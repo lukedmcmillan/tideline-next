@@ -62,7 +62,7 @@ function WhoItsForDropdown() {
             borderRight: "none", borderBottom: "none"
           }} />
           {items.map((item, i) => (
-            <a key={i} href="/platform" style={{
+            <a key={i} href="/start" style={{
               display: "flex", flexDirection: "column", gap: 4,
               padding: "12px 14px", textDecoration: "none",
               borderBottom: i < items.length - 1 ? `1px solid ${BORDER_LIGHT}` : "none"
@@ -78,7 +78,7 @@ function WhoItsForDropdown() {
             display: "flex", alignItems: "center", justifyContent: "space-between"
           }}>
             <span style={{ fontSize: 11, color: MUTED, fontFamily: SANS }}>14 days free · No credit card required</span>
-            <a href="/platform" style={{
+            <a href="/start" style={{
               padding: "6px 16px", background: BLUE, color: WHITE,
               fontSize: 11, fontWeight: 700, cursor: "pointer",
               fontFamily: SANS, textDecoration: "none", borderRadius: 2
@@ -115,12 +115,12 @@ export default function Home() {
             <span style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontFamily: SANS }}>Ocean Intelligence</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            <a href="/platform" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>The Brief</a>
+            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>The Brief</a>
             <WhoItsForDropdown />
-            <a href="/platform" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Trackers</a>
-            <a href="/platform" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Pricing</a>
+            <a href="/start" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Trackers</a>
+            <a href="/start" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Pricing</a>
             <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-            <a href="/platform" style={{
+            <a href="/start" style={{
               padding: "8px 20px", background: BLUE, color: WHITE,
               fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS
             }}>Try Pro free →</a>
@@ -150,11 +150,11 @@ export default function Home() {
               Built for NGO policy teams, ocean investors, corporate ESG analysts, and journalists who act on information rather than just consume it.
             </p>
             <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-              <a href="/platform" style={{
+              <a href="/start" style={{
                 padding: "13px 32px", background: BLUE, color: WHITE,
                 fontSize: 14, fontWeight: 700, borderRadius: 2, fontFamily: SANS, whiteSpace: "nowrap"
               }}>Start reading free</a>
-              <a href="/platform" style={{
+              <a href="/start" style={{
                 color: "rgba(255,255,255,0.5)", fontSize: 14, fontFamily: SANS,
                 textDecoration: "underline", textUnderlineOffset: 3
               }}>See today&apos;s edition →</a>
@@ -196,7 +196,7 @@ export default function Home() {
                 </div>
               );
             })}
-            <a href="/platform" style={{
+            <a href="/start" style={{
               display: "block", padding: "11px 16px", background: "rgba(29,111,164,0.12)",
               textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.06)"
             }}>
@@ -261,7 +261,7 @@ export default function Home() {
             <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.75, marginBottom: 32, fontStyle: "italic", fontFamily: SANS }}>
               Tideline goes beyond mainstream news — pulling from regulatory documents, scientific preprints, NGO briefings, parliamentary records, and institutional databases that most professionals never have time to monitor themselves.
             </p>
-            <a href="/platform" style={{
+            <a href="/start" style={{
               padding: "12px 28px", background: BLUE, color: WHITE,
               fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS, display: "inline-block"
             }}>Read today&apos;s brief →</a>
@@ -298,7 +298,7 @@ export default function Home() {
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <a href="/platform" style={{ padding: "10px 24px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS }}>See all indicators →</a>
+            <a href="/start" style={{ padding: "10px 24px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS }}>See all indicators →</a>
             <span style={{ fontSize: 12, color: MUTED, fontFamily: SANS }}>Updated continuously. Pro subscribers receive instant alerts on status changes.</span>
           </div>
         </div>
