@@ -1,41 +1,25 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 const NAVY = "#0a1628";
 const BLUE = "#1d6fa4";
-const BLUE_LIGHT = "#e8f2f9";
 const WHITE = "#ffffff";
 const OFF_WHITE = "#f8f9fa";
-const BORDER_LIGHT = "#e8e8e8";
+const BORDER = "#e8e8e8";
 const MUTED = "#666";
 const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 const SERIF = "Georgia, serif";
-const MONO = "'IBM Plex Mono', 'Courier New', monospace";
 
 const SRC: Record<string, { bg: string; color: string }> = {
-  reg: { bg: "#e8f2f9", color: "#1d6fa4" },
-  res: { bg: "#eaf3de", color: "#2D6A0A" },
-  ngo: { bg: "#f0eef9", color: "#4A3F8C" },
-  gov: { bg: "#fff3e0", color: "#7A4500" },
-  esg: { bg: "#fde8e8", color: "#8C1A1A" },
-  media: { bg: "#f5f5f5", color: "#444" },
+  gov:   { bg: "#dbeafe", color: "#1e40af" },
+  reg:   { bg: "#fee2e2", color: "#991b1b" },
+  ngo:   { bg: "#dcfce7", color: "#166534" },
+  res:   { bg: "#f3e8ff", color: "#6b21a8" },
+  media: { bg: "#fef3c7", color: "#78350f" },
+  esg:   { bg: "#ccfbf1", color: "#134e4a" },
 };
-
-interface Story {
-  id: string;
-  title: string;
-  link: string;
-  source_name: string;
-  topic: string;
-  source_type: string;
-  published_at: string;
-  short_summary: string | null;
-  full_summary: string | null;
-  is_pro: boolean;
-}
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -51,222 +35,189 @@ export default function StoryPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [story, setStory] = useState<Story | null>(null);
-  const [related, setRelated] = useState<Story[]>([]);
+  const [story, setStory] = useState<any>(null);
+  const [related, setRelated] = useState<any[]>([]);
   const [shortSummary, setShortSummary] = useState<string | null>(null);
   const [fullSummary, setFullSummary] = useState<string | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [showFull, setShowFull] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch story from Supabase via API
   useEffect(() => {
     if (!id) return;
 
+    // Fetch the story
     fetch(`/api/stories?id=${id}`)
       .then(r => r.json())
       .then(data => {
-        const found = data.stories?.find((s: Story) => s.id === id);
-        if (found) {
-          setStory(found);
-        } else {
-          // Try fetching all and finding by id
-          fetch("/api/stories?limit=200")
+        const s = data.story || (data.stories && data.stories[0]);
+        if (!s) return;
+        setStory(s);
+        setLoading(false);
+
+        // If summary exists use it
+        if (s.short_summary) setShortSummary(s.short_summary);
+        if (s.full_summary) setFullSummary(s.full_summary);
+
+        // Fetch related stories
+        fetch(`/api/stories?topic=${s.topic}&limit=5`)
+          .then(r => r.json())
+          .then(d => {
+            const others = (d.stories || []).filter((r: any) => r.id !== id).slice(0, 4);
+            setRelated(others);
+          });
+
+        // Generate summary if missing
+        if (!s.short_summary) {
+          setGenerating(true);
+          fetch("/api/summarise", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ storyId: id }),
+          })
             .then(r => r.json())
-            .then(allData => {
-              const s = allData.stories?.find((s: Story) => s.id === id);
-              if (s) {
-                setStory(s);
-              } else {
-                setNotFound(true);
-              }
-            });
+            .then(d => {
+              if (d.short_summary) setShortSummary(d.short_summary);
+              if (d.full_summary) setFullSummary(d.full_summary);
+            })
+            .finally(() => setGenerating(false));
         }
-      })
-      .catch(() => setNotFound(true));
+      });
   }, [id]);
 
-  // Fetch related stories once we have the topic
-  useEffect(() => {
-    if (!story) return;
+  const CSS = `
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+  `;
 
-    fetch(`/api/stories?topic=${story.topic}&limit=6`)
-      .then(r => r.json())
-      .then(data => {
-        const others = (data.stories || []).filter((s: Story) => s.id !== story.id).slice(0, 4);
-        setRelated(others);
-      })
-      .catch(() => {});
-  }, [story]);
-
-  // Generate summary
-  useEffect(() => {
-    if (!story) return;
-    if (story.short_summary) {
-      setShortSummary(story.short_summary);
-      setFullSummary(story.full_summary);
-      return;
-    }
-
-    setSummaryLoading(true);
-    fetch("/api/summarise", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storyId: story.id }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        setShortSummary(data.short_summary || null);
-        setFullSummary(data.full_summary || null);
-      })
-      .catch(() => {})
-      .finally(() => setSummaryLoading(false));
-  }, [story]);
-
-  if (notFound) return (
-    <div style={{ minHeight: "100vh", background: WHITE, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 14, color: MUTED, marginBottom: 16 }}>Story not found.</div>
-        <Link href="/platform" style={{ color: BLUE, fontSize: 13, fontFamily: SANS }}>← Back to Intelligence Brief</Link>
+  if (loading) return (
+    <>
+      <style>{CSS}</style>
+      <div style={{ minHeight: "100vh", background: OFF_WHITE, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: SANS, fontSize: 13, color: MUTED }}>Loading...</div>
       </div>
-    </div>
+    </>
   );
 
   if (!story) return (
-    <div style={{ minHeight: "100vh", background: WHITE, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ fontSize: 13, color: MUTED }}>Loading…</div>
-    </div>
+    <>
+      <style>{CSS}</style>
+      <div style={{ minHeight: "100vh", background: OFF_WHITE, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: SANS, fontSize: 13, color: MUTED }}>Story not found.</div>
+      </div>
+    </>
   );
 
-  const sc = SRC[story.source_type] || SRC.res;
+  const sc = SRC[story.source_type] || SRC.media;
 
   return (
-    <div style={{ minHeight: "100vh", background: WHITE, fontFamily: SANS, color: NAVY }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-        * { box-sizing: border-box; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-      `}</style>
+    <>
+      <style>{CSS}</style>
+      <div style={{ minHeight: "100vh", background: OFF_WHITE, fontFamily: SANS }}>
 
-      {/* Masthead */}
-      <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="/" style={{ fontSize: 22, fontWeight: 700, color: WHITE, fontFamily: SERIF, textDecoration: "none", letterSpacing: "-0.02em" }}>TIDELINE</a>
-            <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
-            <span style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)", fontFamily: SANS }}>Ocean Intelligence</span>
-          </div>
-          <Link href="/platform" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontFamily: SANS, textDecoration: "none" }}>
-            ← Back to Intelligence Brief
-          </Link>
-        </div>
-      </div>
+        {/* Content */}
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 40px 80px", display: "grid", gridTemplateColumns: "1fr 340px", gap: 60 }}>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "52px 40px 80px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 64, alignItems: "start" }}>
-
-          {/* MAIN */}
+          {/* Main column */}
           <div>
-            {/* Meta */}
-            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 20, flexWrap: "wrap" as const }}>
-              <span style={{ fontSize: 11, padding: "2px 8px", background: sc.bg, color: sc.color, fontWeight: 600, borderRadius: 2, fontFamily: SANS }}>{story.source_name}</span>
-              <span style={{ fontSize: 11, color: BLUE, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as const, fontFamily: SANS }}>{story.topic}</span>
-              <span style={{ fontSize: 11, color: "#aaa", marginLeft: "auto", fontFamily: MONO }}>{formatDate(story.published_at)}</span>
+            {/* Back link */}
+            <Link href="/platform/feed" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: MUTED, fontFamily: SANS, textDecoration: "none", marginBottom: 28, borderBottom: `1px solid ${BORDER}`, paddingBottom: 1 }}>
+              ← Back to Intelligence Brief
+            </Link>
+
+            {/* Source + topic tags */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" as const }}>
+              <span style={{ fontSize: 11, padding: "2px 8px", background: sc.bg, color: sc.color, fontWeight: 600, borderRadius: 4, fontFamily: SANS }}>{story.source_name}</span>
+              <span style={{ fontSize: 11, padding: "2px 8px", background: "#f1f5f9", color: "#475569", fontWeight: 600, borderRadius: 4, fontFamily: SANS, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{story.topic}</span>
+              <span style={{ fontSize: 12, color: MUTED, fontFamily: SANS, marginLeft: "auto" }}>{formatDate(story.published_at)}</span>
             </div>
 
-            {/* Headline */}
-            <h1 style={{ fontSize: 30, fontWeight: 700, color: NAVY, lineHeight: 1.35, margin: "0 0 32px", fontFamily: SERIF, letterSpacing: "-0.02em" }}>
+            {/* Title */}
+            <h1 style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 700, color: NAVY, lineHeight: 1.3, letterSpacing: "-0.02em", marginBottom: 32 }}>
               {story.title}
             </h1>
 
-            {/* Intelligence summary */}
-            <div style={{ borderLeft: `3px solid ${BLUE}`, paddingLeft: 20, marginBottom: 36 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: BLUE, marginBottom: 14, fontFamily: SANS }}>Intelligence Analysis</div>
-              {summaryLoading ? (
-                <div>
-                  {[1, 2, 3].map(i => (
-                    <div key={i} style={{ height: 16, background: "#f0f0f0", borderRadius: 2, marginBottom: 10, width: i === 3 ? "60%" : "100%", animation: "pulse 1.5s ease-in-out infinite" }} />
-                  ))}
+            {/* Intelligence Analysis */}
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: BLUE, marginBottom: 14, fontFamily: SANS }}>
+                Intelligence Analysis
+              </div>
+
+              {generating && !shortSummary ? (
+                <div style={{ padding: "16px 20px", background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${BLUE}` }}>
+                  <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS }}>Generating intelligence brief...</div>
                 </div>
               ) : shortSummary ? (
-                <div>
-                  <p style={{ fontSize: 16, color: "#222", lineHeight: 1.85, margin: "0 0 16px", fontFamily: SANS }}>{shortSummary}</p>
+                <div style={{ padding: "20px 24px", background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${BLUE}` }}>
+                  <p style={{ fontSize: 15, lineHeight: 1.8, color: NAVY, fontFamily: SERIF, marginBottom: fullSummary ? 16 : 0 }}>
+                    {shortSummary}
+                  </p>
                   {fullSummary && (
                     <>
-                      {showFull && (
-                        <p style={{ fontSize: 15, color: "#444", lineHeight: 1.85, margin: "0 0 16px", fontFamily: SANS }}>{fullSummary}</p>
+                      {expanded && (
+                        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#333", fontFamily: SERIF, marginBottom: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+                          {fullSummary}
+                        </p>
                       )}
-                      <button onClick={() => setShowFull(p => !p)} style={{ background: "none", border: "none", color: BLUE, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase" as const, padding: 0, textDecoration: "underline", textUnderlineOffset: 3 }}>
-                        {showFull ? "Show less ▲" : "Read full analysis ▼"}
+                      <button onClick={() => setExpanded(!expanded)} style={{ background: "none", border: "none", color: BLUE, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: SANS, padding: 0 }}>
+                        {expanded ? "Show less ▲" : "Read full analysis ▼"}
                       </button>
                     </>
                   )}
                 </div>
               ) : (
-                <div style={{ fontSize: 14, color: MUTED, fontFamily: SANS }}>Summary unavailable.</div>
+                <div style={{ padding: "16px 20px", background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${BORDER}` }}>
+                  <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS }}>Summary unavailable.</div>
+                </div>
               )}
             </div>
 
-            {/* Source link */}
-            <div style={{ borderTop: `1px solid ${BORDER_LIGHT}`, paddingTop: 24, marginBottom: 36 }}>
+            {/* Primary source */}
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 24, marginBottom: 36 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: MUTED, marginBottom: 12, fontFamily: SANS }}>Primary Source</div>
-              <a href={story.link} target="_blank" rel="noopener noreferrer" style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "10px 18px", border: `1px solid ${BORDER_LIGHT}`,
-                background: OFF_WHITE, color: NAVY, textDecoration: "none",
-                fontSize: 13, fontWeight: 600, fontFamily: SANS, borderRadius: 2
-              }}>
-                <span style={{ fontSize: 11, padding: "1px 7px", background: sc.bg, color: sc.color, fontWeight: 600, borderRadius: 2, fontFamily: SANS }}>{story.source_name}</span>
+              <a href={story.link} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", border: `1px solid ${BORDER}`, background: WHITE, color: NAVY, textDecoration: "none", fontSize: 13, fontWeight: 600, fontFamily: SANS }}>
+                <span style={{ fontSize: 11, padding: "1px 7px", background: sc.bg, color: sc.color, fontWeight: 600, fontFamily: SANS }}>{story.source_name}</span>
                 View original source →
               </a>
             </div>
-
-            <Link href="/platform" style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 13, color: MUTED, fontFamily: SANS, textDecoration: "none",
-              borderBottom: `1px solid ${BORDER_LIGHT}`, paddingBottom: 1
-            }}>
-              ← Back to Intelligence Brief
-            </Link>
           </div>
 
-          {/* SIDEBAR */}
-          <div style={{ position: "sticky" as const, top: 80 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: MUTED, marginBottom: 16, fontFamily: SANS }}>Related Intelligence</div>
-            {related.length === 0 ? (
-              <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS }}>Loading related stories…</div>
-            ) : (
-              related.map((r, i) => {
-                const rSc = SRC[r.source_type] || SRC.res;
-                return (
-                  <Link key={r.id} href={`/platform/story/${r.id}`} style={{
-                    display: "block", padding: "14px 0",
-                    borderBottom: i < related.length - 1 ? `1px solid ${BORDER_LIGHT}` : "none",
-                    textDecoration: "none"
-                  }}>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 7, flexWrap: "wrap" as const }}>
-                      <span style={{ fontSize: 10, padding: "1px 6px", background: rSc.bg, color: rSc.color, fontWeight: 600, borderRadius: 2, fontFamily: SANS }}>{r.source_name}</span>
-                      <span style={{ fontSize: 10, color: BLUE, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" as const, fontFamily: SANS }}>{r.topic}</span>
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.4, fontFamily: SERIF }}>{r.title}</div>
-                    <div style={{ fontSize: 11, color: "#aaa", marginTop: 5, fontFamily: MONO }}>{formatDate(r.published_at)}</div>
-                  </Link>
-                );
-              })
-            )}
-            <div style={{ marginTop: 20 }}>
-              <Link href="/platform" style={{ fontSize: 12, color: BLUE, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>View all stories →</Link>
+          {/* Sidebar */}
+          <div>
+            <div style={{ position: "sticky", top: 40 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: MUTED, marginBottom: 16, fontFamily: SANS }}>Related Intelligence</div>
+              {related.length === 0 ? (
+                <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS }}>Loading related stories...</div>
+              ) : (
+                related.map((r, i) => {
+                  const rSc = SRC[r.source_type] || SRC.media;
+                  return (
+                    <Link key={r.id} href={`/platform/story/${r.id}`} style={{ display: "block", padding: "14px 0", borderBottom: i < related.length - 1 ? `1px solid ${BORDER}` : "none", textDecoration: "none" }}>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 7, flexWrap: "wrap" as const }}>
+                        <span style={{ fontSize: 10, padding: "1px 6px", background: rSc.bg, color: rSc.color, fontWeight: 600, fontFamily: SANS }}>{r.source_name}</span>
+                        <span style={{ fontSize: 10, color: BLUE, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" as const, fontFamily: SANS }}>{r.topic}</span>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.4, fontFamily: SERIF, marginBottom: 4 }}>{r.title}</div>
+                      <div style={{ fontSize: 11, color: "#aaa", fontFamily: SANS }}>{formatDate(r.published_at)}</div>
+                    </Link>
+                  );
+                })
+              )}
+              <div style={{ marginTop: 20 }}>
+                <Link href="/platform/feed" style={{ fontSize: 12, color: BLUE, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>View all stories →</Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div style={{ borderTop: `1px solid ${BORDER_LIGHT}`, background: OFF_WHITE, padding: "18px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <a href="/" style={{ fontSize: 18, fontWeight: 700, color: NAVY, fontFamily: SERIF, textDecoration: "none" }}>TIDELINE</a>
-          <span style={{ fontSize: 11, color: "#aaa", fontFamily: MONO }}>© {new Date().getFullYear()} · tideline.io</span>
+        {/* Footer */}
+        <div style={{ borderTop: `1px solid ${BORDER}`, background: WHITE, padding: "18px 40px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <a href="/" style={{ fontSize: 18, fontWeight: 700, color: NAVY, fontFamily: SERIF, textDecoration: "none" }}>TIDELINE</a>
+            <span style={{ fontSize: 11, color: "#aaa", fontFamily: SANS }}>© {new Date().getFullYear()} · thetideline.co</span>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
