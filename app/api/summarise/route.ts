@@ -12,91 +12,44 @@ const anthropic = new Anthropic({
 })
 
 const ACADEMIC_DOMAINS = [
-  'nature.com', 'science.org', 'journals.plos.org',
+  'sciencedirect.com', 'nature.com', 'science.org', 'journals.plos.org',
   'onlinelibrary.wiley.com', 'springer.com', 'tandfonline.com', 'jstor.org',
   'frontiersin.org', 'mdpi.com', 'academic.oup.com', 'cell.com', 'pnas.org', 'ices.dk',
+]
+
+const PAYWALLED_DOMAINS = [
+  'bloomberg.com', 'ft.com', 'wsj.com', 'economist.com',
+  'thetimes.co.uk', 'telegraph.co.uk', 'intrafish.com',
+  'undercurrentnews.com', 'seafoodsource.com',
 ]
 
 function isAcademicPaper(url: string): boolean {
   return ACADEMIC_DOMAINS.some(domain => url.includes(domain))
 }
 
-function extractAbstract(html: string): string | null {
-  let abstract = ''
+function isPaywalled(url: string): boolean {
+  return PAYWALLED_DOMAINS.some(domain => url.includes(domain))
+}
 
+function extractAbstract(html: string): string | null {
   const patterns = [
-    /<div[^>]*class="[^"]*abstract[^"]*author[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]*class="[^"]*abstract[^"]*"[^>]*>\s*<h2[^>]*>Abstract<\/h2>([\s\S]*?)<\/div>/i,
-    /<section[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/section>/i,
     /<div[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<section[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/section>/i,
+    /<h2[^>]*>Abstract<\/h2>\s*<p[^>]*>([\s\S]*?)<\/p>/i,
     /<div[^>]*id="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
     /<p[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/p>/i,
-    /<div[^>]*data-component="abstract"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]*id="abstract0"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]*class="[^"]*JournalAbstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-    /(?:<h2[^>]*>|<h3[^>]*>)Abstract(?:<\/h2>|<\/h3>)\s*<p[^>]*>([\s\S]*?)<\/p>/i,
   ]
-
   for (const pattern of patterns) {
     const match = html.match(pattern)
     if (match) {
-      const text = match[1]
-        .replace(/<h2[^>]*>Abstract<\/h2>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-      if (text.length > 100) {
-        abstract = text
-        break
-      }
+      const text = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (text.length > 50) return text
     }
   }
-
-  if (!abstract) {
-    const abstractSection = html.match(/Abstract\s*<\/[^>]+>\s*([\s\S]{100,2000}?)(?:Keywords|Introduction|1\.|Background)/i)
-    if (abstractSection) {
-      const text = abstractSection[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-      if (text.length > 100) abstract = text
-    }
-  }
-
-  if (abstract) return abstract
   return null
 }
 
-// Jina Reader API — returns clean markdown of article content.
-// Handles JS rendering, soft paywalls, and messy HTML automatically.
-// Falls back to direct HTML fetch if Jina fails or returns thin content.
 async function fetchArticleText(url: string): Promise<string | null> {
-  // Try Jina first
-  if (process.env.JINA_API_KEY) {
-    try {
-      const jinaUrl = `https://r.jina.ai/${url}`
-      const res = await fetch(jinaUrl, {
-        headers: {
-          'Authorization': `Bearer ${process.env.JINA_API_KEY}`,
-          'Accept': 'text/plain',
-          'X-Return-Format': 'markdown',
-          'X-Timeout': '8',
-        },
-        signal: AbortSignal.timeout(12000),
-      })
-      if (res.ok) {
-        const text = await res.text()
-        // Strip Jina metadata header
-        const cleaned = text
-          .replace(/^Title:.*\n/m, '')
-          .replace(/^URL Source:.*\n/m, '')
-          .replace(/^Markdown Content:\n/m, '')
-          .trim()
-        if (cleaned.length > 200) return cleaned.slice(0, 8000)
-      }
-    } catch {
-      // Fall through to direct fetch
-    }
-  }
-
-  // Direct HTML fetch fallback
   try {
     const res = await fetch(url, {
       headers: {
@@ -108,6 +61,7 @@ async function fetchArticleText(url: string): Promise<string | null> {
     if (!res.ok) return null
     const html = await res.text()
 
+    // Strip abstract section so model reads the body
     const htmlWithoutAbstract = html
       .replace(/<section[^>]*class="[^"]*abstract[^"]*"[^>]*>[\s\S]*?<\/section>/gi, '')
       .replace(/<div[^>]*class="[^"]*abstract[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
@@ -160,6 +114,14 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Paywalled sources — no summary attempt
+    if (isPaywalled(story.link)) {
+      const short_summary = `This article is from ${story.source_name}. Full access requires a subscription to the original source.`
+      const full_summary = short_summary
+      await supabase.from('stories').update({ short_summary, full_summary }).eq('id', storyId)
+      return NextResponse.json({ short_summary, full_summary })
+    }
+
     // Academic papers — extract and use the abstract directly
     if (isAcademicPaper(story.link)) {
       try {
@@ -171,22 +133,22 @@ export async function POST(request: Request) {
           const html = await res.text()
           const abstract = extractAbstract(html)
           if (abstract) {
-            const short_summary = abstract.slice(0, 300).trim() + (abstract.length > 300 ? '...' : '')
+            const short_summary = abstract.slice(0, 300).trim() + (abstract.length > 300 ? '…' : '')
             const full_summary = abstract
             await supabase.from('stories').update({ short_summary, full_summary }).eq('id', storyId)
             return NextResponse.json({ short_summary, full_summary })
           }
         }
       } catch {
-        // Fall through to Jina fetch if abstract extraction fails
+        // Fall through to AI summary if abstract extraction fails
       }
     }
 
-    // Fetch full article text via Jina (with direct HTML fallback)
+    // Open news articles — fetch full text and generate AI summary
     const articleText = await fetchArticleText(story.link)
 
     const prompt = articleText
-      ? `You are a factual intelligence editor at Tideline, an ocean and marine policy briefing platform. Your readers are sector experts: NGO policy teams, corporate ESG leads, shipping compliance officers, blue finance investors, and ocean researchers.
+      ? `You are a factual intelligence editor at Tideline, an ocean and marine policy briefing platform. Write accurate, source-faithful summaries based only on what the article actually says.
 
 Article title: "${story.title}"
 Source: ${story.source_name}
@@ -195,29 +157,25 @@ URL: ${story.link}
 ARTICLE CONTENT:
 ${articleText}
 
-STRICT ACCURACY RULES — violations damage editorial credibility:
-- Base every factual claim solely on the article content above. Nothing else.
-- Do not add company locations, funding totals, customer sectors, or technical specifications unless the article states them explicitly.
-- Preserve exact technical terminology. Do not generalise specialist terms (e.g. "split-beam echosounder" stays "split-beam echosounder", "torpedo launcher support" stays "torpedo launcher support").
-- Do not supplement with background knowledge about the topic — even if accurate and relevant. If it is not in the article, it does not exist for this brief.
-- For well-covered topics (deep-sea mining, climate negotiations, fisheries governance, shipping regulation) you will have strong background knowledge. Do not use it in the summary. Report only what this specific article states.
-- Scale the significance frame to the actual story. A training contract is not a fleet expansion. A software integration is not a regulatory mandate. Do not overreach.
-- Lead with the most professionally significant detail in the article — not the most familiar or expected angle.
-- No hedging phrases: "it appears", "it seems", "it is worth noting"
-- No filler: "this is significant because" — state the significance directly
-- No em dashes
-- No AI-tell phrases: "crucial", "urgent", "vital", "significant", "important" unless the source uses them
-- Declarative sentences only
-- The full summary must be a distinct account from the short summary — do not repeat the opening sentence
+---
+
+RULES:
+- Summarise only what the article explicitly states. Never paraphrase the abstract — read and draw from the full body.
+- Preserve approximate language exactly. Do not round up or sharpen numbers.
+- Do not add implications, urgency, or significance the article does not state.
+- No AI-tell phrases: "crucial", "urgent", "significant", "vital", "important" unless the source uses them.
+- No meta-commentary or framing language.
+- Declarative sentences only.
+- The full summary must be a DISTINCT account from the short summary. Do not repeat the short summary opening.
 
 SHORT SUMMARY (2 sentences maximum):
-Sentence 1: what happened or was announced, grounded strictly in the article.
-Sentence 2: the single most professionally significant detail from the article body.
+Sentence 1: source, publication context, and what the document is.
+Sentence 2: the single most important factual finding from the body — not from any abstract.
 
-FULL SUMMARY (5-8 sentences):
+FULL SUMMARY (6-10 sentences):
 Do NOT begin with the same sentence as the short summary.
-Cover: specific findings, named organisations, numbers, methodology, implementation details, and caveats — all drawn from the article.
-End with one concrete watch point: a specific body, process, or deadline professionals should monitor.
+Draw from the body — methodology, specific findings, numbers, implementation details, cost figures, caveats.
+Final sentence: the single most important limitation or qualification the authors themselves state.
 
 Respond in this exact JSON format with no markdown or code fences:
 {
@@ -229,10 +187,10 @@ Respond in this exact JSON format with no markdown or code fences:
 Article title: "${story.title}"
 Source: ${story.source_name}
 
-Write two summaries based only on what the title and source name explicitly suggest. Do not fabricate findings, statistics, or context.
+Write two summaries based only on what can be reasonably inferred from the title and source. Do not fabricate findings or statistics.
 
-SHORT SUMMARY (1 sentence): What the article covers based on title and source only.
-FULL SUMMARY (2 sentences): Same, ending with: "Full article text was unavailable — this summary is based on the title and source only."
+SHORT SUMMARY (1-2 sentences): What the article appears to cover based on title and source only.
+FULL SUMMARY (2-3 sentences): Same, ending with: "Full article text was unavailable — this summary is based on the title and source only."
 
 Respond in this exact JSON format with no markdown:
 {
