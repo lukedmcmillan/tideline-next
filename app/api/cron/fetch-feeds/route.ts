@@ -10,7 +10,7 @@ const RSS_SOURCES = [
   // GOVERNMENT
   { name: "NOAA Fisheries", rss: "https://www.fisheries.noaa.gov/rss.xml", topic: "fisheries", type: "gov" },
   { name: "NOAA Ocean Service", rss: "https://oceanservice.noaa.gov/rss/oceancast.xml", topic: "climate", type: "gov" },
-  { name: "NOAA Climate", rss: "https://www.climate.gov/rss.xml", topic: "climate", type: "gov" },
+  { name: "NOAA News", rss: "https://www.noaa.gov/news-release/feed", topic: "climate", type: "gov" },
   { name: "EPA Water News", rss: "https://www.epa.gov/rss/epa-news-releases.rss", topic: "pollution", type: "gov" },
   { name: "European Environment Agency", rss: "https://www.eea.europa.eu/rss/highlights.rss", topic: "governance", type: "gov" },
   { name: "UK DEFRA", rss: "https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs.atom", topic: "governance", type: "gov" },
@@ -20,6 +20,7 @@ const RSS_SOURCES = [
   { name: "ISA", rss: "https://www.isa.org.jm/feed", topic: "dsm", type: "reg" },
   { name: "IMO News", rss: "https://www.imo.org/en/MediaCentre/PressBriefings/Pages/rss.aspx", topic: "shipping", type: "reg" },
   { name: "CITES", rss: "https://cites.org/eng/news/rss.xml", topic: "cites", type: "reg" },
+  { name: "IWC", rss: "https://iwc.int/en/news/feed", topic: "whales", type: "reg" },
 
   // NGOs
   { name: "IUCN Red List", rss: "https://www.iucnredlist.org/rss.xml", topic: "iucn", type: "ngo" },
@@ -76,6 +77,8 @@ const RSS_SOURCES = [
   { name: "New Scientist", rss: "https://www.newscientist.com/feed/home/", topic: "science", type: "media" },
   { name: "Natural History Museum", rss: "https://www.nhm.ac.uk/discover/news/rss-feed.xml", topic: "science", type: "media" },
   { name: "Oceanographic Magazine", rss: "https://oceanographicmagazine.com/news/feed/", topic: "all", type: "media" },
+  { name: "Phys.org Ocean", rss: "https://phys.org/rss-feed/earth-news/", topic: "science", type: "media" },
+  { name: "Carbon Brief", rss: "https://www.carbonbrief.org/feed/", topic: "climate", type: "media" },
 
   // ESG / FINANCE
   { name: "Bloomberg Green", rss: "https://feeds.bloomberg.com/green/news.rss", topic: "bluefinance", type: "esg" },
@@ -98,7 +101,7 @@ const OCEAN_DEDICATED_SOURCES = new Set([
   'Undercurrent News', 'IntraFish', 'Natural History Museum', 'Bloomberg Green',
   'GreenBiz', 'OECD Ocean Finance', 'WWF Oceans', 'WWF', 'Nature Ocean & Marine',
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
-  'CBD Secretariat', 'IPCC',
+  'IWC', 'Phys.org Ocean', 'Carbon Brief', 'NOAA News',
 ])
 
 async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string | null }[]> {
