@@ -107,7 +107,7 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
           items.push({
             title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#038;/g, '&').replace(/&#8217;/g, "'").replace(/&#8216;/g, "'").replace(/&#8220;/g, '"').replace(/&#8221;/g, '"').replace(/&#8211;/g, '–').replace(/&#8212;/g, '—').replace(/&nbsp;/g, ' ').replace(/&hellip;/g, '…').replace(/<[^>]+>/g, '').trim(),
             link: link.replace(/&amp;/g, '&'),
-            published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+            published_at: pubDate ? new Date(pubDate).toISOString() : null,
           })
         }
       }
