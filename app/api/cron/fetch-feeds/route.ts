@@ -75,7 +75,7 @@ const RSS_SOURCES = [
   { name: "OECD Ocean Finance", rss: "https://www.oecd.org/ocean/rss.xml", topic: "bluefinance", type: "esg" },
 ]
 
-async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string }[]> {
+async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string | null }[]>
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Tideline/1.0 RSS Reader' },
@@ -84,8 +84,8 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
     if (!res.ok) return []
     const xml = await res.text()
 
-    const items: { title: string; link: string; published_at: string }[] = []
-    const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
+const items: { title: string; link: string; published_at: string | null }[] = []
+  const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
     // Also handle Atom <entry> tags
     const entryRegex = /<entry[^>]*>([\s\S]*?)<\/entry>/gi
     let match
