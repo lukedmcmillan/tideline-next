@@ -164,17 +164,17 @@ Sentence 2: the single most professionally significant detail from the article b
 
 FULL SUMMARY (5-8 sentences):
 Do NOT begin with the same sentence as the short summary.
-1. The specific mechanism or technology — explain exactly how it works, never leave a technical term unexplained.
-2. Quantitative data — specific numbers, named participants, measurable outcomes from the article.
-3. Why this decision was made — connect mechanism and data to outcome.
-4. The non-obvious watch point — downstream implications for adjacent jurisdictions or frameworks, not just obvious next steps.
+1. The specific mechanism or technology ï¿½ explain exactly how it works, never leave a technical term unexplained.
+2. Quantitative data ï¿½ specific numbers, named participants, measurable outcomes from the article.
+3. Why this decision was made ï¿½ connect mechanism and data to outcome.
+4. The non-obvious watch point ï¿½ downstream implications for adjacent jurisdictions or frameworks, not just obvious next steps.
 
 Respond in this exact JSON format with no markdown:
 {"short_summary":"...","full_summary":"..."}`
       : `You are a factual intelligence editor at Tideline. Article text unavailable.
 Title: "${story.title}"
 Source: ${story.source_name}
-Respond: {"short_summary":"Summary unavailable — full article text could not be retrieved.","full_summary":"Summary unavailable — full article text could not be retrieved. Visit the original source directly."}`
+Respond: {"short_summary":"Summary unavailable ï¿½ full article text could not be retrieved.","full_summary":"Summary unavailable ï¿½ full article text could not be retrieved. Visit the original source directly."}`
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
