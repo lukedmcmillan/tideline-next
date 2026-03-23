@@ -33,20 +33,34 @@ function isPaywalled(url: string): boolean {
 }
 
 function extractAbstract(html: string): string | null {
+  let abstract = ''
   const patterns = [
-    /<div[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]*class="[^"]*abstract[^"]*author[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]*class="[^"]*abstract[^"]*"[^>]*>\s*<h2[^>]*>Abstract<\/h2>([\s\S]*?)<\/div>/i,
     /<section[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/section>/i,
-    /<h2[^>]*>Abstract<\/h2>\s*<p[^>]*>([\s\S]*?)<\/p>/i,
+    /<div[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
     /<div[^>]*id="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
     /<p[^>]*class="[^"]*abstract[^"]*"[^>]*>([\s\S]*?)<\/p>/i,
+    /<div[^>]*data-component="abstract"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]*id="abstract0"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]*class="[^"]*JournalAbstract[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /(?:<h2[^>]*>|<h3[^>]*>)Abstract(?:<\/h2>|<\/h3>)\s*<p[^>]*>([\s\S]*?)<\/p>/i,
   ]
   for (const pattern of patterns) {
     const match = html.match(pattern)
     if (match) {
-      const text = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-      if (text.length > 100) return text
+      const text = match[1].replace(/<h2[^>]*>Abstract<\/h2>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (text.length > 100) { abstract = text; break }
     }
   }
+  if (!abstract) {
+    const abstractSection = html.match(/Abstract\s*<\/[^>]+>\s*([\s\S]{100,2000}?)(?:Keywords|Introduction|1\.|Background)/i)
+    if (abstractSection) {
+      const text = abstractSection[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (text.length > 100) abstract = text
+    }
+  }
+  if (abstract) return abstract
   return null
 }
 
@@ -73,7 +87,12 @@ async function fetchArticleText(url: string): Promise<string | null> {
   if (process.env.JINA_API_KEY) {
     try {
       const res = await fetch(`https://r.jina.ai/${url}`, {
-        headers: { 'Authorization': `Bearer ${process.env.JINA_API_KEY}`, 'Accept': 'text/plain', 'X-Return-Format': 'markdown', 'X-Timeout': '8' },
+        headers: {
+          'Authorization': `Bearer ${process.env.JINA_API_KEY}`,
+          'Accept': 'text/plain',
+          'X-Return-Format': 'markdown',
+          'X-Timeout': '8',
+        },
         signal: AbortSignal.timeout(12000),
       })
       if (res.ok) {
@@ -85,7 +104,7 @@ async function fetchArticleText(url: string): Promise<string | null> {
   }
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Tideline/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Tideline/1.0; +https://thetideline.co)' },
       signal: AbortSignal.timeout(10000),
     })
     if (!res.ok) return null
@@ -97,6 +116,7 @@ async function fetchArticleText(url: string): Promise<string | null> {
       .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
       .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
       .replace(/<[^>]+>/g, ' ')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
       .replace(/\s+/g, ' ').trim()
     return text.length > 100 ? text.slice(0, 20000) : null
   } catch { return null }
@@ -151,8 +171,9 @@ STRICT ACCURACY RULES:
 - Do not add locations, funding totals, customer sectors, or specs unless explicitly stated.
 - Preserve exact technical terminology. Do not generalise specialist terms.
 - Do not use background knowledge. If it is not in the article, it does not exist for this brief.
-- For well-covered topics (deep-sea mining, climate, fisheries, shipping) do not use background knowledge in the summary.
+- For well-covered topics (deep-sea mining, climate, fisheries, shipping) do not use background knowledge.
 - Scale the significance to match the actual story. Do not overreach.
+- Do not sub-categorise or break down figures beyond what the article states.
 - No hedging: "it appears", "it seems"
 - No filler: state significance directly
 - No em dashes
@@ -164,17 +185,17 @@ Sentence 2: the single most professionally significant detail from the article b
 
 FULL SUMMARY (5-8 sentences):
 Do NOT begin with the same sentence as the short summary.
-1. The specific mechanism or technology — explain exactly how it works, never leave a technical term unexplained.
-2. Quantitative data — specific numbers, named participants, measurable outcomes from the article.
-3. Why this decision was made — connect mechanism and data to outcome.
-4. The non-obvious watch point — downstream implications for adjacent jurisdictions or frameworks, not just obvious next steps.
+1. The specific mechanism or technology - explain exactly how it works, never leave a technical term unexplained.
+2. Quantitative data - specific numbers, named participants, measurable outcomes from the article.
+3. Why this decision was made - connect mechanism and data to outcome.
+4. The non-obvious watch point - downstream implications for adjacent jurisdictions or frameworks, not just obvious next steps.
 
 Respond in this exact JSON format with no markdown:
 {"short_summary":"...","full_summary":"..."}`
       : `You are a factual intelligence editor at Tideline. Article text unavailable.
 Title: "${story.title}"
 Source: ${story.source_name}
-Respond: {"short_summary":"Summary unavailable — full article text could not be retrieved.","full_summary":"Summary unavailable — full article text could not be retrieved. Visit the original source directly."}`
+Respond with this exact JSON: {"short_summary":"Summary unavailable - full article text could not be retrieved.","full_summary":"Summary unavailable - full article text could not be retrieved. Visit the original source directly."}`
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
