@@ -7,7 +7,7 @@ const supabase = createClient(
 )
 
 const RSS_SOURCES = [
-  // ── GOVERNMENT ──────────────────────────────────────────────────────────────
+  // GOVERNMENT
   { name: "NOAA Fisheries", rss: "https://www.fisheries.noaa.gov/rss.xml", topic: "fisheries", type: "gov" },
   { name: "NOAA Ocean Service", rss: "https://oceanservice.noaa.gov/rss/oceancast.xml", topic: "climate", type: "gov" },
   { name: "NOAA Climate", rss: "https://www.climate.gov/rss.xml", topic: "climate", type: "gov" },
@@ -16,12 +16,12 @@ const RSS_SOURCES = [
   { name: "UK DEFRA", rss: "https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs.atom", topic: "governance", type: "gov" },
   { name: "FAO Fisheries", rss: "https://www.fao.org/fishery/rss/en", topic: "fisheries", type: "gov" },
 
-  // ── REGULATORY ──────────────────────────────────────────────────────────────
+  // REGULATORY
   { name: "ISA", rss: "https://www.isa.org.jm/feed", topic: "dsm", type: "reg" },
   { name: "IMO News", rss: "https://www.imo.org/en/MediaCentre/PressBriefings/Pages/rss.aspx", topic: "shipping", type: "reg" },
   { name: "CITES", rss: "https://cites.org/eng/news/rss.xml", topic: "cites", type: "reg" },
 
-  // ── NGOs ────────────────────────────────────────────────────────────────────
+  // NGOs
   { name: "IUCN Red List", rss: "https://www.iucnredlist.org/rss.xml", topic: "iucn", type: "ngo" },
   { name: "WWF", rss: "https://www.worldwildlife.org/press-releases.rss", topic: "all", type: "ngo" },
   { name: "Oceana", rss: "https://oceana.org/rss.xml", topic: "all", type: "ngo" },
@@ -42,21 +42,28 @@ const RSS_SOURCES = [
   { name: "The Ocean Foundation", rss: "https://oceanfdn.org/feed/", topic: "acidification", type: "ngo" },
   { name: "Surfrider Foundation", rss: "https://www.surfrider.org/feed", topic: "pollution", type: "ngo" },
   { name: "Global Fishing Watch", rss: "https://globalfishingwatch.org/feed/", topic: "iuu", type: "ngo" },
+  { name: "MSC", rss: "https://www.msc.org/media-centre/news-opinion/rss", topic: "fisheries", type: "ngo" },
+  { name: "Marine Conservation Society", rss: "https://www.mcsuk.org/feed/", topic: "governance", type: "ngo" },
+  { name: "High Seas Alliance", rss: "https://highseasalliance.org/feed/", topic: "governance", type: "ngo" },
+  { name: "Deep Sea Conservation Coalition", rss: "https://www.savethehighseas.org/feed/", topic: "dsm", type: "ngo" },
+  { name: "WWF Oceans", rss: "https://www.worldwildlife.org/stories.rss", topic: "governance", type: "ngo" },
 
-  // ── RESEARCH & SCIENCE ──────────────────────────────────────────────────────
-  { name: "Nature — Ocean & Marine", rss: "https://www.nature.com/search.rss?q=ocean&subject=earth-and-environmental-sciences", topic: "science", type: "res" },
+  // RESEARCH & SCIENCE
+  { name: "Nature Ocean & Marine", rss: "https://www.nature.com/search.rss?q=ocean&subject=earth-and-environmental-sciences", topic: "science", type: "res" },
   { name: "Nature Climate Change", rss: "https://www.nature.com/nclimate.rss", topic: "climate", type: "res" },
   { name: "Nature Sustainability", rss: "https://www.nature.com/natsustain.rss", topic: "governance", type: "res" },
   { name: "Nature Ecology & Evolution", rss: "https://www.nature.com/natecolevol.rss", topic: "science", type: "res" },
-  { name: "Science — Ocean Research", rss: "https://www.science.org/rss/news_current.xml", topic: "science", type: "res" },
+  { name: "Science Ocean Research", rss: "https://www.science.org/rss/news_current.xml", topic: "science", type: "res" },
   { name: "Scripps Oceanography", rss: "https://scripps.ucsd.edu/news/rss.xml", topic: "science", type: "res" },
   { name: "WHOI", rss: "https://www.whoi.edu/press-room/news-releases/rss/", topic: "science", type: "res" },
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
   { name: "Smithsonian Ocean", rss: "https://ocean.si.edu/rss.xml", topic: "science", type: "res" },
-  { name: "Marine Pollution Bulletin", rss: "https://rss.sciencedirect.com/publication/science/0025326X", topic: "pollution", type: "res" },
   { name: "PLOS ONE Marine", rss: "https://journals.plos.org/plosone/feed/atom?filterSubjects=Marine+and+aquatic+sciences", topic: "science", type: "res" },
+  { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
+  { name: "National Oceanography Centre", rss: "https://noc.ac.uk/feed", topic: "science", type: "res" },
+  { name: "Plymouth Marine Laboratory", rss: "https://www.pml.ac.uk/feed/", topic: "science", type: "res" },
 
-  // ── MEDIA ───────────────────────────────────────────────────────────────────
+  // MEDIA
   { name: "Mongabay Oceans", rss: "https://news.mongabay.com/oceans/feed/", topic: "all", type: "media" },
   { name: "The Guardian Environment", rss: "https://www.theguardian.com/environment/rss", topic: "all", type: "media" },
   { name: "Hakai Magazine", rss: "https://www.hakaimagazine.com/feed/", topic: "all", type: "media" },
@@ -68,14 +75,33 @@ const RSS_SOURCES = [
   { name: "National Geographic", rss: "https://www.nationalgeographic.com/feed/rss", topic: "all", type: "media" },
   { name: "New Scientist", rss: "https://www.newscientist.com/feed/home/", topic: "science", type: "media" },
   { name: "Natural History Museum", rss: "https://www.nhm.ac.uk/discover/news/rss-feed.xml", topic: "science", type: "media" },
+  { name: "Oceanographic Magazine", rss: "https://oceanographicmagazine.com/news/feed/", topic: "all", type: "media" },
 
-  // ── ESG / FINANCE ───────────────────────────────────────────────────────────
+  // ESG / FINANCE
   { name: "Bloomberg Green", rss: "https://feeds.bloomberg.com/green/news.rss", topic: "bluefinance", type: "esg" },
   { name: "GreenBiz", rss: "https://www.greenbiz.com/rss.xml", topic: "bluefinance", type: "esg" },
   { name: "OECD Ocean Finance", rss: "https://www.oecd.org/ocean/rss.xml", topic: "bluefinance", type: "esg" },
+  { name: "CBD Secretariat", rss: "https://www.cbd.int/rss/news.xml", topic: "governance", type: "reg" },
+  { name: "IPCC", rss: "https://www.ipcc.ch/feed/", topic: "climate", type: "reg" },
 ]
 
-async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string | null }[]>
+const OCEAN_DEDICATED_SOURCES = new Set([
+  'Whale and Dolphin Conservation', 'Oceana', 'Ocean Conservancy', 'Sea Shepherd',
+  'Shark Trust', 'Sea Turtle Conservancy', 'Reef Check', 'Blue Marine Foundation',
+  'Mission Blue', 'Plastic Soup Foundation', 'The Ocean Foundation', 'Surfrider Foundation',
+  'Global Fishing Watch', 'EDF Oceans', '5 Gyres', 'MSC', 'Marine Conservation Society',
+  'ClientEarth', 'High Seas Alliance', 'DSCC', 'Deep Sea Conservation Coalition', 'WCS Marine',
+  'WHOI', 'Scripps Oceanography', 'MBARI', 'Smithsonian Ocean', 'NASA Earth Observatory',
+  'PLOS ONE Marine', 'Plymouth Marine Laboratory', 'British Antarctic Survey',
+  'National Oceanography Centre', 'ICES', 'ISA', 'IUCN Red List', 'IMO News', 'CITES',
+  'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine', 'The Fish Site',
+  'Undercurrent News', 'IntraFish', 'Natural History Museum', 'Bloomberg Green',
+  'GreenBiz', 'OECD Ocean Finance', 'WWF Oceans', 'WWF', 'Nature Ocean & Marine',
+  'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
+  'CBD Secretariat', 'IPCC',
+])
+
+async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string | null }[]> {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Tideline/1.0 RSS Reader' },
@@ -84,9 +110,8 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
     if (!res.ok) return []
     const xml = await res.text()
 
-const items: { title: string; link: string; published_at: string | null }[] = []
-  const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
-    // Also handle Atom <entry> tags
+    const items: { title: string; link: string; published_at: string | null }[] = []
+    const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
     const entryRegex = /<entry[^>]*>([\s\S]*?)<\/entry>/gi
     let match
 
@@ -105,9 +130,14 @@ const items: { title: string; link: string; published_at: string | null }[] = []
 
         if (title && link) {
           items.push({
-            title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#038;/g, '&').replace(/&#8217;/g, "'").replace(/&#8216;/g, "'").replace(/&#8220;/g, '"').replace(/&#8221;/g, '"').replace(/&#8211;/g, '–').replace(/&#8212;/g, '—').replace(/&nbsp;/g, ' ').replace(/&hellip;/g, '…').replace(/<[^>]+>/g, '').trim(),
+            title: title
+              .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+              .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#038;/g, '&')
+              .replace(/&#8217;/g, "'").replace(/&#8216;/g, "'").replace(/&#8220;/g, '"')
+              .replace(/&#8221;/g, '"').replace(/&#8211;/g, '-').replace(/&#8212;/g, '-')
+              .replace(/&nbsp;/g, ' ').replace(/&hellip;/g, '...').replace(/<[^>]+>/g, '').trim(),
             link: link.replace(/&amp;/g, '&'),
-published_at: pubDate ? new Date(pubDate).toISOString() : null,
+            published_at: pubDate ? new Date(pubDate).toISOString() : null,
           })
         }
       }
@@ -132,25 +162,44 @@ export async function GET(request: Request) {
   let totalSkipped = 0
   const errors: string[] = []
 
+  const oceanKeywords = [
+    'ocean', 'marine', 'sea ', 'seas', 'coral', 'fish', 'whale', 'shark', 'trawl',
+    'fishing', 'coastal', 'reef', 'dolphin', 'plastic', 'pollution', 'climate', 'carbon',
+    'arctic', 'antarctic', 'shipping', 'vessel', 'aquaculture', 'mangrove', 'kelp',
+    'seagrass', 'deep-sea', 'tuna', 'salmon', 'bluefin', 'IUU', 'CITES', 'ISA', 'IMO',
+    'NOAA', 'seabed', 'tidal', 'plankton', 'algae', 'cetacean', 'dugong', 'manatee',
+    'walrus', 'seal ', 'seals', 'otter', 'pelican', 'albatross', 'seabird', 'bycatch',
+    'overfishing', 'stock', 'quota', 'MPA', 'maritime', 'offshore', 'trawling',
+  ]
+
   for (const source of RSS_SOURCES) {
     const items = await parseRSSFeed(source.rss)
 
     for (const item of items) {
+      // Skip articles with no pub date
+      if (!item.published_at) {
+        totalSkipped++
+        continue
+      }
+
       // Skip articles older than 60 days
       const pubDate = new Date(item.published_at)
       const cutoff = new Date()
       cutoff.setDate(cutoff.getDate() - 60)
-if (!item.published_at || pubDate < cutoff) {        totalSkipped++
+      if (pubDate < cutoff) {
+        totalSkipped++
         continue
       }
 
-      // Skip stories with no ocean/marine relevance
-      const oceanKeywords = ['ocean', 'marine', 'sea ', 'seas', 'coral', 'fish', 'whale', 'shark', 'trawl', 'fishing', 'coastal', 'reef', 'dolphin', 'plastic', 'pollution', 'climate', 'carbon', 'arctic', 'antarctic', 'shipping', 'vessel', 'aquaculture', 'mangrove', 'kelp', 'seagrass', 'deep-sea', 'tuna', 'salmon', 'bluefin', 'IUU', 'CITES', 'ISA', 'IMO', 'NOAA', 'seabed', 'tidal', 'tsunami', 'plankton', 'algae', 'cetacean', 'dugong', 'manatee', 'walrus', 'seal ', 'seals', 'otter', 'pelican', 'albatross', 'seabird']
-      const titleLower = item.title.toLowerCase()
-      const isRelevant = oceanKeywords.some(kw => titleLower.includes(kw.toLowerCase()))
-      if (!isRelevant) {
-        totalSkipped++
-        continue
+      // Skip non-ocean stories from general sources
+      const isDedicated = OCEAN_DEDICATED_SOURCES.has(source.name)
+      if (!isDedicated) {
+        const titleLower = item.title.toLowerCase()
+        const isRelevant = oceanKeywords.some(kw => titleLower.includes(kw.toLowerCase()))
+        if (!isRelevant) {
+          totalSkipped++
+          continue
+        }
       }
 
       const { error } = await supabase
@@ -188,5 +237,3 @@ if (!item.published_at || pubDate < cutoff) {        totalSkipped++
     timestamp: new Date().toISOString(),
   })
 }
-
-
