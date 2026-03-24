@@ -73,13 +73,6 @@ const TIERS = [
 
 const ALL_TOPICS = TIERS.flatMap(t => t.topics);
 
-const FREE_EMAIL_DOMAINS = ["gmail", "hotmail", "yahoo", "outlook", "icloud", "aol", "protonmail", "live", "msn"];
-
-function isProfessionalEmail(email: string): boolean {
-  const domain = email.split("@")[1]?.split(".")[0]?.toLowerCase();
-  return !FREE_EMAIL_DOMAINS.includes(domain || "");
-}
-
 function selectedTopicSummary(topics: Set<string>): string {
   if (topics.size === 0) return "All intelligence areas";
   const names = ALL_TOPICS.filter(t => topics.has(t.id)).map(t => t.name);
@@ -106,10 +99,6 @@ export default function StartPage() {
     e.preventDefault();
     if (!email.includes("@") || !email.includes(".")) {
       setEmailError("Please enter a valid email address.");
-      return;
-    }
-    if (!isProfessionalEmail(email)) {
-      setEmailError("Please use a professional email address. Tideline is a professional tool.");
       return;
     }
     setEmailError("");
@@ -247,13 +236,10 @@ export default function StartPage() {
             )}
             <form onSubmit={handleEmailSubmit}>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>Professional email address</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@organisation.com"
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>Email address</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com"
                   style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${emailError ? "#ef4444" : BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE }} />
-                {emailError
-                  ? <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{emailError}</p>
-                  : <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 7, fontFamily: SANS }}>We don't accept Gmail, Hotmail or Yahoo addresses. Tideline is a professional tool.</p>
-                }
+                {emailError && <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{emailError}</p>}
               </div>
               <button type="submit" disabled={submitting}
                 style={{ width: "100%", padding: "14px", background: submitting ? "#94a3b8" : BLUE, border: "none", color: WHITE, fontSize: 15, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", borderRadius: 3, fontFamily: SANS }}>

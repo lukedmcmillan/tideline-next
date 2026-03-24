@@ -101,7 +101,7 @@ function LoginForm() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="you@organisation.com"
+                  placeholder="you@example.com"
                   required
                   style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${error ? "#ef4444" : BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE, color: NAVY }}
                 />

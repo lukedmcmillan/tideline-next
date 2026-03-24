@@ -15,8 +15,6 @@ const MUTED = "#64748b";
 const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 const SERIF = "Georgia, 'Times New Roman', serif";
 
-const FREE_EMAIL_DOMAINS = ["gmail", "hotmail", "yahoo", "outlook", "icloud", "aol", "protonmail", "live", "msn"];
-
 function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
@@ -33,12 +31,6 @@ function CheckoutForm() {
 
     if (!email.includes("@") || !email.includes(".")) {
       setError("Please enter a valid email address.");
-      return;
-    }
-
-    const domain = email.split("@")[1]?.split(".")[0]?.toLowerCase();
-    if (FREE_EMAIL_DOMAINS.includes(domain || "")) {
-      setError("Please use a professional email address.");
       return;
     }
 
@@ -106,14 +98,14 @@ function CheckoutForm() {
     <form onSubmit={handleSubmit}>
       <div style={{ marginBottom: 24 }}>
         <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-          Professional email address
+          Email address
         </label>
         <input
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
-          placeholder="you@organisation.com"
+          placeholder="you@example.com"
           style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE }}
         />
       </div>
