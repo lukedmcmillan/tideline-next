@@ -13,13 +13,6 @@ const TEXT_TER = "#9ca3af";
 const SANS  = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 const SERIF = "Georgia, serif";
 
-const FREE_DOMAINS = ["gmail", "hotmail", "yahoo", "outlook", "icloud", "aol", "protonmail", "live", "msn"];
-
-function isProfessional(email: string): boolean {
-  const domain = email.split("@")[1]?.split(".")[0]?.toLowerCase();
-  return !FREE_DOMAINS.includes(domain || "");
-}
-
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -103,7 +96,6 @@ function LoginForm() {
                 />
                 {error
                   ? <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{error}</p>
-                  : <p style={{ fontSize: 12, color: TEXT_TER, marginTop: 7, fontFamily: SANS }}>We don't accept Gmail, Hotmail or Yahoo addresses.</p>
                 }
               </div>
 
