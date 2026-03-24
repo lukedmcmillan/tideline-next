@@ -282,25 +282,22 @@ export default function Home() {
                 <img src={LUKE_PHOTO} alt="Luke McMillan" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: NAVY, fontFamily: SERIF, marginBottom: 4 }}>Luke McMillan</div>
-              <div style={{ fontSize: 12, color: BLUE, fontWeight: 600, fontFamily: SANS }}>Founder, Tideline</div>
+              <div style={{ fontSize: 12, color: BLUE, fontWeight: 600, fontFamily: SANS }}>Head of Hunting &amp; Captivity, WDC · Ocean journalist, The Guardian, BBC Wildlife, Oceanographic Magazine · Founder, Ocean Rising, read across 100+ countries</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: BLUE, marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontFamily: SANS }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: BLUE, marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontFamily: SANS }}>
                 <span style={{ display: "inline-block", width: 28, height: 2, background: BLUE }} />
-                Built by someone inside the sector
+                The journalist broadcasters call when whaling stories break
               </div>
               <div style={{ fontSize: 64, fontFamily: SERIF, color: BLUE_LIGHT, lineHeight: 0.6, marginBottom: 16, userSelect: "none" }}>&ldquo;</div>
               <blockquote style={{ fontSize: "clamp(20px,3.5vw,28px)", fontWeight: 700, color: NAVY, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.25, margin: "0 0 24px", padding: 0, border: "none" }}>
-                I spent years losing hours every morning finding the ocean stories that mattered. Tideline is the tool I needed.
+                The intelligence I needed didn&apos;t exist. So I built it.
               </blockquote>
               <p style={{ fontSize: 15, color: TEXT_PRI, lineHeight: 1.8, marginBottom: 14, fontFamily: SANS }}>
-                I&apos;ve spent two decades inside ocean conservation — from coral reef programmes in Madagascar and whale conservation in the Canary Islands to running the anti-whaling and captivity campaigns at the Whale and Dolphin Conservation charity. When whaling stories break, I&apos;m the person broadcasters call.
+                I&apos;ve spent two decades inside ocean conservation — coral reef programmes in Madagascar, whale research in the Canary Islands, running the anti-whaling and captivity campaigns at WDC. When a whaling story breaks, broadcasters call me.
               </p>
-              <p style={{ fontSize: 15, color: TEXT_PRI, lineHeight: 1.8, marginBottom: 14, fontFamily: SANS }}>
-                As an ocean journalist writing for The Guardian, BBC Wildlife, and Oceanographic Magazine, I track dozens of regulatory issues simultaneously. The intelligence I needed didn&apos;t exist. So I built it.
-              </p>
-              <p style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.75, marginBottom: 28, fontStyle: "italic", fontFamily: SANS }}>
-                Tideline goes beyond mainstream news — pulling from regulatory documents, scientific preprints, NGO briefings, parliamentary records, and institutional databases that most professionals never have time to monitor themselves.
+              <p style={{ fontSize: 15, color: TEXT_PRI, lineHeight: 1.8, marginBottom: 28, fontFamily: SANS }}>
+                As an ocean journalist for The Guardian, BBC Wildlife, and Oceanographic Magazine, I track regulatory decisions, scientific preprints, and parliamentary records across a dozen issue areas simultaneously. What I needed didn&apos;t exist. So I built Tideline — and now it lands in your inbox before 7am.
               </p>
               <a href="/start" style={{ padding: "12px 28px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS, display: "inline-block" }}>Read today&apos;s brief →</a>
             </div>
