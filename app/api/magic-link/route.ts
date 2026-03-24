@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     }
 
     // Send email via Resend
-    const url = `${process.env.NEXTAUTH_URL}/api/auth/verify?token=${token}&email=${encodeURIComponent(email)}`
+    const url = `${process.env.NEXTAUTH_URL}/api/verify?token=${token}&email=${encodeURIComponent(email)}`
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
