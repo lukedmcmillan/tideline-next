@@ -212,8 +212,11 @@ export default function Home() {
                 Stop searching.<br />
                 <span style={{ color: BLUE }}>Start knowing.</span>
               </h1>
+              <p style={{ fontSize: "clamp(15px, 2.5vw, 17px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: 4, maxWidth: 460, fontFamily: SANS }}>
+                Everything significant happening in the ocean.
+              </p>
               <p style={{ fontSize: "clamp(15px, 2.5vw, 17px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: 12, maxWidth: 460, fontFamily: SANS }}>
-                Everything significant happening in the ocean. Curated by an expert. Waiting for you.
+                Expertly curated. Waiting for you.
               </p>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.65, marginBottom: 36, maxWidth: 440, fontFamily: SANS }}>
                 Built for NGO policy teams, ocean investors, corporate ESG analysts, and journalists who act on information rather than just consume it.
@@ -428,8 +431,11 @@ export default function Home() {
           <h2 style={{ fontSize: "clamp(32px,6vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 20px" }}>
             The ocean doesn&apos;t stop.<br />Neither does Tideline.
           </h2>
+          <p style={{ fontSize: "clamp(15px,2.5vw,17px)", color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 4, fontFamily: SANS }}>
+            Everything significant happening in the ocean.
+          </p>
           <p style={{ fontSize: "clamp(15px,2.5vw,17px)", color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 36, fontFamily: SANS }}>
-            Everything significant happening in the ocean. Curated by an expert. Waiting for you.
+            Expertly curated. Waiting for you.
           </p>
           <a href="/start" style={{ padding: "14px 32px", background: BLUE, color: WHITE, fontSize: 15, fontWeight: 700, borderRadius: 2, fontFamily: SANS, display: "inline-block" }}>Start reading free</a>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: SANS, marginTop: 16 }}>14 days free · No credit card required</div>
