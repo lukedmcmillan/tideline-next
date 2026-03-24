@@ -153,6 +153,10 @@ export default function TidelineFeed() {
     fetch("/api/subscription-status")
       .then(r => r.json())
       .then(data => {
+        if (data.needsOnboarding) {
+          window.location.href = "/onboarding";
+          return;
+        }
         setSubStatus(data.status);
         if (data.trialEnd) {
           const days = Math.ceil((new Date(data.trialEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24));

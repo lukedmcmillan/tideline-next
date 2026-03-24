@@ -36,10 +36,11 @@ export async function GET(request: Request) {
   // Create user record on first login (skip if already exists)
   const { data: existingUser } = await supabase
     .from('users')
-    .select('id')
+    .select('id, topics')
     .eq('email', link.email)
     .single()
 
+  let needsOnboarding = true
   if (!existingUser) {
     await supabase.from('users').insert({
       email: link.email,
@@ -48,6 +49,8 @@ export async function GET(request: Request) {
       topics: [],
       timezone: 'Europe/London',
     })
+  } else {
+    needsOnboarding = !existingUser.topics || (Array.isArray(existingUser.topics) && existingUser.topics.length === 0)
   }
 
   const session = Buffer.from(JSON.stringify({
@@ -56,7 +59,9 @@ export async function GET(request: Request) {
   })).toString('base64')
 
   const callbackUrl = searchParams.get('callbackUrl')
-  const redirectTo = callbackUrl && callbackUrl.startsWith('/') ? callbackUrl : '/platform/feed'
+  const redirectTo = needsOnboarding
+    ? '/onboarding'
+    : (callbackUrl && callbackUrl.startsWith('/') ? callbackUrl : '/platform/feed')
   const response = NextResponse.redirect(new URL(redirectTo, request.url))
   response.cookies.set('tideline_session', session, {
     httpOnly: true,
