@@ -31,7 +31,6 @@ const RSS_SOURCES = [
   { name: "Shark Trust", rss: "https://www.sharktrust.org/feed", topic: "sharks", type: "ngo" },
   { name: "WCS Marine", rss: "https://newsroom.wcs.org/rss.aspx", topic: "all", type: "ngo" },
   { name: "Plastic Soup Foundation", rss: "https://www.plasticsoupfoundation.org/en/feed/", topic: "pollution", type: "ngo" },
-  { name: "Whale and Dolphin Conservation", rss: "https://uk.whales.org/feed/", topic: "whales", type: "ngo" },
   { name: "Sea Turtle Conservancy", rss: "https://conserveturtles.org/feed/", topic: "turtles", type: "ngo" },
   { name: "Reef Check", rss: "https://www.reefcheck.org/feed/", topic: "coral", type: "ngo" },
   { name: "DSCC", rss: "https://www.savethehighseas.org/feed/", topic: "dsm", type: "ngo" },
@@ -66,7 +65,8 @@ const RSS_SOURCES = [
 
   // MEDIA
   { name: "Mongabay Oceans", rss: "https://news.mongabay.com/oceans/feed/", topic: "all", type: "media" },
-  { name: "The Guardian Environment", rss: "https://www.theguardian.com/environment/rss", topic: "all", type: "media" },
+  { name: "Guardian Oceans", rss: "https://www.theguardian.com/environment/oceans/rss", topic: "governance", type: "media" },
+  { name: "Guardian Fishing", rss: "https://www.theguardian.com/environment/fishing/rss", topic: "fisheries", type: "media" },
   { name: "Hakai Magazine", rss: "https://www.hakaimagazine.com/feed/", topic: "all", type: "media" },
   { name: "The Fish Site", rss: "https://thefishsite.com/feed", topic: "aquaculture", type: "media" },
   { name: "Undercurrent News", rss: "https://www.undercurrentnews.com/feed/", topic: "fisheries", type: "media" },
@@ -89,7 +89,7 @@ const RSS_SOURCES = [
 ]
 
 const OCEAN_DEDICATED_SOURCES = new Set([
-  'Whale and Dolphin Conservation', 'Oceana', 'Ocean Conservancy', 'Sea Shepherd',
+  'Oceana', 'Ocean Conservancy', 'Sea Shepherd',
   'Shark Trust', 'Sea Turtle Conservancy', 'Reef Check', 'Blue Marine Foundation',
   'Mission Blue', 'Plastic Soup Foundation', 'The Ocean Foundation', 'Surfrider Foundation',
   'Global Fishing Watch', 'EDF Oceans', '5 Gyres', 'MSC', 'Marine Conservation Society',
