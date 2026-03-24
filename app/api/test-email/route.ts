@@ -9,7 +9,7 @@ export async function GET() {
     },
     body: JSON.stringify({
       from: 'Tideline <noreply@thetideline.co>',
-      to: 'luke.mcmillan@whales.org',
+      to: 'lukedmcmillan@hotmail.com',
       subject: 'Tideline email test',
       html: '<p>This is a test email from Tideline.</p>',
     }),
