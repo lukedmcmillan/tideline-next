@@ -139,12 +139,27 @@ export default function TidelineFeed() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [mobile, setMobile] = useState(false);
+  const [subStatus, setSubStatus] = useState<string | null>(null);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
     const c = () => setMobile(window.innerWidth < 768);
     c();
     window.addEventListener("resize", c);
     return () => window.removeEventListener("resize", c);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/subscription-status")
+      .then(r => r.json())
+      .then(data => {
+        setSubStatus(data.status);
+        if (data.trialEnd) {
+          const days = Math.ceil((new Date(data.trialEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          setTrialDaysLeft(days);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const fetchStories = async () => {
@@ -190,6 +205,26 @@ export default function TidelineFeed() {
   return (
     <>
       <style>{CSS}</style>
+      {/* Subscription banner */}
+      {subStatus === "trialing" && trialDaysLeft !== null && trialDaysLeft <= 5 && (
+        <div style={{ background: "#fffbeb", borderBottom: "1px solid #fde68a", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontFamily: "system-ui,-apple-system,sans-serif", fontSize: 13 }}>
+          <span style={{ color: "#92400e" }}>Your trial ends in {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""}.</span>
+          <a href="/subscribe" style={{ color: "#1d4ed8", fontWeight: 600, textDecoration: "underline" }}>Subscribe to keep access →</a>
+        </div>
+      )}
+      {subStatus === "canceled" && (
+        <div style={{ background: "#fef2f2", borderBottom: "1px solid #fecaca", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontFamily: "system-ui,-apple-system,sans-serif", fontSize: 13 }}>
+          <span style={{ color: "#991b1b" }}>Your trial has ended.</span>
+          <a href="/subscribe" style={{ color: "#1d4ed8", fontWeight: 600, textDecoration: "underline" }}>Subscribe to continue reading →</a>
+        </div>
+      )}
+      {subStatus === "past_due" && (
+        <div style={{ background: "#fff7ed", borderBottom: "1px solid #fed7aa", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontFamily: "system-ui,-apple-system,sans-serif", fontSize: 13 }}>
+          <span style={{ color: "#9a3412" }}>Your payment failed. Please update your card to keep access.</span>
+          <a href="/subscribe" style={{ color: "#1d4ed8", fontWeight: 600, textDecoration: "underline" }}>Update payment →</a>
+        </div>
+      )}
+
       <div style={{ width: "100%", minHeight: "100vh", background: "#f2ede4", display: "flex" }}>
 
         {/* Left sidebar */}
