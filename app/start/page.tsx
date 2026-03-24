@@ -239,7 +239,10 @@ export default function StartPage() {
                 <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>Email address</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com"
                   style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${emailError ? "#ef4444" : BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE }} />
-                {emailError && <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{emailError}</p>}
+                {emailError
+                  ? <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{emailError}</p>
+                  : <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 7, fontFamily: SANS }}>Most subscribers use their work email address.</p>
+                }
               </div>
               <button type="submit" disabled={submitting}
                 style={{ width: "100%", padding: "14px", background: submitting ? "#94a3b8" : BLUE, border: "none", color: WHITE, fontSize: 15, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", borderRadius: 3, fontFamily: SANS }}>
