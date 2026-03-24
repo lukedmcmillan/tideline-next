@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import crypto from 'crypto'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,7 +42,6 @@ export async function GET(request: Request) {
 
   if (!existingUser) {
     await supabase.from('users').insert({
-      id: crypto.randomUUID(),
       email: link.email,
       subscription_status: 'trial',
       trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),

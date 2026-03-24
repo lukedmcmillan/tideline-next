@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-02-25.clover",
@@ -48,7 +47,6 @@ async function syncUserStatus(
   status: string,
   stripeSubscriptionId?: string
 ) {
-  // Try update first
   const { data: existing } = await supabase
     .from("users")
     .select("id")
@@ -56,27 +54,27 @@ async function syncUserStatus(
     .single();
 
   console.log(`[webhook] syncUserStatus: email=${email}, status=${status}, existing=${!!existing}`);
+
   if (existing) {
     const updateData: Record<string, unknown> = { subscription_status: status };
     if (stripeSubscriptionId) updateData.stripe_subscription_id = stripeSubscriptionId;
     const { error } = await supabase.from("users").update(updateData).eq("email", email);
     if (error) console.error("[webhook] users update error:", error.message);
-    else console.log("[webhook] users updated successfully");
+    else console.log("[webhook] users updated");
   } else {
-    // Create user — they may have subscribed before logging in
-    const insertData = {
-      id: crypto.randomUUID(),
+    // Insert without id — relies on database default gen_random_uuid()
+    // Run this SQL in Supabase if not already done:
+    // ALTER TABLE public.users ALTER COLUMN id SET DEFAULT gen_random_uuid();
+    const { error } = await supabase.from("users").insert({
       email,
       subscription_status: status,
       stripe_subscription_id: stripeSubscriptionId ?? null,
       trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       topics: [],
       timezone: "Europe/London",
-    };
-    console.log("[webhook] inserting user:", JSON.stringify(insertData));
-    const { error } = await supabase.from("users").insert(insertData);
-    if (error) console.error("[webhook] users insert error:", error.message, error.details, error.hint);
-    else console.log("[webhook] users inserted successfully");
+    });
+    if (error) console.error("[webhook] users insert error:", error.message, error.details);
+    else console.log("[webhook] users inserted");
   }
 }
 
