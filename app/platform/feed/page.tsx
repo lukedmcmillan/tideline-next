@@ -205,23 +205,39 @@ export default function TidelineFeed() {
   return (
     <>
       <style>{CSS}</style>
-      {/* Subscription banner */}
-      {subStatus === "trialing" && trialDaysLeft !== null && trialDaysLeft <= 5 && (
+      {/* Trial expiring banner (soft) */}
+      {subStatus === "trialing" && trialDaysLeft !== null && trialDaysLeft <= 5 && trialDaysLeft > 0 && (
         <div style={{ background: "#fffbeb", borderBottom: "1px solid #fde68a", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontFamily: "system-ui,-apple-system,sans-serif", fontSize: 13 }}>
           <span style={{ color: "#92400e" }}>Your trial ends in {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""}.</span>
           <a href="/subscribe" style={{ color: "#1d4ed8", fontWeight: 600, textDecoration: "underline" }}>Subscribe to keep access →</a>
         </div>
       )}
-      {subStatus === "canceled" && (
-        <div style={{ background: "#fef2f2", borderBottom: "1px solid #fecaca", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontFamily: "system-ui,-apple-system,sans-serif", fontSize: 13 }}>
-          <span style={{ color: "#991b1b" }}>Your trial has ended.</span>
-          <a href="/subscribe" style={{ color: "#1d4ed8", fontWeight: 600, textDecoration: "underline" }}>Subscribe to continue reading →</a>
-        </div>
-      )}
-      {subStatus === "past_due" && (
-        <div style={{ background: "#fff7ed", borderBottom: "1px solid #fed7aa", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontFamily: "system-ui,-apple-system,sans-serif", fontSize: 13 }}>
-          <span style={{ color: "#9a3412" }}>Your payment failed. Please update your card to keep access.</span>
-          <a href="/subscribe" style={{ color: "#1d4ed8", fontWeight: 600, textDecoration: "underline" }}>Update payment →</a>
+
+      {/* Paywall (hard gate) */}
+      {(subStatus === "canceled" || subStatus === "past_due" || subStatus === "none") && subStatus !== null && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(10,22,40,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ maxWidth: 480, width: "100%", background: "#ffffff", border: "1px solid #e2e8f0", borderTop: "4px solid #1d6fa4", padding: "48px 40px", textAlign: "center" as const }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#1d6fa4", marginBottom: 16, fontFamily: "system-ui,-apple-system,sans-serif" }}>Tideline Professional</div>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: "#0a1628", fontFamily: "Georgia,serif", marginBottom: 14, letterSpacing: "-0.02em", lineHeight: 1.25 }}>
+              {subStatus === "past_due" ? "Your payment failed." : "Your trial has ended."}
+            </h2>
+            <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7, marginBottom: 8, fontFamily: "system-ui,-apple-system,sans-serif" }}>
+              Subscribe to unlock full access to Tideline's ocean intelligence platform.
+            </p>
+            <ul style={{ textAlign: "left" as const, fontSize: 14, color: "#0a1628", lineHeight: 1.8, margin: "20px auto 28px", maxWidth: 320, fontFamily: "system-ui,-apple-system,sans-serif", listStyle: "none", padding: 0 }}>
+              {["All 55 intelligence topics", "Daily morning brief before 7am", "Live regulatory trackers", "AI-powered article summaries", "Breaking incident alerts"].map(f => (
+                <li key={f} style={{ display: "flex", gap: 10, marginBottom: 4 }}>
+                  <span style={{ color: "#1d6fa4", fontWeight: 700, flexShrink: 0 }}>✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <a href="/subscribe" style={{ display: "block", padding: "14px", background: "#1d6fa4", color: "#ffffff", fontSize: 15, fontWeight: 700, borderRadius: 3, fontFamily: "system-ui,-apple-system,sans-serif", textDecoration: "none", marginBottom: 12 }}>
+              {subStatus === "past_due" ? "Update payment — £25/month" : "Subscribe now — £25/month"}
+            </a>
+            <p style={{ fontSize: 12, color: "#94a3b8", fontFamily: "system-ui,-apple-system,sans-serif", lineHeight: 1.6 }}>
+              {subStatus === "past_due" ? "Update your card to restore access instantly." : "14-day free trial. Cancel anytime."}
+            </p>
+          </div>
         </div>
       )}
 

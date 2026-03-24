@@ -42,6 +42,37 @@ async function upsertSubscription(
   );
 }
 
+async function syncUserStatus(
+  email: string,
+  status: string,
+  stripeSubscriptionId?: string
+) {
+  // Try update first
+  const { data: existing } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .single();
+
+  if (existing) {
+    const updateData: Record<string, unknown> = { subscription_status: status };
+    if (stripeSubscriptionId) updateData.stripe_subscription_id = stripeSubscriptionId;
+    const { error } = await supabase.from("users").update(updateData).eq("email", email);
+    if (error) console.error("[webhook] users update error:", error.message);
+  } else {
+    // Create user — they may have subscribed before logging in
+    const { error } = await supabase.from("users").insert({
+      email,
+      subscription_status: status,
+      stripe_subscription_id: stripeSubscriptionId ?? null,
+      trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      topics: [],
+      timezone: "Europe/London",
+    });
+    if (error) console.error("[webhook] users insert error:", error.message);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -62,21 +93,52 @@ export async function POST(req: NextRequest) {
   }
 
   switch (event.type) {
+    // ── Checkout completed ──────────────────────────────────────────────
+    case "checkout.session.completed": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const email = session.customer_details?.email;
+      const subscriptionId = session.subscription as string | null;
+
+      if (email) {
+        await syncUserStatus(email, "active", subscriptionId ?? undefined);
+
+        // Also sync the subscriptions table if there's a subscription
+        if (subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          await upsertSubscription(email, subscription);
+        }
+      }
+      break;
+    }
+
+    // ── Subscription created or updated ─────────────────────────────────
     case "customer.subscription.created":
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
       const email = await getCustomerEmail(subscription.customer as string);
-      if (email) await upsertSubscription(email, subscription);
+      if (email) {
+        await upsertSubscription(email, subscription);
+        await syncUserStatus(
+          email,
+          subscription.status === "active" || subscription.status === "trialing" ? subscription.status : "cancelled",
+          subscription.id
+        );
+      }
       break;
     }
 
+    // ── Subscription deleted ────────────────────────────────────────────
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
       const email = await getCustomerEmail(subscription.customer as string);
-      if (email) await upsertSubscription(email, subscription, "canceled");
+      if (email) {
+        await upsertSubscription(email, subscription, "canceled");
+        await syncUserStatus(email, "cancelled");
+      }
       break;
     }
 
+    // ── Payment failed ──────────────────────────────────────────────────
     case "invoice.payment_failed": {
       const invoice = event.data.object as Stripe.Invoice;
       const subDetail = invoice.parent?.subscription_details;
@@ -86,7 +148,10 @@ export async function POST(req: NextRequest) {
           : subDetail.subscription.id;
         const subscription = await stripe.subscriptions.retrieve(subId);
         const email = await getCustomerEmail(subscription.customer as string);
-        if (email) await upsertSubscription(email, subscription, "past_due");
+        if (email) {
+          await upsertSubscription(email, subscription, "past_due");
+          await syncUserStatus(email, "cancelled");
+        }
       }
       break;
     }

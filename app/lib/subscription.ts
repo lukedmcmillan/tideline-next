@@ -12,7 +12,29 @@ export async function getSubscriptionStatus(email: string): Promise<{
   trialEnd: string | null;
   currentPeriodEnd: string | null;
 }> {
-  // Check the subscriptions table first (Stripe-backed)
+  // 1. Check users table first (primary source after webhook sync)
+  const { data: user } = await supabase
+    .from("users")
+    .select("subscription_status, trial_ends_at")
+    .eq("email", email)
+    .single();
+
+  if (user) {
+    if (user.subscription_status === "active") {
+      return { status: "active", trialEnd: null, currentPeriodEnd: null };
+    }
+    if (user.subscription_status === "trial" && user.trial_ends_at) {
+      if (new Date(user.trial_ends_at) > new Date()) {
+        return { status: "trialing", trialEnd: user.trial_ends_at, currentPeriodEnd: null };
+      }
+      return { status: "canceled", trialEnd: user.trial_ends_at, currentPeriodEnd: null };
+    }
+    if (user.subscription_status === "cancelled") {
+      return { status: "canceled", trialEnd: user.trial_ends_at, currentPeriodEnd: null };
+    }
+  }
+
+  // 2. Check subscriptions table (Stripe-backed)
   const { data: sub } = await supabase
     .from("subscriptions")
     .select("status, trial_end, current_period_end")
@@ -27,7 +49,7 @@ export async function getSubscriptionStatus(email: string): Promise<{
     };
   }
 
-  // Fall back to trial_signups table (no-card trial)
+  // 3. Fall back to trial_signups table (no-card trial)
   const { data: trial } = await supabase
     .from("trial_signups")
     .select("signed_up_at")
