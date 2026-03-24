@@ -19,6 +19,8 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `/` — marketing homepage (large single file, ~800 lines)
 - `/start` — trial signup flow (topic selection → email)
 - `/login` — email magic link sign-in
+- `/onboarding` — two-step onboarding (topic selection → timezone), shown on first login
+- `/subscribe` — Stripe Elements checkout page
 - `/platform/feed` — main feed with topic sidebar and story list
 - `/platform/story/[id]` — individual story detail with AI summaries
 
@@ -26,6 +28,9 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `auth/[...nextauth]` — NextAuth handlers
 - `trial-signup` — stores signups in Supabase `trial_signups` table
 - `subscribe` — Stripe subscription creation with trial period
+- `onboarding` — saves topic selection + timezone to `public.users`
+- `subscription-status` — returns subscription status + `needsOnboarding` flag from session cookie
+- `stripe-webhook` — handles Stripe lifecycle events, syncs to `subscriptions` + `public.users` tables
 - `stories` — fetches from Supabase `stories` table (supports id lookup, topic filter, pagination)
 - `summarise` — on-demand Claude-powered article summarization (fetches via Jina or direct, caches in DB)
 - `cron/fetch-feeds` — hourly RSS aggregation from ~89 sources, bearer token auth via `CRON_SECRET`
@@ -33,7 +38,9 @@ Tideline — a professional ocean intelligence platform that curates and summari
 
 **Auth**: Custom magic link system (`/api/magic-link` + `/api/verify`) sets a `tideline_session` cookie. NextAuth v4 also configured in `auth.ts` but the custom system is primary. Middleware protects `/platform/*` by checking session cookies.
 
-**Database**: Supabase. Key tables: `stories` (aggregated articles + summaries), `trial_signups`, `subscriptions` (Stripe subscription state), `magic_links`, plus NextAuth tables.
+**Database**: Supabase (three schemas: `public`, `auth`, `next_auth`). Key tables: `public.users` (subscription status, topics, timezone, stripe IDs), `public.stories`, `public.trial_signups`, `public.subscriptions` (Stripe state), `public.magic_links`. NextAuth uses `next_auth.users` for sessions — separate from `public.users`.
+
+**Onboarding**: On first login, users with empty topics in `public.users` are redirected to `/onboarding` (31 topic cards, min 3 required, then timezone). The verify route handles this redirect server-side; the feed page has a client-side safety net via the `needsOnboarding` flag from `/api/subscription-status`.
 
 **External Services**: Supabase (DB + auth adapter), Resend (email), Claude API (summarization via `claude-sonnet-4-20250514`), Stripe (payments), Jina (article scraping fallback), Vercel (hosting + cron).
 
