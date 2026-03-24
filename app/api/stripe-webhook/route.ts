@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-02-25.clover",
@@ -64,6 +65,7 @@ async function syncUserStatus(
   } else {
     // Create user — they may have subscribed before logging in
     const insertData = {
+      id: crypto.randomUUID(),
       email,
       subscription_status: status,
       stripe_subscription_id: stripeSubscriptionId ?? null,

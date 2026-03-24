@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,17 +34,23 @@ export async function GET(request: Request) {
 
   await supabase.from('magic_links').update({ used: true }).eq('id', link.id)
 
-  // Create user record on first login
-  await supabase.from('users').upsert(
-    {
+  // Create user record on first login (skip if already exists)
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', link.email)
+    .single()
+
+  if (!existingUser) {
+    await supabase.from('users').insert({
+      id: crypto.randomUUID(),
       email: link.email,
       subscription_status: 'trial',
       trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       topics: [],
       timezone: 'Europe/London',
-    },
-    { onConflict: 'email', ignoreDuplicates: true }
-  )
+    })
+  }
 
   const session = Buffer.from(JSON.stringify({
     email: link.email,
