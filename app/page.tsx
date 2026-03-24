@@ -79,13 +79,14 @@ function MobileNav() {
             { label: "Who It's For", href: "/start" },
             { label: "Trackers", href: "/start" },
             { label: "Pricing", href: "/#pricing" },
+            { label: "Sign in", href: "/login" },
           ].map(item => (
             <a key={item.label} href={item.href} onClick={() => setOpen(false)} style={{ display: "block", padding: "13px 24px", color: "rgba(255,255,255,0.75)", fontSize: 15, fontFamily: SANS, textDecoration: "none", borderBottom: `1px solid rgba(255,255,255,0.05)` }}>
               {item.label}
             </a>
           ))}
           <div style={{ padding: "16px 24px 0" }}>
-            <a href="/start" style={{ display: "block", padding: "13px", background: BLUE, color: WHITE, fontSize: 14, fontWeight: 700, borderRadius: 2, fontFamily: SANS, textAlign: "center", textDecoration: "none" }}>Try Pro free →</a>
+            <a href="/subscribe" style={{ display: "block", padding: "13px", background: BLUE, color: WHITE, fontSize: 14, fontWeight: 700, borderRadius: 2, fontFamily: SANS, textAlign: "center", textDecoration: "none" }}>Start free trial →</a>
           </div>
         </div>
       )}
@@ -147,7 +148,8 @@ export default function Home() {
             <a href="/start" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Trackers</a>
             <a href="/#pricing" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Pricing</a>
             <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-            <a href="/start" style={{ padding: "8px 20px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS }}>Try Pro free →</a>
+            <a href="/login" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Sign in</a>
+            <a href="/subscribe" style={{ padding: "8px 20px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS }}>Start free trial →</a>
           </div>
           {/* Mobile hamburger */}
           <div className="nav-mobile" style={{ alignItems: "center" }}>
