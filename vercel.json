@@ -1,1 +1,1 @@
-{"crons":[{"path":"/api/cron/fetch-feeds","schedule":"0 * * * *"}]}
+{"crons":[{"path":"/api/cron/fetch-feeds","schedule":"0 * * * *"},{"path":"/api/cron/harvest-scraped-sources","schedule":"0 5 * * *"}]}

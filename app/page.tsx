@@ -235,6 +235,41 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── TRACKERS ── */}
+      <div style={{ padding: "72px 0", background: OFF_WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
+          <div style={{ marginBottom: 40 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: BLUE, marginBottom: 14, display: "flex", alignItems: "center", gap: 10, fontFamily: SANS }}>
+              <span style={{ display: "inline-block", width: 28, height: 2, background: BLUE }} />
+              Live intelligence indicators
+            </div>
+            <h2 style={{ fontSize: "clamp(26px,4vw,36px)", fontWeight: 700, color: NAVY, fontFamily: SERIF, letterSpacing: "-0.02em", margin: "0 0 10px" }}>Never miss a regulatory shift.</h2>
+            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 500, fontFamily: SANS }}>Tideline tracks the decisions that matter before they make the news.</p>
+          </div>
+          <div className="trackers-grid" style={{ marginBottom: 28 }}>
+            {[
+              { cat: "ISA · Seabed Mining",          title: "Nodule mining code vote",        status: "DEFERRED",  detail: "Next expected: Jul 2026", statusColor: "#e65100" },
+              { cat: "Norway · Whaling & Hunting",   title: "Minke quota 2026",               status: "1,277",     detail: "↑ 12% vs 2025",          statusColor: RED      },
+              { cat: "Global · Marine Protected Areas", title: "Ocean MPAs — global coverage",status: "9.61%",     detail: "Target: 30% by 2030",    statusColor: BLUE     },
+              { cat: "UN · Ocean Governance",         title: "High Seas Treaty",              status: "IN FORCE",  detail: "Since Jan 17, 2026",     statusColor: GREEN    },
+            ].map((card, i) => (
+              <div key={i} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderTop: `3px solid ${card.statusColor}`, padding: "20px 20px" }}>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: TEXT_TER, marginBottom: 6, fontFamily: SANS }}>{card.cat}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: NAVY, marginBottom: 14, fontFamily: SERIF }}>{card.title}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                  <span style={{ fontSize: "clamp(20px,4vw,26px)", fontWeight: 700, color: card.statusColor, fontFamily: MONO }}>{card.status}</span>
+                  <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: SANS }}>{card.detail}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <a href="/start" style={{ padding: "10px 24px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS }}>See all indicators →</a>
+            <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: SANS }}>Updated continuously. Pro subscribers receive instant alerts on status changes.</span>
+          </div>
+        </div>
+      </div>
+
       {/* ── FOUNDER ── */}
       <div style={{ padding: "72px 0", borderBottom: `1px solid ${BORDER}`, background: WHITE }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
@@ -267,41 +302,6 @@ export default function Home() {
               </p>
               <a href="/start" style={{ padding: "12px 28px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS, display: "inline-block" }}>Read today&apos;s brief →</a>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── TRACKERS ── */}
-      <div style={{ padding: "72px 0", background: OFF_WHITE, borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
-          <div style={{ marginBottom: 40 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: BLUE, marginBottom: 14, display: "flex", alignItems: "center", gap: 10, fontFamily: SANS }}>
-              <span style={{ display: "inline-block", width: 28, height: 2, background: BLUE }} />
-              Live intelligence indicators
-            </div>
-            <h2 style={{ fontSize: "clamp(26px,4vw,36px)", fontWeight: 700, color: NAVY, fontFamily: SERIF, letterSpacing: "-0.02em", margin: "0 0 10px" }}>Never miss a regulatory shift.</h2>
-            <p style={{ fontSize: 14, color: TEXT_SEC, margin: 0, maxWidth: 500, fontFamily: SANS }}>Tideline tracks the decisions that matter before they make the news.</p>
-          </div>
-          <div className="trackers-grid" style={{ marginBottom: 28 }}>
-            {[
-              { cat: "ISA · Seabed Mining",          title: "Nodule mining code vote",        status: "DEFERRED",  detail: "Next expected: Jul 2026", statusColor: "#e65100" },
-              { cat: "Norway · Whaling & Hunting",   title: "Minke quota 2026",               status: "1,277",     detail: "↑ 12% vs 2025",          statusColor: RED      },
-              { cat: "Global · Marine Protected Areas", title: "Ocean MPAs — global coverage",status: "9.61%",     detail: "Target: 30% by 2030",    statusColor: BLUE     },
-              { cat: "UN · Ocean Governance",         title: "High Seas Treaty",              status: "IN FORCE",  detail: "Since Jan 17, 2026",     statusColor: GREEN    },
-            ].map((card, i) => (
-              <div key={i} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderTop: `3px solid ${card.statusColor}`, padding: "20px 20px" }}>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: TEXT_TER, marginBottom: 6, fontFamily: SANS }}>{card.cat}</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: NAVY, marginBottom: 14, fontFamily: SERIF }}>{card.title}</div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                  <span style={{ fontSize: "clamp(20px,4vw,26px)", fontWeight: 700, color: card.statusColor, fontFamily: MONO }}>{card.status}</span>
-                  <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: SANS }}>{card.detail}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <a href="/start" style={{ padding: "10px 24px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS }}>See all indicators →</a>
-            <span style={{ fontSize: 12, color: TEXT_SEC, fontFamily: SANS }}>Updated continuously. Pro subscribers receive instant alerts on status changes.</span>
           </div>
         </div>
       </div>
