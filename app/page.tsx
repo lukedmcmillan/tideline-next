@@ -121,7 +121,7 @@ function FAQAccordion() {
         <div key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
           <button
             onClick={() => setOpenIndex(openIndex === i ? null : i)}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: 16 }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: 16, minHeight: 44 }}
           >
             <span style={{ fontSize: "clamp(15px,2.5vw,17px)", fontWeight: 600, color: WHITE, fontFamily: SERIF, lineHeight: 1.4 }}>{faq.q}</span>
             <span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)", flexShrink: 0, transition: "transform 0.2s", transform: openIndex === i ? "rotate(45deg)" : "none" }}>+</span>
@@ -159,8 +159,8 @@ export default function Home() {
 
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr; gap: 40px; }
-          .hero-widget { display: none; }
-          .founder-grid { grid-template-columns: 1fr; gap: 40px; }
+          .hero-widget { display: block; width: 100%; }
+          .founder-grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
           .pricing-grid { grid-template-columns: 1fr; }
         }
 
@@ -169,6 +169,7 @@ export default function Home() {
           .nav-mobile { display: flex !important; }
           .stats-grid { grid-template-columns: repeat(2,1fr); }
           .trackers-grid { grid-template-columns: 1fr; }
+          .hero-widget { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -212,7 +213,7 @@ export default function Home() {
                 <span style={{ color: BLUE }}>Start knowing.</span>
               </h1>
               <p style={{ fontSize: "clamp(15px, 2.5vw, 17px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: 12, maxWidth: 460, fontFamily: SANS }}>
-                Tideline collates every significant ocean story, research report, and regulatory development — globally, daily, before 7am.
+                Everything significant happening in the ocean. Curated by an expert. Waiting for you.
               </p>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.65, marginBottom: 36, maxWidth: 440, fontFamily: SANS }}>
                 Built for NGO policy teams, ocean investors, corporate ESG analysts, and journalists who act on information rather than just consume it.
@@ -417,6 +418,21 @@ export default function Home() {
             {" "}or{" "}
             <a href="mailto:luke@thetideline.co" style={{ color: BLUE, fontWeight: 600, textDecoration: "none" }}>get in touch</a>.
           </p>
+        </div>
+      </div>
+
+      {/* ── FINAL CTA ── */}
+      <div style={{ background: NAVY, padding: "clamp(56px,10vw,96px) 20px", textAlign: "center" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: BLUE, marginBottom: 20, fontFamily: SANS }}>Ocean intelligence platform</div>
+          <h2 style={{ fontSize: "clamp(32px,6vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 20px" }}>
+            The ocean doesn&apos;t stop.<br />Neither does Tideline.
+          </h2>
+          <p style={{ fontSize: "clamp(15px,2.5vw,17px)", color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 36, fontFamily: SANS }}>
+            Everything significant happening in the ocean. Curated by an expert. Waiting for you.
+          </p>
+          <a href="/start" style={{ padding: "14px 32px", background: BLUE, color: WHITE, fontSize: 15, fontWeight: 700, borderRadius: 2, fontFamily: SANS, display: "inline-block" }}>Start reading free</a>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: SANS, marginTop: 16 }}>14 days free · No credit card required</div>
         </div>
       </div>
 
