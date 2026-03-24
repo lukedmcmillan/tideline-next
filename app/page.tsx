@@ -282,22 +282,22 @@ export default function Home() {
                 <img src={LUKE_PHOTO} alt="Luke McMillan" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: NAVY, fontFamily: SERIF, marginBottom: 4 }}>Luke McMillan</div>
-              <div style={{ fontSize: 12, color: BLUE, fontWeight: 600, fontFamily: SANS }}>Head of Hunting &amp; Captivity, WDC · Ocean journalist, The Guardian, BBC Wildlife, Oceanographic Magazine · Founder, Ocean Rising, read across 100+ countries</div>
+              <div style={{ fontSize: 12, color: BLUE, fontWeight: 600, fontFamily: SANS }}>Ocean journalist, The Guardian, BBC Wildlife, Oceanographic Magazine · Head of Hunting &amp; Captivity, WDC · Founder, Ocean Rising, read across 100+ countries</div>
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: BLUE, marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontFamily: SANS }}>
                 <span style={{ display: "inline-block", width: 28, height: 2, background: BLUE }} />
-                The journalist broadcasters call when whaling stories break
+                The ocean journalist who built the intelligence tool the sector was missing
               </div>
               <div style={{ fontSize: 64, fontFamily: SERIF, color: BLUE_LIGHT, lineHeight: 0.6, marginBottom: 16, userSelect: "none" }}>&ldquo;</div>
               <blockquote style={{ fontSize: "clamp(20px,3.5vw,28px)", fontWeight: 700, color: NAVY, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.25, margin: "0 0 24px", padding: 0, border: "none" }}>
                 The intelligence I needed didn&apos;t exist. So I built it.
               </blockquote>
               <p style={{ fontSize: 15, color: TEXT_PRI, lineHeight: 1.8, marginBottom: 14, fontFamily: SANS }}>
-                I&apos;ve spent two decades inside ocean conservation — coral reef programmes in Madagascar, whale research in the Canary Islands, running the anti-whaling and captivity campaigns at WDC. When a whaling story breaks, broadcasters call me.
+                I&apos;ve spent two decades reporting on the ocean — from coral reef collapse in Madagascar to deep-sea mining disputes, blue economy investment, and international conservation policy. Writing for The Guardian, BBC Wildlife, and Oceanographic Magazine, I&apos;ve reported across every part of the sector Tideline serves.
               </p>
               <p style={{ fontSize: 15, color: TEXT_PRI, lineHeight: 1.8, marginBottom: 28, fontFamily: SANS }}>
-                As an ocean journalist for The Guardian, BBC Wildlife, and Oceanographic Magazine, I track regulatory decisions, scientific preprints, and parliamentary records across a dozen issue areas simultaneously. What I needed didn&apos;t exist. So I built Tideline — and now it lands in your inbox before 7am.
+                That reporting meant constant conversations with NGOs, investors, policy teams, and scientists — all of them making decisions based on what was happening in the ocean right now. The intelligence infrastructure they needed didn&apos;t exist. So I built it.
               </p>
               <a href="/start" style={{ padding: "12px 28px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS, display: "inline-block" }}>Read today&apos;s brief →</a>
             </div>
