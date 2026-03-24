@@ -30,7 +30,7 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/magic-link", {
+      const res = await fetch("/api/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
