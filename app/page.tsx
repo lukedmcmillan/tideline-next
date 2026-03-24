@@ -104,7 +104,7 @@ function FAQAccordion() {
     },
     {
       q: "What does Tideline actually cover?",
-      a: "More than 80 curated sources across 31 ocean subject areas — from coral reef science and deep-sea mining regulation to IUU fishing enforcement, blue finance, and international ocean governance. Every source is hand-selected. Nothing is scraped from mainstream news feeds.",
+      a: "More than 80 hand-curated sources across 31 ocean subject areas, spanning coral reef science, deep-sea mining regulation, IUU fishing enforcement, blue finance, and international ocean governance. Selected by an ocean journalist. Not an algorithm.",
     },
     {
       q: "How is this different from Google Alerts or free news sites?",
