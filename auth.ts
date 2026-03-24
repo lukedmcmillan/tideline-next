@@ -6,7 +6,7 @@ export const authOptions = {
     EmailProvider({
       server: {
         host: 'smtp.resend.com',
-        port: 465,
+        port: 587,
         auth: {
           user: 'resend',
           pass: process.env.RESEND_API_KEY,
