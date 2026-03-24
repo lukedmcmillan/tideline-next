@@ -94,6 +94,49 @@ function MobileNav() {
   );
 }
 
+// ── FAQ accordion ─────────────────────────────────────────────────────────
+function FAQAccordion() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const faqs = [
+    {
+      q: "Is there a contract or minimum commitment?",
+      a: "No contract. No minimum term. Cancel any time from your account settings — no emails, no phone calls, no questions asked.",
+    },
+    {
+      q: "What does Tideline actually cover?",
+      a: "More than 80 curated sources across 31 ocean subject areas — from coral reef science and deep-sea mining regulation to IUU fishing enforcement, blue finance, and international ocean governance. Every source is hand-selected. Nothing is scraped from mainstream news feeds.",
+    },
+    {
+      q: "How is this different from Google Alerts or free news sites?",
+      a: "Google Alerts gives you volume. Tideline gives you signal. Free news covers what happened. Tideline covers what\u2019s moving — regulatory decisions, scientific preprints, NGO briefings, parliamentary records, and institutional databases that don\u2019t surface in mainstream coverage. Curated by an ocean journalist with two decades in the sector, delivered as it breaks.",
+    },
+    {
+      q: "Do you sell or share subscriber data?",
+      a: "Never. Your data is used solely to deliver your Tideline subscription. It is not sold, shared, or used for advertising.",
+    },
+  ];
+  return (
+    <div>
+      {faqs.map((faq, i) => (
+        <div key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
+          <button
+            onClick={() => setOpenIndex(openIndex === i ? null : i)}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: 16 }}
+          >
+            <span style={{ fontSize: "clamp(15px,2.5vw,17px)", fontWeight: 600, color: WHITE, fontFamily: SERIF, lineHeight: 1.4 }}>{faq.q}</span>
+            <span style={{ fontSize: 18, color: "rgba(255,255,255,0.4)", flexShrink: 0, transition: "transform 0.2s", transform: openIndex === i ? "rotate(45deg)" : "none" }}>+</span>
+          </button>
+          {openIndex === i && (
+            <div style={{ paddingBottom: 20 }}>
+              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, fontFamily: SANS, maxWidth: 640 }}>{faq.a}</p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────
 export default function Home() {
   return (
@@ -358,6 +401,25 @@ export default function Home() {
         </a>
       </div>
 
+      {/* ── FAQ ── */}
+      <div id="faq" style={{ padding: "72px 0", background: NAVY, borderBottom: `1px solid rgba(255,255,255,0.08)` }}>
+        <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 20px" }}>
+          <div style={{ marginBottom: 40 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: BLUE, marginBottom: 14, display: "flex", alignItems: "center", gap: 10, fontFamily: SANS }}>
+              <span style={{ display: "inline-block", width: 28, height: 2, background: BLUE }} />
+              Common questions
+            </div>
+          </div>
+          <FAQAccordion />
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginTop: 36, fontFamily: SANS, lineHeight: 1.7 }}>
+            Still have questions?{" "}
+            <a href="/subscribe" style={{ color: BLUE, fontWeight: 600, textDecoration: "none" }}>Start your free trial</a>
+            {" "}or{" "}
+            <a href="mailto:luke@thetideline.co" style={{ color: BLUE, fontWeight: 600, textDecoration: "none" }}>get in touch</a>.
+          </p>
+        </div>
+      </div>
+
       {/* ── FOOTER ── */}
       <div style={{ borderTop: `1px solid ${BORDER}`, background: OFF_WHITE, padding: "18px 20px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -366,6 +428,7 @@ export default function Home() {
             {["Privacy", "Terms", "Contact"].map(l => (
               <span key={l} style={{ fontSize: 12, color: TEXT_TER, cursor: "pointer", fontFamily: SANS }}>{l}</span>
             ))}
+            <a href="#faq" style={{ fontSize: 12, color: TEXT_TER, fontFamily: SANS, textDecoration: "none" }}>FAQ</a>
             <span style={{ fontSize: 12, color: TEXT_TER, fontFamily: MONO }}>© 2026 · tideline.io</span>
           </div>
         </div>
