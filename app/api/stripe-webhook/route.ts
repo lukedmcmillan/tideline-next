@@ -53,19 +53,12 @@ async function syncUserStatus(
     .eq("email", email)
     .single();
 
-  console.log(`[webhook] syncUserStatus: email=${email}, status=${status}, existing=${!!existing}`);
-
   if (existing) {
     const updateData: Record<string, unknown> = { subscription_status: status };
     if (stripeSubscriptionId) updateData.stripe_subscription_id = stripeSubscriptionId;
-    const { error } = await supabase.from("users").update(updateData).eq("email", email);
-    if (error) console.error("[webhook] users update error:", error.message);
-    else console.log("[webhook] users updated");
+    await supabase.from("users").update(updateData).eq("email", email);
   } else {
-    // Insert without id — relies on database default gen_random_uuid()
-    // Run this SQL in Supabase if not already done:
-    // ALTER TABLE public.users ALTER COLUMN id SET DEFAULT gen_random_uuid();
-    const { error } = await supabase.from("users").insert({
+    await supabase.from("users").insert({
       email,
       subscription_status: status,
       stripe_subscription_id: stripeSubscriptionId ?? null,
@@ -73,8 +66,6 @@ async function syncUserStatus(
       topics: [],
       timezone: "Europe/London",
     });
-    if (error) console.error("[webhook] users insert error:", error.message, error.details);
-    else console.log("[webhook] users inserted");
   }
 }
 
@@ -120,10 +111,7 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.created":
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
-      const customerId = subscription.customer as string;
-      console.log(`[webhook] ${event.type}: customer=${customerId}, status=${subscription.status}`);
-      const email = await getCustomerEmail(customerId);
-      console.log(`[webhook] resolved email: ${email}`);
+      const email = await getCustomerEmail(subscription.customer as string);
       if (email) {
         await upsertSubscription(email, subscription);
         await syncUserStatus(
@@ -131,8 +119,6 @@ export async function POST(req: NextRequest) {
           subscription.status === "active" || subscription.status === "trialing" ? subscription.status : "cancelled",
           subscription.id
         );
-      } else {
-        console.error(`[webhook] Could not resolve email for customer ${customerId}`);
       }
       break;
     }
