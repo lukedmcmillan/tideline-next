@@ -108,6 +108,7 @@ function CheckoutForm() {
           placeholder="you@example.com"
           style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE }}
         />
+        <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 7, fontFamily: SANS }}>Most subscribers use their work email address.</p>
       </div>
 
       <div style={{ marginBottom: 24 }}>
