@@ -94,9 +94,7 @@ function LoginForm() {
                   required
                   style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${error ? "#ef4444" : BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE, color: NAVY }}
                 />
-                {error
-                  ? <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{error}</p>
-                }
+                {error && <p style={{ fontSize: 12, color: "#ef4444", marginTop: 7, fontFamily: SANS }}>{error}</p>}
               </div>
 
               <button
