@@ -20,6 +20,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const isVerify = searchParams?.get("verify") === "1";
   const isError = searchParams?.get("error");
+  const callbackUrl = searchParams?.get("callbackUrl");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,7 @@ function LoginForm() {
       const res = await fetch("/api/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, callbackUrl: callbackUrl || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {

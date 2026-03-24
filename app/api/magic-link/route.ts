@@ -9,7 +9,7 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json()
+    const { email, callbackUrl } = await request.json()
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
     // Generate token
@@ -27,7 +27,8 @@ export async function POST(request: Request) {
     }
 
     // Send email via Resend
-    const url = `${process.env.NEXTAUTH_URL}/api/verify?token=${token}&email=${encodeURIComponent(email)}`
+    let url = `${process.env.NEXTAUTH_URL}/api/verify?token=${token}&email=${encodeURIComponent(email)}`
+    if (callbackUrl) url += `&callbackUrl=${encodeURIComponent(callbackUrl)}`
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

@@ -33,12 +33,26 @@ export async function GET(request: Request) {
 
   await supabase.from('magic_links').update({ used: true }).eq('id', link.id)
 
+  // Create user record on first login
+  await supabase.from('users').upsert(
+    {
+      email: link.email,
+      subscription_status: 'trial',
+      trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      topics: [],
+      timezone: 'Europe/London',
+    },
+    { onConflict: 'email', ignoreDuplicates: true }
+  )
+
   const session = Buffer.from(JSON.stringify({
     email: link.email,
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   })).toString('base64')
 
-  const response = NextResponse.redirect(new URL('/platform/feed', request.url))
+  const callbackUrl = searchParams.get('callbackUrl')
+  const redirectTo = callbackUrl && callbackUrl.startsWith('/') ? callbackUrl : '/platform/feed'
+  const response = NextResponse.redirect(new URL(redirectTo, request.url))
   response.cookies.set('tideline_session', session, {
     httpOnly: true,
     secure: true,
