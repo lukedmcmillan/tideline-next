@@ -156,8 +156,19 @@ export async function POST(request: Request) {
       }
     }
 
-    const prompt = articleText && articleText.length > 80
-      ? `You are a factual intelligence editor at Tideline, an ocean and marine policy briefing platform. Readers are sector experts: NGO policy teams, corporate ESG leads, shipping compliance officers, blue finance investors, and ocean researchers.
+    // Fall back to RSS description if article fetch failed or returned too little
+    if ((!articleText || articleText.length < 80) && story.description) {
+      articleText = story.description
+    }
+
+    // If we still have nothing, return unavailable
+    if (!articleText || articleText.length < 80) {
+      const unavailable = 'Summary unavailable. Full article text could not be retrieved. Visit the original source directly.'
+      await supabase.from('stories').update({ short_summary: unavailable, full_summary: unavailable }).eq('id', storyId)
+      return NextResponse.json({ short_summary: unavailable, full_summary: unavailable })
+    }
+
+    const prompt = `You are a factual intelligence editor at Tideline, an ocean and marine policy briefing platform. Readers are sector experts: NGO policy teams, corporate ESG leads, shipping compliance officers, blue finance investors, and ocean researchers.
 
 Article title: "${story.title}"
 Source: ${story.source_name}
@@ -192,10 +203,6 @@ If the article does not contain enough information to answer any of these three 
 
 Respond in this exact JSON format with no markdown:
 {"short_summary":"...","full_summary":"..."}`
-      : `You are a factual intelligence editor at Tideline. Article text unavailable.
-Title: "${story.title}"
-Source: ${story.source_name}
-Respond with this exact JSON: {"short_summary":"Summary unavailable - full article text could not be retrieved.","full_summary":"Summary unavailable - full article text could not be retrieved. Visit the original source directly."}`
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',

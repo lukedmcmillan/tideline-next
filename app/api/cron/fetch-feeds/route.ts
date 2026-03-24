@@ -104,7 +104,7 @@ const OCEAN_DEDICATED_SOURCES = new Set([
   'IWC', 'Phys.org Ocean', 'Carbon Brief', 'NOAA News',
 ])
 
-async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string | null }[]> {
+async function parseRSSFeed(url: string): Promise<{ title: string; link: string; published_at: string | null; description: string | null }[]> {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Tideline/1.0 RSS Reader' },
@@ -113,7 +113,7 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
     if (!res.ok) return []
     const xml = await res.text()
 
-    const items: { title: string; link: string; published_at: string | null }[] = []
+    const items: { title: string; link: string; published_at: string | null; description: string | null }[] = []
     const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
     const entryRegex = /<entry[^>]*>([\s\S]*?)<\/entry>/gi
     let match
@@ -131,6 +131,16 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
           || item.match(/<updated[^>]*>(.*?)<\/updated>/i)?.[1]?.trim()
           || item.match(/<dc:date[^>]*>(.*?)<\/dc:date>/i)?.[1]?.trim()
 
+        const descRaw = item.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i)?.[1]?.trim()
+          || item.match(/<content[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content>/i)?.[1]?.trim()
+          || item.match(/<summary[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/summary>/i)?.[1]?.trim()
+          || ''
+        const description = descRaw
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+          .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+          .replace(/\s+/g, ' ').trim()
+
         if (title && link) {
           items.push({
             title: title
@@ -141,6 +151,7 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
               .replace(/&nbsp;/g, ' ').replace(/&hellip;/g, '...').replace(/<[^>]+>/g, '').trim(),
             link: link.replace(/&amp;/g, '&'),
             published_at: pubDate ? new Date(pubDate).toISOString() : null,
+            description: description || null,
           })
         }
       }
@@ -205,19 +216,19 @@ export async function GET(request: Request) {
         }
       }
 
+      const storyData: Record<string, unknown> = {
+        title: item.title,
+        link: item.link,
+        source_name: source.name,
+        topic: source.topic,
+        source_type: source.type,
+        published_at: item.published_at,
+      }
+      if (item.description) storyData.description = item.description
+
       const { error } = await supabase
         .from('stories')
-        .upsert(
-          {
-            title: item.title,
-            link: item.link,
-            source_name: source.name,
-            topic: source.topic,
-            source_type: source.type,
-            published_at: item.published_at,
-          },
-          { onConflict: 'link', ignoreDuplicates: true }
-        )
+        .upsert(storyData, { onConflict: 'link', ignoreDuplicates: true })
 
       if (error) {
         totalSkipped++
