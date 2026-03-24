@@ -296,8 +296,9 @@ async function scrapeBBNJRatifications(): Promise<ScrapeResult> {
     const xml = await res.text();
 
     // Parse <Row><Entry>Country</Entry><Entry>Signature</Entry><Entry>Ratification</Entry></Row>
+    // Note: empty columns may be self-closing <Entry/> instead of <Entry></Entry>
     const rowPattern =
-      /<Row><Entry>([^<]+)<\/Entry><Entry>([^<]*)<\/Entry><Entry>([^<]*)<\/Entry><\/Row>/g;
+      /<Row><Entry>([^<]+)<\/Entry>(?:<Entry>([^<]*)<\/Entry>|<Entry\/>)(?:<Entry>([^<]*)<\/Entry>|<Entry\/>)<\/Row>/g;
     const rows: {
       country: string;
       status: "ratified" | "signed" | "neither";
@@ -309,8 +310,10 @@ async function scrapeBBNJRatifications(): Promise<ScrapeResult> {
       const country = match[1]
         .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)))
         .trim();
-      const signatureDate = match[2].replace(/[a-zA-Z()]/g, "").trim();
-      const ratificationDate = match[3].replace(/[a-zA-Z()]/g, "").trim();
+      const signatureRaw = match[2] || "";
+      const ratificationRaw = match[3] || "";
+      const signatureDate = signatureRaw.replace(/[a-zA-Z()]/g, "").trim();
+      const ratificationDate = ratificationRaw.replace(/[a-zA-Z()]/g, "").trim();
 
       if (!country || country === "Participant" || country.length < 2) continue;
 
@@ -319,10 +322,10 @@ async function scrapeBBNJRatifications(): Promise<ScrapeResult> {
 
       if (ratificationDate && ratificationDate.length > 4) {
         status = "ratified";
-        date = match[3].trim(); // Keep original text for date parsing
+        date = ratificationRaw.trim();
       } else if (signatureDate && signatureDate.length > 4) {
         status = "signed";
-        date = match[2].trim();
+        date = signatureRaw.trim();
       }
 
       rows.push({ country, status, date });
