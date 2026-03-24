@@ -422,7 +422,7 @@ export default function Home() {
       </div>
 
       {/* ── FINAL CTA ── */}
-      <div style={{ background: NAVY, padding: "clamp(56px,10vw,96px) 20px", textAlign: "center" }}>
+      <div style={{ background: "#112236", padding: "clamp(56px,10vw,96px) 20px", textAlign: "center" }}>
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: BLUE, marginBottom: 20, fontFamily: SANS }}>Ocean intelligence platform</div>
           <h2 style={{ fontSize: "clamp(32px,6vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 20px" }}>
