@@ -29,10 +29,11 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `stories` — fetches from Supabase `stories` table (supports id lookup, topic filter, pagination)
 - `summarise` — on-demand Claude-powered article summarization (fetches via Jina or direct, caches in DB)
 - `cron/fetch-feeds` — hourly RSS aggregation from ~89 sources, bearer token auth via `CRON_SECRET`
+- `cron/harvest-scraped-sources` — daily (5am UTC) scraper for non-RSS sources (IMO, ISA, FAO Fisheries, UN BBNJ, IISD ENB), uses Jina to render index pages and extract article titles
 
-**Auth**: NextAuth v4 with email provider (Resend SMTP), Supabase adapter, database sessions. Config in `auth.ts`. Professional email enforcement (blocks Gmail/Yahoo/Outlook etc.) on both signup and login.
+**Auth**: Custom magic link system (`/api/magic-link` + `/api/verify`) sets a `tideline_session` cookie. NextAuth v4 also configured in `auth.ts` but the custom system is primary. Middleware protects `/platform/*` by checking session cookies.
 
-**Database**: Supabase. Key tables: `stories` (aggregated articles + summaries), `trial_signups`, plus NextAuth tables (users, sessions, accounts, verification_tokens).
+**Database**: Supabase. Key tables: `stories` (aggregated articles + summaries), `trial_signups`, `subscriptions` (Stripe subscription state), `magic_links`, plus NextAuth tables.
 
 **External Services**: Supabase (DB + auth adapter), Resend (email), Claude API (summarization via `claude-sonnet-4-20250514`), Stripe (payments), Jina (article scraping fallback), Vercel (hosting + cron).
 
@@ -44,11 +45,11 @@ All pages use **inline styles** (`style={{...}}`), not Tailwind utility classes 
 
 - Path alias: `@/*` maps to project root
 - The only shared component is `components/Header.tsx` — pages are largely self-contained
-- The middleware (`middleware.ts`) matches `/platform/:path*` but currently just passes through
-- The cron job (`vercel.json`) runs `/api/cron/fetch-feeds` hourly
+- The middleware (`middleware.ts`) protects `/platform/*` routes — redirects to `/login` if no session cookie
+- Cron jobs (`vercel.json`): `/api/cron/fetch-feeds` hourly, `/api/cron/harvest-scraped-sources` daily at 5am UTC
 - AI summaries are generated lazily on story view and cached in the `stories` table
 - RSS feed sources include keyword filtering for non-ocean-dedicated sources, 60-day age cutoff, and link-based deduplication
 
 ## Environment Variables
 
-`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `CRON_SECRET`, `JINA_API_KEY` (optional)
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `CRON_SECRET`, `JINA_API_KEY`
