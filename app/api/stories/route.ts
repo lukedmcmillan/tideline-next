@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   if (id) {
     const { data, error } = await supabase
       .from('stories')
-      .select('id, title, link, source_name, topic, source_type, published_at, short_summary, full_summary, is_pro')
+      .select('id, title, link, source_name, topic, source_type, published_at, short_summary, full_summary, is_pro, alert_type')
       .eq('id', id)
       .single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   // List lookup
   let query = supabase
     .from('stories')
-    .select('id, title, link, source_name, topic, source_type, published_at, short_summary, full_summary, is_pro')
+    .select('id, title, link, source_name, topic, source_type, published_at, short_summary, full_summary, is_pro, alert_type')
     .order('published_at', { ascending: false })
     .range(page * limit, (page + 1) * limit - 1)
   if (topic && topic !== 'all') {

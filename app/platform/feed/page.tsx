@@ -113,6 +113,52 @@ function StoryRow({ story, isTop }: { story: any; isTop?: boolean }) {
   );
 }
 
+function AlertRow({ story }: { story: any }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <a href={`/platform/story/${story.id}`}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: "block",
+        padding: "18px 24px",
+        borderBottom: "1px solid #e8e4dc",
+        background: hov ? "#fef2f2" : "#fff5f5",
+        borderLeft: "3px solid #ef4444",
+        transition: "background 0.12s ease",
+        textDecoration: "none",
+        cursor: "pointer",
+      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" as const }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, fontFamily: "system-ui,-apple-system,sans-serif", letterSpacing: "0.06em", color: "#ffffff", background: "#dc2626", padding: "2px 8px", borderRadius: 3, textTransform: "uppercase" as const }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ffffff", display: "inline-block", animation: "tlpulse 1.5s ease-in-out infinite" }} />
+          ALERT
+        </span>
+        <span style={{ fontSize: 10, fontWeight: 600, fontFamily: "system-ui,-apple-system,sans-serif", color: "#991b1b", letterSpacing: "0.04em" }}>Treaty Monitor</span>
+        <span style={{ fontSize: 11, fontFamily: "system-ui,-apple-system,sans-serif", color: "#a8a29e", marginLeft: "auto", flexShrink: 0 }}>{ageStr(story.published_at)}</span>
+      </div>
+      <div style={{
+        fontFamily: "'Libre Baskerville',Georgia,serif",
+        fontSize: 16,
+        lineHeight: 1.5,
+        color: "#1c1917",
+        fontWeight: 700,
+        marginBottom: 4,
+      }}>
+        {story.title}
+      </div>
+      {story.short_summary && (
+        <div style={{ fontSize: 13, fontFamily: "system-ui,-apple-system,sans-serif", color: "#57534e", lineHeight: 1.6, marginBottom: 6 }}>
+          {story.short_summary}
+        </div>
+      )}
+      <div style={{ fontSize: 11, fontFamily: "system-ui,-apple-system,sans-serif", fontWeight: 600, color: "#dc2626" }}>
+        View intelligence →
+      </div>
+    </a>
+  );
+}
+
 function LoadingState() {
   return (
     <div style={{ padding: "40px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
@@ -189,8 +235,10 @@ export default function TidelineFeed() {
     return () => clearInterval(interval);
   }, [vertical]);
 
-  const top = stories[0];
-  const rest = stories.slice(1);
+  const alerts = stories.filter((s: any) => s.alert_type === "treaty_alert");
+  const regular = stories.filter((s: any) => s.alert_type !== "treaty_alert");
+  const top = regular[0];
+  const rest = regular.slice(1);
 
   const updatedLabel = lastUpdated
     ? `Live · Updated ${ageStr(lastUpdated.toISOString())}`
@@ -289,6 +337,7 @@ export default function TidelineFeed() {
           <div style={{ flex: 1, background: "#faf8f4" }}>
             {loading ? <LoadingState /> : stories.length === 0 ? <EmptyState vertical={vertical} /> : (
               <>
+                {alerts.map(s => <AlertRow key={s.id} story={s} />)}
                 {top && <StoryRow story={top} isTop />}
                 {rest.map(s => <StoryRow key={s.id} story={s} />)}
               </>
