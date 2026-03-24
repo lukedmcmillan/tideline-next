@@ -34,10 +34,6 @@ function LoginForm() {
       setError("Please enter a valid email address.");
       return;
     }
-    if (!isProfessional(email)) {
-      setError("Please use a professional email address. Tideline is a professional tool.");
-      return;
-    }
     setError("");
     setLoading(true);
     try {
