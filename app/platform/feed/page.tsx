@@ -37,8 +37,8 @@ function ageStr(iso: string): string {
 
 function sig(iso: string): string {
   const m = (Date.now() - new Date(iso).getTime()) / 60000;
-  if (m < 60) return "breaking";
-  if (m < 480) return "new";
+  if (m < 120) return "breaking";
+  if (m < 1440) return "new";
   return "standard";
 }
 
