@@ -2,21 +2,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const session = request.cookies.get('tideline_session')
+  const sessionToken =
+    request.cookies.get('__Secure-next-auth.session-token')?.value ||
+    request.cookies.get('next-auth.session-token')?.value
 
-  if (!session) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  try {
-    const data = JSON.parse(Buffer.from(session.value, 'base64').toString())
-    if (new Date(data.expires) < new Date()) {
-      const response = NextResponse.redirect(new URL('/login', request.url))
-      response.cookies.delete('tideline_session')
-      return response
-    }
-  } catch {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (!sessionToken) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
