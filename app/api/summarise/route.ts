@@ -183,12 +183,12 @@ SHORT SUMMARY (2 sentences max):
 Sentence 1: what happened, grounded in the article.
 Sentence 2: the single most professionally significant detail from the article body.
 
-FULL SUMMARY (5-8 sentences):
-Do NOT begin with the same sentence as the short summary.
-1. The specific mechanism or technology - explain exactly how it works, never leave a technical term unexplained.
-2. Quantitative data - specific numbers, named participants, measurable outcomes from the article.
-3. Why this decision was made - connect mechanism and data to outcome.
-4. The non-obvious watch point - downstream implications for adjacent jurisdictions or frameworks, not just obvious next steps.
+FULL SUMMARY (max 150 words, plain text, no bullet points):
+Do NOT begin with the same sentence as the short summary. Do not begin with a reference to "the article" itself. Cover three things in order:
+1. What caused this development, based only on information in the article.
+2. What it means for the relevant industry or policy area, based only on what the article says.
+3. One specific thing a professional should watch next, only if the article explicitly mentions it.
+If the article does not contain enough information to answer any of these three points, say so in one short sentence rather than speculating.
 
 Respond in this exact JSON format with no markdown:
 {"short_summary":"...","full_summary":"..."}`
