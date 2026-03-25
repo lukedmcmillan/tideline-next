@@ -45,7 +45,7 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `calendar/[token]` — personal iCal feed (text/calendar), filtered by subscriber preferences
 - `calendar/subscribe` — creates personal calendar subscription with filter preferences, returns iCal URL + Google/Outlook/Apple links
 
-**Auth**: Custom magic link system (`/api/magic-link` + `/api/verify`) sets a `tideline_session` cookie (base64 JSON with email + 30-day expiry, httpOnly). NextAuth v4 also configured in `auth.ts` but the custom system is primary. Middleware protects `/platform/*` by checking `tideline_session` first, then NextAuth cookies as fallback. Login page passes `callbackUrl` through the full chain.
+**Auth**: NextAuth v4 with two providers — Google OAuth (primary) and Email magic link via Resend (fallback). JWT session strategy with Supabase adapter for verification token storage. On first login (either provider), creates a row in `public.users` with trial defaults. Middleware protects `/platform/*` and `/tracker/*` by checking NextAuth session cookies. Shared `getEmailFromSession` helper in `app/lib/auth.ts` extracts email from JWT token for API routes.
 
 **Database**: Supabase (three schemas: `public`, `auth`, `next_auth`). Key tables:
 - `public.users` — subscription status, topics (jsonb), timezone, stripe_subscription_id, trial_ends_at, last_brief_sent. `id` column uses `gen_random_uuid()` default.
@@ -87,7 +87,7 @@ All pages use **inline styles** (`style={{...}}`), not Tailwind utility classes 
 
 - Path alias: `@/*` maps to project root
 - Pages are largely self-contained — minimal shared components (`components/Header.tsx`)
-- Middleware checks `tideline_session` cookie first, then NextAuth cookies as fallback
+- Middleware checks NextAuth JWT session cookies (`__Secure-next-auth.session-token` / `next-auth.session-token`)
 - Cron jobs (`vercel.json`): `/api/cron/fetch-feeds` hourly, `/api/cron/harvest-scraped-sources` every 6 hours, `/api/cron/scrape-governance-calendar` weekly (Mondays 3am UTC)
 - Middleware protects `/platform/*` and `/tracker/*` routes behind auth
 - AI summaries are generated lazily on story view with three-tier fallback: Jina article fetch → direct fetch/meta scrape → RSS description field. Only shows "Summary unavailable" if all three fail.
@@ -99,4 +99,4 @@ All pages use **inline styles** (`style={{...}}`), not Tailwind utility classes 
 
 ## Environment Variables
 
-`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `CRON_SECRET`, `JINA_API_KEY`, `NEXTAUTH_URL`
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `CRON_SECRET`, `JINA_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
