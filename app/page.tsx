@@ -134,20 +134,21 @@ export default function Home() {
       `}</style>
 
       {/* ── NAV ── */}
-      <div style={{ background: NAVY, borderBottom: `3px solid ${TEAL}`, position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ background: NAVY, position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, position: "relative" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="/" style={{ fontSize: 24, fontWeight: 400, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em" }}>Tideline</a>
-            <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-            <span style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: MONO }}>OCEAN INTELLIGENCE</span>
-          </div>
+          <a href="/" style={{ display: "flex", flexDirection: "column", textDecoration: "none" }}>
+            <span style={{ fontSize: 22, fontWeight: 400, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1 }}>Tideline</span>
+            <span style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: MONO, marginTop: 2 }}>OCEAN INTELLIGENCE</span>
+          </a>
           <div className="nav-desktop" style={{ alignItems: "center", gap: 28 }}>
-            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>The Brief</a>
             <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Trackers</a>
+            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Governance</a>
+            <a href="/#founder" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>About</a>
             <a href="/#pricing" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Pricing</a>
-            <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
+          </div>
+          <div className="nav-desktop" style={{ alignItems: "center", gap: 16 }}>
             <a href="/login" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS }}>Sign in</a>
-            <a href="/subscribe" style={{ padding: "8px 20px", background: TEAL, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 4, fontFamily: SANS }}>Start free trial</a>
+            <a href="/subscribe" style={{ padding: "8px 20px", background: TEAL, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 4, fontFamily: SANS }}>Free trial</a>
           </div>
           <div className="nav-mobile" style={{ alignItems: "center" }}>
             <MobileNav />
@@ -175,40 +176,48 @@ export default function Home() {
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: SANS }}>14 days free. No credit card required.</div>
             </div>
 
-            {/* Live feed widget */}
-            <div className="hero-widget" style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.25)" }}>
-              <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 14, fontWeight: 400, color: "rgba(255,255,255,0.85)", fontFamily: SERIF }}>Tideline</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, display: "inline-block", animation: "livepulse 1.5s ease-in-out infinite" }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, color: TEAL, letterSpacing: "0.1em", fontFamily: MONO }}>LIVE</span>
-                  </span>
+            {/* Live feed card */}
+            <div className="hero-widget" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0A1628", padding: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, display: "inline-block", animation: "livepulse 1.5s ease-in-out infinite" }} />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: TEAL, letterSpacing: "0.12em", fontFamily: MONO }}>LIVE</span>
                 </div>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: MONO }}>{new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.08em", fontFamily: MONO }}>NOW</span>
               </div>
               {[
-                { src: "ISA",      srcType: "reg", topic: "Seabed Mining",             title: "ISA defers nodule mining code vote amid scientific uncertainty" },
-                { src: "IUCN",     srcType: "ngo", topic: "Coral Reef Systems",         title: "44% of reef-building coral species now at risk of extinction" },
-                { src: "Interpol", srcType: "reg", topic: "IUU Fishing",                title: "47 vessels detained across Pacific for illegal fishing violations" },
-                { src: "IMO",      srcType: "gov", topic: "Shipping Decarbonisation",   title: "MEPC 84 adopts revised GHG strategy with 2030 interim targets" },
-              ].map((item, i) => {
-                const sc = SRC[item.srcType] || SRC.res;
-                return (
-                  <div key={i} style={{ padding: "11px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, background: sc.bg, color: sc.color, padding: "1px 7px", borderRadius: 2, fontFamily: SANS }}>{item.src}</span>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontFamily: SANS }}>{item.topic}</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.82)", lineHeight: 1.4, fontFamily: SERIF }}>{item.title}</div>
+                { time: "3m",  tag: "Seabed Mining",           title: "ISA defers nodule mining code vote amid scientific uncertainty" },
+                { time: "17m", tag: "Coral Reefs",              title: "44% of reef-building coral species now at risk of extinction" },
+                { time: "42m", tag: "IUU Fishing",              title: "47 vessels detained across Pacific for illegal fishing violations" },
+                { time: "1h",  tag: "Shipping",                 title: "MEPC 84 adopts revised GHG strategy with 2030 interim targets" },
+              ].map((item, i) => (
+                <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: MONO }}>{item.time}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: TEAL, fontFamily: MONO, letterSpacing: "0.04em" }}>{item.tag}</span>
                   </div>
-                );
-              })}
-              <a href="/subscribe" style={{ display: "block", padding: "11px 16px", background: `${TEAL}15`, textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ fontSize: 12, color: TEAL, fontWeight: 700, fontFamily: SANS }}>Start free trial</span>
-              </a>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.45, fontFamily: SANS }}>{item.title}</div>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── STATS BAR ── */}
+      <div style={{ background: WHITE, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px", display: "grid", gridTemplateColumns: "repeat(4,1fr)" }} className="segments-grid">
+          {[
+            { num: "80+", label: "Curated institutional sources" },
+            { num: "31", label: "Ocean intelligence topics" },
+            { num: "10", label: "Governance bodies tracked" },
+            { num: "Daily", label: "Briefing to your inbox" },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: "center", borderRight: i < 3 ? `1px solid ${BORDER}` : "none", padding: "28px 16px" }}>
+              <div style={{ fontSize: "clamp(28px,5vw,40px)", fontWeight: 700, color: TEAL, fontFamily: MONO, letterSpacing: "-0.04em", lineHeight: 1 }}>{s.num}</div>
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 6, lineHeight: 1.4, fontFamily: SANS }}>{s.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -273,7 +282,7 @@ export default function Home() {
       </div>
 
       {/* ── FOUNDER ── */}
-      <div style={{ padding: "72px 0", borderBottom: `1px solid ${BORDER}`, background: OFF_WHITE }}>
+      <div id="founder" style={{ padding: "72px 0", borderBottom: `1px solid ${BORDER}`, background: OFF_WHITE }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
           <div className="founder-grid">
             <div style={{ textAlign: "center" }}>
@@ -306,29 +315,47 @@ export default function Home() {
 
       {/* ── PRICING ── */}
       <div id="pricing" style={{ padding: "72px 0", borderBottom: `1px solid ${BORDER}`, background: WHITE }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", padding: "0 20px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 20px" }}>
           <div style={{ textAlign: "center", marginBottom: 44 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 12, fontFamily: SANS }}>Pricing</div>
             <h2 style={{ fontSize: "clamp(26px,4vw,36px)", fontWeight: 400, color: NAVY, fontFamily: SERIF, letterSpacing: "-0.02em", margin: "0 0 12px" }}>Choose your depth.</h2>
           </div>
-          <div style={{ background: NAVY, borderTop: `4px solid ${TEAL}`, padding: "32px 28px", textAlign: "center" }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, fontFamily: SANS }}>Individual</div>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4, marginBottom: 20 }}>
-              <span style={{ fontSize: "clamp(36px,6vw,48px)", fontWeight: 700, color: WHITE, letterSpacing: "-0.04em", fontFamily: MONO }}>£79</span>
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontFamily: SANS }}>/month</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="segments-grid">
+            {/* Individual */}
+            <div style={{ background: NAVY, borderTop: `4px solid ${TEAL}`, padding: "32px 28px", position: "relative" }}>
+              <div style={{ position: "absolute", top: -1, right: 0, background: TEAL, color: WHITE, fontSize: 10, fontWeight: 700, padding: "3px 10px", letterSpacing: "0.1em", fontFamily: SANS }}>RECOMMENDED</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, fontFamily: SANS }}>Individual</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 20 }}>
+                <span style={{ fontSize: "clamp(32px,6vw,42px)", fontWeight: 700, color: WHITE, letterSpacing: "-0.04em", fontFamily: MONO }}>£79</span>
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: SANS }}>/month</span>
+              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 18, marginBottom: 24 }}>
+                {["Daily personalised brief", "All 31 intelligence topics", "Live regulatory trackers", "Intelligence Agent search", "Treaty and governance calendar", "14-day free trial"].map(f => (
+                  <div key={f} style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginBottom: 10, lineHeight: 1.7, display: "flex", gap: 10, fontFamily: SANS }}>
+                    <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0 }}>&#10003;</span> {f}
+                  </div>
+                ))}
+              </div>
+              <a href="/subscribe" style={{ display: "block", padding: "12px", background: TEAL, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 4, fontFamily: SANS, textAlign: "center" }}>Start free trial</a>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", marginTop: 10, fontFamily: SANS }}>No credit card required to start.</div>
             </div>
-            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 18, marginBottom: 24 }}>
-              {["Daily personalised brief", "All 31 intelligence topics", "Live regulatory trackers", "Intelligence Agent search", "Treaty and governance calendar", "14-day free trial"].map(f => (
-                <div key={f} style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", marginBottom: 10, lineHeight: 1.7, display: "flex", gap: 10, justifyContent: "center", fontFamily: SANS }}>
-                  <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0 }}>&#10003;</span> {f}
-                </div>
-              ))}
+            {/* Enterprise */}
+            <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderTop: `4px solid ${TEAL}`, padding: "32px 28px" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, fontFamily: SANS }}>Enterprise</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 20 }}>
+                <span style={{ fontSize: "clamp(32px,6vw,42px)", fontWeight: 700, color: NAVY, letterSpacing: "-0.04em", fontFamily: MONO }}>£389</span>
+                <span style={{ fontSize: 13, color: TEXT_TER, fontFamily: SANS }}>/month</span>
+              </div>
+              <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 18, marginBottom: 24 }}>
+                {["Everything in Individual", "Up to 5 team seats", "Slack and email integration", "Priority incident alerts", "Monthly briefing with Luke McMillan", "API access"].map(f => (
+                  <div key={f} style={{ fontSize: 13, color: INK, marginBottom: 10, lineHeight: 1.7, display: "flex", gap: 10, fontFamily: SANS }}>
+                    <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0 }}>&#10003;</span> {f}
+                  </div>
+                ))}
+              </div>
+              <a href="mailto:luke@thetideline.co" style={{ display: "block", padding: "12px", background: "transparent", border: `1.5px solid ${BORDER}`, color: NAVY, fontSize: 13, fontWeight: 700, borderRadius: 4, fontFamily: SANS, textAlign: "center" }}>Contact sales</a>
+              <div style={{ fontSize: 11, color: TEXT_TER, textAlign: "center", marginTop: 10, fontFamily: SANS }}>One seat costs less than two hours of a researcher's time per month.</div>
             </div>
-            <a href="/subscribe" style={{ display: "block", padding: "14px", background: TEAL, color: WHITE, fontSize: 15, fontWeight: 700, borderRadius: 4, fontFamily: SANS }}>Start free trial</a>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 12, fontFamily: SANS }}>No credit card required to start.</div>
-          </div>
-          <div style={{ textAlign: "center", marginTop: 20 }}>
-            <p style={{ fontSize: 14, color: MUTED, fontFamily: SANS }}>Need team seats or API access? <a href="mailto:luke@thetideline.co" style={{ color: TEAL, fontWeight: 600 }}>Get in touch</a>.</p>
           </div>
         </div>
       </div>
