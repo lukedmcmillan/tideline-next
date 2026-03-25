@@ -269,6 +269,34 @@ export default function GovernanceCalendar() {
           <>
             {stats && <StatCards stats={stats} />}
 
+            {/* Significance legend */}
+            <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "16px 20px", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 12, fontFamily: SANS }}>How we classify meetings</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }} className="stat-grid-3">
+                <div style={{ display: "flex", gap: 10 }}>
+                  <span style={{ width: 3, background: RED, borderRadius: 2, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: RED, fontFamily: SANS, marginBottom: 2 }}>Critical</div>
+                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Binding votes, quota adoptions, treaty amendments, or major policy decisions expected. Direct impact on operations or compliance.</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <span style={{ width: 3, background: AMBER, borderRadius: 2, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: AMBER, fontFamily: SANS, marginBottom: 2 }}>Important</div>
+                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Substantive policy discussion with real outcomes, but binding decisions unlikely at this session. Scientific committees, preparatory meetings.</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <span style={{ width: 3, background: "#d1d5db", borderRadius: 2, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: MUTED, fontFamily: SANS, marginBottom: 2 }}>Routine</div>
+                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Administrative, procedural, or early-stage. No imminent decisions. Working group logistics, capacity-building workshops.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Controls */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
               {/* View tabs */}
