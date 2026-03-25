@@ -523,13 +523,16 @@ export default function BBNJTracker() {
 
       {/* Header */}
       <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}`, padding: "0 20px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", height: 48, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="/" style={{ fontSize: 20, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
-            <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
-            <span style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: SANS }}>Treaty Tracker</span>
+            <a href="/" style={{ fontSize: 18, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
+            <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
           </div>
-          <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>← Back to feed</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
+            <a href="/tracker/bbnj" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>BBNJ Tracker</a>
+            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Governance Calendar</a>
+          </div>
         </div>
       </div>
 

@@ -293,6 +293,21 @@ export default function TidelineFeed() {
         </div>
       )}
 
+      {/* Platform nav */}
+      <div style={{ background: "#0a1628", borderBottom: "3px solid #1d6fa4", position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", fontFamily: "Georgia,serif", letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
+            <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <a href="/platform/feed" style={{ color: "#ffffff", fontSize: 13, fontFamily: "system-ui,-apple-system,sans-serif", fontWeight: 600, textDecoration: "none" }}>Feed</a>
+            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: "system-ui,-apple-system,sans-serif", textDecoration: "none" }}>BBNJ Tracker</a>
+            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: "system-ui,-apple-system,sans-serif", textDecoration: "none" }}>Governance Calendar</a>
+          </div>
+        </div>
+      </div>
+
       <div style={{ width: "100%", minHeight: "100vh", background: "#f2ede4", display: "flex" }}>
 
         {/* Left sidebar */}
