@@ -152,7 +152,7 @@ function LoginContent() {
         </form>
 
         <p style={{ fontSize: 12, color: "#94a3b8", fontFamily: "'DM Sans', sans-serif", marginTop: 24, lineHeight: 1.6 }}>
-          Professional ocean intelligence · Before 7am
+          See what the ocean is doing today.
         </p>
       </div>
     </div>
