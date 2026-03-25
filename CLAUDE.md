@@ -100,3 +100,7 @@ All pages use **inline styles** (`style={{...}}`), not Tailwind utility classes 
 ## Environment Variables
 
 `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `CRON_SECRET`, `JINA_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+
+## Always read before building
+
+Before writing any copy or building any UI component, read MESSAGING_HOUSE.md in the root of this project and apply every rule in it without being asked.
