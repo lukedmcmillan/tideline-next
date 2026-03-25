@@ -271,27 +271,28 @@ export default function GovernanceCalendar() {
 
             {/* Significance legend */}
             <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "16px 20px", marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 12, fontFamily: SANS }}>How we classify meetings</div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 4, fontFamily: SANS }}>Meeting classifications</div>
+              <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5, marginBottom: 14 }}>Based on the formal mandate of each session, not editorial judgement. A meeting is classified by what its rules of procedure empower it to do.</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }} className="stat-grid-3">
                 <div style={{ display: "flex", gap: 10 }}>
                   <span style={{ width: 3, background: RED, borderRadius: 2, flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: RED, fontFamily: SANS, marginBottom: 2 }}>Critical</div>
-                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Binding votes, quota adoptions, treaty amendments, or major policy decisions expected. Direct impact on operations or compliance.</div>
+                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Session has the mandate to adopt binding decisions: regulations, quotas, treaty amendments, or conservation measures. Commissions, Councils, COPs.</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <span style={{ width: 3, background: AMBER, borderRadius: 2, flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: AMBER, fontFamily: SANS, marginBottom: 2 }}>Important</div>
-                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Substantive policy discussion with real outcomes, but binding decisions unlikely at this session. Scientific committees, preparatory meetings.</div>
+                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Session produces recommendations or assessments that inform binding decisions at a higher body. Scientific committees, subsidiary bodies, expert groups.</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <span style={{ width: 3, background: "#d1d5db", borderRadius: 2, flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: MUTED, fontFamily: SANS, marginBottom: 2 }}>Routine</div>
-                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Administrative, procedural, or early-stage. No imminent decisions. Working group logistics, capacity-building workshops.</div>
+                    <div style={{ fontSize: 12, color: MUTED, fontFamily: SANS, lineHeight: 1.5 }}>Administrative or procedural session with no decision-making mandate. Working group logistics, capacity-building, compliance monitoring.</div>
                   </div>
                 </div>
               </div>
