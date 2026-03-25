@@ -23,6 +23,9 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `/subscribe` — Stripe Elements checkout page with card form and SCA handling
 - `/platform/feed` — main feed with topic sidebar, story list, subscription banners, and paywall overlay
 - `/platform/story/[id]` — individual story detail with AI summaries
+- `/tracker/bbnj` — BBNJ treaty ratification tracker (choropleth map, regional bars, timeline chart, country table)
+- `/tracker/governance` — ocean governance calendar (three views: Timeline, By Body, By Topic) with iCal sync
+- `/tracker/governance/[id]` — event detail with significance, expected decisions, documents, related events
 
 **API Routes** (`app/api/`):
 - `magic-link` — generates magic link token, stores in `magic_links` table, sends email via Resend
@@ -37,6 +40,10 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `cron/fetch-feeds` — hourly RSS aggregation from ~89 sources, extracts descriptions, bearer token auth via `CRON_SECRET`
 - `cron/harvest-scraped-sources` — every 6 hours, scrapes non-RSS sources (IMO, ISA, FAO, IUCN, CBD, CITES, UN BBNJ) via Jina + BBNJ treaty ratification XML parser. Writes to `scraped_sources`, `stories`, `treaty_ratifications`, and `scrape_runs` tables
 - `webhooks/treaty-change` — receives Supabase pg_net trigger on `treaty_ratifications` INSERT, uses Claude to assess significance, creates story with `alert_type: "treaty_alert"` if warranted
+- `cron/scrape-governance-calendar` — weekly (Mondays 3am UTC), scrapes 10 governance body meeting pages via Jina, uses Claude to extract structured meeting data (not regex), classifies significance, inserts expected decisions
+- `governance-events` — GET endpoint for governance calendar events with body/topic/significance filters and single event detail
+- `calendar/[token]` — personal iCal feed (text/calendar), filtered by subscriber preferences
+- `calendar/subscribe` — creates personal calendar subscription with filter preferences, returns iCal URL + Google/Outlook/Apple links
 
 **Auth**: Custom magic link system (`/api/magic-link` + `/api/verify`) sets a `tideline_session` cookie (base64 JSON with email + 30-day expiry, httpOnly). NextAuth v4 also configured in `auth.ts` but the custom system is primary. Middleware protects `/platform/*` by checking `tideline_session` first, then NextAuth cookies as fallback. Login page passes `callbackUrl` through the full chain.
 
@@ -49,6 +56,10 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `public.subscriptions` — Stripe subscription state (status, trial_end, current_period_end, cancel_at_period_end)
 - `public.trial_signups` — email, topics, signed_up_at, status
 - `public.magic_links` — email, token, expires_at, used
+- `public.governance_bodies` — 10 intergovernmental bodies (IMO, ISA, IWC, CBD, OSPAR, CCAMLR, ICCAT, CITES, UNOC, WTO-Fish) with scrape URLs and frequencies
+- `public.governance_events` — meetings/deadlines/sessions with body_id, dates, location, significance, topics[], source_id (dedup), expected decisions
+- `public.expected_decisions` — per-event decision tracker: description, type (vote/adoption/review/deadline), expected_outcome, audience_tags, resolved status
+- `public.calendar_subscriptions` — personal iCal subscriptions with user_email, calendar_token, filters (topics/bodies)
 - `next_auth.users` — NextAuth session management (separate from `public.users`)
 
 **Stripe Webhook** (`/api/stripe-webhook`) handles these 5 events:
@@ -64,6 +75,8 @@ Tideline — a professional ocean intelligence platform that curates and summari
 
 **Treaty Monitoring Agent**: The harvest cron parses BBNJ treaty ratification data from the UN Treaty Collection XML. New ratification changes are inserted into `treaty_ratifications` with `changed_from` tracking. A Supabase pg_net trigger fires on INSERT, calling `/api/webhooks/treaty-change`. The webhook uses Claude to assess significance and creates a story alert if warranted. Treaty alerts appear at the top of the feed with a distinct red ALERT badge, above all regular stories regardless of topic filter.
 
+**Governance Calendar**: Scrapes 10 intergovernmental body meeting pages weekly using Claude to extract structured meeting data from Jina-rendered pages (not regex — handles arbitrary page layouts). Each new event is classified by Claude for significance (critical/important/routine) with strict rules: no speculative predictions, "unknown" as default outcome, empty expected_decisions if no agenda published. Subscribers can sync filtered events to Google Calendar, Outlook, or Apple Calendar via personal iCal URLs. Three-view tracker page: Timeline (chronological), By Body, By Topic.
+
 **External Services**: Supabase (DB), Resend (email via SMTP and API), Claude API (summarization via `claude-sonnet-4-20250514`), Stripe (payments + webhooks), Jina (article scraping), Vercel (hosting + cron).
 
 ## Styling
@@ -75,7 +88,8 @@ All pages use **inline styles** (`style={{...}}`), not Tailwind utility classes 
 - Path alias: `@/*` maps to project root
 - Pages are largely self-contained — minimal shared components (`components/Header.tsx`)
 - Middleware checks `tideline_session` cookie first, then NextAuth cookies as fallback
-- Cron jobs (`vercel.json`): `/api/cron/fetch-feeds` hourly, `/api/cron/harvest-scraped-sources` every 6 hours
+- Cron jobs (`vercel.json`): `/api/cron/fetch-feeds` hourly, `/api/cron/harvest-scraped-sources` every 6 hours, `/api/cron/scrape-governance-calendar` weekly (Mondays 3am UTC)
+- Middleware protects `/platform/*` and `/tracker/*` routes behind auth
 - AI summaries are generated lazily on story view with three-tier fallback: Jina article fetch → direct fetch/meta scrape → RSS description field. Only shows "Summary unavailable" if all three fail.
 - Feed urgency tags: Breaking (< 2 hours old), New (2-24 hours), no tag (> 24 hours)
 - RSS feed cron extracts `<description>`, `<content>`, or `<summary>` from feed items and stores in `stories.description`
