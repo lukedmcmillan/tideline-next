@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getEmailFromSession } from "@/app/lib/auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function getEmailFromSession(req: NextRequest): string | null {
-  const cookie = req.cookies.get("tideline_session")?.value;
-  if (!cookie) return null;
-  try {
-    const decoded = JSON.parse(Buffer.from(cookie, "base64").toString());
-    if (new Date(decoded.expires) < new Date()) return null;
-    return decoded.email ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export async function POST(req: NextRequest) {
-  const email = getEmailFromSession(req);
+  const email = await getEmailFromSession(req);
   if (!email) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }

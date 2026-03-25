@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const sessionToken =
-    request.cookies.get('tideline_session')?.value ||
     request.cookies.get('__Secure-next-auth.session-token')?.value ||
     request.cookies.get('next-auth.session-token')?.value
 
