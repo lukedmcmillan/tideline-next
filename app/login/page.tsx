@@ -2,18 +2,59 @@
 
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get("callbackUrl") || "/platform/feed";
   const isError = searchParams?.get("error");
+  const isVerify = searchParams?.get("verify") === "1";
+  const [email, setEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.includes("@") || !email.includes(".")) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+    setEmailError("");
+    setLoading(true);
+    try {
+      await signIn("email", { email, callbackUrl, redirect: false });
+      setEmailSent(true);
+    } catch {
+      setEmailError("Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  if (emailSent || isVerify) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0B1D35", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Mono&family=DM+Sans:wght@400;500;600;700&display=swap');
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+        `}</style>
+        <div style={{ maxWidth: 400, width: "100%", background: "#ffffff", borderRadius: 8, padding: "48px 40px", textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: 20 }}>✓</div>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: "#0a1628", fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>Check your email</h2>
+          <p style={{ fontSize: 14, color: "#64748b", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+            We sent a sign-in link to <strong style={{ color: "#0a1628" }}>{email}</strong>. Click the link to sign in.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#0B1D35", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Mono&family=DM+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        input:focus { outline: none; border-color: #1D9E75 !important; box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
       `}</style>
       <div style={{ maxWidth: 400, width: "100%", background: "#ffffff", borderRadius: 8, padding: "48px 40px", textAlign: "center" }}>
         <h1 style={{ fontSize: 36, fontWeight: 400, color: "#0a1628", fontFamily: "'Instrument Serif', Georgia, serif", marginBottom: 4, letterSpacing: "-0.02em" }}>
@@ -31,6 +72,7 @@ function LoginContent() {
           </div>
         )}
 
+        {/* Google OAuth */}
         <button
           onClick={() => signIn("google", { callbackUrl })}
           style={{
@@ -58,6 +100,56 @@ function LoginContent() {
           </svg>
           Continue with Google
         </button>
+
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0" }}>
+          <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
+          <span style={{ fontSize: 12, color: "#94a3b8", fontFamily: "'DM Sans', sans-serif" }}>or</span>
+          <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
+        </div>
+
+        {/* Email magic link */}
+        <form onSubmit={handleEmailSignIn} style={{ textAlign: "left" }}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              border: `1.5px solid ${emailError ? "#ef4444" : "#e2e8f0"}`,
+              fontSize: 14,
+              fontFamily: "'DM Sans', sans-serif",
+              borderRadius: 4,
+              background: "#ffffff",
+              color: "#0a1628",
+              marginBottom: emailError ? 0 : 10,
+            }}
+          />
+          {emailError && (
+            <p style={{ fontSize: 12, color: "#ef4444", fontFamily: "'DM Sans', sans-serif", margin: "6px 0 10px" }}>{emailError}</p>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "transparent",
+              border: "1.5px solid #e2e8f0",
+              color: "#0a1628",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: loading ? "not-allowed" : "pointer",
+              borderRadius: 4,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            {loading ? "Sending..." : "Send sign-in link"}
+          </button>
+        </form>
 
         <p style={{ fontSize: 12, color: "#94a3b8", fontFamily: "'DM Sans', sans-serif", marginTop: 24, lineHeight: 1.6 }}>
           Professional ocean intelligence · Before 7am
