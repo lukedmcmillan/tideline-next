@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -23,7 +22,13 @@ function LoginContent() {
     setEmailError("");
     setLoading(true);
     try {
-      await signIn("email", { email, callbackUrl, redirect: false });
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
+      await fetch("/api/auth/signin/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ email, callbackUrl, csrfToken }),
+      });
       setEmailSent(true);
     } catch {
       setEmailError("Something went wrong. Please try again.");
@@ -74,7 +79,7 @@ function LoginContent() {
 
         {/* Google OAuth */}
         <button
-          onClick={() => signIn("google", { callbackUrl })}
+          onClick={() => window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`}
           style={{
             width: "100%",
             padding: "14px",
