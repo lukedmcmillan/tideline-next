@@ -96,6 +96,7 @@ function Sidebar() {
             <a href="/tracker/bbnj" className="sidebar-nav-item" style={{
               display: "flex", alignItems: "center", gap: 8, height: 32, padding: "0 16px",
               fontFamily: SANS, fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none",
+              borderRight: t.pulse ? `2px solid ${RED}` : "2px solid transparent",
             }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: t.color, flexShrink: 0, animation: t.pulse ? "pulse 2.2s ease-in-out infinite" : "none" }} />
               <span>{t.name}</span>
@@ -131,7 +132,7 @@ function Sidebar() {
         ].map(p => (
           <a key={p.name} href="/platform/workspace" className="sidebar-nav-item" style={{
             display: "flex", alignItems: "center", gap: 8, height: 32, padding: "0 16px",
-            fontFamily: SANS, fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none",
+            fontFamily: SANS, fontSize: 11, color: "rgba(255,255,255,0.55)", textDecoration: "none",
           }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
             <span>{p.name}</span>
@@ -180,13 +181,14 @@ function RightPanel() {
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, animation: "pulse 2.2s ease-in-out infinite" }} />
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.35 }}>TIDELINE CONNECTIONS</span>
         </div>
+        <div style={{ fontFamily: SANS, fontSize: 11, fontStyle: "italic", color: BLACK, opacity: 0.4, marginBottom: 10 }}>Patterns identified across trackers today.</div>
         <div style={{ borderLeft: `2px solid ${TEAL}`, background: "#FAFAF9", padding: "12px 14px" }}>
-          <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.65, color: BLACK, margin: 0 }}>
+          <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.7, color: BLACK, margin: 0 }}>
             The ISA deferral and accelerating BBNJ ratification are directly linked. Three sponsoring states are conditioning their ISA vote on BBNJ implementation terms.
           </p>
           <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
             {["ISA Mining", "BBNJ Treaty"].map(t => (
-              <span key={t} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", border: `1px solid ${TEAL}`, color: TEAL, padding: "2px 7px" }}>{t}</span>
+              <span key={t} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", border: `1px solid ${TEAL}`, color: TEAL, padding: "4px 9px" }}>{t}</span>
             ))}
           </div>
         </div>
@@ -208,32 +210,12 @@ function RightPanel() {
         <a href="/tracker/governance" style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.4, textDecoration: "none" }}>View full calendar &rarr;</a>
       </div>
 
-      {/* Source transparency */}
-      <div style={{ padding: 16, borderBottom: `1px solid ${RULE}` }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.35, marginBottom: 12 }}>SOURCE TRANSPARENCY</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <span style={{ width: 16, height: 2, background: TEAL, marginTop: 6, flexShrink: 0 }} />
-          <p style={{ fontFamily: MONO, fontSize: 9, lineHeight: 1.6, color: BLACK, opacity: 0.5, margin: 0 }}>
-            Underlined sources are Tier 1 &mdash; primary regulatory bodies, scientific institutions and enforcement databases. Click any source to view the original document.
-          </p>
-        </div>
-        <a href="#" style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.4, textDecoration: "none", display: "block", marginTop: 8 }}>How Tideline works &rarr;</a>
-      </div>
-
-      {/* Your topics */}
-      <div style={{ padding: 16 }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.35, marginBottom: 12 }}>YOUR TOPICS</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-          {[
-            { name: "BBNJ", active: true }, { name: "Deep-Sea Mining", active: true },
-            { name: "Blue Finance", active: false }, { name: "IUU Fishing", active: false },
-            { name: "30x30", active: true }, { name: "Climate", active: false },
-            { name: "Shipping", active: false },
-          ].map(t => (
-            <span key={t.name} style={{ fontFamily: MONO, fontSize: 9, padding: "3px 7px", border: `1px solid ${t.active ? TEAL : RULE}`, color: t.active ? TEAL : BLACK, opacity: t.active ? 1 : 0.5 }}>{t.name}</span>
-          ))}
-        </div>
-        <a href="/onboarding" style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.4, textDecoration: "none", display: "block", marginTop: 8 }}>Edit topics &rarr;</a>
+      {/* Settings link */}
+      <div style={{ marginTop: "auto", padding: "12px 16px", borderTop: `1px solid ${RULE}` }}>
+        <a href="/platform/settings" style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.35, textDecoration: "none", cursor: "pointer" }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="6" cy="6" r="2"/><path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.3 2.3l.7.7M9 9l.7.7M9.7 2.3l-.7.7M3 9l-.7.7"/></svg>
+          Settings &amp; sources
+        </a>
       </div>
     </div>
   );

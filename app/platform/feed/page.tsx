@@ -78,7 +78,8 @@ export default function FeedPage() {
       `}</style>
 
       {/* 1. SEARCH HERO */}
-      <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${RULE}` }}>
+      <div style={{ padding: "32px 28px 18px", borderBottom: `1px solid ${RULE}` }}>
+        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", color: BLACK, opacity: 0.35, marginBottom: 10 }}>Your research assistant. Cited answers from Tideline's dataset.</div>
         <div style={{ position: "relative" }}>
           <input type="text" placeholder="Ask Tideline anything." style={{ width: "100%", height: 48, border: `1.5px solid ${BLACK}`, borderRadius: 0, fontFamily: SERIF, fontStyle: "italic", fontSize: 15, padding: "0 54px 0 18px", background: WHITE, color: BLACK }} />
           <button style={{ position: "absolute", right: 0, top: 0, width: 48, height: 48, background: BLACK, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -91,7 +92,7 @@ export default function FeedPage() {
             "Summarise BBNJ ratification status and what it means for enforcement. \u2192",
             "What does the ISA deferral mean for my uploaded OSPAR report? \u2192",
           ].map((chip, i) => (
-            <span key={i} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.05em", border: `1px solid ${RULE}`, padding: "6px 12px", color: BLACK, opacity: 0.5, cursor: "pointer" }}>{chip}</span>
+            <span key={i} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.05em", border: `1px solid ${RULE}`, padding: "8px 14px", color: BLACK, opacity: 0.5, cursor: "pointer" }}>{chip}</span>
           ))}
         </div>
       </div>
@@ -106,6 +107,7 @@ export default function FeedPage() {
         </div>
         <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: RED }}>CONSEQUENTIAL</span>
         <span style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.55, marginLeft: 4 }}>Three consequential events across BBNJ, ISA and IUU trackers this week.</span>
+        <span onClick={() => document.getElementById("lead-story")?.scrollIntoView({ behavior: "smooth" })} style={{ fontFamily: MONO, fontSize: 10, color: RED, cursor: "pointer", marginLeft: "auto", flexShrink: 0 }}>Show me {"\u2192"}</span>
       </div>
 
       {/* 3. MORNING SIGNAL */}
@@ -115,7 +117,7 @@ export default function FeedPage() {
           {signalRead ? (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL, flexShrink: 0 }} />
-              <span style={{ fontFamily: SANS, fontSize: 13, color: BLACK, opacity: 0.4, fontStyle: "italic" }}>You are up to date on your morning signal.</span>
+              <span style={{ fontFamily: SERIF, fontSize: 13, color: BLACK, opacity: 0.45, fontStyle: "italic" }}>You are up to date on your morning signal.</span>
             </div>
           ) : (
             <>
@@ -124,7 +126,7 @@ export default function FeedPage() {
               </p>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 {["IFC Blue Finance Framework", "BBNJ Ratification"].map((c, i) => (
-                  <span key={i} onClick={() => handleChipClick(i)} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", border: `1px solid ${TEAL}`, color: TEAL, padding: "3px 9px", cursor: "pointer", opacity: chipsClicked.has(i) ? 0.4 : 1 }}>{c} {"\u2192"}</span>
+                  <span key={i} onClick={() => handleChipClick(i)} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", border: `1px solid ${TEAL}`, color: TEAL, padding: "6px 12px", cursor: "pointer", opacity: chipsClicked.has(i) ? 0.4 : 1 }}>{c} {"\u2192"}</span>
                 ))}
               </div>
             </>
@@ -135,11 +137,10 @@ export default function FeedPage() {
       {/* 4. FEED HEADER */}
       <div style={{ padding: "10px 28px", borderBottom: `1px solid ${RULE}`, display: "flex", alignItems: "center", gap: 14, position: "sticky", top: 0, background: WHITE, zIndex: 10 }}>
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, animation: "pulse 2.2s ease-in-out infinite", flexShrink: 0 }} />
-        <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" }}>What moved overnight</span>
-        <span style={{ fontFamily: MONO, fontSize: 10, opacity: 0.35, marginLeft: 8 }}>06:42</span>
+        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" }}>What moved overnight <span style={{ opacity: 0.2 }}>{"\u00b7"}</span> <span style={{ fontSize: 10, opacity: 0.35, fontWeight: 400 }}>06:42</span></span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 5 }}>
           {filters.map(f => (
-            <button key={f} onClick={() => setFilter(f)} style={{ fontFamily: MONO, fontSize: 9, padding: "4px 10px", border: `1px solid ${filter === f ? BLACK : RULE}`, background: filter === f ? BLACK : "transparent", color: filter === f ? WHITE : BLACK, opacity: filter === f ? 1 : 0.5, cursor: "pointer" }}>{f}</button>
+            <button key={f} onClick={() => setFilter(f)} style={{ fontFamily: MONO, fontSize: 8, padding: "3px 9px", border: `1px solid ${filter === f ? BLACK : RULE}`, background: filter === f ? BLACK : "transparent", color: filter === f ? WHITE : BLACK, opacity: filter === f ? 1 : 0.4, cursor: "pointer" }}>{f}</button>
           ))}
         </div>
       </div>
@@ -147,9 +148,9 @@ export default function FeedPage() {
       {/* 5. NEWSPAPER GRID */}
       <div style={{ padding: "0 28px" }}>
         {/* Row 1: Lead + 2 secondary */}
-        <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", borderBottom: `1px solid ${RULE}`, padding: "20px 0" }}>
+        <div id="lead-story" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", borderBottom: `1px solid ${RULE}`, padding: "32px 0" }}>
           {/* Lead */}
-          <div style={{ borderRight: `1px solid ${RULE}`, paddingRight: 24 }}>
+          <div style={{ borderRight: `1px solid ${RULE}`, borderLeft: `2px solid ${RED}`, paddingRight: 24, paddingLeft: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               {STORIES[0].breaking && (
                 <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -160,19 +161,19 @@ export default function FeedPage() {
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4 }}>{STORIES[0].cat}</span>
               <span style={{ fontFamily: MONO, fontSize: 9, color: timeColor(STORIES[0].time), fontWeight: 500 }}>{timeStr(STORIES[0].time)}</span>
             </div>
-            <h3 style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 700, lineHeight: 1.22, margin: "0 0 8px" }}>{STORIES[0].headline}</h3>
-            <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.65, opacity: 0.7, margin: "0 0 10px" }}>{STORIES[0].summary}</p>
-            <SourceLink name={STORIES[0].source} tier={STORIES[0].tier} />
+            <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 700, lineHeight: 1.22, margin: "0 0 8px" }}>{STORIES[0].headline}</h3>
+            <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.75, opacity: 0.7, margin: "0 0 10px" }}>{STORIES[0].summary}</p>
+            <div style={{ marginBottom: 8 }}><SourceLink name={STORIES[0].source} tier={STORIES[0].tier} /></div>
           </div>
           {/* Secondary */}
           <div style={{ paddingLeft: 24 }}>
             {STORIES.slice(1, 3).map((s, i) => (
-              <div key={s.id} style={{ paddingBottom: i === 0 ? 14 : 0, marginBottom: i === 0 ? 14 : 0, borderBottom: i === 0 ? `1px solid ${RULE}` : "none" }}>
+              <div key={s.id} style={{ paddingBottom: i === 0 ? 18 : 0, marginBottom: i === 0 ? 18 : 0, borderBottom: i === 0 ? `1px solid ${RULE}` : "none" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4 }}>{s.cat}</span>
                   <span style={{ fontFamily: MONO, fontSize: 9, color: timeColor(s.time), fontWeight: 500 }}>{timeStr(s.time)}</span>
                 </div>
-                <h4 style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 700, lineHeight: 1.35, margin: "0 0 6px" }}>{s.headline}</h4>
+                <h4 style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 700, lineHeight: 1.35, margin: "4px 0 6px" }}>{s.headline}</h4>
                 <SourceLink name={s.source} tier={s.tier} />
               </div>
             ))}
@@ -182,12 +183,12 @@ export default function FeedPage() {
         {/* Row 2: Three columns */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: `1px solid ${RULE}` }}>
           {STORIES.slice(3, 6).map((s, i) => (
-            <div key={s.id} style={{ padding: "16px 0", paddingLeft: i > 0 ? 20 : 0, paddingRight: i < 2 ? 20 : 0, borderRight: i < 2 ? `1px solid ${RULE}` : "none" }}>
+            <div key={s.id} style={{ padding: "24px 0", paddingLeft: i > 0 ? 28 : 0, paddingRight: i < 2 ? 28 : 0, borderRight: i < 2 ? `1px solid ${RULE}` : "none" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4 }}>{s.cat}</span>
                 <span style={{ fontFamily: MONO, fontSize: 9, color: timeColor(s.time) }}>{timeStr(s.time)}</span>
               </div>
-              <h4 style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 700, lineHeight: 1.35, margin: "0 0 6px" }}>{s.headline}</h4>
+              <h4 style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 700, lineHeight: 1.35, margin: "4px 0 6px" }}>{s.headline}</h4>
               {s.summary && <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.65, opacity: 0.6, margin: "0 0 8px" }}>{s.summary}</p>}
               <SourceLink name={s.source} tier={s.tier} />
             </div>
@@ -195,10 +196,10 @@ export default function FeedPage() {
         </div>
 
         {/* Row 3: Compact list */}
-        <div style={{ paddingTop: 14 }}>
+        <div style={{ paddingTop: 22 }}>
           <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.35, marginBottom: 10 }}>More from Tideline</div>
           {COMPACT.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 12, padding: "8px 0", borderBottom: `1px solid ${RULE}` }}>
+            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "13px 0", borderBottom: `1px solid ${RULE}` }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4, minWidth: 88, flexShrink: 0 }}>{s.cat}</span>
               <span style={{ fontFamily: SERIF, fontSize: 13, fontWeight: 700, lineHeight: 1.35, flex: 1 }}>{s.headline}</span>
               <SourceLink name={s.source} tier={s.tier} />
