@@ -55,10 +55,8 @@ export const authOptions = {
       },
     }),
   ],
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  }),
+  // adapter removed: SupabaseAdapter conflicts with Google OAuth + JWT strategy
+  // Email provider verification tokens handled via custom flow instead
   pages: {
     signIn: '/login',
     verifyRequest: '/login?verify=1',
