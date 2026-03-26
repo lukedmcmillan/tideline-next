@@ -110,10 +110,10 @@ export default function Home() {
           The brief.<br />The trackers.<br />The edge.
         </h1>
         <div style={{ fontSize: 12, fontFamily: MONO, letterSpacing: "0.06em", color: BLACK, opacity: 0.5, marginBottom: 28 }}>
-          Monitoring 50+ primary sources across 31 ocean subject areas. Updated daily.
+          Monitoring 100+ primary sources across 31 ocean subject areas. Updated daily.
         </div>
         <p style={{ fontSize: 19, fontFamily: SERIF, lineHeight: 1.65, maxWidth: 560, margin: "0 0 36px", color: BLACK }}>
-          The longer you use it, the more it knows about what you need to know. Everything that moves in ocean governance, regulation, climate, finance and policy &mdash; tracked daily, before 7am.
+          The longer you use it, the more it knows about what you need to know. Everything that moves in ocean governance, regulation, climate, finance and policy. Tracked daily.
         </p>
         <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap" }}>
           <a href="/subscribe" style={{ fontSize: 14, fontFamily: SANS, fontWeight: 500, color: WHITE, background: BLACK, padding: "14px 28px", border: "none", borderRadius: 0 }}>Start your free trial</a>
@@ -122,6 +122,7 @@ export default function Home() {
 
         {/* Feed excerpt */}
         <div style={{ maxWidth: 580, marginTop: 56 }}>
+          <div style={{ fontSize: 13, fontFamily: SANS, fontWeight: 400, color: BLACK, opacity: 0.45, marginBottom: 14 }}>This arrived in your inbox this morning.</div>
           <div style={{ borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, padding: "20px 0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <span style={{ fontSize: 10, fontFamily: MONO, letterSpacing: "0.18em", color: BLACK, opacity: 0.4 }}>DEEP-SEA MINING</span>
@@ -181,9 +182,9 @@ export default function Home() {
         </div>
         <div className="feature-grid">
           {[
-            { num: "01", title: "The Morning Brief", body: "A synthesised summary of overnight developments across regulation, science, finance and policy. In your inbox before 7am. Written from primary sources, not press releases." },
+            { num: "01", title: "The Morning Brief", body: "A synthesised summary of overnight developments across regulation, science, finance and policy. In your inbox daily. Written from primary sources, not press releases." },
             { num: "02", title: "Live Trackers", body: "Running status on BBNJ ratification, ISA negotiations, IUU enforcement actions, blue bond issuance, and the key regulatory dockets shaping the next five years." },
-            { num: "03", title: "Source Intelligence", body: "Monitored feeds from 50+ primary sources: UN agencies, scientific journals, enforcement bodies, financial regulators and government ministries. Curated, not scraped." },
+            { num: "03", title: "Source Intelligence", body: "Monitored feeds from 100+ primary sources: UN agencies, scientific journals, enforcement bodies, financial regulators and government ministries. Curated, not scraped." },
           ].map((f, i) => (
             <>
               {i > 0 && <div key={`frv-${i}`} className="feature-rule-v" style={{ background: RULE }} />}
