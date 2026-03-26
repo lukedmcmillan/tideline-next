@@ -1,5 +1,7 @@
 import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import EmailProvider from 'next-auth/providers/email'
+import { SupabaseAdapter } from '@auth/supabase-adapter'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -12,10 +14,55 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    EmailProvider({
+      server: {
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: 'resend',
+          pass: process.env.RESEND_API_KEY,
+        },
+      },
+      from: 'Tideline <noreply@thetideline.co>',
+      sendVerificationRequest: async ({ identifier: email, url }) => {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Tideline <noreply@thetideline.co>',
+            to: email,
+            subject: 'Sign in to Tideline',
+            html: `
+              <div style="max-width:520px;margin:40px auto;font-family:Georgia,serif;">
+                <div style="background:#0D1B2A;padding:20px 32px;">
+                  <span style="font-size:14px;font-weight:400;color:#ffffff;letter-spacing:0.18em;text-transform:uppercase;font-family:monospace;">TIDELINE</span>
+                </div>
+                <div style="padding:40px 32px;background:#ffffff;border:1px solid #E4E4E4;">
+                  <h1 style="font-size:22px;color:#0D0D0D;margin:0 0 16px;font-family:Georgia,serif;">Sign in to Tideline</h1>
+                  <p style="font-size:15px;color:#64748B;margin:0 0 28px;font-family:sans-serif;">Click the button below to sign in. This link expires in 24 hours.</p>
+                  <a href="${url}" style="display:inline-block;padding:13px 28px;background:#0D0D0D;color:#ffffff;font-size:14px;font-weight:500;text-decoration:none;font-family:sans-serif;">Sign in to Tideline</a>
+                  <p style="font-size:12px;color:#94a3b8;margin:24px 0 0;font-family:sans-serif;">If you did not request this, you can safely ignore this email.</p>
+                </div>
+              </div>
+            `,
+          }),
+        })
+      },
     }),
   ],
+  adapter: SupabaseAdapter({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  }),
   pages: {
     signIn: '/login',
+    verifyRequest: '/login?verify=1',
     error: '/login?error=1',
   },
   session: {
@@ -26,20 +73,25 @@ export const authOptions = {
     async signIn({ user }: { user: any }) {
       if (!user?.email) return false
 
-      const { data: existing } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', user.email)
-        .single()
+      // Create user in public.users on first login
+      try {
+        const { data: existing } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', user.email)
+          .single()
 
-      if (!existing) {
-        await supabase.from('users').insert({
-          email: user.email,
-          subscription_status: 'trial',
-          trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          topics: [],
-          timezone: 'Europe/London',
-        })
+        if (!existing) {
+          await supabase.from('users').insert({
+            email: user.email,
+            subscription_status: 'trial',
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            topics: [],
+            timezone: 'Europe/London',
+          })
+        }
+      } catch (err) {
+        console.error('signIn callback error:', err)
       }
 
       return true
