@@ -113,7 +113,7 @@ export default function Home() {
           Built for every professional with a stake in the ocean.
         </div>
         <p style={{ fontSize: 19, fontFamily: SERIF, lineHeight: 1.65, maxWidth: 620, margin: "0 0 36px", color: BLACK }}>
-          The ocean space moves fast. Tideline tracks everything that matters across governance, regulation, finance and policy &mdash; so you are never the professional who missed it.
+          The ocean space moves fast. Tideline tracks everything that matters across governance, regulation, climate, finance and policy &mdash; so you are never the professional who missed it. The longer you use it, the more it knows about what you need to know.
         </p>
         <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
           <a href="/subscribe" style={{ fontSize: 13, fontFamily: SANS, fontWeight: 500, color: WHITE, background: BLACK, padding: "13px 28px" }}>Start your free trial</a>
