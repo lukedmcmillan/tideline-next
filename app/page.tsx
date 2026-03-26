@@ -106,18 +106,38 @@ export default function Home() {
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, display: "inline-block", animation: "pulse 2.2s ease-in-out infinite" }} />
           <span style={{ fontSize: 11, fontFamily: MONO, color: BLACK, opacity: 0.45, letterSpacing: "0.06em" }}>Ocean intelligence</span>
         </div>
-        <h1 style={{ fontSize: "clamp(42px, 5.5vw, 68px)", fontWeight: 700, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.08, margin: "0 0 20px", color: BLACK }}>
+        <h1 style={{ fontSize: "clamp(42px, 5.5vw, 68px)", fontWeight: 700, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.08, margin: "0 0 24px", color: BLACK }}>
           The brief.<br />The trackers.<br />The edge.
         </h1>
-        <div style={{ fontSize: 13, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase", opacity: 0.55, marginBottom: 24 }}>
-          Built for every professional with a stake in the ocean.
+        <div style={{ fontSize: 12, fontFamily: MONO, letterSpacing: "0.06em", color: BLACK, opacity: 0.5, marginBottom: 28 }}>
+          Monitoring 50+ primary sources across 31 ocean subject areas. Updated daily.
         </div>
-        <p style={{ fontSize: 19, fontFamily: SERIF, lineHeight: 1.65, maxWidth: 620, margin: "0 0 36px", color: BLACK }}>
-          The ocean space moves fast. Tideline tracks everything that matters across governance, regulation, climate, finance and policy &mdash; so you are never the professional who missed it. The longer you use it, the more it knows about what you need to know.
+        <p style={{ fontSize: 19, fontFamily: SERIF, lineHeight: 1.65, maxWidth: 560, margin: "0 0 36px", color: BLACK }}>
+          The longer you use it, the more it knows about what you need to know. Everything that moves in ocean governance, regulation, climate, finance and policy &mdash; tracked daily, before 7am.
         </p>
-        <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-          <a href="/subscribe" style={{ fontSize: 13, fontFamily: SANS, fontWeight: 500, color: WHITE, background: BLACK, padding: "13px 28px" }}>Start your free trial</a>
-          <a href="/#product" style={{ fontSize: 13, fontFamily: SANS, color: BLACK, opacity: 0.55, textDecoration: "underline", textUnderlineOffset: "4px" }}>See what's covered</a>
+        <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap" }}>
+          <a href="/subscribe" style={{ fontSize: 14, fontFamily: SANS, fontWeight: 500, color: WHITE, background: BLACK, padding: "14px 28px", border: "none", borderRadius: 0 }}>Start your free trial</a>
+          <a href="/#product" style={{ fontSize: 14, fontFamily: SANS, fontWeight: 400, color: BLACK, opacity: 0.5, textDecoration: "underline", textUnderlineOffset: "3px" }}>See what&apos;s covered</a>
+        </div>
+
+        {/* Feed excerpt */}
+        <div style={{ maxWidth: 580, marginTop: 56 }}>
+          <div style={{ borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, padding: "20px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 10, fontFamily: MONO, letterSpacing: "0.18em", color: BLACK, opacity: 0.4 }}>DEEP-SEA MINING</span>
+              <span style={{ fontSize: 10, fontFamily: MONO, color: BLACK, opacity: 0.3, marginLeft: "auto" }}>06:42 this morning</span>
+            </div>
+            <div style={{ fontSize: "clamp(16px, 2vw, 20px)", fontFamily: SERIF, fontWeight: 700, lineHeight: 1.35, color: BLACK, marginTop: 10, maxWidth: 540 }}>
+              ISA Council defers exploitation code vote as sponsoring state pressure mounts ahead of July session.
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8, flexWrap: "wrap", gap: 8 }}>
+              <span style={{ fontSize: 12, fontFamily: SANS, color: BLACK, opacity: 0.4 }}>ISA / Bloomberg Law</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, display: "inline-block", animation: "pulse 2.2s ease-in-out infinite" }} />
+                <span style={{ fontSize: 10, fontFamily: MONO, color: TEAL, opacity: 0.8 }}>Live feed</span>
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
