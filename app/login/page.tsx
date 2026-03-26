@@ -79,7 +79,19 @@ function LoginContent() {
 
         {/* Google OAuth */}
         <button
-          onClick={() => window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+          onClick={async () => {
+            const res = await fetch("/api/auth/csrf");
+            const { csrfToken } = await res.json();
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/api/auth/signin/google";
+            const csrf = document.createElement("input");
+            csrf.type = "hidden"; csrf.name = "csrfToken"; csrf.value = csrfToken;
+            const cb = document.createElement("input");
+            cb.type = "hidden"; cb.name = "callbackUrl"; cb.value = callbackUrl;
+            form.appendChild(csrf); form.appendChild(cb);
+            document.body.appendChild(form); form.submit();
+          }}
           style={{
             width: "100%",
             padding: "14px",
