@@ -1,211 +1,148 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-const BLACK   = "#0D0D0D";
-const WHITE   = "#FFFFFF";
-const TEAL    = "#1D9E75";
-const AMBER   = "#D97706";
-const RED     = "#C0392B";
-const SLATE   = "#64748B";
-const RULE    = "#E4E4E4";
-const SERIF   = "var(--font-serif), 'Libre Baskerville', Georgia, serif";
-const SANS    = "var(--font-sans), 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
-const MONO    = "var(--font-mono), 'DM Mono', monospace";
+const BG     = "#F8F9FA";
+const WHITE  = "#FFFFFF";
+const TEAL   = "#1D9E75";
+const AMBER  = "#F9AB00";
+const RED    = "#D93025";
+const T1     = "#202124";
+const T2     = "#3C4043";
+const T3     = "#5F6368";
+const T4     = "#9AA0A6";
+const BORDER = "#DADCE0";
+const BLT    = "#E8EAED";
+const F      = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+const M      = "var(--font-mono), 'DM Mono', monospace";
 
-function timeColor(iso: string): string {
-  const h = (Date.now() - new Date(iso).getTime()) / 3600000;
-  if (h < 6) return TEAL;
-  if (h < 24) return `${BLACK}59`; // 0.35 opacity
-  return `${BLACK}40`; // 0.25 opacity
-}
-
-function timeStr(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
-
-function SourceLink({ name, tier }: { name: string; tier: 1 | 2 }) {
-  if (tier === 1) {
-    return (
-      <a href="#" target="_blank" rel="noopener" style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: BLACK, textDecoration: "underline", textDecorationColor: TEAL, textUnderlineOffset: "2px", cursor: "pointer" }} title="Tier 1 \u2014 primary regulatory source. Click to view original document.">
-        {name} {"\u2197"}
-      </a>
-    );
-  }
-  return (
-    <a href="#" target="_blank" rel="noopener" style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.4, cursor: "pointer", textDecoration: "none" }}>
-      {name} {"\u2197"}
-    </a>
-  );
-}
-
-// ── Sample data ───────────────────────────────────────────────────────────
 const STORIES = [
-  { id: "1", breaking: true, cat: "OCEAN GOVERNANCE", time: "2026-03-26T06:42:00Z", tier: 1 as const, source: "IISD Reporting Services", headline: "BBNJ ratification tracker: third instrument deposit confirmed as Pacific bloc signals alignment", summary: "The UN Treaty Collection confirmed a third instrument of ratification from a Pacific island state late yesterday, bringing the total to 87 \u2014 past the 60 required for entry into force. Legal analysts suggest coordinated timing with the July ISA session. The development accelerates the implementation timeline by an estimated two quarters." },
-  { id: "2", breaking: false, cat: "DEEP-SEA MINING", time: "2026-03-26T05:18:00Z", tier: 1 as const, source: "ISA / Bloomberg Law", headline: "ISA Council defers exploitation code vote as sponsoring state pressure mounts ahead of July session", summary: null },
-  { id: "3", breaking: false, cat: "BLUE FINANCE", time: "2026-03-26T04:55:00Z", tier: 1 as const, source: "IFC / Climate Bonds Initiative", headline: "Sovereign blue bond pipeline doubles in 12 months as IFC publishes revised certification framework", summary: null },
-  { id: "4", breaking: false, cat: "IUU FISHING", time: "2026-03-26T03:30:00Z", tier: 2 as const, source: "Maritime Executive", headline: "Pacific coast guard intercepts vessel under falsified flag documentation", summary: "Port state authorities detained vessel pending investigation into flag registration and catch records." },
-  { id: "5", breaking: false, cat: "CLIMATE", time: "2026-03-26T02:15:00Z", tier: 1 as const, source: "IPCC / Nature Climate Change", headline: "IPCC confirms accelerated Southern Ocean acidification exceeds 2019 projections", summary: "Argo float data shows pH declining 40% faster than the most pessimistic scenario published six years ago." },
-  { id: "6", breaking: false, cat: "30X30", time: "2026-03-26T01:44:00Z", tier: 2 as const, source: "IUCN / El Mercurio", headline: "Chile announces 740,000km\u00B2 MPA ahead of CBD COP target review", summary: "Covers Nazca-Desventuradas seamount chain. Chile's protected EEZ now at 42%." },
+  { id: "s1", cat: "OCEAN GOVERNANCE", time: "06:42", headline: "BBNJ ratification: third deposit confirmed as Pacific bloc signals alignment", summary: "The UN Treaty Collection confirmed a third instrument of ratification from a Pacific island state, bringing the total to 87. Analysts suggest coordinated timing with the July ISA session, accelerating implementation by an estimated two quarters.", src: "IISD Reporting Services", t1: true },
+  { id: "s2", cat: "DEEP-SEA MINING", time: "05:18", headline: "ISA Council defers exploitation code vote as sponsoring state pressure mounts", summary: null, src: "ISA / Bloomberg Law", t1: true },
+  { id: "s3", cat: "BLUE FINANCE", time: "04:55", headline: "Sovereign blue bond pipeline doubles as IFC publishes revised certification framework", summary: null, src: "IFC / Climate Bonds Initiative", t1: true },
+  { id: "s4", cat: "IUU FISHING", time: "03:30", headline: "Pacific coast guard intercepts vessel under falsified flag documentation", summary: "Port state authorities detained vessel pending investigation into registration and catch records.", src: "Maritime Executive", t1: false },
+  { id: "s5", cat: "CLIMATE", time: "02:15", headline: "IPCC confirms accelerated Southern Ocean acidification exceeds 2019 projections", summary: "Argo float data shows pH declining 40% faster than the most pessimistic scenario six years ago.", src: "IPCC / Nature Climate Change", t1: true },
+  { id: "s6", cat: "30X30", time: "01:44", headline: "Chile announces 740,000km\u00B2 MPA ahead of CBD COP target review", summary: "Covers Nazca-Desventuradas seamount chain. Chile's protected EEZ now at 42%.", src: "IUCN / El Mercurio", t1: false },
 ];
 
 const COMPACT = [
-  { cat: "SHIPPING", headline: "IMO MEPC 83 adopts revised carbon intensity framework for bulk carriers over 25,000 DWT", source: "IMO", tier: 1 as const },
-  { cat: "GOVERNANCE", headline: "OSPAR opens consultation on revised North-East Atlantic fisheries recovery zones", source: "OSPAR", tier: 2 as const },
-  { cat: "BLUE FINANCE", headline: "Fiji prices $150m sovereign blue bond with TNFD-aligned reporting covenant", source: "Reuters", tier: 2 as const },
+  { id: "s7", cat: "SHIPPING", hl: "IMO MEPC 83 adopts revised carbon intensity framework for bulk carriers over 25,000 DWT", src: "IMO", t1: true },
+  { id: "s8", cat: "GOVERNANCE", hl: "OSPAR opens consultation on revised North-East Atlantic fisheries recovery zones", src: "OSPAR", t1: false },
+  { id: "s9", cat: "BLUE FINANCE", hl: "Fiji prices $150m sovereign blue bond with TNFD-aligned reporting covenant", src: "Reuters", t1: true },
+  { id: "s10", cat: "IUU FISHING", hl: "INTERPOL Operation Liberterra identifies 136 vessels under investigation across 40 flag states", src: "INTERPOL", t1: true },
+  { id: "s11", cat: "DEEP-SEA MINING", hl: "Norway opens second licensing round for seabed mineral extraction in the Norwegian Sea", src: "Offshore Energy", t1: false },
 ];
 
-// ── Main page ─────────────────────────────────────────────────────────────
+function Src({ name, t1 }: { name: string; t1: boolean }) {
+  return <span style={{ fontSize: 12, fontWeight: 500, color: t1 ? TEAL : T4, cursor: "pointer" }}>{name} {"\u2197"}</span>;
+}
+
 export default function FeedPage() {
   const [filter, setFilter] = useState("All");
-  const [signalRead, setSignalRead] = useState(false);
-  const [chipsClicked, setChipsClicked] = useState(new Set<number>());
+  const [read, setRead] = useState(new Set<string>());
+  const [unread, setUnread] = useState(9);
 
-  const filters = ["All", "Governance", "Mining", "Finance", "Climate"];
-
-  const handleChipClick = (idx: number) => {
-    const next = new Set(chipsClicked);
-    next.add(idx);
-    setChipsClicked(next);
-    if (next.size >= 2) setSignalRead(true);
+  const markRead = (id: string) => {
+    if (read.has(id)) return;
+    const next = new Set(read);
+    next.add(id);
+    setRead(next);
+    setUnread(Math.max(0, unread - 1));
+  };
+  const markAll = () => {
+    setRead(new Set([...STORIES, ...COMPACT].map(s => s.id)));
+    setUnread(0);
   };
 
+  const isRead = (id: string) => read.has(id);
+  const filters = ["All", "Governance", "Mining", "Finance", "Climate"];
+
   return (
-    <div>
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
-      `}</style>
-
-      {/* 1. SEARCH HERO */}
-      <div style={{ padding: "32px 28px 18px", borderBottom: `1px solid ${RULE}` }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", color: BLACK, opacity: 0.35, marginBottom: 10 }}>Your research assistant. Cited answers from Tideline's dataset.</div>
-        <div style={{ position: "relative" }}>
-          <input type="text" placeholder="Ask Tideline anything." style={{ width: "100%", height: 48, border: `1.5px solid ${BLACK}`, borderRadius: 0, fontFamily: SERIF, fontStyle: "italic", fontSize: 15, padding: "0 54px 0 18px", background: WHITE, color: BLACK }} />
-          <button style={{ position: "absolute", right: 0, top: 0, width: 48, height: 48, background: BLACK, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke={WHITE} strokeWidth="1.5"><circle cx="7.5" cy="7.5" r="5"/><line x1="11" y1="11" x2="16" y2="16"/></svg>
-          </button>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-          {[
-            "What changed in deep-sea mining regulation in the last 30 days? \u2192",
-            "Summarise BBNJ ratification status and what it means for enforcement. \u2192",
-            "What does the ISA deferral mean for my uploaded OSPAR report? \u2192",
-          ].map((chip, i) => (
-            <span key={i} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.05em", border: `1px solid ${RULE}`, padding: "8px 14px", color: BLACK, opacity: 0.5, cursor: "pointer" }}>{chip}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* 2. SIGNIFICANCE BAROMETER */}
-      <div style={{ background: "#FAFAF9", borderBottom: `1px solid ${RULE}`, padding: "9px 28px", display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: BLACK, opacity: 0.35, flexShrink: 0 }}>THIS WEEK</span>
-        <div style={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
-          {[8, 12, 16, 20, 10].map((h, i) => (
-            <span key={i} style={{ width: 4, height: h, borderRadius: 1, background: i < 4 ? RED : RULE }} />
-          ))}
-        </div>
-        <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: RED }}>CONSEQUENTIAL</span>
-        <span style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.55, marginLeft: 4 }}>Three consequential events across BBNJ, ISA and IUU trackers this week.</span>
-        <span onClick={() => document.getElementById("lead-story")?.scrollIntoView({ behavior: "smooth" })} style={{ fontFamily: MONO, fontSize: 10, color: RED, cursor: "pointer", marginLeft: "auto", flexShrink: 0 }}>Show me {"\u2192"}</span>
-      </div>
-
-      {/* 3. MORNING SIGNAL */}
-      <div style={{ padding: "14px 28px", borderBottom: `1px solid ${RULE}`, display: "flex", alignItems: "flex-start", gap: 14 }}>
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: BLACK, opacity: 0.35, flexShrink: 0, paddingTop: 3 }}>YOUR SIGNAL</span>
-        <div>
-          {signalRead ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL, flexShrink: 0 }} />
-              <span style={{ fontFamily: SERIF, fontSize: 13, color: BLACK, opacity: 0.45, fontStyle: "italic" }}>You are up to date on your morning signal.</span>
-            </div>
+    <div style={{ padding: "16px 24px 40px" }}>
+      {/* Feed header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: unread === 0 ? TEAL : TEAL, animation: unread > 0 ? "pulse 2.2s ease-in-out infinite" : "none" }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: T1, letterSpacing: "-.01em" }}>What you&apos;ve missed</span>
+          <span style={{ color: BORDER }}>&middot;</span>
+          {unread > 0 ? (
+            <span style={{ fontSize: 13, color: T4 }}>{unread} unread</span>
           ) : (
-            <>
-              <p style={{ fontFamily: SERIF, fontSize: 14, lineHeight: 1.55, color: BLACK, margin: 0 }}>
-                2 stories this morning directly relevant to your ESG and Blue Finance topics.
-              </p>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                {["IFC Blue Finance Framework", "BBNJ Ratification"].map((c, i) => (
-                  <span key={i} onClick={() => handleChipClick(i)} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", border: `1px solid ${TEAL}`, color: TEAL, padding: "6px 12px", cursor: "pointer", opacity: chipsClicked.has(i) ? 0.4 : 1 }}>{c} {"\u2192"}</span>
-                ))}
-              </div>
-            </>
+            <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 500, color: TEAL }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
+              All caught up
+            </span>
           )}
         </div>
-      </div>
-
-      {/* 4. FEED HEADER */}
-      <div style={{ padding: "10px 28px", borderBottom: `1px solid ${RULE}`, display: "flex", alignItems: "center", gap: 14, position: "sticky", top: 0, background: WHITE, zIndex: 10 }}>
-        <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, animation: "pulse 2.2s ease-in-out infinite", flexShrink: 0 }} />
-        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" }}>What moved overnight <span style={{ opacity: 0.2 }}>{"\u00b7"}</span> <span style={{ fontSize: 10, opacity: 0.35, fontWeight: 400 }}>06:42</span></span>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 5 }}>
-          {filters.map(f => (
-            <button key={f} onClick={() => setFilter(f)} style={{ fontFamily: MONO, fontSize: 8, padding: "3px 9px", border: `1px solid ${filter === f ? BLACK : RULE}`, background: filter === f ? BLACK : "transparent", color: filter === f ? WHITE : BLACK, opacity: filter === f ? 1 : 0.4, cursor: "pointer" }}>{f}</button>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. NEWSPAPER GRID */}
-      <div style={{ padding: "0 28px" }}>
-        {/* Row 1: Lead + 2 secondary */}
-        <div id="lead-story" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", borderBottom: `1px solid ${RULE}`, padding: "32px 0" }}>
-          {/* Lead */}
-          <div style={{ borderRight: `1px solid ${RULE}`, borderLeft: `2px solid ${RED}`, paddingRight: 24, paddingLeft: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              {STORIES[0].breaking && (
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED, animation: "pulse 2.2s ease-in-out infinite" }} />
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: RED }}>BREAKING</span>
-                </span>
-              )}
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4 }}>{STORIES[0].cat}</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: timeColor(STORIES[0].time), fontWeight: 500 }}>{timeStr(STORIES[0].time)}</span>
-            </div>
-            <h3 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 700, lineHeight: 1.22, margin: "0 0 8px" }}>{STORIES[0].headline}</h3>
-            <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.75, opacity: 0.7, margin: "0 0 10px" }}>{STORIES[0].summary}</p>
-            <div style={{ marginBottom: 8 }}><SourceLink name={STORIES[0].source} tier={STORIES[0].tier} /></div>
-          </div>
-          {/* Secondary */}
-          <div style={{ paddingLeft: 24 }}>
-            {STORIES.slice(1, 3).map((s, i) => (
-              <div key={s.id} style={{ paddingBottom: i === 0 ? 18 : 0, marginBottom: i === 0 ? 18 : 0, borderBottom: i === 0 ? `1px solid ${RULE}` : "none" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4 }}>{s.cat}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: timeColor(s.time), fontWeight: 500 }}>{timeStr(s.time)}</span>
-                </div>
-                <h4 style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 700, lineHeight: 1.35, margin: "4px 0 6px" }}>{s.headline}</h4>
-                <SourceLink name={s.source} tier={s.tier} />
-              </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginLeft: "auto" }}>
+          <span onClick={markAll} style={{ fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer", opacity: .65 }}>Mark all read</span>
+          <div style={{ display: "flex", gap: 6 }}>
+            {filters.map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{ fontSize: 12, fontWeight: 500, border: `1px solid ${filter === f ? TEAL : BORDER}`, borderRadius: 20, padding: "5px 14px", color: filter === f ? "#fff" : T3, background: filter === f ? TEAL : WHITE, cursor: "pointer" }}>{f}</button>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Row 2: Three columns */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: `1px solid ${RULE}` }}>
-          {STORIES.slice(3, 6).map((s, i) => (
-            <div key={s.id} style={{ padding: "24px 0", paddingLeft: i > 0 ? 28 : 0, paddingRight: i < 2 ? 28 : 0, borderRight: i < 2 ? `1px solid ${RULE}` : "none" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4 }}>{s.cat}</span>
-                <span style={{ fontFamily: MONO, fontSize: 9, color: timeColor(s.time) }}>{timeStr(s.time)}</span>
+      {/* Lead story card */}
+      <div onClick={() => markRead("s1")} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, display: "grid", gridTemplateColumns: "3fr 2fr", cursor: "pointer", opacity: isRead("s1") ? 0.55 : 1 }}>
+        <div style={{ padding: "26px 30px", borderRight: `1px solid ${BLT}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+            {!isRead("s1") && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
+            {isRead("s1") && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
+            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{STORIES[0].cat}</span>
+          </div>
+          <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{STORIES[0].headline}</div>
+          <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 14 }}>{STORIES[0].summary}</div>
+          <Src name={STORIES[0].src} t1={STORIES[0].t1} />
+        </div>
+        <div>
+          {STORIES.slice(1, 3).map((s, i) => (
+            <div key={s.id} onClick={(e) => { e.stopPropagation(); markRead(s.id); }} style={{ padding: "18px 22px", borderBottom: i === 0 ? `1px solid ${BLT}` : "none", opacity: isRead(s.id) ? 0.55 : 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
+                {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
+                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{s.cat}</span>
               </div>
-              <h4 style={{ fontFamily: SERIF, fontSize: 14, fontWeight: 700, lineHeight: 1.35, margin: "4px 0 6px" }}>{s.headline}</h4>
-              {s.summary && <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.65, opacity: 0.6, margin: "0 0 8px" }}>{s.summary}</p>}
-              <SourceLink name={s.source} tier={s.tier} />
+              <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 6, marginTop: 3 }}>{s.headline}</div>
+              <Src name={s.src} t1={s.t1} />
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Row 3: Compact list */}
-        <div style={{ paddingTop: 22 }}>
-          <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.35, marginBottom: 10 }}>More from Tideline</div>
-          {COMPACT.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "13px 0", borderBottom: `1px solid ${RULE}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.4, minWidth: 88, flexShrink: 0 }}>{s.cat}</span>
-              <span style={{ fontFamily: SERIF, fontSize: 13, fontWeight: 700, lineHeight: 1.35, flex: 1 }}>{s.headline}</span>
-              <SourceLink name={s.source} tier={s.tier} />
+      {/* Three column grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+        {STORIES.slice(3, 6).map(s => (
+          <div key={s.id} onClick={() => markRead(s.id)} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, cursor: "pointer", transition: "all .15s", opacity: isRead(s.id) ? 0.55 : 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
+              {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{s.cat}</span>
+              <span style={{ fontSize: 11, color: s.time < "04:00" ? T4 : TEAL, fontWeight: s.time < "04:00" ? 400 : 600 }}>{s.time}</span>
             </div>
-          ))}
+            <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{s.headline}</div>
+            {s.summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.summary}</div>}
+            <Src name={s.src} t1={s.t1} />
+          </div>
+        ))}
+      </div>
+
+      {/* Compact list */}
+      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ padding: "14px 22px", borderBottom: `1px solid ${BLT}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: T2 }}>More from Tideline</span>
+          <span style={{ fontSize: 12, color: T4 }}>38 stories today</span>
         </div>
+        {COMPACT.map(s => (
+          <div key={s.id} onClick={() => markRead(s.id)} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 22px", borderBottom: `1px solid ${BLT}`, cursor: "pointer", transition: "background .1s", opacity: isRead(s.id) ? 0.45 : 1 }}>
+            {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>New</span>}
+            {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Viewed</span>}
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: T4, flexShrink: 0, minWidth: 84 }}>{s.cat}</span>
+            <span style={{ fontSize: 13, color: T1, flex: 1, lineHeight: 1.35 }}>{s.hl}</span>
+            <Src name={s.src} t1={s.t1} />
+          </div>
+        ))}
       </div>
     </div>
   );
