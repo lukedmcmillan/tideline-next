@@ -1,46 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 
-const NAVY    = "#0D1B2A";
-const WHITE   = "#FFFFFF";
-const TEAL    = "#1D9E75";
-const AMBER   = "#D97706";
-const RED     = "#C0392B";
-const RULE    = "#E4E4E4";
-const BLACK   = "#0D0D0D";
-const SERIF   = "var(--font-serif), 'Libre Baskerville', Georgia, serif";
-const SANS    = "var(--font-sans), 'DM Sans', 'Helvetica Neue', Arial, sans-serif";
-const MONO    = "var(--font-mono), 'DM Mono', monospace";
+// ── Design tokens ─────────────────────────────────────────────────────────
+const BG     = "#F8F9FA";
+const WHITE  = "#FFFFFF";
+const NAVY   = "#0A1628";
+const NAVY2  = "#0D1F35";
+const TEAL   = "#1D9E75";
+const AMBER  = "#F9AB00";
+const RED    = "#D93025";
+const T1     = "#202124";
+const T2     = "#3C4043";
+const T3     = "#5F6368";
+const T4     = "#9AA0A6";
+const BORDER = "#DADCE0";
+const BLT    = "#E8EAED";
+const F      = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+const M      = "var(--font-mono), 'DM Mono', monospace";
 
-// ── SVG icons (inline, no libraries) ──────────────────────────────────────
-const IconGrid = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>;
-const IconCalendar = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><rect x="2" y="3" width="12" height="11" rx="1"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5" y1="1.5" x2="5" y2="4.5"/><line x1="11" y1="1.5" x2="11" y2="4.5"/></svg>;
-const IconBookmark = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M4 2h8v12l-4-3-4 3V2z"/></svg>;
-const IconColumns = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><rect x="2" y="2" width="4" height="12" rx="0.5"/><rect x="8" y="2" width="6" height="12" rx="0.5"/></svg>;
-const IconSearch = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>;
+// ── Icons (inline SVG) ────────────────────────────────────────────────────
+const IcFeed = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>;
+const IcCal = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="2" width="16" height="15" rx="2"/><path d="M6 1v2M12 1v2M1 8h16"/></svg>;
+const IcBook = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h12v15l-6-4-6 4V2z"/></svg>;
+const IcWork = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="3" width="16" height="13" rx="2"/><path d="M6 3V1M12 3V1"/></svg>;
+const IcSearch = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M13 13l4 4"/></svg>;
+const IcDir = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="3"/><circle cx="12" cy="12" r="3"/><path d="M8.5 8.5l1 1"/><circle cx="12" cy="6" r="3"/><path d="M8.5 7.5l2-1"/></svg>;
 
-// ── Tracker tooltip ───────────────────────────────────────────────────────
-const TRACKER_TOOLTIPS: Record<string, { status: string; color: string; desc: string }> = {
-  "BBNJ Treaty": { status: "Active \u2014 in force", color: TEAL, desc: "87 ratifications. Pacific bloc deposit confirmed 06:42. Implementation accelerating." },
-  "ISA Mining": { status: "Developing \u2014 watch", color: AMBER, desc: "Council vote deferred to July. 3 sponsoring states signalled opposition to current text." },
-  "IUU Enforcement": { status: "Breaking \u2014 enforcement", color: RED, desc: "Vessel detained under falsified flag documentation. Port state action 03:30." },
-  "30x30 Protection": { status: "Active", color: TEAL, desc: "Chile MPA announced. Global ocean protection at 24.3% toward 30% target." },
-  "Blue Finance": { status: "Developing", color: AMBER, desc: "IFC revised framework published. 7 new sovereign blue bonds in pipeline." },
+// ── Tracker tooltips ──────────────────────────────────────────────────────
+const TIPS: Record<string, { st: string; c: string; d: string }> = {
+  "BBNJ Treaty": { st: "Active \u2014 in force", c: TEAL, d: "87 ratifications. Pacific bloc deposit confirmed 06:42." },
+  "ISA Mining": { st: "Developing \u2014 watch", c: AMBER, d: "Council vote deferred to July. 3 states signalled opposition." },
+  "IUU Enforcement": { st: "Enforcement action", c: RED, d: "Vessel detained under falsified flag. Port state action 03:30." },
+  "30x30 Protection": { st: "Active", c: TEAL, d: "Chile MPA. Global ocean coverage 24.3% toward 30% target." },
+  "Blue Finance": { st: "Developing", c: AMBER, d: "IFC framework published. 7 new blue bonds in pipeline." },
 };
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar() {
-  const pathname = usePathname();
-  const [hoveredTracker, setHoveredTracker] = useState<string | null>(null);
+function Sidebar({ onNav }: { onNav?: () => void }) {
+  const path = usePathname();
+  const [hTip, setHTip] = useState<string | null>(null);
 
-  const navItems = [
-    { icon: <IconGrid />, label: "Feed", href: "/platform", badge: null },
-    { icon: <IconCalendar />, label: "Calendar", href: "/platform/calendar", badge: null },
-    { icon: <IconBookmark />, label: "Library", href: "/platform/library", badge: "3 saved" },
-    { icon: <IconColumns />, label: "Workspace", href: "/platform/workspace", badge: "2 projects" },
-    { icon: <IconSearch />, label: "Research", href: "/platform/research", badge: null },
+  const nav = [
+    { ic: <IcFeed />, label: "Feed", href: "/platform/feed" },
+    { ic: <IcCal />, label: "Calendar", href: "/platform/calendar" },
+    { ic: <IcBook />, label: "Library", href: "/platform/library", badge: "3" },
+    { ic: <IcWork />, label: "Workspace", href: "/platform/workspace", badge: "2" },
+    { ic: <IcSearch />, label: "Research", href: "/platform/research" },
+    { ic: <IcDir />, label: "Directory", href: "/platform/directory" },
   ];
 
   const trackers = [
@@ -51,171 +59,199 @@ function Sidebar() {
     { name: "Blue Finance", color: AMBER, badge: "1 today", pulse: false },
   ];
 
-  const isActive = (href: string) => {
-    if (href === "/platform") return pathname === "/platform" || pathname === "/platform/feed";
-    return pathname?.startsWith(href);
+  const active = (h: string) => {
+    if (h === "/platform/feed") return path === "/platform" || path === "/platform/feed";
+    return path?.startsWith(h) || false;
   };
 
   return (
-    <div style={{ width: 220, background: NAVY, height: "calc(100vh - 52px)", position: "fixed", top: 52, left: 0, display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 }} className="sidebar-desktop">
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
-        .sidebar-nav-item:hover { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.9) !important; }
-      `}</style>
-
+    <div style={{ width: 256, background: NAVY, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
       {/* Nav */}
-      <div style={{ padding: "12px 0 0" }}>
-        {navItems.map(item => {
-          const active = isActive(item.href);
+      <div style={{ padding: "8px 0 0" }}>
+        {nav.map(n => {
+          const on = active(n.href);
           return (
-            <a key={item.label} href={item.href} className="sidebar-nav-item" style={{
-              display: "flex", alignItems: "center", gap: 10, height: 38, padding: "0 16px",
-              color: active ? WHITE : "rgba(255,255,255,0.55)",
-              background: active ? "rgba(255,255,255,0.10)" : "transparent",
-              borderLeft: active ? `2px solid ${TEAL}` : "2px solid transparent",
-              fontFamily: SANS, fontSize: 13, textDecoration: "none",
-              opacity: active ? 1 : 0.85,
+            <a key={n.label} href={n.href} onClick={onNav} style={{
+              display: "flex", alignItems: "center", height: 48, padding: "0 28px 0 72px",
+              fontSize: 14, fontFamily: F, color: on ? "#fff" : "rgba(255,255,255,.6)",
+              background: on ? "rgba(29,158,117,.14)" : "transparent",
+              fontWeight: on ? 500 : 400, textDecoration: "none", position: "relative",
+              transition: "background .12s",
             }}>
-              <span style={{ opacity: active ? 0.9 : 0.4 }}>{item.icon}</span>
-              <span>{item.label}</span>
-              {item.badge && (
-                <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, background: active ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.10)", padding: "2px 6px", borderRadius: 2, color: active ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.5)" }}>{item.badge}</span>
-              )}
+              {on && <span style={{ position: "absolute", left: 0, top: 6, bottom: 6, width: 3, borderRadius: "0 3px 3px 0", background: TEAL }} />}
+              <span style={{ position: "absolute", left: 24, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: on ? TEAL : "rgba(255,255,255,.4)" }}>{n.ic}</span>
+              {n.label}
+              {n.badge && <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, background: TEAL, color: "#fff", borderRadius: 10, padding: "1px 8px" }}>{n.badge}</span>}
             </a>
           );
         })}
       </div>
 
-      {/* Trackers section */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", marginTop: 12 }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", padding: "10px 16px 4px" }}>TRACKERS</div>
-        {trackers.map(t => (
-          <div key={t.name} style={{ position: "relative" }}
-            onMouseEnter={() => setHoveredTracker(t.name)}
-            onMouseLeave={() => setHoveredTracker(null)}>
-            <a href="/tracker/bbnj" className="sidebar-nav-item" style={{
-              display: "flex", alignItems: "center", gap: 8, height: 32, padding: "0 16px",
-              fontFamily: SANS, fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none",
-              borderRight: t.pulse ? `2px solid ${RED}` : "2px solid transparent",
-            }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: t.color, flexShrink: 0, animation: t.pulse ? "pulse 2.2s ease-in-out infinite" : "none" }} />
-              <span>{t.name}</span>
-              {t.badge && (
-                <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, background: "rgba(255,255,255,0.10)", padding: "2px 6px", borderRadius: 2, color: "rgba(255,255,255,0.5)" }}>{t.badge}</span>
-              )}
-            </a>
-            {/* Tooltip */}
-            {hoveredTracker === t.name && TRACKER_TOOLTIPS[t.name] && (
-              <div style={{
-                position: "absolute", left: 218, top: 0, zIndex: 300,
-                background: NAVY, border: "1px solid rgba(255,255,255,0.14)",
-                padding: "10px 14px", width: 240, pointerEvents: "none",
-              }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: TRACKER_TOOLTIPS[t.name].color, marginBottom: 6 }}>
-                  {"\u25CF"} {TRACKER_TOOLTIPS[t.name].status}
-                </div>
-                <div style={{ fontFamily: SANS, fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
-                  {TRACKER_TOOLTIPS[t.name].desc}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Workspace section */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", marginTop: 8 }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", padding: "10px 16px 4px" }}>WORKSPACE</div>
-        {[
-          { name: "ISA Deep-Sea Watch", color: TEAL, badge: "4 new" },
-          { name: "BBNJ Implementation", color: AMBER, badge: "7 items" },
-        ].map(p => (
-          <a key={p.name} href="/platform/workspace" className="sidebar-nav-item" style={{
-            display: "flex", alignItems: "center", gap: 8, height: 32, padding: "0 16px",
-            fontFamily: SANS, fontSize: 11, color: "rgba(255,255,255,0.55)", textDecoration: "none",
+      {/* Divider + Trackers */}
+      <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", padding: "12px 28px 6px" }}>Trackers</div>
+      {trackers.map(t => (
+        <div key={t.name} style={{ position: "relative" }} onMouseEnter={() => setHTip(t.name)} onMouseLeave={() => setHTip(null)}>
+          <a href="/tracker/bbnj" style={{
+            display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px",
+            fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none",
+            borderRight: t.pulse ? `2px solid ${RED}` : "2px solid transparent",
+            transition: "background .12s",
           }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
-            <span>{p.name}</span>
-            <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, background: "rgba(255,255,255,0.10)", padding: "2px 6px", borderRadius: 2, color: "rgba(255,255,255,0.5)" }}>{p.badge}</span>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: t.color, flexShrink: 0, marginRight: 12, animation: t.pulse ? "pulse 1.8s ease-in-out infinite" : "none" }} />
+            {t.name}
+            {t.badge && <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{t.badge}</span>}
           </a>
-        ))}
-        <a href="/platform/workspace" style={{ display: "block", padding: "6px 16px", fontFamily: SANS, fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>+ New project</a>
-      </div>
+          {hTip === t.name && TIPS[t.name] && (
+            <div style={{ position: "absolute", left: "calc(100% + 8px)", top: "50%", transform: "translateY(-50%)", background: "#1a1a2e", border: "1px solid rgba(255,255,255,.12)", borderRadius: 10, padding: "10px 14px", width: 220, zIndex: 500, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: TIPS[t.name].c, marginBottom: 4 }}>{"\u25CF"} {TIPS[t.name].st}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.85)", lineHeight: 1.5 }}>{TIPS[t.name].d}</div>
+            </div>
+          )}
+        </div>
+      ))}
 
-      {/* Bottom: streak + queries */}
-      <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.07)", padding: "14px 16px" }}>
-        {/* Streak */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <span style={{ fontFamily: MONO, fontSize: 22, fontWeight: 500, color: WHITE }}>12</span>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", lineHeight: 1.2 }}>day</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", lineHeight: 1.2 }}>streak</span>
+      {/* Workspace */}
+      <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", padding: "12px 28px 6px" }}>Workspace</div>
+      {[
+        { name: "ISA Deep-Sea Watch", c: TEAL, b: "4 new" },
+        { name: "BBNJ Implementation", c: AMBER, b: "7 items" },
+      ].map(p => (
+        <a key={p.name} href="/platform/workspace" style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: p.c, flexShrink: 0, marginRight: 12 }} />
+          {p.name}
+          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{p.b}</span>
+        </a>
+      ))}
+      <a href="/platform/workspace" style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, color: "rgba(255,255,255,.3)", textDecoration: "none" }}>
+        <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,.3)", flexShrink: 0, marginRight: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M3.5 1v5M1 3.5h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+        </span>
+        New project
+      </a>
+
+      {/* Footer: streak + queries */}
+      <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,.08)", padding: 16 }}>
+        <div style={{ background: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
+            <span style={{ fontSize: 32, fontWeight: 500, color: "#fff", lineHeight: 1, letterSpacing: "-.03em" }}>12</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,.5)" }}>day streak</span>
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)", marginBottom: 10 }}>Since 14 March</div>
+          <div style={{ display: "flex", gap: 5 }}>
+            {[...Array(7)].map((_, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i === 6 ? TEAL : i < 6 ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.12)" }} />)}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 3, marginBottom: 10 }}>
-          {[...Array(7)].map((_, i) => (
-            <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i === 6 ? TEAL : i < 6 ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)" }} />
-          ))}
-        </div>
-        {/* Query dots */}
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ display: "flex", gap: 3 }}>
-            {[...Array(10)].map((_, i) => (
-              <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i < 7 ? "rgba(255,255,255,0.45)" : i === 7 ? AMBER : "rgba(255,255,255,0.15)" }} />
-            ))}
+            {[...Array(10)].map((_, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i < 7 ? "rgba(255,255,255,.4)" : i === 7 ? AMBER : "rgba(255,255,255,.12)" }} />)}
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,255,255,0.35)" }}>8 queries today</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>8 queries today</span>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Right panel ───────────────────────────────────────────────────────────
+// ── Right Panel ───────────────────────────────────────────────────────────
 function RightPanel() {
+  const [copied, setCopied] = useState(false);
+
+  const copyInsight = () => {
+    navigator.clipboard.writeText("ISA deferral and BBNJ ratification are directly linked. Three sponsoring states conditioning their ISA vote on implementation terms.").then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
-    <div style={{ width: 256, borderLeft: `1px solid ${RULE}`, background: WHITE, height: "calc(100vh - 52px)", position: "fixed", top: 52, right: 0, overflowY: "auto" }} className="right-panel-desktop">
+    <div style={{ width: 268, flexShrink: 0, background: WHITE, borderLeft: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }} className="rp-desktop">
       {/* Connections */}
-      <div style={{ padding: 16, borderBottom: `1px solid ${RULE}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, animation: "pulse 2.2s ease-in-out infinite" }} />
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.35 }}>TIDELINE CONNECTIONS</span>
+      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL, animation: "pulse 2.5s ease-in-out infinite" }} />
+          Tideline connections
         </div>
-        <div style={{ fontFamily: SANS, fontSize: 11, fontStyle: "italic", color: BLACK, opacity: 0.4, marginBottom: 10 }}>Patterns identified across trackers today.</div>
-        <div style={{ borderLeft: `2px solid ${TEAL}`, background: "#FAFAF9", padding: "12px 14px" }}>
-          <p style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.7, color: BLACK, margin: 0 }}>
-            The ISA deferral and accelerating BBNJ ratification are directly linked. Three sponsoring states are conditioning their ISA vote on BBNJ implementation terms.
-          </p>
-          <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+        <div style={{ fontSize: 12, color: T4, fontStyle: "italic", marginBottom: 14 }}>Patterns across trackers today.</div>
+        <div style={{ borderLeft: `3px solid ${TEAL}`, padding: "14px 14px 14px 16px" }}>
+          <div style={{ fontSize: 13, lineHeight: 1.65, color: T1, marginBottom: 12 }}>The ISA deferral and accelerating BBNJ ratification are directly linked. Three sponsoring states are conditioning their ISA vote on BBNJ implementation terms.</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
             {["ISA Mining", "BBNJ Treaty"].map(t => (
-              <span key={t} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", border: `1px solid ${TEAL}`, color: TEAL, padding: "4px 9px" }}>{t}</span>
+              <span key={t} style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", border: `1px solid rgba(29,158,117,.22)`, borderRadius: 4, padding: "3px 9px", color: TEAL, background: "rgba(255,255,255,.7)" }}>{t}</span>
             ))}
           </div>
+          <button onClick={copyInsight} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", background: WHITE, border: `1.5px solid rgba(29,158,117,.22)`, borderRadius: 8, padding: "8px 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer" }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M4 4V3a1.5 1.5 0 011.5-1.5h5A1.5 1.5 0 0112 3v5a1.5 1.5 0 01-1.5 1.5H9" stroke="currentColor" strokeWidth="1.3"/></svg>
+            {copied ? "Copied" : "Copy for meeting"}
+          </button>
         </div>
       </div>
 
       {/* Calendar */}
-      <div style={{ padding: 16, borderBottom: `1px solid ${RULE}` }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.35, marginBottom: 12 }}>REGULATORY CALENDAR</div>
+      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}`, flex: 1 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Regulatory calendar</div>
         {[
-          { date: "31 Mar", days: "5 days", title: "EU CSRD Ocean Reporting Deadline", color: TEAL },
-          { date: "3 Apr", days: "8 days", title: "BBNJ Preparatory Committee", color: AMBER },
-          { date: "14 Jul", days: "", title: "ISA Council Session 29", color: "rgba(13,13,13,0.4)" },
+          { date: "31 Mar", days: "5 days", title: "EU CSRD Ocean Reporting Deadline", c: TEAL },
+          { date: "3 Apr", days: "8 days", title: "BBNJ Preparatory Committee", c: AMBER },
+          { date: "14 Jul", days: "", title: "ISA Council Session 29", c: T4 },
+          { date: "22 Sep", days: "", title: "UN Ocean Conference 2026", c: T4 },
         ].map((e, i) => (
-          <div key={i} style={{ marginBottom: 10 }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: e.color }}>{e.date} {e.days && `\u2014 ${e.days}`}</div>
-            <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, color: BLACK }}>{e.title}</div>
+          <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BLT}` }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: e.c, marginBottom: 2 }}>{e.date} {e.days && `\u2014 ${e.days}`}</div>
+            <div style={{ fontSize: 13, color: T1, lineHeight: 1.35 }}>{e.title}</div>
           </div>
         ))}
-        <a href="/tracker/governance" style={{ fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.4, textDecoration: "none" }}>View full calendar &rarr;</a>
+        <a href="/tracker/governance" style={{ fontSize: 12, fontWeight: 500, color: TEAL, marginTop: 12, display: "block", cursor: "pointer", textDecoration: "none" }}>View full calendar &rarr;</a>
       </div>
 
-      {/* Settings link */}
-      <div style={{ marginTop: "auto", padding: "12px 16px", borderTop: `1px solid ${RULE}` }}>
-        <a href="/platform/settings" style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11, color: BLACK, opacity: 0.35, textDecoration: "none", cursor: "pointer" }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="6" cy="6" r="2"/><path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.3 2.3l.7.7M9 9l.7.7M9.7 2.3l-.7.7M3 9l-.7.7"/></svg>
-          Settings &amp; sources
-        </a>
+      {/* Footer */}
+      <div style={{ padding: "14px 20px", borderTop: `1px solid ${BLT}`, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={T4} strokeWidth="1.3"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+        <span style={{ fontSize: 13, color: T3 }}>Settings &amp; sources</span>
+      </div>
+      <div style={{ padding: "10px 20px", borderTop: `1px solid ${BLT}` }}>
+        <a style={{ fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer", textDecoration: "none" }}>How Tideline works &rarr;</a>
+      </div>
+    </div>
+  );
+}
+
+// ── Search Overlay ────────────────────────────────────────────────────────
+function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(10,22,40,.55)", backdropFilter: "blur(3px)", zIndex: 200, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 80 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 660, background: WHITE, borderRadius: 24, boxShadow: "0 16px 48px rgba(0,0,0,.3)", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 22px", borderBottom: `1px solid ${BLT}` }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="6" stroke={T4} strokeWidth="1.5"/><path d="M13 13l4 4" stroke={T4} strokeWidth="1.5" strokeLinecap="round"/></svg>
+          <input autoFocus placeholder="Ask Tideline anything\u2026" style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: F, fontSize: 16, color: T1 }} />
+          <span onClick={onClose} style={{ fontSize: 12, background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "2px 9px", color: T4, cursor: "pointer", fontFamily: M }}>Esc</span>
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "10px 22px 2px" }}>What people are asking Tideline today</div>
+        <div style={{ fontSize: 12, color: T4, padding: "2px 22px 8px", fontStyle: "italic" }}>Rotating from this week's most-asked queries</div>
+        {[
+          { q: "What changed in deep-sea mining regulation in the last 30 days?", sub: "Research \u00b7 Tideline Intelligence" },
+          { q: "Summarise BBNJ ratification and enforcement implications", sub: "Research \u00b7 Tideline Intelligence" },
+          { q: "What does the ISA deferral mean for my uploaded OSPAR report?", sub: "Research \u00b7 Uses your documents" },
+        ].map((item, i) => (
+          <a key={i} href="/platform/research" style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 22px", cursor: "pointer", textDecoration: "none", color: T1 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: BG, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke={TEAL} strokeWidth="1.4"/><path d="M11 11l3.5 3.5" stroke={TEAL} strokeWidth="1.4" strokeLinecap="round"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, color: T1 }}>{item.q}</div>
+              <div style={{ fontSize: 12, color: T4, marginTop: 2 }}>{item.sub}</div>
+            </div>
+          </a>
+        ))}
+        <div style={{ borderTop: `1px solid ${BLT}`, padding: "12px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 12, color: T4 }}>Enter to search &middot; Esc to close</span>
+          <a href="/platform/research" style={{ display: "flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", border: "none", borderRadius: 20, padding: "8px 18px", fontFamily: F, fontSize: 13, fontWeight: 500, cursor: "pointer", textDecoration: "none" }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Open Research
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -223,56 +259,85 @@ function RightPanel() {
 
 // ── Layout ────────────────────────────────────────────────────────────────
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sbOpen, setSbOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const handleKey = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setSearchOpen(true); }
+    if (e.key === "Escape") setSearchOpen(false);
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [handleKey]);
 
   return (
-    <div style={{ fontFamily: SANS, color: BLACK, background: WHITE }}>
+    <div style={{ fontFamily: F, color: T1, background: BG, height: "100vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <style>{`
-        @media (max-width: 1279px) { .right-panel-desktop { display: none !important; } }
-        @media (max-width: 767px) {
-          .sidebar-desktop { display: none !important; }
-          .sidebar-mobile-toggle { display: flex !important; }
-          .main-content { margin-left: 0 !important; }
-        }
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}
+        @keyframes fi{from{opacity:0}to{opacity:1}}
+        a{text-decoration:none;color:inherit}
+        .rp-desktop{}
+        @media(max-width:1279px){.rp-desktop{display:none!important}}
+        @media(max-width:767px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
       `}</style>
 
       {/* Top bar */}
-      <div style={{ height: 52, background: WHITE, borderBottom: `2px solid ${BLACK}`, position: "fixed", top: 0, left: 0, right: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Mobile sidebar toggle */}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="sidebar-mobile-toggle" style={{ display: "none", background: "none", border: "none", cursor: "pointer", padding: 0, alignItems: "center" }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={BLACK} strokeWidth="1.5"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/></svg>
-          </button>
-          <a href="/" style={{ display: "flex", flexDirection: "column", textDecoration: "none" }}>
-            <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: BLACK, lineHeight: 1 }}>TIDELINE</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", color: BLACK, opacity: 0.4, marginTop: 1 }}>OCEAN INTELLIGENCE</span>
-          </a>
+      <div style={{ height: 64, background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: 0, flexShrink: 0, zIndex: 100 }}>
+        {/* Burger */}
+        <button className="sb-toggle" onClick={() => setSbOpen(!sbOpen)} style={{ display: "none", width: 48, height: 64, alignItems: "center", justifyContent: "center", cursor: "pointer", background: "none", border: "none", color: T3 }}>
+          <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        </button>
+        {/* Logo */}
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 24px 0 16px", minWidth: 220 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: NAVY, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10c0-4 3.5-7 7-7s7 3 7 7" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="10" cy="14" r="2.5" fill="white"/></svg>
+          </div>
+          <div>
+            <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-.025em", color: T1, display: "block", lineHeight: 1.1 }}>Tideline</span>
+            <span style={{ fontSize: 10, fontWeight: 500, color: T4, letterSpacing: ".04em", textTransform: "uppercase" }}>Ocean Intelligence</span>
+          </div>
+        </a>
+        {/* Search */}
+        <div onClick={() => setSearchOpen(true)} style={{ flex: 1, maxWidth: 560, height: 42, background: BG, border: "1px solid transparent", borderRadius: 24, display: "flex", alignItems: "center", padding: "0 14px 0 16px", gap: 10, cursor: "text", transition: "all .2s" }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke={T4} strokeWidth="1.5"/><path d="M11 11l3.5 3.5" stroke={T4} strokeWidth="1.5" strokeLinecap="round"/></svg>
+          <span style={{ flex: 1, fontSize: 14, color: T4 }}>Search or ask Tideline anything</span>
+          <span style={{ fontSize: 11, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "1px 6px", color: T4, fontFamily: M }}>{"\u2318"}K</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, border: "1px solid #E4E4E4", padding: "3px 8px", textTransform: "uppercase", letterSpacing: "0.1em", color: BLACK, opacity: 0.5 }}>INDIVIDUAL</span>
-          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#E4E4E4" }} />
+        {/* Right */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px 0 24px", marginLeft: "auto" }}>
+          <span style={{ fontSize: 12, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 12px", color: T2, background: WHITE, marginRight: 4 }}>Individual</span>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${NAVY},${TEAL})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>LM</div>
         </div>
       </div>
 
-      {/* Mobile sidebar drawer */}
-      {sidebarOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.4)" }} onClick={() => setSidebarOpen(false)}>
-          <div style={{ width: 260, height: "100%", background: NAVY, paddingTop: 52 }} onClick={e => e.stopPropagation()}>
-            <Sidebar />
+      {/* Body: sidebar + main + right panel */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        {/* Mobile drawer */}
+        {sbOpen && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.4)" }} onClick={() => setSbOpen(false)}>
+            <div style={{ width: 280, height: "100%", background: NAVY }} onClick={e => e.stopPropagation()}>
+              <Sidebar onNav={() => setSbOpen(false)} />
+            </div>
           </div>
+        )}
+
+        {/* Desktop sidebar */}
+        <div className="sb-desktop" style={{ flexShrink: 0 }}>
+          <Sidebar />
         </div>
-      )}
 
-      <Sidebar />
-      <RightPanel />
-
-      {/* Main content */}
-      <main className="main-content" style={{ marginLeft: 220, marginRight: 0, marginTop: 52, minHeight: "calc(100vh - 52px)", background: WHITE, overflowY: "auto" }}>
-        <div style={{ marginRight: 256 }} className="main-inner">
-          <style>{`@media (max-width: 1279px) { .main-inner { margin-right: 0 !important; } }`}</style>
+        {/* Main */}
+        <main className="main-ml" style={{ flex: 1, overflowY: "auto", background: BG }}>
           {children}
-        </div>
-      </main>
+        </main>
+
+        {/* Right panel */}
+        <RightPanel />
+      </div>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
