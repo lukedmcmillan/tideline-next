@@ -72,8 +72,45 @@ function fmtRelative(iso: string) {
   return fmtDate(iso);
 }
 
-// ── Save dropdown ────────────────────────────────────────────────────────
-function SaveButton({ storyId }: { storyId: string }) {
+// ── Save to library ──────────────────────────────────────────────────────
+const btnStyle = {
+  display: "inline-flex" as const, alignItems: "center" as const, gap: 6,
+  fontSize: 12, fontWeight: 500, fontFamily: F,
+  background: WHITE, borderRadius: 8, padding: "6px 12px",
+};
+
+function SaveToLibrary({ storyId }: { storyId: string }) {
+  const [saved, setSaved] = useState(false);
+
+  const save = () => {
+    if (saved) return;
+    setSaved(true);
+    fetch("/api/stories/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ story_id: storyId, project_name: "library" }),
+    }).catch(() => {});
+  };
+
+  return (
+    <button onClick={save} style={{
+      ...btnStyle,
+      color: saved ? TEAL : T3,
+      border: `1.5px solid ${saved ? "rgba(29,158,117,.3)" : BORDER}`,
+      cursor: saved ? "default" : "pointer",
+    }}>
+      {saved ? (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill={TEAL} stroke="none"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
+      )}
+      {saved ? "Saved" : "Save to library"}
+    </button>
+  );
+}
+
+// ── Save to project ─────────────────────────────────────────────────────
+function SaveToProject({ storyId }: { storyId: string }) {
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedTo, setSavedTo] = useState<string | null>(null);
@@ -103,18 +140,13 @@ function SaveButton({ storyId }: { storyId: string }) {
       <button
         onClick={() => { if (saved) return; setOpen(!open); }}
         style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          fontSize: 12, fontWeight: 500, fontFamily: F,
-          color: saved ? TEAL : T3, background: WHITE,
+          ...btnStyle,
+          color: saved ? TEAL : T3,
           border: `1.5px solid ${saved ? "rgba(29,158,117,.3)" : BORDER}`,
-          borderRadius: 8, padding: "6px 12px", cursor: saved ? "default" : "pointer",
+          cursor: saved ? "default" : "pointer",
         }}
       >
-        {saved ? (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill={TEAL} stroke="none"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
-        )}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={saved ? TEAL : "currentColor"} strokeWidth="1.3"><rect x="2" y="2" width="10" height="10" rx="2"/><path d="M5 7h4M7 5v4" strokeLinecap="round"/></svg>
         {saved ? `Saved to ${savedTo}` : "Save to project"}
       </button>
       {open && (
@@ -343,8 +375,9 @@ export default function StoryPage() {
           <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4, background: BG, borderRadius: 4, padding: "2px 8px" }}>{story.source_type}</span>
           {isPro && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: TEAL, background: "rgba(29,158,117,.1)", borderRadius: 4, padding: "2px 7px" }}>Tier 1</span>}
           <span style={{ fontSize: 12, color: T4 }}>{fmtDate(story.published_at)}</span>
-          <div style={{ marginLeft: "auto" }}>
-            <SaveButton storyId={id} />
+          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+            <SaveToLibrary storyId={id} />
+            <SaveToProject storyId={id} />
           </div>
         </div>
 
