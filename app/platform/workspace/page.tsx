@@ -38,12 +38,13 @@ function fmtDate(iso: string) {
 
 // ── Topic detection ──────────────────────────────────────────────────────
 const TOPIC_MAP: Record<string, string[]> = {
-  isa: ["dsm"], mining: ["dsm"], "deep-sea": ["dsm"],
-  bbnj: ["governance"], treaty: ["governance"], governance: ["governance"],
-  iuu: ["iuu"], fishing: ["iuu", "fisheries"],
-  mpa: ["mpa"], "30x30": ["mpa"],
-  finance: ["bluefinance"], bond: ["bluefinance"],
-  shipping: ["shipping"], imo: ["shipping"],
+  isa: ["dsm"], mining: ["dsm"], "deep-sea": ["dsm"], seabed: ["dsm"],
+  bbnj: ["governance"], treaty: ["governance"], governance: ["governance"], "high seas": ["governance"],
+  iuu: ["iuu"], fishing: ["iuu", "fisheries"], enforcement: ["iuu"],
+  mpa: ["mpa"], "30x30": ["mpa"], protection: ["mpa"],
+  finance: ["bluefinance"], bond: ["bluefinance"], investment: ["bluefinance"],
+  shipping: ["shipping"], imo: ["shipping"], vessel: ["shipping"],
+  whaling: ["governance"], cetacean: ["governance"], whale: ["governance"],
   climate: ["climate"],
 };
 
@@ -57,27 +58,52 @@ function detectTopics(text: string): string[] {
 }
 
 // ── 1. Project Memory strip ──────────────────────────────────────────────
-function NewStoriesStrip({ topics, since }: { topics: string[]; since: string }) {
+function isDismissed(docId: string): boolean {
+  try {
+    const raw = localStorage.getItem("tideline_dismissed_banners");
+    if (raw) return JSON.parse(raw).includes(docId);
+  } catch {}
+  return false;
+}
+
+function dismissBanner(docId: string) {
+  try {
+    const raw = localStorage.getItem("tideline_dismissed_banners");
+    const arr: string[] = raw ? JSON.parse(raw) : [];
+    if (!arr.includes(docId)) arr.push(docId);
+    localStorage.setItem("tideline_dismissed_banners", JSON.stringify(arr.slice(-50)));
+  } catch {}
+}
+
+function NewStoriesStrip({ docId, topics, since, createdAt }: { docId: string; topics: string[]; since: string; createdAt?: string }) {
   const [stories, setStories] = useState<NewStory[]>([]);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => isDismissed(docId));
+
+  // Don't show if doc was just created (within 60s)
+  const isNew = createdAt && since && Math.abs(new Date(since).getTime() - new Date(createdAt).getTime()) < 60000;
 
   useEffect(() => {
-    if (topics.length === 0 || !since) return;
+    if (dismissed || isNew || topics.length === 0 || !since) return;
     fetch(`/api/projects/new-stories?topics=${topics.join(",")}&since=${since}`)
       .then(r => r.ok ? r.json() : { stories: [] })
       .then(d => setStories(d.stories || []))
       .catch(() => {});
-  }, [topics.join(","), since]);
+  }, [topics.join(","), since, dismissed, isNew]);
 
-  if (dismissed || stories.length === 0) return null;
+  if (dismissed || isNew || stories.length === 0) return null;
+
+  const topicName = topics[0] || "your topics";
 
   return (
-    <div style={{ margin: "0 40px 16px", padding: "14px 18px", background: "rgba(29,158,117,.05)", borderLeft: `3px solid ${TEAL}`, borderRadius: 8, position: "relative" }}>
-      <button onClick={() => setDismissed(true)} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: T4, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>{"\u00D7"}</button>
-      <div style={{ fontSize: 12, fontWeight: 600, color: TEAL, marginBottom: 8 }}>{stories.length} new {stories.length === 1 ? "story" : "stories"} since your last visit</div>
+    <div style={{ marginBottom: 16, padding: "14px 18px", background: "rgba(29,158,117,.07)", borderLeft: `3px solid ${TEAL}`, borderRadius: 8, position: "relative" }}>
+      <button onClick={() => { setDismissed(true); dismissBanner(docId); }} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: T4, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>{"\u00D7"}</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+        <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL }} />
+        <span style={{ fontSize: 13, fontWeight: 500, color: T1 }}>{stories.length} new {stories.length === 1 ? "story" : "stories"} on {topicName} since your last visit</span>
+      </div>
       {stories.map(s => (
-        <a key={s.id} href={`/platform/story/${s.id}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: T2, lineHeight: 1.5, textDecoration: "none", marginBottom: 2 }}>
-          {decodeHtml(s.title)} <span style={{ color: T4 }}>({s.source_name})</span>
+        <a key={s.id} href={`/platform/story/${s.id}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: TEAL, lineHeight: 1.5, textDecoration: "none", marginBottom: 2 }}>
+          {decodeHtml(s.title).slice(0, 70)}{decodeHtml(s.title).length > 70 ? "..." : ""} <span style={{ color: T4 }}>({s.source_name})</span>
         </a>
       ))}
     </div>
@@ -85,6 +111,8 @@ function NewStoriesStrip({ topics, since }: { topics: string[]; since: string })
 }
 
 // ── 2. /ask inline research ──────────────────────────────────────────────
+const BLUE = "#185FA5";
+
 function AskOverlay({ editor, onClose }: { editor: ReturnType<typeof useEditor>; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -103,8 +131,15 @@ function AskOverlay({ editor, onClose }: { editor: ReturnType<typeof useEditor>;
       });
       const d = await r.json();
       if (d.answer) {
+        // Insert as a styled answer block using HTML that TipTap can parse
         editor.chain().focus()
-          .insertContent(`<blockquote><p><em>${d.answer}</em></p><p style="font-size:11px;color:#1D9E75"><strong>Tideline Research</strong> · ${query.trim()}</p></blockquote>`)
+          .insertContent({
+            type: "blockquote",
+            content: [
+              { type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: d.answer }] },
+              { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: "Tideline Research" }, { type: "text", text: ` \u00B7 ${query.trim()}` }] },
+            ],
+          })
           .run();
       }
     } catch {}
@@ -112,10 +147,15 @@ function AskOverlay({ editor, onClose }: { editor: ReturnType<typeof useEditor>;
   };
 
   return (
-    <div style={{ margin: "0 40px 12px", padding: "10px 14px", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 10, display: "flex", gap: 8, alignItems: "center", boxShadow: "0 4px 12px rgba(0,0,0,.08)" }}>
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke={TEAL} strokeWidth="1.3"/><path d="M9.5 9.5l3 3" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/></svg>
-      <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); if (e.key === "Escape") onClose(); }} placeholder="Ask Tideline..." style={{ flex: 1, border: "none", outline: "none", fontSize: 13, fontFamily: F, color: T1, background: "transparent" }} />
-      {loading && <span style={{ fontSize: 11, color: T4 }}>Thinking...</span>}
+    <div style={{ marginBottom: 12, padding: "12px 16px", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 10, boxShadow: "0 4px 12px rgba(0,0,0,.08)" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke={TEAL} strokeWidth="1.3"/><path d="M9.5 9.5l3 3" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/></svg>
+        <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); if (e.key === "Escape") onClose(); }} placeholder="Ask Tideline anything about ocean governance..." style={{ flex: 1, border: "none", outline: "none", fontSize: 13, fontFamily: F, color: T1, background: "transparent" }} />
+        <button onClick={submit} disabled={!query.trim() || loading} style={{ fontSize: 12, fontWeight: 600, fontFamily: F, color: "#fff", background: query.trim() && !loading ? TEAL : T4, border: "none", borderRadius: 6, padding: "5px 12px", cursor: query.trim() ? "pointer" : "default" }}>
+          {loading ? "Asking..." : "Ask"}
+        </button>
+      </div>
+      {loading && <div style={{ fontSize: 11, color: T4, marginTop: 6 }}>Asking Tideline...</div>}
     </div>
   );
 }
@@ -165,6 +205,7 @@ function EditorArea({ docId, initialContent, updatedAt }: { docId: string; initi
   const titleLoaded = useRef(false);
   const isLocal = docId === "local";
   const [detectedTopics, setDetectedTopics] = useState<string[]>([]);
+  const [createdAt, setCreatedAt] = useState<string | undefined>();
 
   const doSave = useCallback((editor: ReturnType<typeof useEditor>) => {
     if (!editor || isLocal) return;
@@ -213,13 +254,36 @@ function EditorArea({ docId, initialContent, updatedAt }: { docId: string; initi
     titleLoaded.current = true;
     fetch(`/api/documents/${docId}`)
       .then(r => { if (!r.ok) throw new Error("not ok"); return r.json(); })
-      .then(d => { if (d.title && d.title !== "Untitled document" && d.title !== "Project brief") setTitle(d.title); })
+      .then(d => {
+        if (d.title && d.title !== "Untitled document" && d.title !== "Project brief") setTitle(d.title);
+        if (d.created_at) setCreatedAt(d.created_at);
+      })
       .catch(() => {});
   }, [docId, isLocal]);
 
   useEffect(() => {
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, []);
+
+  // Listen for citation insert events from the right panel
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if (!editor) return;
+      const detail = (e as CustomEvent).detail;
+      if (!detail?.title) return;
+      const date = detail.published_at ? fmtDate(detail.published_at) : "";
+      const blocks: any[] = [
+        { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: decodeHtml(detail.title) }] },
+        { type: "paragraph", content: [{ type: "text", text: `${detail.source_name || "Source"}${date ? ` \u00B7 ${date}` : ""}` }] },
+      ];
+      if (detail.short_summary) {
+        blocks.push({ type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: detail.short_summary }] });
+      }
+      editor.chain().focus("end").insertContent({ type: "blockquote", content: blocks }).run();
+    };
+    window.addEventListener("tideline:insert-citation", handler);
+    return () => window.removeEventListener("tideline:insert-citation", handler);
+  }, [editor]);
 
   const saveTitle = (val: string) => {
     if (isLocal) return;
@@ -263,7 +327,7 @@ function EditorArea({ docId, initialContent, updatedAt }: { docId: string; initi
         <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 40px 80px" }}>
           {/* Project memory strip */}
           {!isLocal && updatedAt && detectedTopics.length > 0 && (
-            <NewStoriesStrip topics={detectedTopics} since={updatedAt} />
+            <NewStoriesStrip docId={docId} topics={detectedTopics} since={updatedAt} createdAt={createdAt} />
           )}
 
           {/* /ask overlay */}
@@ -279,6 +343,9 @@ function EditorArea({ docId, initialContent, updatedAt }: { docId: string; initi
             style={{ width: "100%", fontSize: 28, fontWeight: 600, letterSpacing: "-.025em", color: title ? T1 : T4, fontFamily: F, border: "none", outline: "none", background: titleFocused ? BG : "transparent", borderRadius: 6, padding: "4px 0", marginBottom: 24, transition: "background .15s" }}
           />
           <EditorContent editor={editor} />
+          {editor && editor.isEmpty && (
+            <div style={{ fontSize: 12, color: T4, marginTop: 8 }}>Type /ask to query Tideline intelligence inline</div>
+          )}
         </div>
       </div>
 
@@ -418,8 +485,11 @@ function WorkspaceContent() {
         .ProseMirror p { margin: 0 0 8px; }
         .ProseMirror ul { padding-left: 20px; margin: 0 0 8px; }
         .ProseMirror li { margin: 0 0 4px; }
-        .ProseMirror blockquote { border-left: 2px solid ${TEAL}; padding: 12px 16px; background: rgba(29,158,117,.05); margin: 12px 0; border-radius: 4px; }
-        .ProseMirror blockquote p { font-style: italic; color: ${T2}; }
+        .ProseMirror blockquote { border-left: 2px solid ${TEAL}; padding: 12px 16px; background: rgba(29,158,117,.06); margin: 12px 0; border-radius: 6px; }
+        .ProseMirror blockquote p { color: ${T2}; font-size: 13px; line-height: 1.65; }
+        .ProseMirror blockquote p:first-child { font-weight: 500; }
+        .ProseMirror blockquote p strong { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: ${TEAL}; }
+        .ProseMirror p.is-empty:not(.is-editor-empty)::before { content: none; }
       `}</style>
 
       {/* Left panel */}

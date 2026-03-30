@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("stories")
-    .select("id, title, source_name, topic, published_at")
+    .select("id, title, source_name, topic, published_at, short_summary")
     .in("topic", topics)
     .gt("published_at", since)
     .not("short_summary", "is", null)

@@ -248,7 +248,10 @@ function WorkspaceRightPanel() {
         {saved.slice(0, 8).map((s: any) => (
           <div key={s.id} style={{ padding: "8px 0", borderBottom: `1px solid ${BLT}` }}>
             <div style={{ fontSize: 12, fontWeight: 500, color: T1, lineHeight: 1.35, marginBottom: 3 }}>{(s.title || "").slice(0, 60)}{(s.title || "").length > 60 ? "..." : ""}</div>
-            <div style={{ fontSize: 11, color: T4 }}>{s.source_name} {s.published_at ? `\u00B7 ${new Date(s.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : ""}</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, color: T4 }}>{s.source_name} {s.published_at ? `\u00B7 ${new Date(s.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : ""}</span>
+              <button onClick={() => window.dispatchEvent(new CustomEvent("tideline:insert-citation", { detail: { title: s.title, source_name: s.source_name, published_at: s.published_at, short_summary: s.short_summary } }))} style={{ fontSize: 10, fontWeight: 600, color: TEAL, background: "none", border: "none", cursor: "pointer", fontFamily: F, padding: 0 }}>+ Insert</button>
+            </div>
           </div>
         ))}
       </div>
