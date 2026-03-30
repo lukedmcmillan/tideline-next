@@ -34,6 +34,23 @@ const TOPIC_LABELS: Record<string, string> = {
 
 const PROJECTS = ["ISA Deep-Sea Watch", "BBNJ Implementation"];
 
+function decodeHtml(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&#8217;/g, "\u2019")
+    .replace(/&#8216;/g, "\u2018")
+    .replace(/&#8220;/g, "\u201C")
+    .replace(/&#8221;/g, "\u201D")
+    .replace(/&#8211;/g, "-")
+    .replace(/&#8212;/g, "\u2014")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)));
+}
+
 function fmtDate(iso: string) {
   const d = new Date(iso);
   const now = new Date();
@@ -172,13 +189,13 @@ function ExpertContext({ storyId }: { storyId: string }) {
   return (
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>
-        Expert context
+        Got context to add?
       </div>
       <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, marginBottom: 12 }}>
         <textarea
           value={draft}
           onChange={e => setDraft(e.target.value)}
-          placeholder="What does this mean for your work? Add a note visible to other subscribers."
+          placeholder="Got the inside track? Share what this means for the sector — visible to other Tideline subscribers."
           rows={3}
           style={{
             width: "100%", resize: "vertical", border: `1px solid ${BLT}`,
@@ -333,7 +350,7 @@ export default function StoryPage() {
 
         {/* Title */}
         <h1 style={{ fontFamily: F, fontSize: 24, fontWeight: 600, lineHeight: 1.3, letterSpacing: "-.025em", color: T1, marginBottom: 16, margin: 0 }}>
-          {story.title}
+          {decodeHtml(story.title)}
         </h1>
 
         {/* Tracker tags */}
@@ -423,7 +440,7 @@ export default function StoryPage() {
                     <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", background: rSc.bg, color: rSc.color, borderRadius: 3 }}>{r.source_name}</span>
                     <span style={{ fontSize: 11, color: T4 }}>{fmtDate(r.published_at)}</span>
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{r.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{decodeHtml(r.title)}</div>
                 </a>
               );
             })}

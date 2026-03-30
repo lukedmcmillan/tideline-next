@@ -60,7 +60,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData }: {
   const nav: { ic: React.ReactNode; label: string; href: string; badge?: string; badgeColor?: string }[] = [
     { ic: <IcFeed />, label: "Feed", href: "/platform/feed" },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
-    { ic: <IcBook />, label: "Library", href: "/platform/library", badge: "3" },
+    { ic: <IcBook />, label: "Library", href: "/platform/library" },
     { ic: <IcWork />, label: "Workspace", href: "/platform/workspace", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
     { ic: <IcDir />, label: "Directory", href: "/platform/directory" },

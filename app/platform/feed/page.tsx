@@ -55,6 +55,23 @@ const FILTER_TOPICS: Record<string, string[]> = {
   Climate: ["climate", "acidification"],
 };
 
+function decodeHtml(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&#8217;/g, "\u2019")
+    .replace(/&#8216;/g, "\u2018")
+    .replace(/&#8220;/g, "\u201C")
+    .replace(/&#8221;/g, "\u201D")
+    .replace(/&#8211;/g, "-")
+    .replace(/&#8212;/g, "\u2014")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)));
+}
+
 function topicLabel(topic: string) {
   return TOPIC_LABELS[topic] || topic.toUpperCase();
 }
@@ -166,7 +183,7 @@ export default function FeedPage() {
               {isRead(lead.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
               <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(lead.topic)}</span>
             </div>
-            <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{lead.title}</div>
+            <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{decodeHtml(lead.title)}</div>
             {lead.short_summary && <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 14 }}>{lead.short_summary}</div>}
             <Src name={lead.source_name} t1={isPro(lead)} link={lead.link} />
           </div>
@@ -178,7 +195,7 @@ export default function FeedPage() {
                   {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
                   <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(s.topic)}</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 6, marginTop: 3 }}>{s.title}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 6, marginTop: 3 }}>{decodeHtml(s.title)}</div>
                 <Src name={s.source_name} t1={isPro(s)} link={s.link} />
               </div>
             ))}
@@ -197,7 +214,7 @@ export default function FeedPage() {
                 <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(s.topic)}</span>
                 <span style={{ fontSize: 11, color: TEAL, fontWeight: 600 }}>{fmtTime(s.published_at)}</span>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{s.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{decodeHtml(s.title)}</div>
               {s.short_summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.short_summary}</div>}
               <Src name={s.source_name} t1={isPro(s)} link={s.link} />
             </div>
@@ -217,7 +234,7 @@ export default function FeedPage() {
               {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>New</span>}
               {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Viewed</span>}
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: T4, flexShrink: 0, minWidth: 84 }}>{topicLabel(s.topic)}</span>
-              <span style={{ fontSize: 13, color: T1, flex: 1, lineHeight: 1.35 }}>{s.title}</span>
+              <span style={{ fontSize: 13, color: T1, flex: 1, lineHeight: 1.35 }}>{decodeHtml(s.title)}</span>
               <Src name={s.source_name} t1={isPro(s)} link={s.link} />
             </div>
           ))}
