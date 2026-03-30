@@ -37,8 +37,23 @@ const TIPS: Record<string, { st: string; c: string; d: string }> = {
   "Blue Finance": { st: "Developing", c: AMBER, d: "IFC framework published. 7 new blue bonds in pipeline." },
 };
 
+// ── Sidebar types ────────────────────────────────────────────────────────
+interface TrackerData { name: string; count24: number; count48: number }
+interface ProjectData { name: string; count: number }
+
+function trackerColor(t: TrackerData): string {
+  if (t.count24 > 0) return TEAL;
+  if (t.count48 > 0) return AMBER;
+  return RED;
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ onNav, urgentCount }: { onNav?: () => void; urgentCount?: number }) {
+function Sidebar({ onNav, urgentCount, trackerData, projectData }: {
+  onNav?: () => void;
+  urgentCount?: number;
+  trackerData?: TrackerData[];
+  projectData?: ProjectData[];
+}) {
   const path = usePathname();
   const [hTip, setHTip] = useState<string | null>(null);
 
@@ -46,18 +61,17 @@ function Sidebar({ onNav, urgentCount }: { onNav?: () => void; urgentCount?: num
     { ic: <IcFeed />, label: "Feed", href: "/platform/feed" },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library", badge: "3" },
-    { ic: <IcWork />, label: "Workspace", href: "/platform/workspace", badge: "2" },
+    { ic: <IcWork />, label: "Workspace", href: "/platform/workspace", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
     { ic: <IcDir />, label: "Directory", href: "/platform/directory" },
   ];
 
-  const trackers = [
-    { name: "BBNJ Treaty", color: TEAL, badge: "3 today", pulse: false },
-    { name: "ISA Mining", color: AMBER, badge: "1 today", pulse: false },
-    { name: "IUU Enforcement", color: RED, badge: "2 today", pulse: true },
-    { name: "30x30 Protection", color: TEAL, badge: null, pulse: false },
-    { name: "Blue Finance", color: AMBER, badge: "1 today", pulse: false },
-  ];
+  const trackers = (trackerData || []).map(t => ({
+    name: t.name,
+    color: trackerColor(t),
+    badge: t.count24 > 0 ? `${t.count24} today` : null,
+    pulse: t.count24 >= 3,
+  }));
 
   const active = (h: string) => {
     if (h === "/platform/feed") return path === "/platform" || path === "/platform/feed";
@@ -114,14 +128,11 @@ function Sidebar({ onNav, urgentCount }: { onNav?: () => void; urgentCount?: num
       {/* Workspace */}
       <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
       <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", padding: "12px 28px 6px" }}>Workspace</div>
-      {[
-        { name: "ISA Deep-Sea Watch", c: TEAL, b: "4 new" },
-        { name: "BBNJ Implementation", c: AMBER, b: "7 items" },
-      ].map(p => (
+      {(projectData || []).map(p => (
         <a key={p.name} href="/platform/workspace" style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: p.c, flexShrink: 0, marginRight: 12 }} />
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: TEAL, flexShrink: 0, marginRight: 12 }} />
           {p.name}
-          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{p.b}</span>
+          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{p.count} {p.count === 1 ? "item" : "items"}</span>
         </a>
       ))}
       <a href="/platform/workspace" style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, color: "rgba(255,255,255,.3)", textDecoration: "none" }}>
@@ -321,11 +332,20 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   const [sbOpen, setSbOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [urgentCount, setUrgentCount] = useState(0);
+  const [trackerData, setTrackerData] = useState<TrackerData[]>([]);
+  const [projectData, setProjectData] = useState<ProjectData[]>([]);
 
   useEffect(() => {
     fetch("/api/consultations")
       .then(r => r.json())
       .then(d => { if (d.urgent) setUrgentCount(d.urgent.length); })
+      .catch(() => {});
+    fetch("/api/sidebar-data")
+      .then(r => r.json())
+      .then(d => {
+        if (d.trackers) setTrackerData(d.trackers);
+        if (d.projects) setProjectData(d.projects);
+      })
       .catch(() => {});
   }, []);
 
@@ -385,14 +405,14 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         {sbOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.4)" }} onClick={() => setSbOpen(false)}>
             <div style={{ width: 280, height: "100%", background: NAVY }} onClick={e => e.stopPropagation()}>
-              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} />
+              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} />
             </div>
           </div>
         )}
 
         {/* Desktop sidebar */}
         <div className="sb-desktop" style={{ flexShrink: 0 }}>
-          <Sidebar urgentCount={urgentCount} />
+          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} />
         </div>
 
         {/* Main */}
