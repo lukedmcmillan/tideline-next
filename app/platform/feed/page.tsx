@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const BG     = "#F8F9FA";
 const WHITE  = "#FFFFFF";
@@ -16,53 +17,125 @@ const BLT    = "#E8EAED";
 const F      = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
 const M      = "var(--font-mono), 'DM Mono', monospace";
 
-const STORIES = [
-  { id: "s1", cat: "OCEAN GOVERNANCE", time: "06:42", headline: "BBNJ ratification: third deposit confirmed as Pacific bloc signals alignment", summary: "The UN Treaty Collection confirmed a third instrument of ratification from a Pacific island state, bringing the total to 87. Analysts suggest coordinated timing with the July ISA session, accelerating implementation by an estimated two quarters.", src: "IISD Reporting Services", t1: true },
-  { id: "s2", cat: "DEEP-SEA MINING", time: "05:18", headline: "ISA Council defers exploitation code vote as sponsoring state pressure mounts", summary: null, src: "ISA / Bloomberg Law", t1: true },
-  { id: "s3", cat: "BLUE FINANCE", time: "04:55", headline: "Sovereign blue bond pipeline doubles as IFC publishes revised certification framework", summary: null, src: "IFC / Climate Bonds Initiative", t1: true },
-  { id: "s4", cat: "IUU FISHING", time: "03:30", headline: "Pacific coast guard intercepts vessel under falsified flag documentation", summary: "Port state authorities detained vessel pending investigation into registration and catch records.", src: "Maritime Executive", t1: false },
-  { id: "s5", cat: "CLIMATE", time: "02:15", headline: "IPCC confirms accelerated Southern Ocean acidification exceeds 2019 projections", summary: "Argo float data shows pH declining 40% faster than the most pessimistic scenario six years ago.", src: "IPCC / Nature Climate Change", t1: true },
-  { id: "s6", cat: "30X30", time: "01:44", headline: "Chile announces 740,000km\u00B2 MPA ahead of CBD COP target review", summary: "Covers Nazca-Desventuradas seamount chain. Chile's protected EEZ now at 42%.", src: "IUCN / El Mercurio", t1: false },
-];
+// ── Types ────────────────────────────────────────────────────────────────
+interface Story {
+  id: string;
+  title: string;
+  link: string;
+  source_name: string;
+  topic: string;
+  source_type: string;
+  published_at: string;
+  short_summary: string | null;
+  full_summary: string | null;
+  is_pro: boolean;
+  alert_type: string | null;
+}
 
-const COMPACT = [
-  { id: "s7", cat: "SHIPPING", hl: "IMO MEPC 83 adopts revised carbon intensity framework for bulk carriers over 25,000 DWT", src: "IMO", t1: true },
-  { id: "s8", cat: "GOVERNANCE", hl: "OSPAR opens consultation on revised North-East Atlantic fisheries recovery zones", src: "OSPAR", t1: false },
-  { id: "s9", cat: "BLUE FINANCE", hl: "Fiji prices $150m sovereign blue bond with TNFD-aligned reporting covenant", src: "Reuters", t1: true },
-  { id: "s10", cat: "IUU FISHING", hl: "INTERPOL Operation Liberterra identifies 136 vessels under investigation across 40 flag states", src: "INTERPOL", t1: true },
-  { id: "s11", cat: "DEEP-SEA MINING", hl: "Norway opens second licensing round for seabed mineral extraction in the Norwegian Sea", src: "Offshore Energy", t1: false },
-];
+// ── Topic mapping ────────────────────────────────────────────────────────
+const TOPIC_LABELS: Record<string, string> = {
+  governance: "GOVERNANCE",
+  dsm: "DEEP-SEA MINING",
+  bluefinance: "BLUE FINANCE",
+  climate: "CLIMATE",
+  iuu: "IUU FISHING",
+  mpa: "30X30",
+  fisheries: "FISHERIES",
+  science: "SCIENCE",
+  acidification: "CLIMATE",
+  technology: "TECHNOLOGY",
+  all: "OCEAN",
+};
 
-function Src({ name, t1 }: { name: string; t1: boolean }) {
-  return <span style={{ fontSize: 12, fontWeight: 500, color: t1 ? TEAL : T4, cursor: "pointer" }}>{name} {"\u2197"}</span>;
+const FILTER_TOPICS: Record<string, string[]> = {
+  All: [],
+  Governance: ["governance"],
+  Mining: ["dsm"],
+  Finance: ["bluefinance"],
+  Climate: ["climate", "acidification"],
+};
+
+function topicLabel(topic: string) {
+  return TOPIC_LABELS[topic] || topic.toUpperCase();
+}
+
+function fmtTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function isPro(s: Story) {
+  return s.is_pro || s.source_type === "gov" || s.source_type === "reg";
+}
+
+function Src({ name, t1, link }: { name: string; t1: boolean; link?: string }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ fontSize: 12, fontWeight: 500, color: t1 ? TEAL : T4 }}>{name}</span>
+      {link && (
+        <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 500, color: T4, textDecoration: "none" }}>View original {"\u2197"}</a>
+      )}
+    </span>
+  );
 }
 
 export default function FeedPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState("All");
   const [read, setRead] = useState(new Set<string>());
-  const [unread, setUnread] = useState(9);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/stories?limit=50")
+      .then((r) => {
+        if (!r.ok) throw new Error(r.statusText);
+        return r.json();
+      })
+      .then((d) => {
+        setStories(d.stories || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filtered = filter === "All"
+    ? stories
+    : stories.filter((s) => (FILTER_TOPICS[filter] || []).includes(s.topic));
+
+  const LEAD = filtered.slice(0, 6);
+  const COMPACT = filtered.slice(6);
+  const totalCount = filtered.length;
+
+  const unread = filtered.filter((s) => !read.has(s.id)).length;
 
   const markRead = (id: string) => {
     if (read.has(id)) return;
-    const next = new Set(read);
-    next.add(id);
-    setRead(next);
-    setUnread(Math.max(0, unread - 1));
+    setRead((prev) => new Set(prev).add(id));
   };
   const markAll = () => {
-    setRead(new Set([...STORIES, ...COMPACT].map(s => s.id)));
-    setUnread(0);
+    setRead(new Set(filtered.map((s) => s.id)));
   };
 
   const isRead = (id: string) => read.has(id);
   const filters = ["All", "Governance", "Mining", "Finance", "Climate"];
+
+  if (loading) {
+    return (
+      <div style={{ padding: "16px 24px 40px" }}>
+        <div style={{ fontSize: 13, color: T4, padding: "40px 0", textAlign: "center" }}>Loading feed...</div>
+      </div>
+    );
+  }
+
+  const lead = LEAD[0];
 
   return (
     <div style={{ padding: "16px 24px 40px" }}>
       {/* Feed header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: unread === 0 ? TEAL : TEAL, animation: unread > 0 ? "pulse 2.2s ease-in-out infinite" : "none" }} />
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL, animation: unread > 0 ? "pulse 2.2s ease-in-out infinite" : "none" }} />
           <span style={{ fontSize: 14, fontWeight: 600, color: T1, letterSpacing: "-.01em" }}>What you&apos;ve missed</span>
           <span style={{ color: BORDER }}>&middot;</span>
           {unread > 0 ? (
@@ -85,65 +158,71 @@ export default function FeedPage() {
       </div>
 
       {/* Lead story card */}
-      <div onClick={() => markRead("s1")} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, display: "grid", gridTemplateColumns: "3fr 2fr", cursor: "pointer", opacity: isRead("s1") ? 0.55 : 1 }}>
-        <div style={{ padding: "26px 30px", borderRight: `1px solid ${BLT}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-            {!isRead("s1") && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
-            {isRead("s1") && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
-            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{STORIES[0].cat}</span>
+      {lead && (
+        <div onClick={() => { markRead(lead.id); router.push(`/platform/story/${lead.id}`); }} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, display: "grid", gridTemplateColumns: "3fr 2fr", cursor: "pointer", opacity: isRead(lead.id) ? 0.55 : 1 }}>
+          <div style={{ padding: "26px 30px", borderRight: `1px solid ${BLT}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              {!isRead(lead.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
+              {isRead(lead.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(lead.topic)}</span>
+            </div>
+            <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{lead.title}</div>
+            {lead.short_summary && <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 14 }}>{lead.short_summary}</div>}
+            <Src name={lead.source_name} t1={isPro(lead)} link={lead.link} />
           </div>
-          <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{STORIES[0].headline}</div>
-          <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 14 }}>{STORIES[0].summary}</div>
-          <Src name={STORIES[0].src} t1={STORIES[0].t1} />
+          <div>
+            {LEAD.slice(1, 3).map((s, i) => (
+              <div key={s.id} onClick={(e) => { e.stopPropagation(); markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ padding: "18px 22px", borderBottom: i === 0 ? `1px solid ${BLT}` : "none", opacity: isRead(s.id) ? 0.55 : 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
+                  {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
+                  <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(s.topic)}</span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 6, marginTop: 3 }}>{s.title}</div>
+                <Src name={s.source_name} t1={isPro(s)} link={s.link} />
+              </div>
+            ))}
+          </div>
         </div>
-        <div>
-          {STORIES.slice(1, 3).map((s, i) => (
-            <div key={s.id} onClick={(e) => { e.stopPropagation(); markRead(s.id); }} style={{ padding: "18px 22px", borderBottom: i === 0 ? `1px solid ${BLT}` : "none", opacity: isRead(s.id) ? 0.55 : 1 }}>
+      )}
+
+      {/* Three column grid */}
+      {LEAD.length > 3 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+          {LEAD.slice(3, 6).map(s => (
+            <div key={s.id} onClick={() => { markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, cursor: "pointer", transition: "all .15s", opacity: isRead(s.id) ? 0.55 : 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                 {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
                 {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
-                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{s.cat}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(s.topic)}</span>
+                <span style={{ fontSize: 11, color: TEAL, fontWeight: 600 }}>{fmtTime(s.published_at)}</span>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 6, marginTop: 3 }}>{s.headline}</div>
-              <Src name={s.src} t1={s.t1} />
+              <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{s.title}</div>
+              {s.short_summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.short_summary}</div>}
+              <Src name={s.source_name} t1={isPro(s)} link={s.link} />
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Three column grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
-        {STORIES.slice(3, 6).map(s => (
-          <div key={s.id} onClick={() => markRead(s.id)} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, cursor: "pointer", transition: "all .15s", opacity: isRead(s.id) ? 0.55 : 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
-              {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
-              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{s.cat}</span>
-              <span style={{ fontSize: 11, color: s.time < "04:00" ? T4 : TEAL, fontWeight: s.time < "04:00" ? 400 : 600 }}>{s.time}</span>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{s.headline}</div>
-            {s.summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.summary}</div>}
-            <Src name={s.src} t1={s.t1} />
-          </div>
-        ))}
-      </div>
+      )}
 
       {/* Compact list */}
-      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden" }}>
-        <div style={{ padding: "14px 22px", borderBottom: `1px solid ${BLT}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: T2 }}>More from Tideline</span>
-          <span style={{ fontSize: 12, color: T4 }}>38 stories today</span>
-        </div>
-        {COMPACT.map(s => (
-          <div key={s.id} onClick={() => markRead(s.id)} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 22px", borderBottom: `1px solid ${BLT}`, cursor: "pointer", transition: "background .1s", opacity: isRead(s.id) ? 0.45 : 1 }}>
-            {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>New</span>}
-            {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Viewed</span>}
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: T4, flexShrink: 0, minWidth: 84 }}>{s.cat}</span>
-            <span style={{ fontSize: 13, color: T1, flex: 1, lineHeight: 1.35 }}>{s.hl}</span>
-            <Src name={s.src} t1={s.t1} />
+      {COMPACT.length > 0 && (
+        <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ padding: "14px 22px", borderBottom: `1px solid ${BLT}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: T2 }}>More from Tideline</span>
+            <span style={{ fontSize: 12, color: T4 }}>{totalCount} stories</span>
           </div>
-        ))}
-      </div>
+          {COMPACT.map(s => (
+            <div key={s.id} onClick={() => { markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 22px", borderBottom: `1px solid ${BLT}`, cursor: "pointer", transition: "background .1s", opacity: isRead(s.id) ? 0.45 : 1 }}>
+              {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>New</span>}
+              {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Viewed</span>}
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: T4, flexShrink: 0, minWidth: 84 }}>{topicLabel(s.topic)}</span>
+              <span style={{ fontSize: 13, color: T1, flex: 1, lineHeight: 1.35 }}>{s.title}</span>
+              <Src name={s.source_name} t1={isPro(s)} link={s.link} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
