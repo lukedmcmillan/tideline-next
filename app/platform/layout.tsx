@@ -38,13 +38,13 @@ const TIPS: Record<string, { st: string; c: string; d: string }> = {
 };
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ onNav }: { onNav?: () => void }) {
+function Sidebar({ onNav, urgentCount }: { onNav?: () => void; urgentCount?: number }) {
   const path = usePathname();
   const [hTip, setHTip] = useState<string | null>(null);
 
-  const nav = [
+  const nav: { ic: React.ReactNode; label: string; href: string; badge?: string; badgeColor?: string }[] = [
     { ic: <IcFeed />, label: "Feed", href: "/platform/feed" },
-    { ic: <IcCal />, label: "Calendar", href: "/platform/calendar" },
+    { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library", badge: "3" },
     { ic: <IcWork />, label: "Workspace", href: "/platform/workspace", badge: "2" },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
@@ -81,7 +81,7 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
               {on && <span style={{ position: "absolute", left: 0, top: 6, bottom: 6, width: 3, borderRadius: "0 3px 3px 0", background: TEAL }} />}
               <span style={{ position: "absolute", left: 24, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: on ? TEAL : "rgba(255,255,255,.4)" }}>{n.ic}</span>
               {n.label}
-              {n.badge && <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, background: TEAL, color: "#fff", borderRadius: 10, padding: "1px 8px" }}>{n.badge}</span>}
+              {n.badge && <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, background: n.badgeColor || TEAL, color: "#fff", borderRadius: 10, padding: "1px 8px" }}>{n.badge}</span>}
             </a>
           );
         })}
@@ -154,9 +154,82 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
   );
 }
 
+// ── Calendar widget (shared) ─────────────────────────────────────────────
+function CalendarWidget() {
+  return (
+    <div style={{ padding: 20, borderBottom: `1px solid ${BLT}` }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Regulatory calendar</div>
+      {[
+        { date: "31 Mar", days: "1 day", title: "EU CSRD Ocean Reporting Deadline", c: RED },
+        { date: "3 Apr", days: "4 days", title: "OSPAR Fisheries Recovery Zones", c: RED },
+        { date: "30 Apr", days: "31 days", title: "ISA Environmental Safeguard Review", c: AMBER },
+        { date: "16 May", days: "47 days", title: "ISWG-GHG 17", c: AMBER },
+      ].map((e, i) => (
+        <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BLT}` }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: e.c, marginBottom: 2 }}>{e.date} {e.days && `\u2014 ${e.days}`}</div>
+          <div style={{ fontSize: 13, color: T1, lineHeight: 1.35 }}>{e.title}</div>
+        </div>
+      ))}
+      <a href="/platform/calendar" style={{ fontSize: 12, fontWeight: 500, color: TEAL, marginTop: 12, display: "block", cursor: "pointer", textDecoration: "none" }}>View full calendar &rarr;</a>
+    </div>
+  );
+}
+
+// ── Calendar right panel ─────────────────────────────────────────────────
+function CalendarRightPanel() {
+  const BODIES = ["OSPAR", "European Commission", "ISA", "IMO", "CBD", "IWC", "CCAMLR", "ICCAT", "CITES", "WTO-Fish"];
+  return (
+    <div style={{ width: 268, flexShrink: 0, background: WHITE, borderLeft: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }} className="rp-desktop">
+      {/* Coverage summary */}
+      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 14 }}>Coverage summary</div>
+        <div style={{ display: "flex", gap: 12, marginBottom: 4 }}>
+          <div style={{ flex: 1, background: BG, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-.03em", color: T1, lineHeight: 1 }}>6</div>
+            <div style={{ fontSize: 11, color: T4, marginTop: 4 }}>Open items</div>
+          </div>
+          <div style={{ flex: 1, background: BG, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-.03em", color: TEAL, lineHeight: 1 }}>5</div>
+            <div style={{ fontSize: 11, color: T4, marginTop: 4 }}>Covered</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Monitored bodies */}
+      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}`, flex: 1 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Monitored bodies</div>
+        {BODIES.map(b => (
+          <div key={b} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: T2 }}>{b}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Suggest missing */}
+      <div style={{ padding: 20 }}>
+        <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: WHITE, border: `1.5px solid ${BORDER}`, borderRadius: 8, padding: "10px 14px", fontFamily: F, fontSize: 12, fontWeight: 500, color: T3, cursor: "pointer" }}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M6.5 1v11M1 6.5h11" strokeLinecap="round" /></svg>
+          Suggest a missing consultation
+        </button>
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: "14px 20px", borderTop: `1px solid ${BLT}`, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={T4} strokeWidth="1.3"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+        <span style={{ fontSize: 13, color: T3 }}>Settings &amp; sources</span>
+      </div>
+    </div>
+  );
+}
+
 // ── Right Panel ───────────────────────────────────────────────────────────
 function RightPanel() {
+  const path = usePathname();
   const [copied, setCopied] = useState(false);
+  const isCalendar = path === "/platform/calendar";
+
+  if (isCalendar) return <CalendarRightPanel />;
 
   const copyInsight = () => {
     navigator.clipboard.writeText("ISA deferral and BBNJ ratification are directly linked. Three sponsoring states conditioning their ISA vote on implementation terms.").then(() => {
@@ -188,22 +261,8 @@ function RightPanel() {
         </div>
       </div>
 
-      {/* Calendar */}
-      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}`, flex: 1 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Regulatory calendar</div>
-        {[
-          { date: "31 Mar", days: "5 days", title: "EU CSRD Ocean Reporting Deadline", c: TEAL },
-          { date: "3 Apr", days: "8 days", title: "BBNJ Preparatory Committee", c: AMBER },
-          { date: "14 Jul", days: "", title: "ISA Council Session 29", c: T4 },
-          { date: "22 Sep", days: "", title: "UN Ocean Conference 2026", c: T4 },
-        ].map((e, i) => (
-          <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BLT}` }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: e.c, marginBottom: 2 }}>{e.date} {e.days && `\u2014 ${e.days}`}</div>
-            <div style={{ fontSize: 13, color: T1, lineHeight: 1.35 }}>{e.title}</div>
-          </div>
-        ))}
-        <a href="/tracker/governance" style={{ fontSize: 12, fontWeight: 500, color: TEAL, marginTop: 12, display: "block", cursor: "pointer", textDecoration: "none" }}>View full calendar &rarr;</a>
-      </div>
+      {/* Calendar widget — always visible */}
+      <CalendarWidget />
 
       {/* Footer */}
       <div style={{ padding: "14px 20px", borderTop: `1px solid ${BLT}`, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
@@ -261,6 +320,14 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
   const [sbOpen, setSbOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [urgentCount, setUrgentCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/consultations")
+      .then(r => r.json())
+      .then(d => { if (d.urgent) setUrgentCount(d.urgent.length); })
+      .catch(() => {});
+  }, []);
 
   const handleKey = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setSearchOpen(true); }
@@ -318,14 +385,14 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         {sbOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.4)" }} onClick={() => setSbOpen(false)}>
             <div style={{ width: 280, height: "100%", background: NAVY }} onClick={e => e.stopPropagation()}>
-              <Sidebar onNav={() => setSbOpen(false)} />
+              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} />
             </div>
           </div>
         )}
 
         {/* Desktop sidebar */}
         <div className="sb-desktop" style={{ flexShrink: 0 }}>
-          <Sidebar />
+          <Sidebar urgentCount={urgentCount} />
         </div>
 
         {/* Main */}
