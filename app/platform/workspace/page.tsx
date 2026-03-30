@@ -68,8 +68,10 @@ function EditorArea({ docId, initialContent }: { docId: string; initialContent: 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleLoaded = useRef(false);
 
+  const isLocal = docId === "local";
+
   const doSave = (editor: ReturnType<typeof useEditor>) => {
-    if (!editor) return;
+    if (!editor || isLocal) return;
     setSaveStatus("saving");
     const content = editor.getJSON();
     const content_text = editor.getText();
@@ -101,23 +103,24 @@ function EditorArea({ docId, initialContent }: { docId: string; initialContent: 
 
   // Load title
   useEffect(() => {
-    if (titleLoaded.current) return;
+    if (titleLoaded.current || isLocal) return;
     titleLoaded.current = true;
     fetch(`/api/documents/${docId}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error("not ok"); return r.json(); })
       .then(d => { if (d.title) setTitle(d.title === "Untitled document" || d.title === "Project brief" ? "" : d.title); })
       .catch(() => {});
-  }, [docId]);
+  }, [docId, isLocal]);
 
   // Save on unmount
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      if (editor) doSave(editor);
+      if (editor && !isLocal) doSave(editor);
     };
-  }, [editor, docId]);
+  }, [editor, docId, isLocal]);
 
   const saveTitle = (val: string) => {
+    if (isLocal) return;
     const t = val.trim() || "Untitled document";
     fetch(`/api/documents/${docId}`, {
       method: "PATCH",
@@ -126,7 +129,7 @@ function EditorArea({ docId, initialContent }: { docId: string; initialContent: 
     }).catch(() => {});
   };
 
-  const exportDoc = () => window.open(`/api/documents/${docId}/export`, "_blank");
+  const exportDoc = () => { if (!isLocal) window.open(`/api/documents/${docId}/export`, "_blank"); };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
@@ -198,42 +201,85 @@ function WorkspaceContent() {
   // Load or create active document
   useEffect(() => {
     const projectName = activeProject || "Workspace";
-    // Try to load existing docs for this project
-    fetch(`/api/projects/${encodeURIComponent(projectName)}`)
-      .then(r => r.json())
-      .then(async (d) => {
-        const docs: DocMeta[] = d.documents || [];
-        setAllDocs(docs);
-        setStories(d.stories || []);
-        setConsultations(d.consultations || []);
+    let cancelled = false;
+
+    async function boot() {
+      try {
+        // Try to load project data
+        const projRes = await fetch(`/api/projects/${encodeURIComponent(projectName)}`);
+        let docs: DocMeta[] = [];
+
+        if (projRes.ok) {
+          const d = await projRes.json();
+          docs = d.documents || [];
+          if (!cancelled) {
+            setAllDocs(docs);
+            setStories(d.stories || []);
+            setConsultations(d.consultations || []);
+          }
+        }
+
+        if (cancelled) return;
 
         if (docs.length > 0) {
-          // Open most recent
           await loadDoc(docs[0].id);
-        } else {
-          // Create one
-          const res = await fetch("/api/documents", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ project_name: projectName, title: "Untitled document" }),
-          });
-          const created = await res.json();
+          return;
+        }
+
+        // No docs found — try to create one
+        const createRes = await fetch("/api/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_name: projectName, title: "Untitled document" }),
+        });
+
+        if (cancelled) return;
+
+        if (createRes.ok) {
+          const created = await createRes.json();
           if (created.id) {
             setAllDocs([{ id: created.id, title: created.title, updated_at: new Date().toISOString(), project_name: projectName }]);
             setActiveDocId(created.id);
             setActiveDocContent(null);
             setReady(true);
+            return;
           }
         }
-      })
-      .catch(() => setReady(true));
+
+        // All API calls failed (e.g. not authenticated) — show editor anyway with no doc persistence
+        setActiveDocId("local");
+        setActiveDocContent(null);
+        setReady(true);
+      } catch (err) {
+        console.error("Workspace boot error:", err);
+        if (!cancelled) {
+          setActiveDocId("local");
+          setActiveDocContent(null);
+          setReady(true);
+        }
+      }
+    }
+
+    boot();
+    return () => { cancelled = true; };
   }, [activeProject]);
 
   async function loadDoc(id: string) {
-    const r = await fetch(`/api/documents/${id}`);
-    const d = await r.json();
-    setActiveDocId(d.id || id);
-    setActiveDocContent(d.content || null);
+    try {
+      const r = await fetch(`/api/documents/${id}`);
+      if (r.ok) {
+        const d = await r.json();
+        setActiveDocId(d.id || id);
+        setActiveDocContent(d.content || null);
+      } else {
+        setActiveDocId(id);
+        setActiveDocContent(null);
+      }
+    } catch (err) {
+      console.error("Failed to load document:", err);
+      setActiveDocId(id);
+      setActiveDocContent(null);
+    }
     setReady(true);
   }
 
