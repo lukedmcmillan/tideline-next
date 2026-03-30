@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -175,7 +175,7 @@ function EditorArea({ docId, initialContent }: { docId: string; initialContent: 
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────
-export default function WorkspacePage() {
+function WorkspaceContent() {
   const searchParams = useSearchParams();
   const activeProject = searchParams.get("project");
 
@@ -429,5 +429,13 @@ export default function WorkspacePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function WorkspacePage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "40px", textAlign: "center", color: "#9AA0A6", fontSize: 13 }}>Loading workspace...</div>}>
+      <WorkspaceContent />
+    </Suspense>
   );
 }
