@@ -235,12 +235,40 @@ function CalendarRightPanel() {
 }
 
 // ── Right Panel ───────────────────────────────────────────────────────────
+// ── Workspace right panel ────────────────────────────────────────────────
+function WorkspaceRightPanel() {
+  const [saved, setSaved] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/stories?limit=8").then(r => r.ok ? r.json() : { stories: [] }).then(d => setSaved(d.stories || [])).catch(() => {});
+  }, []);
+  return (
+    <div style={{ width: 268, flexShrink: 0, background: WHITE, borderLeft: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }} className="rp-desktop">
+      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Your sources</div>
+        {saved.slice(0, 8).map((s: any) => (
+          <div key={s.id} style={{ padding: "8px 0", borderBottom: `1px solid ${BLT}` }}>
+            <div style={{ fontSize: 12, fontWeight: 500, color: T1, lineHeight: 1.35, marginBottom: 3 }}>{(s.title || "").slice(0, 60)}{(s.title || "").length > 60 ? "..." : ""}</div>
+            <div style={{ fontSize: 11, color: T4 }}>{s.source_name} {s.published_at ? `\u00B7 ${new Date(s.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : ""}</div>
+          </div>
+        ))}
+      </div>
+      <CalendarWidget />
+      <div style={{ padding: "14px 20px", borderTop: `1px solid ${BLT}`, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={T4} strokeWidth="1.3"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+        <span style={{ fontSize: 13, color: T3 }}>Settings &amp; sources</span>
+      </div>
+    </div>
+  );
+}
+
 function RightPanel() {
   const path = usePathname();
   const [copied, setCopied] = useState(false);
   const isCalendar = path === "/platform/calendar";
+  const isWorkspace = path === "/platform/workspace";
 
   if (isCalendar) return <CalendarRightPanel />;
+  if (isWorkspace) return <WorkspaceRightPanel />;
 
   const copyInsight = () => {
     navigator.clipboard.writeText("ISA deferral and BBNJ ratification are directly linked. Three sponsoring states conditioning their ISA vote on implementation terms.").then(() => {

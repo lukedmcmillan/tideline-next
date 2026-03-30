@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.content !== undefined) update.content = body.content;
   if (body.content_text !== undefined) update.content_text = body.content_text;
   if (body.title !== undefined) update.title = body.title;
+  if (body.tags !== undefined) update.tags = body.tags;
 
   const { error } = await supabase
     .from("project_documents")
