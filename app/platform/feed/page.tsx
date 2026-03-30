@@ -47,16 +47,6 @@ const TOPIC_LABELS: Record<string, string> = {
   all: "OCEAN",
 };
 
-const FILTER_TOPICS: Record<string, string[]> = {
-  All: [],
-  "BBNJ Treaty": ["governance"],
-  "ISA Mining": ["dsm"],
-  "IUU Enforcement": ["iuu"],
-  "30x30": ["mpa"],
-  "Blue Finance": ["bluefinance"],
-  "Shipping": ["shipping"],
-};
-
 const LS_KEY = "tideline_read_stories";
 
 function loadReadSet(): Set<string> {
@@ -116,7 +106,6 @@ function Src({ name, t1, link }: { name: string; t1: boolean; link?: string }) {
 
 export default function FeedPage() {
   const router = useRouter();
-  const [filter, setFilter] = useState("All");
   const [read, setRead] = useState<Set<string>>(() => loadReadSet());
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,15 +123,11 @@ export default function FeedPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const filtered = filter === "All"
-    ? stories
-    : stories.filter((s) => (FILTER_TOPICS[filter] || []).includes(s.topic));
+  const LEAD = stories.slice(0, 6);
+  const COMPACT = stories.slice(6);
+  const totalCount = stories.length;
 
-  const LEAD = filtered.slice(0, 6);
-  const COMPACT = filtered.slice(6);
-  const totalCount = filtered.length;
-
-  const unread = filtered.filter((s) => !read.has(s.id)).length;
+  const unread = stories.filter((s) => !read.has(s.id)).length;
 
   const markRead = (id: string) => {
     if (read.has(id)) return;
@@ -151,13 +136,12 @@ export default function FeedPage() {
     saveReadSet(next);
   };
   const markAll = () => {
-    const next = new Set([...read, ...filtered.map((s) => s.id)]);
+    const next = new Set([...read, ...stories.map((s) => s.id)]);
     setRead(next);
     saveReadSet(next);
   };
 
   const isRead = (id: string) => read.has(id);
-  const filters = Object.keys(FILTER_TOPICS);
 
   if (loading) {
     return (
@@ -186,14 +170,7 @@ export default function FeedPage() {
             </span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginLeft: "auto" }}>
-          <span onClick={markAll} style={{ fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer", opacity: .65 }}>Mark all read</span>
-          <div style={{ display: "flex", gap: 6 }}>
-            {filters.map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{ fontSize: 12, fontWeight: 500, border: `1px solid ${filter === f ? TEAL : BORDER}`, borderRadius: 20, padding: "5px 14px", color: filter === f ? "#fff" : T3, background: filter === f ? TEAL : WHITE, cursor: "pointer" }}>{f}</button>
-            ))}
-          </div>
-        </div>
+        <span onClick={markAll} style={{ fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer", opacity: .65, marginLeft: "auto" }}>Mark all read</span>
       </div>
 
       {/* Lead story card */}
