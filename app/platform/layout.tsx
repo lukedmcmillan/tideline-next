@@ -336,15 +336,12 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
 
   useEffect(() => {
-    fetch("/api/consultations")
-      .then(r => r.json())
-      .then(d => { if (d.urgent) setUrgentCount(d.urgent.length); })
-      .catch(() => {});
     fetch("/api/sidebar-data")
       .then(r => r.json())
       .then(d => {
         if (d.trackers) setTrackerData(d.trackers);
         if (d.projects) setProjectData(d.projects);
+        if (typeof d.urgent_count === "number") setUrgentCount(d.urgent_count);
       })
       .catch(() => {});
   }, []);
