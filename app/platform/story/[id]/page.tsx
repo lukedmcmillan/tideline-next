@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 // ── Design tokens (match layout.tsx) ─────────────────────────────────────
 const BG     = "#F8F9FA";
 const WHITE  = "#FFFFFF";
+const NAVY   = "#0A1628";
 const TEAL   = "#1D9E75";
-const AMBER  = "#F9AB00";
 const RED    = "#D93025";
 const T1     = "#202124";
 const T2     = "#3C4043";
@@ -32,6 +32,8 @@ const TOPIC_LABELS: Record<string, string> = {
   science: "Science", acidification: "Climate", technology: "Technology", all: "Ocean",
 };
 
+const PROJECTS = ["ISA Deep-Sea Watch", "BBNJ Implementation"];
+
 function fmtDate(iso: string) {
   const d = new Date(iso);
   const now = new Date();
@@ -42,6 +44,191 @@ function fmtDate(iso: string) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function fmtRelative(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const mins = Math.floor((now.getTime() - d.getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return fmtDate(iso);
+}
+
+// ── Save dropdown ────────────────────────────────────────────────────────
+function SaveButton({ storyId }: { storyId: string }) {
+  const [open, setOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savedTo, setSavedTo] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  const save = (project: string) => {
+    setSaved(true);
+    setSavedTo(project);
+    setOpen(false);
+    fetch("/api/stories/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ story_id: storyId, project_name: project }),
+    }).catch(() => {});
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => { if (saved) return; setOpen(!open); }}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          fontSize: 12, fontWeight: 500, fontFamily: F,
+          color: saved ? TEAL : T3, background: WHITE,
+          border: `1.5px solid ${saved ? "rgba(29,158,117,.3)" : BORDER}`,
+          borderRadius: 8, padding: "6px 12px", cursor: saved ? "default" : "pointer",
+        }}
+      >
+        {saved ? (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill={TEAL} stroke="none"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
+        )}
+        {saved ? `Saved to ${savedTo}` : "Save to project"}
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", right: 0, width: 220,
+          background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 10,
+          boxShadow: "0 8px 24px rgba(0,0,0,.1)", zIndex: 50, overflow: "hidden",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "10px 14px 6px" }}>Projects</div>
+          {PROJECTS.map(p => (
+            <button key={p} onClick={() => save(p)} style={{
+              display: "block", width: "100%", textAlign: "left", padding: "8px 14px",
+              fontSize: 13, color: T1, background: "none", border: "none",
+              cursor: "pointer", fontFamily: F,
+            }}>
+              {p}
+            </button>
+          ))}
+          <div style={{ borderTop: `1px solid ${BLT}` }}>
+            <button onClick={() => save("New project")} style={{
+              display: "flex", alignItems: "center", gap: 6, width: "100%",
+              textAlign: "left", padding: "8px 14px", fontSize: 13, color: TEAL,
+              background: "none", border: "none", cursor: "pointer", fontFamily: F,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M6 1v10M1 6h10" strokeLinecap="round"/></svg>
+              New project...
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Comment ──────────────────────────────────────────────────────────────
+interface Comment {
+  id: string;
+  comment: string;
+  created_at: string;
+  user_email?: string;
+}
+
+function ExpertContext({ storyId }: { storyId: string }) {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [draft, setDraft] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/stories/comments?story_id=${storyId}`)
+      .then(r => r.ok ? r.json() : { comments: [] })
+      .then(d => setComments(d.comments || []))
+      .catch(() => {});
+  }, [storyId]);
+
+  const submit = () => {
+    if (!draft.trim() || submitting) return;
+    setSubmitting(true);
+    fetch("/api/stories/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ story_id: storyId, comment: draft.trim() }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.comment) setComments(prev => [d.comment, ...prev]);
+        setDraft("");
+      })
+      .catch(() => {})
+      .finally(() => setSubmitting(false));
+  };
+
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>
+        Expert context
+      </div>
+      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, marginBottom: 12 }}>
+        <textarea
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          placeholder="What does this mean for your work? Add a note visible to other subscribers."
+          rows={3}
+          style={{
+            width: "100%", resize: "vertical", border: `1px solid ${BLT}`,
+            borderRadius: 8, padding: "10px 12px", fontSize: 13, lineHeight: 1.6,
+            color: T1, fontFamily: F, background: BG, outline: "none",
+          }}
+        />
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+          <button
+            onClick={submit}
+            disabled={!draft.trim() || submitting}
+            style={{
+              fontSize: 12, fontWeight: 600, fontFamily: F,
+              color: "#fff", background: draft.trim() ? TEAL : T4,
+              border: "none", borderRadius: 8, padding: "7px 16px",
+              cursor: draft.trim() ? "pointer" : "default", opacity: submitting ? 0.6 : 1,
+            }}
+          >
+            {submitting ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+      </div>
+
+      {comments.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {comments.map(c => {
+            const initial = (c.user_email || "U")[0].toUpperCase();
+            return (
+              <div key={c.id} style={{ display: "flex", gap: 10, padding: "12px 0", borderBottom: `1px solid ${BLT}` }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: "50%", background: NAVY,
+                  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 600, flexShrink: 0,
+                }}>
+                  {initial}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, lineHeight: 1.55, color: T1, marginBottom: 4 }}>{c.comment}</div>
+                  <div style={{ fontSize: 11, color: T4 }}>{fmtRelative(c.created_at)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────
 export default function StoryPage() {
   const params = useParams();
   const router = useRouter();
@@ -67,9 +254,14 @@ export default function StoryPage() {
         if (s.short_summary) setShortSummary(s.short_summary);
         if (s.full_summary) setFullSummary(s.full_summary);
 
+        // Related: same topic, exclude current, only summarised
         fetch(`/api/stories?topic=${s.topic}&limit=5`)
           .then(r => r.json())
-          .then(d => setRelated((d.stories || []).filter((r: any) => r.id !== id).slice(0, 4)));
+          .then(d => setRelated(
+            (d.stories || [])
+              .filter((r: any) => r.id !== id)
+              .slice(0, 4)
+          ));
 
         if (!s.short_summary) {
           setGenerating(true);
@@ -117,7 +309,7 @@ export default function StoryPage() {
           display: "inline-flex", alignItems: "center", gap: 6,
           fontSize: 13, fontWeight: 500, color: T4, background: "none",
           border: "none", cursor: "pointer", fontFamily: F,
-          padding: 0, marginBottom: 24,
+          padding: 0, marginBottom: 20,
         }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -126,103 +318,116 @@ export default function StoryPage() {
         Back to feed
       </button>
 
-      {/* Meta row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: sc.bg, color: sc.color, borderRadius: 4 }}>{story.source_name}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4, background: BG, borderRadius: 4, padding: "2px 8px" }}>{story.source_type}</span>
-        {isPro && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: TEAL, background: "rgba(29,158,117,.1)", borderRadius: 4, padding: "2px 7px" }}>Tier 1</span>}
-        <span style={{ fontSize: 12, color: T4, marginLeft: "auto" }}>{fmtDate(story.published_at)}</span>
-      </div>
+      {/* Main card */}
+      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "26px 28px", marginBottom: 16 }}>
+        {/* Byline row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: sc.bg, color: sc.color, borderRadius: 4 }}>{story.source_name}</span>
+          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4, background: BG, borderRadius: 4, padding: "2px 8px" }}>{story.source_type}</span>
+          {isPro && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: TEAL, background: "rgba(29,158,117,.1)", borderRadius: 4, padding: "2px 7px" }}>Tier 1</span>}
+          <span style={{ fontSize: 12, color: T4 }}>{fmtDate(story.published_at)}</span>
+          <div style={{ marginLeft: "auto" }}>
+            <SaveButton storyId={id} />
+          </div>
+        </div>
 
-      {/* Title */}
-      <h1 style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-.02em", color: T1, marginBottom: 24 }}>
-        {story.title}
-      </h1>
+        {/* Title */}
+        <h1 style={{ fontFamily: F, fontSize: 24, fontWeight: 600, lineHeight: 1.3, letterSpacing: "-.025em", color: T1, marginBottom: 16, margin: 0 }}>
+          {story.title}
+        </h1>
 
-      {/* Tracker tags */}
-      {topicTag && (
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
+        {/* Tracker tags */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14, marginBottom: 0 }}>
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", border: `1px solid rgba(29,158,117,.22)`, borderRadius: 4, padding: "3px 9px", color: TEAL, background: "rgba(255,255,255,.7)" }}>{topicTag}</span>
           {story.alert_type && (
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", background: "rgba(217,48,37,.1)", borderRadius: 4, padding: "3px 9px", color: RED }}>{story.alert_type.replace("_", " ")}</span>
           )}
         </div>
-      )}
-
-      {/* Tideline brief */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: TEAL, marginBottom: 12 }}>
-          Tideline brief
-        </div>
-
-        {generating && !shortSummary ? (
-          <div style={{ padding: "16px 20px", background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${TEAL}`, borderRadius: 8 }}>
-            <div style={{ fontSize: 13, color: T4 }}>Generating brief...</div>
-          </div>
-        ) : shortSummary ? (
-          <div style={{ padding: "20px 24px", background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${TEAL}`, borderRadius: 8 }}>
-            <p style={{ fontSize: 15, lineHeight: 1.75, color: T1, fontFamily: "Georgia, serif", marginBottom: fullSummary ? 16 : 0 }}>
-              {shortSummary}
-            </p>
-            {fullSummary && (
-              <>
-                {expanded && (
-                  <p style={{ fontSize: 14, lineHeight: 1.75, color: T2, fontFamily: "Georgia, serif", marginBottom: 16, paddingTop: 16, borderTop: `1px solid ${BLT}` }}>
-                    {fullSummary}
-                  </p>
-                )}
-                <button onClick={() => setExpanded(!expanded)} style={{ background: "none", border: "none", color: TEAL, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: F, padding: 0 }}>
-                  {expanded ? "Show less" : "Read full analysis"}
-                </button>
-              </>
-            )}
-          </div>
-        ) : (
-          <div style={{ padding: "16px 20px", background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${BLT}`, borderRadius: 8 }}>
-            <div style={{ fontSize: 13, color: T4 }}>Summary pending. Check back shortly.</div>
-          </div>
-        )}
       </div>
 
-      {/* Original source link */}
-      <div style={{ marginBottom: 32, paddingTop: 24, borderTop: `1px solid ${BLT}` }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Primary source</div>
+      {/* Tideline brief */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: TEAL, marginBottom: 10 }}>
+          Tideline brief
+        </div>
+        <div style={{
+          background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${TEAL}`,
+          borderRadius: 12, padding: "22px 24px",
+        }}>
+          {generating && !shortSummary ? (
+            <div style={{ fontSize: 13, color: T4, lineHeight: 1.6 }}>Generating brief...</div>
+          ) : shortSummary ? (
+            <>
+              <p style={{ fontSize: 14, lineHeight: 1.75, color: T1, fontFamily: F, margin: 0 }}>
+                {shortSummary}
+              </p>
+              {fullSummary && (
+                <>
+                  {expanded && (
+                    <p style={{ fontSize: 14, lineHeight: 1.75, color: T2, fontFamily: F, margin: 0, paddingTop: 16, marginTop: 16, borderTop: `1px solid ${BLT}` }}>
+                      {fullSummary}
+                    </p>
+                  )}
+                  <button onClick={() => setExpanded(!expanded)} style={{ background: "none", border: "none", color: TEAL, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: F, padding: 0, marginTop: 14 }}>
+                    {expanded ? "Show less" : "Read full analysis"}
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: T4, lineHeight: 1.6 }}>Summary pending. Check back shortly.</div>
+          )}
+        </div>
+      </div>
+
+      {/* Original source */}
+      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "18px 24px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 6 }}>Primary source</div>
+          <span style={{ fontSize: 13, color: T3 }}>{story.source_name}</span>
+        </div>
         <a
           href={story.link}
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "10px 18px", border: `1.5px solid ${BORDER}`, background: WHITE,
-            borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 500,
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "8px 16px", border: `1.5px solid ${BORDER}`, background: WHITE,
+            borderRadius: 8, textDecoration: "none", fontSize: 12, fontWeight: 500,
             color: T1, fontFamily: F,
           }}
         >
-          <span style={{ fontSize: 11, fontWeight: 600, padding: "1px 7px", background: sc.bg, color: sc.color, borderRadius: 3 }}>{story.source_name}</span>
-          View original source {"\u2197"}
+          View original {"\u2197"}
         </a>
+      </div>
+
+      {/* Expert context */}
+      <div style={{ marginBottom: 16 }}>
+        <ExpertContext storyId={id} />
       </div>
 
       {/* Related stories */}
       {related.length > 0 && (
-        <div style={{ paddingTop: 24, borderTop: `1px solid ${BLT}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 14 }}>Related stories</div>
-          {related.map((r) => {
-            const rSc = SRC_COLORS[r.source_type] || SRC_COLORS.media;
-            return (
-              <a
-                key={r.id}
-                href={`/platform/story/${r.id}`}
-                style={{ display: "block", padding: "14px 0", borderBottom: `1px solid ${BLT}`, textDecoration: "none" }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", background: rSc.bg, color: rSc.color, borderRadius: 3 }}>{r.source_name}</span>
-                  <span style={{ fontSize: 11, color: T4 }}>{fmtDate(r.published_at)}</span>
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{r.title}</div>
-              </a>
-            );
-          })}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Related stories</div>
+          <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+            {related.map((r, i) => {
+              const rSc = SRC_COLORS[r.source_type] || SRC_COLORS.media;
+              return (
+                <a
+                  key={r.id}
+                  href={`/platform/story/${r.id}`}
+                  style={{ display: "block", padding: "14px 20px", borderBottom: i < related.length - 1 ? `1px solid ${BLT}` : "none", textDecoration: "none" }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", background: rSc.bg, color: rSc.color, borderRadius: 3 }}>{r.source_name}</span>
+                    <span style={{ fontSize: 11, color: T4 }}>{fmtDate(r.published_at)}</span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{r.title}</div>
+                </a>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
