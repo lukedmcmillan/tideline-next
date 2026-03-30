@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -21,7 +21,7 @@ const F      = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
 
 interface Project { name: string; count: number }
 interface SavedStory { id: string; title: string; source_name: string; topic: string; published_at: string; short_summary: string | null }
-interface Doc { id: string; title: string; updated_at: string }
+interface DocMeta { id: string; title: string; updated_at: string; project_name: string }
 interface Consultation { id: string; organisation: string; title: string; deadline: string; type: string }
 
 function decodeHtml(str: string): string {
@@ -39,7 +39,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-// ── Editor toolbar ───────────────────────────────────────────────────────
+// ── Toolbar ──────────────────────────────────────────────────────────────
 function Toolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
   if (!editor) return null;
   const btn = (active: boolean) => ({
@@ -49,7 +49,7 @@ function Toolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
     cursor: "pointer" as const, fontFamily: F, fontSize: 13, fontWeight: 600 as const,
   });
   return (
-    <div style={{ display: "flex", gap: 2, padding: "8px 12px", borderBottom: `1px solid ${BLT}`, background: WHITE }}>
+    <div style={{ display: "flex", gap: 2 }}>
       <button style={btn(editor.isActive("bold"))} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
       <button style={btn(editor.isActive("italic"))} onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></button>
       <button style={btn(editor.isActive("heading", { level: 2 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
@@ -60,85 +60,115 @@ function Toolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
   );
 }
 
-// ── Brief tab (editor) ───────────────────────────────────────────────────
-function BriefTab({ docId }: { docId: string | null }) {
-  const [loaded, setLoaded] = useState(false);
+// ── Editor area ──────────────────────────────────────────────────────────
+function EditorArea({ docId, initialContent }: { docId: string; initialContent: any }) {
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [title, setTitle] = useState("");
+  const [titleFocused, setTitleFocused] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleLoaded = useRef(false);
+
+  const doSave = (editor: ReturnType<typeof useEditor>) => {
+    if (!editor) return;
+    setSaveStatus("saving");
+    const content = editor.getJSON();
+    const content_text = editor.getText();
+    fetch(`/api/documents/${docId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, content_text }),
+    })
+      .then(() => { setSaveStatus("saved"); setTimeout(() => setSaveStatus("idle"), 2000); })
+      .catch(() => setSaveStatus("idle"));
+  };
 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: "Start writing your brief, notes, or draft response. Your work saves automatically." }),
+      Placeholder.configure({ placeholder: "Start writing. Notes, a draft response, your brief. Saves automatically." }),
       Typography,
     ],
     editorProps: {
-      attributes: { style: "outline:none;min-height:400px;font-family:var(--font-sans),'DM Sans',system-ui,sans-serif;font-size:14px;line-height:1.75;color:#202124;" },
+      attributes: { style: `outline:none;min-height:400px;font-family:${F};font-size:14px;line-height:1.75;color:${T1};` },
     },
+    content: initialContent || undefined,
+    autofocus: "end",
     onUpdate: ({ editor }) => {
-      if (!docId) return;
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        const content = editor.getJSON();
-        const content_text = editor.getText();
-        fetch(`/api/documents/${docId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content, content_text }),
-        }).catch(() => {});
-      }, 30000);
+      saveTimer.current = setTimeout(() => doSave(editor), 2000);
     },
   });
 
-  // Load existing content
+  // Load title
   useEffect(() => {
-    if (!docId || loaded || !editor) return;
+    if (titleLoaded.current) return;
+    titleLoaded.current = true;
     fetch(`/api/documents/${docId}`)
       .then(r => r.json())
-      .then(d => {
-        if (d.content && editor) {
-          editor.commands.setContent(d.content);
-        }
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-  }, [docId, editor, loaded]);
+      .then(d => { if (d.title) setTitle(d.title === "Untitled document" || d.title === "Project brief" ? "" : d.title); })
+      .catch(() => {});
+  }, [docId]);
 
   // Save on unmount
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      if (docId && editor) {
-        const content = editor.getJSON();
-        const content_text = editor.getText();
-        fetch(`/api/documents/${docId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content, content_text }),
-        }).catch(() => {});
-      }
+      if (editor) doSave(editor);
     };
-  }, [docId, editor]);
+  }, [editor, docId]);
 
-  const exportDoc = () => {
-    if (!docId) return;
-    window.open(`/api/documents/${docId}/export`, "_blank");
+  const saveTitle = (val: string) => {
+    const t = val.trim() || "Untitled document";
+    fetch(`/api/documents/${docId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: t }),
+    }).catch(() => {});
   };
 
+  const exportDoc = () => window.open(`/api/documents/${docId}/export`, "_blank");
+
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 0 }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Toolbar bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", borderBottom: `1px solid ${BLT}`, background: WHITE, flexShrink: 0 }}>
         <Toolbar editor={editor} />
-        <button onClick={exportDoc} style={{
-          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12,
-          fontWeight: 500, fontFamily: F, color: T3, background: WHITE,
-          border: `1.5px solid ${BORDER}`, borderRadius: 8, padding: "6px 14px",
-          cursor: "pointer", marginRight: 12,
-        }}>
-          Export to Word {"\u2193"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {saveStatus !== "idle" && (
+            <span style={{ fontSize: 12, color: T4 }}>
+              {saveStatus === "saving" ? "Saving..." : "Saved"}
+            </span>
+          )}
+          <button onClick={exportDoc} style={{
+            display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12,
+            fontWeight: 500, fontFamily: F, color: T3, background: WHITE,
+            border: `1.5px solid ${BORDER}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+          }}>
+            Export to Word {"\u2193"}
+          </button>
+        </div>
       </div>
-      <div style={{ background: WHITE, padding: 40, minHeight: 500 }}>
-        <EditorContent editor={editor} />
+
+      {/* Editor content */}
+      <div style={{ flex: 1, overflowY: "auto", background: WHITE }}>
+        <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 40px 80px" }}>
+          {/* Editable title */}
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onFocus={() => setTitleFocused(true)}
+            onBlur={() => { setTitleFocused(false); saveTitle(title); }}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }}
+            placeholder="Untitled project"
+            style={{
+              width: "100%", fontSize: 28, fontWeight: 600, letterSpacing: "-.025em",
+              color: title ? T1 : T4, fontFamily: F, border: "none", outline: "none",
+              background: titleFocused ? BG : "transparent", borderRadius: 6,
+              padding: "4px 0", marginBottom: 24, transition: "background .15s",
+            }}
+          />
+          <EditorContent editor={editor} />
+        </div>
       </div>
     </div>
   );
@@ -146,60 +176,85 @@ function BriefTab({ docId }: { docId: string | null }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────
 export default function WorkspacePage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const activeProject = searchParams.get("project");
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [library, setLibrary] = useState<SavedStory[]>([]);
+  const [allDocs, setAllDocs] = useState<DocMeta[]>([]);
+  const [activeDocId, setActiveDocId] = useState<string | null>(null);
+  const [activeDocContent, setActiveDocContent] = useState<any>(null);
   const [stories, setStories] = useState<SavedStory[]>([]);
-  const [docs, setDocs] = useState<Doc[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [tab, setTab] = useState<"brief" | "stories" | "intelligence">("brief");
-  const [newName, setNewName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  // Load projects
+  // Boot: load projects + ensure a document exists
   useEffect(() => {
     fetch("/api/projects").then(r => r.json()).then(d => setProjects(d.projects || [])).catch(() => {});
-    // Load library items
     fetch("/api/stories/save?project_name=library").then(r => r.ok ? r.json() : { stories: [] }).then(d => setLibrary(d.stories || [])).catch(() => {});
   }, []);
 
-  // Load project detail when selected
+  // Load or create active document
   useEffect(() => {
-    if (!activeProject) { setStories([]); setDocs([]); setConsultations([]); return; }
-    fetch(`/api/projects/${encodeURIComponent(activeProject)}`)
+    const projectName = activeProject || "Workspace";
+    // Try to load existing docs for this project
+    fetch(`/api/projects/${encodeURIComponent(projectName)}`)
       .then(r => r.json())
-      .then(d => {
+      .then(async (d) => {
+        const docs: DocMeta[] = d.documents || [];
+        setAllDocs(docs);
         setStories(d.stories || []);
-        setDocs(d.documents || []);
         setConsultations(d.consultations || []);
-      })
-      .catch(() => {});
-  }, [activeProject]);
 
-  const createProject = () => {
-    if (!newName.trim() || creating) return;
-    setCreating(true);
-    fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim() }),
-    })
-      .then(r => r.json())
-      .then(d => {
-        if (d.project) {
-          setProjects(prev => [...prev, { name: d.project, count: 0 }]);
-          setNewName("");
-          router.push(`/platform/workspace?project=${encodeURIComponent(d.project)}`);
+        if (docs.length > 0) {
+          // Open most recent
+          await loadDoc(docs[0].id);
+        } else {
+          // Create one
+          const res = await fetch("/api/documents", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ project_name: projectName, title: "Untitled document" }),
+          });
+          const created = await res.json();
+          if (created.id) {
+            setAllDocs([{ id: created.id, title: created.title, updated_at: new Date().toISOString(), project_name: projectName }]);
+            setActiveDocId(created.id);
+            setActiveDocContent(null);
+            setReady(true);
+          }
         }
       })
-      .catch(() => {})
-      .finally(() => setCreating(false));
-  };
+      .catch(() => setReady(true));
+  }, [activeProject]);
 
-  const docId = docs.length > 0 ? docs[0].id : null;
+  async function loadDoc(id: string) {
+    const r = await fetch(`/api/documents/${id}`);
+    const d = await r.json();
+    setActiveDocId(d.id || id);
+    setActiveDocContent(d.content || null);
+    setReady(true);
+  }
+
+  async function createNewDoc() {
+    const projectName = activeProject || "Workspace";
+    const res = await fetch("/api/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_name: projectName, title: "Untitled document" }),
+    });
+    const created = await res.json();
+    if (created.id) {
+      const newDoc = { id: created.id, title: created.title, updated_at: new Date().toISOString(), project_name: projectName };
+      setAllDocs(prev => [newDoc, ...prev]);
+      setActiveDocId(created.id);
+      setActiveDocContent(null);
+      setReady(true);
+      setTab("brief");
+    }
+  }
+
   const tabs: { key: "brief" | "stories" | "intelligence"; label: string }[] = [
     { key: "brief", label: "Brief" },
     { key: "stories", label: `Saved stories (${stories.length})` },
@@ -217,7 +272,7 @@ export default function WorkspacePage() {
           height: 0;
         }
         .ProseMirror { outline: none; }
-        .ProseMirror h2 { font-size: 18px; font-weight: 600; margin: 24px 0 8px; }
+        .ProseMirror h2 { font-size: 18px; font-weight: 600; margin: 24px 0 8px; font-family: ${F}; }
         .ProseMirror p { margin: 0 0 8px; }
         .ProseMirror ul { padding-left: 20px; margin: 0 0 8px; }
         .ProseMirror li { margin: 0 0 4px; }
@@ -226,59 +281,70 @@ export default function WorkspacePage() {
       {/* Left panel */}
       <div style={{ width: 280, flexShrink: 0, background: WHITE, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
         <div style={{ padding: "20px 20px 12px" }}>
-          <div style={{ fontSize: 18, fontWeight: 600, color: T1, letterSpacing: "-.02em", marginBottom: 16 }}>Workspace</div>
-          {/* New project input */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-            <input
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && createProject()}
-              placeholder="New project name"
-              style={{ flex: 1, fontSize: 13, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "7px 10px", outline: "none", color: T1 }}
-            />
-            <button onClick={createProject} disabled={!newName.trim()} style={{
-              fontSize: 12, fontWeight: 600, fontFamily: F, color: "#fff",
-              background: newName.trim() ? TEAL : T4, border: "none", borderRadius: 8,
-              padding: "7px 12px", cursor: newName.trim() ? "pointer" : "default",
-            }}>
-              Create
-            </button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div style={{ fontSize: 18, fontWeight: 600, color: T1, letterSpacing: "-.02em" }}>Workspace</div>
           </div>
+          <button onClick={createNewDoc} style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            fontSize: 13, fontWeight: 500, fontFamily: F, color: "#fff", background: TEAL,
+            border: "none", borderRadius: 8, padding: "9px 0", cursor: "pointer", marginBottom: 8,
+          }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 1v10M1 6h10" strokeLinecap="round"/></svg>
+            New document
+          </button>
         </div>
 
-        {/* Project list */}
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "0 20px 6px" }}>Projects</div>
-        {projects.length === 0 && (
-          <div style={{ fontSize: 13, color: T4, padding: "8px 20px" }}>No projects yet</div>
+        {/* Documents in current project */}
+        {allDocs.length > 1 && (
+          <div style={{ padding: "0 0 8px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "0 20px 6px" }}>Documents</div>
+            {allDocs.map(d => {
+              const on = d.id === activeDocId;
+              return (
+                <button key={d.id} onClick={() => loadDoc(d.id)} style={{
+                  display: "block", width: "100%", textAlign: "left", padding: "8px 20px",
+                  fontSize: 13, color: on ? T1 : T3, fontWeight: on ? 600 : 400,
+                  background: on ? BG : "transparent", border: "none", fontFamily: F,
+                  borderLeft: on ? `3px solid ${TEAL}` : "3px solid transparent", cursor: "pointer",
+                }}>
+                  {d.title === "Untitled document" || d.title === "Project brief" ? "Untitled" : d.title}
+                </button>
+              );
+            })}
+          </div>
         )}
-        {projects.map(p => {
-          const on = activeProject === p.name;
-          return (
-            <a
-              key={p.name}
-              href={`/platform/workspace?project=${encodeURIComponent(p.name)}`}
-              style={{
-                display: "flex", alignItems: "center", gap: 8, padding: "10px 20px",
+
+        {/* Project list */}
+        <div style={{ borderTop: `1px solid ${BLT}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "0 20px 6px" }}>Projects</div>
+          {projects.length === 0 && (
+            <div style={{ fontSize: 13, color: T4, padding: "4px 20px" }}>No projects yet</div>
+          )}
+          {projects.map(p => {
+            const on = activeProject === p.name;
+            return (
+              <a key={p.name} href={`/platform/workspace?project=${encodeURIComponent(p.name)}`} style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "8px 20px",
                 fontSize: 13, color: on ? T1 : T3, fontWeight: on ? 600 : 400,
                 background: on ? BG : "transparent", textDecoration: "none",
                 borderLeft: on ? `3px solid ${TEAL}` : "3px solid transparent",
-              }}
-            >
-              <span style={{ flex: 1 }}>{p.name}</span>
-              <span style={{ fontSize: 11, color: T4 }}>{p.count}</span>
-            </a>
-          );
-        })}
+              }}>
+                <span style={{ flex: 1 }}>{p.name}</span>
+                <span style={{ fontSize: 11, color: T4 }}>{p.count}</span>
+              </a>
+            );
+          })}
+        </div>
 
         {/* Library */}
-        <div style={{ borderTop: `1px solid ${BLT}`, marginTop: 12, paddingTop: 12 }}>
+        <div style={{ borderTop: `1px solid ${BLT}`, marginTop: 8, paddingTop: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "0 20px 8px" }}>Library</div>
           {library.length === 0 && (
             <div style={{ fontSize: 13, color: T4, padding: "4px 20px" }}>No saved stories</div>
           )}
           {library.slice(0, 10).map(s => (
             <a key={s.id} href={`/platform/story/${s.id}`} style={{
-              display: "block", padding: "8px 20px", fontSize: 12, color: T2,
+              display: "block", padding: "6px 20px", fontSize: 12, color: T2,
               textDecoration: "none", lineHeight: 1.4,
             }}>
               {decodeHtml(s.title)}
@@ -288,84 +354,77 @@ export default function WorkspacePage() {
       </div>
 
       {/* Main area */}
-      <div style={{ flex: 1, overflowY: "auto", background: BG }}>
-        {!activeProject ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: T4, fontSize: 14 }}>
-            Select a project or create one
-          </div>
-        ) : (
-          <div>
-            {/* Project header + tabs */}
-            <div style={{ background: WHITE, borderBottom: `1px solid ${BLT}`, padding: "16px 24px 0" }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: T1, letterSpacing: "-.02em", marginBottom: 12 }}>{activeProject}</div>
-              <div style={{ display: "flex", gap: 0 }}>
-                {tabs.map(t => {
-                  const on = tab === t.key;
-                  return (
-                    <button key={t.key} onClick={() => setTab(t.key)} style={{
-                      fontSize: 13, fontWeight: on ? 600 : 400, color: on ? T1 : T4,
-                      background: "none", border: "none", fontFamily: F,
-                      borderBottom: on ? `2px solid ${TEAL}` : "2px solid transparent",
-                      padding: "8px 18px", cursor: "pointer",
-                    }}>
-                      {t.label}
-                    </button>
-                  );
-                })}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", background: BG, overflow: "hidden" }}>
+        {/* Tabs */}
+        <div style={{ background: WHITE, borderBottom: `1px solid ${BLT}`, padding: "0 24px", display: "flex", gap: 0, flexShrink: 0 }}>
+          {tabs.map(t => {
+            const on = tab === t.key;
+            return (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                fontSize: 13, fontWeight: on ? 600 : 400, color: on ? T1 : T4,
+                background: "none", border: "none", fontFamily: F,
+                borderBottom: on ? `2px solid ${TEAL}` : "2px solid transparent",
+                padding: "12px 18px", cursor: "pointer",
+              }}>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab content */}
+        {tab === "brief" && ready && activeDocId && (
+          <EditorArea key={activeDocId} docId={activeDocId} initialContent={activeDocContent} />
+        )}
+
+        {tab === "brief" && !ready && (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: T4, fontSize: 13 }}>Loading...</div>
+        )}
+
+        {tab === "stories" && (
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+            {stories.length === 0 && (
+              <div style={{ fontSize: 13, color: T4, padding: "40px 0", textAlign: "center" }}>
+                No saved stories in this project. Save stories from the feed or story page.
               </div>
-            </div>
-
-            {/* Tab content */}
-            <div style={{ padding: tab === "brief" ? 0 : "16px 24px" }}>
-              {tab === "brief" && <BriefTab docId={docId} />}
-
-              {tab === "stories" && (
-                <div>
-                  {stories.length === 0 && (
-                    <div style={{ fontSize: 13, color: T4, padding: "40px 0", textAlign: "center" }}>
-                      No saved stories in this project. Save stories from the feed or story page.
-                    </div>
-                  )}
-                  {stories.map(s => (
-                    <a key={s.id} href={`/platform/story/${s.id}`} style={{
-                      display: "block", background: WHITE, border: `1px solid ${BORDER}`,
-                      borderRadius: 12, padding: "16px 20px", marginBottom: 8, textDecoration: "none",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: T4, textTransform: "uppercase" }}>{s.source_name}</span>
-                        <span style={{ fontSize: 11, color: T4 }}>{fmtDate(s.published_at)}</span>
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 6 }}>{decodeHtml(s.title)}</div>
-                      {s.short_summary && <div style={{ fontSize: 13, color: T3, lineHeight: 1.55 }}>{s.short_summary.slice(0, 150)}...</div>}
-                    </a>
-                  ))}
+            )}
+            {stories.map(s => (
+              <a key={s.id} href={`/platform/story/${s.id}`} style={{
+                display: "block", background: WHITE, border: `1px solid ${BORDER}`,
+                borderRadius: 12, padding: "16px 20px", marginBottom: 8, textDecoration: "none",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T4, textTransform: "uppercase" }}>{s.source_name}</span>
+                  <span style={{ fontSize: 11, color: T4 }}>{fmtDate(s.published_at)}</span>
                 </div>
-              )}
+                <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 6 }}>{decodeHtml(s.title)}</div>
+                {s.short_summary && <div style={{ fontSize: 13, color: T3, lineHeight: 1.55 }}>{s.short_summary.slice(0, 150)}...</div>}
+              </a>
+            ))}
+          </div>
+        )}
 
-              {tab === "intelligence" && (
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Upcoming consultations</div>
-                  {consultations.length === 0 && (
-                    <div style={{ fontSize: 13, color: T4, padding: "20px 0" }}>No consultations linked to this project's topics.</div>
-                  )}
-                  {consultations.map(c => {
-                    const days = Math.max(0, Math.ceil((new Date(c.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-                    return (
-                      <div key={c.id} style={{
-                        background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12,
-                        padding: "14px 20px", marginBottom: 8,
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: T4, textTransform: "uppercase" }}>{c.organisation}</span>
-                          <span style={{ fontSize: 11, color: days <= 14 ? "#D93025" : T4 }}>{days} days</span>
-                        </div>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{c.title}</div>
-                      </div>
-                    );
-                  })}
+        {tab === "intelligence" && (
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Upcoming consultations</div>
+            {consultations.length === 0 && (
+              <div style={{ fontSize: 13, color: T4, padding: "20px 0" }}>No consultations linked to this project's topics.</div>
+            )}
+            {consultations.map(c => {
+              const days = Math.max(0, Math.ceil((new Date(c.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+              return (
+                <div key={c.id} style={{
+                  background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12,
+                  padding: "14px 20px", marginBottom: 8,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: T4, textTransform: "uppercase" }}>{c.organisation}</span>
+                    <span style={{ fontSize: 11, color: days <= 14 ? "#D93025" : T4 }}>{days} days</span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{c.title}</div>
                 </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         )}
       </div>
