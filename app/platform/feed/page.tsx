@@ -49,11 +49,29 @@ const TOPIC_LABELS: Record<string, string> = {
 
 const FILTER_TOPICS: Record<string, string[]> = {
   All: [],
-  Governance: ["governance"],
-  Mining: ["dsm"],
-  Finance: ["bluefinance"],
-  Climate: ["climate", "acidification"],
+  "BBNJ Treaty": ["governance"],
+  "ISA Mining": ["dsm"],
+  "IUU Enforcement": ["iuu"],
+  "30x30": ["mpa"],
+  "Blue Finance": ["bluefinance"],
+  "Shipping": ["shipping"],
 };
+
+const LS_KEY = "tideline_read_stories";
+
+function loadReadSet(): Set<string> {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+
+function saveReadSet(s: Set<string>) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify([...s]));
+  } catch {}
+}
 
 function decodeHtml(str: string): string {
   return str
@@ -99,7 +117,7 @@ function Src({ name, t1, link }: { name: string; t1: boolean; link?: string }) {
 export default function FeedPage() {
   const router = useRouter();
   const [filter, setFilter] = useState("All");
-  const [read, setRead] = useState(new Set<string>());
+  const [read, setRead] = useState<Set<string>>(() => loadReadSet());
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -128,14 +146,18 @@ export default function FeedPage() {
 
   const markRead = (id: string) => {
     if (read.has(id)) return;
-    setRead((prev) => new Set(prev).add(id));
+    const next = new Set(read).add(id);
+    setRead(next);
+    saveReadSet(next);
   };
   const markAll = () => {
-    setRead(new Set(filtered.map((s) => s.id)));
+    const next = new Set([...read, ...filtered.map((s) => s.id)]);
+    setRead(next);
+    saveReadSet(next);
   };
 
   const isRead = (id: string) => read.has(id);
-  const filters = ["All", "Governance", "Mining", "Finance", "Climate"];
+  const filters = Object.keys(FILTER_TOPICS);
 
   if (loading) {
     return (
