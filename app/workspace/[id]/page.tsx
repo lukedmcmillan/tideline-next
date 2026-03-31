@@ -16,6 +16,7 @@ const T3      = "#5F6368";
 const T4      = "#9AA0A6";
 const BORDER  = "#DADCE0";
 const BLT     = "#E8EAED";
+const ROW_BG  = "#F1F3F4";
 const F       = "'DM Sans', system-ui, sans-serif";
 const M       = "'DM Mono', monospace";
 
@@ -135,37 +136,50 @@ function SourcesPanel({ open, onClose }: { open: boolean; onClose: () => void })
 // ── Ask panel ────────────────────────────────────────────────────────────
 function AskPanel({ onSubmit, onClose }: { onSubmit: (q: string) => void; onClose: () => void }) {
   const [query, setQuery] = useState("");
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const chips = ["ISA liability 2026", "BBNJ Pacific conditions", "DSM moratorium position", "Exploitation code timeline"];
+  const chips = ["ISA liability 2026", "BBNJ Pacific conditions", "DSM moratorium", "Exploitation code timeline"];
 
   return (
-    <div style={{ margin: "0 0 20px", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, boxShadow: "0 4px 16px rgba(60,64,67,.12)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        <span style={{ fontFamily: M, fontSize: 11, fontWeight: 500, color: BLUE, background: "rgba(24,95,165,.1)", borderRadius: 4, padding: "2px 8px" }}>Ask Tideline</span>
-        <span style={{ fontSize: 11, color: T4 }}>Query primary sources. Treaty text, governing body decisions, official documents.</span>
+    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, boxShadow: "0 2px 6px rgba(60,64,67,.15)", margin: "12px 0 8px", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ padding: "10px 14px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, color: BLUE, background: "#E8F0FE", borderRadius: 2, padding: "1px 5px" }}>Ask</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: T1 }}>Query Tideline primary sources</span>
+        </div>
+        <button onClick={onClose} style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", borderRadius: 2, color: T4, cursor: "pointer", fontSize: 14 }}>{"\u00D7"}</button>
       </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+      {/* Input */}
+      <div style={{ padding: "10px 14px", display: "flex", gap: 8 }}>
         <input
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           onKeyDown={e => { if (e.key === "Enter" && query.trim()) onSubmit(query.trim()); if (e.key === "Escape") onClose(); }}
           placeholder="What does the ISA exploitation code say about liability?"
           autoFocus
-          style={{ flex: 1, height: 36, fontSize: 13, fontFamily: F, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 12px", outline: "none", color: T1 }}
+          style={{ flex: 1, height: 36, fontSize: 13, fontFamily: F, border: `1px solid ${focused ? BLUE : BORDER}`, borderRadius: 2, padding: "0 12px", outline: "none", color: T1, boxShadow: focused ? `inset 0 0 0 1px ${BLUE}` : "none" }}
         />
         <button
           onClick={() => { if (query.trim()) onSubmit(query.trim()); }}
-          style={{ height: 36, fontSize: 13, fontWeight: 500, fontFamily: F, color: WHITE, background: TEAL, border: "none", borderRadius: 4, padding: "0 16px", cursor: "pointer", opacity: query.trim() ? 1 : 0.5 }}
+          style={{ height: 36, fontSize: 13, fontWeight: 500, fontFamily: F, color: WHITE, background: BLUE, border: "none", borderRadius: 2, padding: "0 16px", cursor: "pointer", opacity: query.trim() ? 1 : 0.5 }}
         >Search</button>
       </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+      {/* Chips */}
+      <div style={{ padding: "0 14px 10px", display: "flex", gap: 6, flexWrap: "wrap", borderBottom: `1px solid ${ROW_BG}` }}>
         {chips.map(c => (
-          <button key={c} onClick={() => { setQuery(c); inputRef.current?.focus(); }} style={{ fontSize: 11, fontFamily: F, color: BLUE, background: "rgba(24,95,165,.06)", border: `1px solid rgba(24,95,165,.15)`, borderRadius: 12, padding: "3px 10px", cursor: "pointer" }}>{c}</button>
+          <button key={c} onClick={() => { setQuery(c); inputRef.current?.focus(); }} style={{ fontSize: 11, fontFamily: F, color: BLUE, background: "#E8F0FE", border: "none", borderRadius: 2, padding: "3px 9px", cursor: "pointer" }}>{c}</button>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: T4, lineHeight: 1.5 }}>/ask anywhere in document {"\u00B7"} answers insert as cited blocks {"\u00B7"} primary sources only</div>
+      {/* Footer */}
+      <div style={{ padding: "7px 14px", display: "flex", alignItems: "center", gap: 4 }}>
+        <span style={{ fontFamily: M, fontSize: 10, color: T3, background: ROW_BG, borderRadius: 2, padding: "1px 5px" }}>/ask</span>
+        <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>anywhere in document {"\u00B7"} primary sources only {"\u00B7"} inserts as cited block</span>
+      </div>
     </div>
   );
 }
@@ -254,17 +268,6 @@ export default function WorkspaceEditor() {
             <span style={{ fontSize: 14, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>ISA Council July 2026 Response</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            {/* Ask Tideline button */}
-            <button onClick={() => setAskPanelOpen(!askPanelOpen)} style={{
-              height: 28, display: "flex", alignItems: "center", gap: 5, padding: "0 10px",
-              fontSize: 12, fontWeight: 500, fontFamily: F, color: BLUE,
-              background: askPanelOpen ? "rgba(24,95,165,.08)" : "rgba(24,95,165,.04)",
-              border: `1px solid ${askPanelOpen ? BLUE : "rgba(24,95,165,.25)"}`,
-              borderRadius: 4, cursor: "pointer",
-            }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke={BLUE} strokeWidth="1.1"/><path d="M6 3.5v3l1.5 1" stroke={BLUE} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Ask Tideline
-            </button>
             <span style={{ fontSize: 12, color: T4, whiteSpace: "nowrap" }}>Saved {"\u2713"}</span>
             <button onClick={() => setSourcesOpen(!sourcesOpen)} style={{
               height: 36, display: "flex", alignItems: "center", gap: 6, padding: "0 16px",
@@ -299,8 +302,8 @@ export default function WorkspaceEditor() {
         )}
 
         {/* ── EDITOR BODY ── */}
-        <div style={{ flex: 1, overflowY: "auto", background: BG }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 60px" }}>
+        <div style={{ flex: 1, overflowY: "auto", background: BG, position: "relative" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 80px", position: "relative" }}>
 
             {/* Consultation deadline card */}
             <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `4px solid ${RED}`, borderRadius: 8, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14 }}>
@@ -312,12 +315,12 @@ export default function WorkspaceEditor() {
               <a href="/platform/calendar" style={{ marginLeft: "auto", fontSize: 12, fontWeight: 500, color: TEAL, textDecoration: "none", whiteSpace: "nowrap" }}>View in Calendar {"\u2192"}</a>
             </div>
 
-            {/* Ask panel (opens inline) */}
-            {askPanelOpen && <AskPanel onSubmit={handleAskSubmit} onClose={() => setAskPanelOpen(false)} />}
-
             {/* Document title */}
             <div style={{ fontSize: 32, fontWeight: 500, color: T1, fontFamily: F, marginBottom: 0, outline: "none" }} contentEditable suppressContentEditableWarning>ISA Council July 2026 Response</div>
             <div style={{ height: 1, background: BLT, margin: "16px 0 24px" }} />
+
+            {/* Ask panel (inline) */}
+            {askPanelOpen && <AskPanel onSubmit={handleAskSubmit} onClose={() => setAskPanelOpen(false)} />}
 
             {/* Editor body */}
             <div ref={editorRef} onKeyDown={handleEditorKeyDown} style={{ fontSize: 14, lineHeight: 1.75, color: T1, fontFamily: F, fontWeight: 300 }} contentEditable suppressContentEditableWarning>
@@ -346,31 +349,37 @@ export default function WorkspaceEditor() {
                 <li style={{ margin: "0 0 6px" }}>The BBNJ Agreement now has 87 ratifications. Pacific bloc coordination has accelerated the timeline by an estimated two quarters.</li>
               </ul>
 
-              {/* Tideline Research block — dynamic */}
+              {/* Tideline Research — static example */}
               {askState === "idle" && (
-                <div style={{ borderLeft: `2px solid ${BLUE}`, padding: "12px 16px", background: "rgba(24,95,165,.05)", borderRadius: 6, margin: "0 0 20px" }} contentEditable={false}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 6 }}>Tideline Research</div>
-                  <div style={{ fontSize: 12, fontStyle: "italic", color: T3, marginBottom: 8 }}>What is the current status of the ISA exploitation code and when is the next decision point?</div>
-                  <div style={{ fontSize: 13, fontWeight: 300, color: T2, lineHeight: 1.65 }}>
-                    The ISA exploitation code remains in draft form following the Council's deferral at its March 2026 session. The next decision point is the 29th Council session scheduled for 14 July 2026 in Kingston. Three member states have formally conditioned their vote on satisfactory progress in BBNJ implementation, making the July outcome contingent on the June BBNJ preparatory committee results. Source: ISA Council Records, March 2026.
+                <div style={{ borderLeft: `3px solid ${BLUE}`, background: "#F8FBFF", padding: "10px 12px", margin: "10px 0" }} contentEditable={false}>
+                  <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 3 }}>Tideline Research</div>
+                  <div style={{ fontSize: 11, fontStyle: "italic", color: T4, marginBottom: 6 }}>What is the current status of the ISA exploitation code and when is the next decision point?</div>
+                  <div style={{ fontSize: 12, fontWeight: 400, lineHeight: 1.7, color: T2, marginBottom: 6 }}>
+                    The ISA exploitation code remains in draft form following the Council's deferral at its March 2026 session. The next decision point is the 29th Council session scheduled for 14 July 2026 in Kingston. Three member states have formally conditioned their vote on satisfactory progress in BBNJ implementation, making the July outcome contingent on the June BBNJ preparatory committee results.
+                  </div>
+                  <div style={{ fontSize: 10, color: T4, display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke={T4} strokeWidth="1"><path d="M2 1h6v8l-3-2-3 2V1z"/></svg>
+                    ISA {"\u00B7"} Council Records {"\u00B7"} March 2026
                   </div>
                 </div>
               )}
 
+              {/* Loading */}
               {askState === "loading" && (
-                <div style={{ borderLeft: `2px solid ${BLUE}`, padding: "14px 16px", background: "rgba(24,95,165,.05)", borderRadius: 6, margin: "0 0 20px", display: "flex", alignItems: "center", gap: 10 }} contentEditable={false}>
+                <div style={{ borderLeft: `3px solid ${BLUE}`, background: "#F8FBFF", padding: "10px 12px", margin: "10px 0", display: "flex", alignItems: "center", gap: 10 }} contentEditable={false}>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}>
                     <circle cx="8" cy="8" r="6" stroke={BLUE} strokeWidth="2" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
                   </svg>
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 2 }}>Tideline Research</div>
-                    <div style={{ fontSize: 13, color: T3 }}>Querying primary sources...</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 2 }}>Tideline Research</div>
+                    <div style={{ fontSize: 12, color: T3 }}>Querying primary sources...</div>
                   </div>
                 </div>
               )}
 
+              {/* Insufficient */}
               {askState === "insufficient" && (
-                <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `4px solid ${AMBER}`, borderRadius: 8, padding: "14px 18px", margin: "0 0 20px", display: "flex", alignItems: "center", gap: 12 }} contentEditable={false}>
+                <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `4px solid ${AMBER}`, borderRadius: 8, padding: "14px 18px", margin: "10px 0", display: "flex", alignItems: "center", gap: 12 }} contentEditable={false}>
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke={AMBER} strokeWidth="1.5"/><path d="M10 6v5M10 13.5v.5" stroke={AMBER} strokeWidth="1.5" strokeLinecap="round"/></svg>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: T1, marginBottom: 2 }}>{askMessage}</div>
@@ -379,21 +388,18 @@ export default function WorkspaceEditor() {
                 </div>
               )}
 
+              {/* Result */}
               {askState === "result" && (
-                <div style={{ borderLeft: `2px solid ${BLUE}`, padding: "12px 16px", background: "rgba(24,95,165,.05)", borderRadius: 6, margin: "0 0 20px" }} contentEditable={false}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 6 }}>Tideline Research</div>
-                  <div style={{ fontSize: 12, fontStyle: "italic", color: T3, marginBottom: 8 }}>{askQuery}</div>
-                  <div style={{ fontSize: 13, fontWeight: 300, color: T2, lineHeight: 1.65, marginBottom: askSources.length > 0 ? 12 : 0 }}>{askAnswer}</div>
-                  {askSources.length > 0 && (
-                    <div style={{ borderTop: `1px solid rgba(24,95,165,.15)`, paddingTop: 10 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 6 }}>Sources</div>
-                      {askSources.map((s, i) => (
-                        <div key={i} style={{ fontSize: 11, color: T3, lineHeight: 1.5, marginBottom: 2 }}>
-                          {s.issuing_body || "Unknown body"} {"\u2014"} {s.document_type || "Document"}{s.date_issued ? `, ${s.date_issued}` : ""}
-                        </div>
-                      ))}
+                <div style={{ borderLeft: `3px solid ${BLUE}`, background: "#F8FBFF", padding: "10px 12px", margin: "10px 0" }} contentEditable={false}>
+                  <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: BLUE, marginBottom: 3 }}>Tideline Research</div>
+                  <div style={{ fontSize: 11, fontStyle: "italic", color: T4, marginBottom: 6 }}>{askQuery}</div>
+                  <div style={{ fontSize: 12, fontWeight: 400, lineHeight: 1.7, color: T2 }}>{askAnswer}</div>
+                  {askSources.length > 0 && askSources.map((s, i) => (
+                    <div key={i} style={{ fontSize: 10, color: T4, display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke={T4} strokeWidth="1"><path d="M2 1h6v8l-3-2-3 2V1z"/></svg>
+                      {s.issuing_body || "Unknown body"} {"\u00B7"} {s.document_type || "Document"}{s.date_issued ? ` \u00B7 ${s.date_issued}` : ""}
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
 
@@ -416,6 +422,24 @@ export default function WorkspaceEditor() {
                 Process Notes {"\u2192"} Generate Report
               </button>
             </div>
+          </div>
+
+          {/* Floating Ask pill */}
+          <div style={{ position: "sticky", bottom: 16, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
+            <button onClick={() => setAskPanelOpen(!askPanelOpen)} style={{
+              pointerEvents: "auto",
+              background: askPanelOpen ? BLUE : WHITE,
+              border: `1px solid ${askPanelOpen ? BLUE : BORDER}`,
+              borderRadius: 24, padding: "0 14px 0 10px", height: 36,
+              boxShadow: "0 1px 4px rgba(60,64,67,.2)",
+              display: "flex", alignItems: "center", gap: 6,
+              cursor: "pointer", whiteSpace: "nowrap",
+            }}>
+              <span style={{ width: 22, height: 22, borderRadius: "50%", background: askPanelOpen ? "rgba(255,255,255,.2)" : "#E8F0FE", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke={askPanelOpen ? "#fff" : BLUE} strokeWidth="1.1"/><path d="M6 3.5v3l1.5 1" stroke={askPanelOpen ? "#fff" : BLUE} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: askPanelOpen ? WHITE : BLUE }}>Ask Tideline</span>
+            </button>
           </div>
         </div>
       </div>

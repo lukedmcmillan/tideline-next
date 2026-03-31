@@ -350,7 +350,10 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetch("/api/consultations")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(r.statusText);
+        return r.json();
+      })
       .then((d) => {
         setData(d);
         setLoading(false);

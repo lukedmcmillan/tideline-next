@@ -65,6 +65,7 @@ export const authOptions = {
     verifyRequest: '/login?verify=1',
     error: '/login?error=1',
   },
+  debug: true,
   session: {
     strategy: 'jwt' as const,
   },
@@ -81,17 +82,21 @@ export const authOptions = {
           .eq('email', user.email)
           .single()
 
+        console.log('[auth] signIn check for:', user.email, 'existing:', !!existing)
+
         if (!existing) {
-          await supabase.from('users').insert({
+          const { error: insertErr } = await supabase.from('users').insert({
             email: user.email,
             subscription_status: 'trial',
             trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
             topics: [],
             timezone: 'Europe/London',
           })
+          if (insertErr) console.error('[auth] users insert error:', insertErr.message, insertErr.details, insertErr.hint)
+          else console.log('[auth] created public.users row for:', user.email)
         }
       } catch (err) {
-        console.error('signIn callback error:', err)
+        console.error('[auth] signIn callback error:', err)
       }
 
       return true

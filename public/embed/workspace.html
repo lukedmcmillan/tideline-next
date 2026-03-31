@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tideline Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0A1628;--navy2:#0D1F35;
+  --teal:#1D9E75;--teal-light:rgba(29,158,117,.08);--teal-b:rgba(29,158,117,.2);
+  --amber:#F9AB00;--red:#D93025;--blue:#185FA5;
+  --t1:#202124;--t2:#3C4043;--t3:#5F6368;--t4:#9AA0A6;
+  --border:#DADCE0;--blt:#E8EAED;--bg:#F8F9FA;--white:#fff;
+  --f:"DM Sans",system-ui,sans-serif;--m:"DM Mono",monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--f);font-size:14px;color:var(--t1);-webkit-font-smoothing:antialiased}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:248px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+.sb-logo{display:flex;align-items:center;gap:10px;padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-mark{width:32px;height:32px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-wm{font-size:16px;font-weight:600;letter-spacing:-.025em;color:#fff}
+.sb-sub{font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:1px}
+.sb-nav{padding:8px 0}
+.sni{display:flex;align-items:center;height:44px;padding:0 20px 0 56px;font-size:13px;font-weight:400;color:rgba(255,255,255,.55);cursor:pointer;position:relative;transition:all .12s;border-left:3px solid transparent}
+.sni:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85)}
+.sni.on{background:rgba(29,158,117,.12);color:#fff;font-weight:500;border-left-color:var(--teal)}
+.sni-ic{position:absolute;left:16px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35)}
+.sni.on .sni-ic{color:var(--teal)}
+.sni-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--teal);color:#fff;border-radius:10px;padding:1px 7px}
+.sb-div{height:1px;background:rgba(255,255,255,.06);margin:4px 12px}
+.sb-sec{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:12px 20px 6px}
+.tracker-item{display:flex;align-items:center;height:36px;padding:0 20px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;gap:10px}
+.tracker-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8)}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dt{background:var(--teal)}.da{background:var(--amber)}.dr{background:var(--red);animation:pulse 1.6s ease-in-out infinite}
+.tracker-badge{margin-left:auto;font-size:10px;font-weight:500;background:rgba(255,255,255,.08);border-radius:6px;padding:1px 6px;color:rgba(255,255,255,.4)}
+
+.doc-toolbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:8;flex-shrink:0;box-shadow:0 1px 3px rgba(60,64,67,.08)}
+.doc-breadcrumb{display:flex;align-items:center;gap:6px;margin-right:auto}
+.doc-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--t3);padding:6px 8px;border-radius:6px}
+.doc-sep{color:var(--border)}
+.doc-title-field{font-size:13px;font-weight:400;color:var(--t1);border:none;outline:none;background:transparent;font-family:var(--f)}
+.doc-actions{display:flex;align-items:center;gap:8px}
+.save-ok{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t4)}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--f);font-size:13px;font-weight:500;border-radius:4px;padding:0 16px;height:34px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-outlined{background:var(--white);border:1px solid var(--border);color:var(--t2)}
+.btn-outlined:hover{background:var(--bg)}
+.btn-primary{background:var(--navy);border:1px solid var(--navy);color:#fff}
+
+.banner{background:var(--teal-light);border-bottom:1px solid var(--teal-b);padding:10px 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.banner-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0;animation:pulse 2s ease-in-out infinite}
+.banner-text{font-size:13px;font-weight:500;color:var(--teal);flex:1}
+.banner-stories{display:flex;gap:12px;flex-wrap:wrap}
+.banner-story{font-size:12px;color:var(--teal);cursor:pointer;opacity:.8;text-decoration:underline;text-decoration-color:rgba(29,158,117,.3)}
+.banner-dismiss{width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--teal);opacity:.6;border-radius:4px;border:none;background:transparent}
+
+.editor-scroll{flex:1;overflow-y:auto;background:var(--bg)}
+.editor-wrap{max-width:760px;margin:0 auto;padding:40px 40px 120px}
+.doc-title{font-size:32px;font-weight:500;letter-spacing:-.03em;color:var(--t1);border:none;outline:none;background:transparent;width:100%;font-family:var(--f);line-height:1.2;margin-bottom:4px}
+.doc-divider{height:1px;background:var(--blt);margin:16px 0 24px}
+.editor-body{min-height:400px;outline:none;font-size:14px;font-weight:300;line-height:1.85;color:var(--t2)}
+
+.editor-h2{font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--t1);margin:28px 0 12px}
+.editor-paragraph{margin-bottom:16px;font-size:14px;font-weight:300;line-height:1.85;color:var(--t2)}
+.citation-block{background:rgba(29,158,117,.05);border-left:2px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0}
+.citation-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+.citation-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:4px}
+.citation-meta{font-size:11px;color:var(--t4);margin-bottom:6px}
+.citation-summary{font-size:12px;font-weight:300;line-height:1.6;color:var(--t3)}
+.ask-block{background:rgba(24,95,165,.05);border-left:2px solid #185FA5;border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0}
+.ask-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#185FA5;margin-bottom:4px}
+.ask-query{font-size:11px;font-style:italic;color:var(--t4);margin-bottom:8px}
+.ask-answer{font-size:13px;font-weight:300;line-height:1.7;color:var(--t2)}
+.cursor{display:inline-block;width:2px;height:16px;background:var(--t1);margin-left:1px;animation:blink 1s step-end infinite;vertical-align:text-bottom}
+
+.ask-explainer{display:flex;align-items:flex-start;gap:10px;background:rgba(24,95,165,.06);border:1px solid rgba(24,95,165,.15);border-radius:10px;padding:12px 16px;margin-bottom:20px}
+.ask-icon{width:28px;height:28px;border-radius:7px;background:rgba(24,95,165,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ask-explainer-title{font-size:12px;font-weight:600;color:#185FA5;margin-bottom:3px}
+.ask-kbd{background:rgba(24,95,165,.12);border:1px solid rgba(24,95,165,.2);border-radius:4px;padding:1px 6px;font-family:var(--m);font-size:11px;color:#185FA5}
+.ask-explainer-desc{font-size:12px;font-weight:300;color:var(--t3);line-height:1.55}
+
+.consult-banner{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:flex-start;gap:14px;box-shadow:0 1px 3px rgba(60,64,67,.15)}
+.consult-urgent{width:44px;height:44px;border-radius:10px;background:rgba(217,48,37,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.consult-days{font-size:18px;font-weight:600;color:var(--red);line-height:1}
+.consult-days-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--red);opacity:.7}
+.consult-body{flex:1}
+.consult-org{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);margin-bottom:4px}
+.consult-title{font-size:14px;font-weight:500;color:var(--t1);line-height:1.35;margin-bottom:8px}
+.consult-covered{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid var(--teal-b);border-radius:4px;padding:3px 8px}
+
+.sources-panel{position:fixed;right:0;top:0;width:340px;height:100vh;background:var(--white);border-left:1px solid var(--border);box-shadow:-4px 0 20px rgba(60,64,67,.1);display:flex;flex-direction:column;z-index:200;transform:translateX(340px);transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.sources-panel.open{transform:translateX(0)}
+.sp-header{height:52px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--blt);gap:10px;flex-shrink:0}
+.sp-title{font-size:13px;font-weight:600;color:var(--t1);flex:1}
+.sp-subtitle{font-size:11px;color:var(--t4);padding:10px 20px 8px;border-bottom:1px solid var(--blt);flex-shrink:0}
+.sp-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t4);border-radius:4px;border:1px solid var(--border);background:var(--white)}
+.sp-list{flex:1;overflow-y:auto;padding:8px 0}
+.sp-story{padding:10px 20px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--blt)}
+.sp-story:hover{background:var(--bg)}
+.sp-story-title{font-size:13px;font-weight:400;color:var(--t1);line-height:1.4;margin-bottom:4px}
+.sp-story-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sp-story-src{font-size:11px;color:var(--t4)}
+.sp-insert-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:var(--teal);background:var(--white);border:1px solid var(--teal-b);border-radius:4px;padding:3px 8px;cursor:pointer;font-family:var(--f)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9c0-3.5 3-6.5 7-6.5s7 3 7 6.5" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="13" r="2.5" fill="white"/></svg></div>
+      <div><div class="sb-wm">Tideline</div><div class="sb-sub">Ocean Intelligence</div></div>
+    </div>
+    <div class="sb-nav">
+      <div class="sni"><div class="sni-ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg></div>Feed</div>
+      <div class="sni"><div class="sni-ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="13" rx="2"/><path d="M5 1v2M11 1v2M1 7h14"/></svg></div>Calendar<span class="sni-badge">2</span></div>
+      <div class="sni"><div class="sni-ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h12v14l-6-4-6 4V2z"/></svg></div>Library</div>
+      <div class="sni on"><div class="sni-ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="11" rx="2"/><path d="M5 3V1M11 3V1"/></svg></div>Workspace</div>
+      <div class="sni"><div class="sni-ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg></div>Research</div>
+      <div class="sni"><div class="sni-ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="2.5"/><circle cx="11" cy="11" r="2.5"/><circle cx="11" cy="5" r="2.5"/><path d="M7.2 7.2l1 1M7.2 6.5l2-1"/></svg></div>Directory</div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Trackers</div>
+    <div class="tracker-item"><span class="tdot dt"></span>BBNJ Treaty<span class="tracker-badge">2 today</span></div>
+    <div class="tracker-item"><span class="tdot da"></span>ISA Mining<span class="tracker-badge">1 today</span></div>
+    <div class="tracker-item"><span class="tdot dr"></span>IUU Enforcement<span class="tracker-badge">3 today</span></div>
+    <div class="tracker-item"><span class="tdot dt"></span>30x30 Protection</div>
+    <div class="tracker-item"><span class="tdot da"></span>Blue Finance<span class="tracker-badge">1 today</span></div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Projects</div>
+    <div class="tracker-item"><span class="tdot dt"></span>OSPAR Response<span class="tracker-badge">4 stories</span></div>
+    <div class="tracker-item" style="color:rgba(255,255,255,.5)"><span class="tdot da"></span>ISA Council July</div>
+  </div>
+  <div class="main">
+    <div class="doc-toolbar">
+      <div class="doc-breadcrumb">
+        <div class="doc-back"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 2L4 7l5 5"/></svg>Workspace</div>
+        <span class="doc-sep">/</span>
+        <input class="doc-title-field" value="OSPAR Consultation Response — Article 9" readonly/>
+      </div>
+      <div class="doc-actions">
+        <div class="save-ok"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#1D9E75" stroke-width="1.2"/><path d="M3.5 6l2 2 3-3" stroke="#1D9E75" stroke-width="1.2" stroke-linecap="round"/></svg>Saved</div>
+        <button class="btn btn-outlined"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 1h9v11l-4.5-3L2 12V1z"/></svg>Sources (6)</button>
+        <button class="btn btn-primary"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6.5 1v8M6.5 9l-3-3M6.5 9l3-3" stroke-linecap="round"/><path d="M1 10v1.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V10" stroke-linecap="round"/></svg>Export to Word</button>
+      </div>
+    </div>
+    <div class="banner">
+      <span class="banner-dot"></span>
+      <div style="flex:1">
+        <div class="banner-text">2 new stories on OSPAR North-East Atlantic since your last visit</div>
+        <div class="banner-stories" style="margin-top:4px">
+          <span class="banner-story">OSPAR revised Article 9 zones published →</span>
+          <span class="banner-story">NGO coalition submits joint comments →</span>
+        </div>
+      </div>
+      <button class="banner-dismiss"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
+    </div>
+    <div class="editor-scroll">
+      <div class="editor-wrap">
+        <div class="consult-banner">
+          <div class="consult-urgent"><div style="text-align:center"><div class="consult-days">8</div><div class="consult-days-label">days</div></div></div>
+          <div class="consult-body">
+            <div class="consult-org">OSPAR Commission · Open consultation</div>
+            <div class="consult-title">Revised North-East Atlantic Fisheries Recovery Zones — Article 9 consultation</div>
+            <div><span class="consult-covered"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" fill="#1D9E75"/><path d="M2.5 5l2 2 3-3" stroke="white" stroke-width="1.1" stroke-linecap="round"/></svg>Covered · 6 stories</span></div>
+          </div>
+        </div>
+        <div class="ask-explainer">
+          <div class="ask-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#185FA5" stroke-width="1.4" stroke-linecap="round"><circle cx="7" cy="7" r="5.5"/><path d="M7 4v3l2 1.5"/></svg></div>
+          <div>
+            <div class="ask-explainer-title">Query Tideline intelligence inline <span class="ask-kbd">/ask</span></div>
+            <div class="ask-explainer-desc">Type <strong>/ask</strong> anywhere in your document to query Tideline's primary source library — treaty text, governing body decisions, official consultation documents. Answers cite only first-hand sources.</div>
+          </div>
+        </div>
+        <div class="doc-title">OSPAR Consultation Response — Article 9</div>
+        <div class="doc-divider"></div>
+        <div class="editor-body">
+          <div class="editor-h2">Overview</div>
+          <div class="editor-paragraph">OSPAR's revised Article 9 framework proposes extending recovery zone boundaries by 40% across the North-East Atlantic. The scientific basis draws directly on 2025 ICES advisory findings on stock recovery timelines. Consultation closes 8 April 2026.</div>
+          <div class="citation-block">
+            <div class="citation-label">Source</div>
+            <div class="citation-title">OSPAR revised North-East Atlantic Fisheries Recovery Zones — Article 9</div>
+            <div class="citation-meta">OSPAR Commission · 15 Mar 2026 · Tier 1</div>
+            <div class="citation-summary">Revised framework proposes 40% boundary extension for fisheries recovery zones. Cites ICES 2025 advisory opinion on North-East Atlantic stock recovery timelines as scientific basis.</div>
+          </div>
+          <div class="editor-h2">Scientific Basis</div>
+          <div class="ask-block">
+            <div class="ask-label">Tideline Research — primary sources only</div>
+            <div class="ask-query">Query: What scientific basis does OSPAR cite for the 40% boundary extension?</div>
+            <div class="ask-answer">OSPAR cites the 2025 ICES advisory opinion on North-East Atlantic stock recovery timelines, which found existing recovery zones insufficient to achieve sustainable yield by 2030 targets. The boundary extension is specifically linked to the ICES habitat classification update of January 2026. Source: OSPAR Commission, Mar 2026 · Tier 1.</div>
+          </div>
+          <div class="editor-paragraph">Our response should address the ICES scientific basis directly. The 2030 target alignment creates a strong obligation argument for supporting the extension. <span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
