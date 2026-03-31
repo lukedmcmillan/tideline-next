@@ -40,6 +40,7 @@ const TIPS: Record<string, { st: string; c: string; d: string }> = {
 // ── Sidebar types ────────────────────────────────────────────────────────
 interface TrackerData { name: string; count24: number; count48: number }
 interface ProjectData { name: string; count: number }
+interface RecentStory { id: string; title: string }
 
 function trackerColor(t: TrackerData): string {
   if (t.count24 > 0) return TEAL;
@@ -48,11 +49,12 @@ function trackerColor(t: TrackerData): string {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ onNav, urgentCount, trackerData, projectData }: {
+function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories }: {
   onNav?: () => void;
   urgentCount?: number;
   trackerData?: TrackerData[];
   projectData?: ProjectData[];
+  recentStories?: RecentStory[];
 }) {
   const path = usePathname();
   const [hTip, setHTip] = useState<string | null>(null);
@@ -128,13 +130,22 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData }: {
       {/* Workspace */}
       <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
       <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", padding: "12px 28px 6px" }}>Workspace</div>
-      {(projectData || []).map(p => (
+      {(projectData || []).length > 0 ? (projectData || []).map(p => (
         <a key={p.name} href={`/platform/workspace?project=${encodeURIComponent(p.name)}`} style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: TEAL, flexShrink: 0, marginRight: 12 }} />
           {p.name}
           <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{p.count} {p.count === 1 ? "item" : "items"}</span>
         </a>
-      ))}
+      )) : (recentStories || []).length > 0 && (
+        <>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".07em", textTransform: "uppercase", color: "rgba(255,255,255,.25)", padding: "4px 28px 4px" }}>Recent</div>
+          {(recentStories || []).slice(0, 3).map(s => (
+            <a key={s.id} href={`/platform/story/${s.id}`} style={{ display: "block", height: 36, lineHeight: "36px", padding: "0 28px", fontSize: 12, fontFamily: F, color: "rgba(255,255,255,.45)", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {(s.title || "").slice(0, 45)}{(s.title || "").length > 45 ? "..." : ""}
+            </a>
+          ))}
+        </>
+      )}
       <a href="/platform/workspace" style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, color: "rgba(255,255,255,.3)", textDecoration: "none" }}>
         <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,.3)", flexShrink: 0, marginRight: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M3.5 1v5M1 3.5h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
@@ -271,7 +282,7 @@ function RightPanel() {
   const isWorkspace = path === "/platform/workspace";
 
   if (isCalendar) return <CalendarRightPanel />;
-  if (isWorkspace) return <WorkspaceRightPanel />;
+  if (isWorkspace) return null;
 
   const copyInsight = () => {
     navigator.clipboard.writeText("ISA deferral and BBNJ ratification are directly linked. Three sponsoring states conditioning their ISA vote on implementation terms.").then(() => {
@@ -365,6 +376,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   const [urgentCount, setUrgentCount] = useState(0);
   const [trackerData, setTrackerData] = useState<TrackerData[]>([]);
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
+  const [recentStories, setRecentStories] = useState<RecentStory[]>([]);
 
   useEffect(() => {
     fetch("/api/sidebar-data")
@@ -374,6 +386,10 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         if (d.projects) setProjectData(d.projects);
         if (typeof d.urgent_count === "number") setUrgentCount(d.urgent_count);
       })
+      .catch(() => {});
+    fetch("/api/stories?limit=3&source_types=gov,reg,ngo")
+      .then(r => r.ok ? r.json() : { stories: [] })
+      .then(d => setRecentStories((d.stories || []).filter((s: any) => s.topic !== "all")))
       .catch(() => {});
   }, []);
 
@@ -433,14 +449,14 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         {sbOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.4)" }} onClick={() => setSbOpen(false)}>
             <div style={{ width: 280, height: "100%", background: NAVY }} onClick={e => e.stopPropagation()}>
-              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} />
+              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} />
             </div>
           </div>
         )}
 
         {/* Desktop sidebar */}
         <div className="sb-desktop" style={{ flexShrink: 0 }}>
-          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} />
+          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} />
         </div>
 
         {/* Main */}
