@@ -232,7 +232,7 @@ export default function LandingPage() {
   const pricing = useReveal();
 
   return (
-    <div style={{ fontFamily: F, color: T1, background: WHITE, WebkitFontSmoothing: "antialiased", overflowX: "hidden" }}>
+    <div style={{ fontFamily: "var(--font-sans), 'DM Sans', system-ui, sans-serif", fontWeight: 400, color: T1, background: WHITE, WebkitFontSmoothing: "antialiased", overflowX: "hidden" }}>
       <style>{`
         html{scroll-behavior:smooth}
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.15;transform:scale(.5)}}
@@ -251,6 +251,7 @@ export default function LandingPage() {
           .hero-pad{padding:96px 24px 64px!important}
           .footer-d{padding:24px!important;flex-direction:column!important}
           .feed-if{height:380px!important}.ws-if{height:400px!important}
+          .pricing-grid-g{grid-template-columns:1fr!important}
         }
         @media(max-width:600px){
           .feat-grid-g{grid-template-columns:1fr!important}
@@ -291,7 +292,7 @@ export default function LandingPage() {
           <p className="fu d3" style={{ fontSize: 13, color: T4, marginBottom: 48 }}>14-day free trial. Cancel any time.</p>
           <div className="fu d4" style={{ display: "inline-flex", alignItems: "center", gap: 14, background: WHITE, border: "1px solid rgba(249,171,0,.25)", borderRadius: R12, padding: "12px 20px", boxShadow: EL1, flexWrap: "wrap", justifyContent: "center" }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: AMBER, animation: "pulse 1.8s ease infinite", flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: T2 }}>Founding member pricing closes <strong style={{ color: AMBER, fontWeight: 600 }}>30 April 2026</strong>, \u00A329/month locked for life</span>
+            <span style={{ fontSize: 13, color: T2 }}>Founding member pricing closes <strong style={{ color: AMBER, fontWeight: 600 }}>30 April 2026</strong>, £29/month locked for life</span>
             <a href="#s-price" style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: NAVY, background: AMBER, border: "none", borderRadius: R8, padding: "7px 14px", textDecoration: "none", whiteSpace: "nowrap" }}>Claim a spot</a>
           </div>
         </div>
@@ -355,13 +356,13 @@ export default function LandingPage() {
           <div className="sw-top-g" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start", marginBottom: 48 }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: TEAL, marginBottom: 12, letterSpacing: "-.01em" }}>Workspace</div>
-              <h2 style={{ fontSize: "clamp(24px,3.2vw,38px)", fontWeight: 700, letterSpacing: "-.04em", lineHeight: 1.08, color: T1, marginBottom: 14 }}>The place where intelligence becomes your work.</h2>
-              <p style={{ fontSize: 16, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 16 }}>The workspace is where monitored intelligence becomes your professional output. Save sources from the feed, query primary documents, draft your response. What comes out has your name on it. Tideline is invisible.</p>
+              <h2 style={{ fontSize: "clamp(24px,3.2vw,38px)", fontWeight: 700, letterSpacing: "-.04em", lineHeight: 1.08, color: T1, marginBottom: 14 }}>The only place where the research and the document are the same thing.</h2>
+              <p style={{ fontSize: 16, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 16 }}>Every professional who produces written work from primary source intelligence knows the problem. You research in one place. You write in another. You copy, paste, check, recheck. And somewhere in the middle you lose the thread between what the source actually said and what ended up in the document.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
                 {[
-                  { n: "01", t: "Save sources to a project", b: "Stories and documents saved from the feed in one click. Sources panel opens on the right with Insert buttons." },
-                  { n: "02", t: "Query with /ask", b: "Type /ask anywhere in your document. Draws only from Tier 1 primary governing body documents. Cited answers insert directly. No copy-pasting between tabs." },
-                  { n: "03", t: "Generate and export", b: "Hit Generate Report. Notes become a structured draft with Executive Summary, Key Developments, Implications. Export to Word. Your name on it." },
+                  { n: "01", t: "Save sources from the feed", b: "Stories and documents saved in one click. The source is in your workspace before you open a new tab." },
+                  { n: "02", t: "Query with /ask, without leaving", b: "Type /ask anywhere in your document. Tideline queries treaty text, IMO circulars, and official consultation records. The cited answer inserts directly. No copy-pasting. No second tab." },
+                  { n: "03", t: "Generate the draft from your notes", b: "Hit Generate Report. Your notes become a structured draft. Export to Word. The provenance is unbroken from source to finished output. That exists nowhere else in this space." },
                 ].map(s => (
                   <div key={s.n} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                     <div style={{ width: 36, height: 36, borderRadius: R8, background: TEAL_BG, border: `1px solid ${TEAL_B}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: M, fontSize: 11, fontWeight: 600, color: TEAL, flexShrink: 0 }}>{s.n}</div>
@@ -440,50 +441,52 @@ export default function LandingPage() {
 
       {/* ── PRICING ── */}
       <section ref={pricing.ref as any} style={{ ...pricing.style, padding: "80px", background: SURF, borderTop: `1px solid ${BORDER}` }} className="sec-pad" id="s-price">
-        <div style={{ maxWidth: 560 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: TEAL, marginBottom: 24 }}>Pricing</div>
-          {/* Founding */}
-          <div style={{ background: WHITE, border: "1px solid rgba(249,171,0,.3)", borderRadius: R16, padding: 28, marginBottom: 14, boxShadow: EL2 }}>
-            <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: AMBER, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: AMBER, animation: "pulse 1.8s ease infinite" }} />
-              Founding member
+          <div className="pricing-grid-g" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20, alignItems: "stretch" }}>
+            {/* Founding */}
+            <div style={{ background: WHITE, border: "1px solid rgba(249,171,0,.3)", borderRadius: R16, padding: 28, boxShadow: EL2, display: "flex", flexDirection: "column" }}>
+              <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: AMBER, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: AMBER, animation: "pulse 1.8s ease infinite" }} />
+                Founding member
+              </div>
+              <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-.055em", color: T1, lineHeight: 1 }}>£29<span style={{ fontSize: 17, fontWeight: 400, color: T4, letterSpacing: 0 }}>/month</span></div>
+              <div style={{ fontSize: 13, fontWeight: 300, color: T3, lineHeight: 1.5, margin: "7px 0 16px" }}>Not a discount. An identity. Full plan including the Workspace. Price never increases. Closes 30 April 2026.</div>
+              <a href="/signup" style={{ display: "inline-flex", background: AMBER, color: NAVY, border: "none", borderRadius: R8, padding: "10px 22px", fontFamily: F, fontSize: 14, fontWeight: 700, textDecoration: "none", boxShadow: EL1, marginTop: "auto" }}>Claim a founding member spot</a>
+              <div style={{ fontSize: 11, color: T4, marginTop: 8, fontFamily: M }}>No credit card. Cancel any time.</div>
             </div>
-            <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-.055em", color: T1, lineHeight: 1 }}>\u00A329<span style={{ fontSize: 17, fontWeight: 400, color: T4, letterSpacing: 0 }}>/month</span></div>
-            <div style={{ fontSize: 13, fontWeight: 300, color: T3, lineHeight: 1.5, margin: "7px 0 16px" }}>Not a discount. An identity. Full plan including the Workspace. Price never increases. Closes 30 April 2026.</div>
-            <a href="/signup" style={{ display: "inline-flex", background: AMBER, color: NAVY, border: "none", borderRadius: R8, padding: "10px 22px", fontFamily: F, fontSize: 14, fontWeight: 700, textDecoration: "none", boxShadow: EL1 }}>Claim a founding member spot</a>
-            <div style={{ fontSize: 11, color: T4, marginTop: 8, fontFamily: M }}>No credit card. Cancel any time.</div>
-          </div>
-          {/* Individual */}
-          <div style={{ border: `1px solid ${BORDER}`, borderRadius: R16, padding: 28, background: WHITE, marginBottom: 14, boxShadow: EL1 }}>
-            <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 10 }}>Individual</div>
-            <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-.055em", color: T1, lineHeight: 1 }}>\u00A379<span style={{ fontSize: 17, fontWeight: 400, color: T4, letterSpacing: 0 }}>/month</span></div>
-            <div style={{ fontSize: 14, fontWeight: 300, color: T3, margin: "7px 0 22px", lineHeight: 1.5 }}>For the professional who needs to stay current and produce work that shows it.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
-              {["Live feed updated continuously, with automatic summaries", "10 live trackers across ocean, climate and blue finance", "Connections between developments identified automatically", "Workspace with /ask against Tier 1 primary sources only", "Generate Report, notes to structured draft", "Entity directory, every organisation, vessel, person", "Export to Word and PDF"].map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, fontWeight: 300, color: T2, lineHeight: 1.45 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL, flexShrink: 0, marginTop: 7 }} />
-                  {f}
-                </div>
-              ))}
+            {/* Individual */}
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: R16, padding: 28, background: WHITE, boxShadow: EL1, display: "flex", flexDirection: "column" }}>
+              <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 10 }}>Individual</div>
+              <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-.055em", color: T1, lineHeight: 1 }}>£79<span style={{ fontSize: 17, fontWeight: 400, color: T4, letterSpacing: 0 }}>/month</span></div>
+              <div style={{ fontSize: 14, fontWeight: 300, color: T3, margin: "7px 0 22px", lineHeight: 1.5 }}>For the professional who needs to stay current and produce work that shows it.</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
+                {["Live feed updated continuously, with automatic summaries", "10 live trackers across ocean, climate and blue finance", "Connections between developments identified automatically", "Workspace with /ask against Tier 1 primary sources only", "Generate Report, notes to structured draft", "Entity directory, every organisation, vessel, person", "Export to Word and PDF"].map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, fontWeight: 300, color: T2, lineHeight: 1.45 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL, flexShrink: 0, marginTop: 7 }} />
+                    {f}
+                  </div>
+                ))}
+              </div>
+              <a href="/signup" style={{ display: "block", textAlign: "center", fontFamily: F, fontSize: 15, fontWeight: 600, background: TEAL, color: "white", border: "none", borderRadius: R8, padding: 14, textDecoration: "none", boxShadow: EL1, marginTop: "auto" }}>Start free, no card required</a>
+              <div style={{ textAlign: "center", fontSize: 12, color: T4, marginTop: 8 }}>14-day free trial.</div>
             </div>
-            <a href="/signup" style={{ display: "block", textAlign: "center", fontFamily: F, fontSize: 15, fontWeight: 600, background: TEAL, color: "white", border: "none", borderRadius: R8, padding: 14, textDecoration: "none", boxShadow: EL1 }}>Start free, no card required</a>
-            <div style={{ textAlign: "center", fontSize: 12, color: T4, marginTop: 8 }}>14-day free trial.</div>
-          </div>
-          {/* Team */}
-          <div style={{ border: `1px solid ${BORDER}`, borderRadius: R16, padding: 28, background: WHITE, marginBottom: 14, boxShadow: EL1 }}>
-            <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 10 }}>Team</div>
-            <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-.055em", color: T1, lineHeight: 1 }}>\u00A3399<span style={{ fontSize: 17, fontWeight: 400, color: T4, letterSpacing: 0 }}>/month</span></div>
-            <div style={{ fontSize: 14, fontWeight: 300, color: T3, margin: "7px 0 22px", lineHeight: 1.5 }}>For organisations where the intelligence needs to stay when people move on. 10 seats, shared workspace, shared projects.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
-              {["Everything in Individual, for 10 people", "Shared workspace projects and annotations", "Shared entity watchlists and tracker alerts", "Institutional intelligence that stays when someone leaves", "Centralised billing and seat management"].map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, fontWeight: 300, color: T2, lineHeight: 1.45 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL, flexShrink: 0, marginTop: 7 }} />
-                  {f}
-                </div>
-              ))}
+            {/* Team */}
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: R16, padding: 28, background: WHITE, boxShadow: EL1, display: "flex", flexDirection: "column" }}>
+              <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 10 }}>Team</div>
+              <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: "-.055em", color: T1, lineHeight: 1 }}>£399<span style={{ fontSize: 17, fontWeight: 400, color: T4, letterSpacing: 0 }}>/month</span></div>
+              <div style={{ fontSize: 14, fontWeight: 300, color: T3, margin: "7px 0 22px", lineHeight: 1.5 }}>For organisations where the intelligence needs to stay when people move on. 10 seats, shared workspace, shared projects.</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
+                {["Everything in Individual, for 10 people", "Shared workspace projects and annotations", "Shared entity watchlists and tracker alerts", "Institutional intelligence that stays when someone leaves", "Centralised billing and seat management"].map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, fontWeight: 300, color: T2, lineHeight: 1.45 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL, flexShrink: 0, marginTop: 7 }} />
+                    {f}
+                  </div>
+                ))}
+              </div>
+              <a href="/signup" style={{ display: "block", textAlign: "center", fontFamily: F, fontSize: 15, fontWeight: 600, background: NAVY, color: "white", border: "none", borderRadius: R8, padding: 14, textDecoration: "none", boxShadow: EL1, marginTop: "auto" }}>Start team trial, no card required</a>
+              <div style={{ textAlign: "center", fontSize: 12, color: T4, marginTop: 8 }}>14-day free trial.</div>
             </div>
-            <a href="/signup" style={{ display: "block", textAlign: "center", fontFamily: F, fontSize: 15, fontWeight: 600, background: NAVY, color: "white", border: "none", borderRadius: R8, padding: 14, textDecoration: "none", boxShadow: EL1 }}>Start team trial, no card required</a>
-            <div style={{ textAlign: "center", fontSize: 12, color: T4, marginTop: 8 }}>14-day free trial.</div>
           </div>
           <div style={{ paddingTop: 20, borderTop: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ fontSize: 14, fontWeight: 300, color: T3 }}>NGO or academic? <a href="/signup" style={{ color: TEAL, textDecoration: "none", fontWeight: 500 }}>50% off, apply here</a></div>
