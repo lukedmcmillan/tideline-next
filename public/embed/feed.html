@@ -1,322 +1,953 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --font-sans:"DM Sans",system-ui,sans-serif;
-  --font-mono:"DM Mono",monospace;
-}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}
-html,body{height:100%;overflow:hidden;font-family:var(--font-sans);color:#202124;background:#F8F9FA;-webkit-font-smoothing:antialiased}
-a{text-decoration:none;color:inherit}
-</style>
-</head>
-<body>
-<div style="font-family:var(--font-sans);color:#202124;background:#F8F9FA;height:100vh;overflow:hidden;display:flex;flex-direction:column">
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',system-ui,sans-serif}
+.page{display:block;position:relative;height:100%;overflow:hidden;padding-bottom:60px}
 
-  <!-- TOP NAV — from real app -->
-  <div style="height:64px;background:#FFFFFF;border-bottom:1px solid #DADCE0;display:flex;align-items:center;padding:0;flex-shrink:0;z-index:100">
-    <a href="#" style="display:flex;align-items:center;gap:10px;padding:0 24px 0 16px;min-width:220px">
-      <div style="width:36px;height:36px;border-radius:8px;background:#0A1628;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10c0-4 3.5-7 7-7s7 3 7 7" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="14" r="2.5" fill="white"/></svg>
-      </div>
-      <div>
-        <span style="font-size:18px;font-weight:600;letter-spacing:-.025em;color:#202124;display:block;line-height:1.1">Tideline</span>
-        <span style="font-size:10px;font-weight:500;color:#9AA0A6;letter-spacing:.04em;text-transform:uppercase">Ocean Intelligence</span>
-      </div>
-    </a>
-    <div style="flex:1;max-width:560px;height:42px;background:#F8F9FA;border:1px solid transparent;border-radius:24px;display:flex;align-items:center;padding:0 14px 0 16px;gap:10px;cursor:text">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#9AA0A6" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="#9AA0A6" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <span style="flex:1;font-size:14px;color:#9AA0A6">Search or ask Tideline anything</span>
-      <span style="font-size:11px;background:#FFFFFF;border:1px solid #DADCE0;border-radius:4px;padding:1px 6px;color:#9AA0A6;font-family:var(--font-mono)">⌘K</span>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8F9FA;--white:#fff;
+  --navy:#0A1628;--navy2:#0D1F35;
+  --teal:#1D9E75;--teal-bg:rgba(29,158,117,.07);--teal-b:rgba(29,158,117,.22);--teal-nav:rgba(29,158,117,.14);
+  --amber:#F9AB00;--red:#D93025;
+  --t1:#202124;--t2:#3C4043;--t3:#5F6368;--t4:#9AA0A6;
+  --border:#DADCE0;--blt:#E8EAED;
+  --hd:rgba(255,255,255,.06);--hl:rgba(32,33,36,.04);
+  --f:'DM Sans',system-ui,sans-serif;--m:'DM Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--f)}
+body{-webkit-font-smoothing:antialiased;color:var(--t1);font-size:14px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toast{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:translateY(0)}85%{opacity:1}100%{opacity:0}}
+.page{display:none;flex-direction:column;height:100vh}
+.page.active{display:flex}
+
+/* TOP BAR */
+.tb{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0;flex-shrink:0;z-index:100}
+.tb-burger{width:48px;height:64px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);flex-shrink:0;transition:background .15s}
+.tb-burger:hover{background:var(--hl)}
+.tb-logo{display:flex;align-items:center;gap:10px;padding:0 24px 0 4px;min-width:220px;cursor:pointer}
+.tb-mark{width:36px;height:36px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tb-wm{font-size:18px;font-weight:600;letter-spacing:-.025em;color:var(--t1);display:block;line-height:1.1}
+.tb-sub{font-size:10px;font-weight:500;color:var(--t4);letter-spacing:.04em;text-transform:uppercase}
+.tb-search{flex:1;max-width:560px;height:42px;background:var(--bg);border:1px solid transparent;border-radius:24px;display:flex;align-items:center;padding:0 14px 0 16px;gap:10px;cursor:text;transition:all .2s}
+.tb-search:hover{background:var(--white);border-color:rgba(32,33,36,.2);box-shadow:0 1px 4px rgba(60,64,67,.15)}
+.tb-search input{flex:1;border:none;outline:none;background:transparent;font-family:var(--f);font-size:14px;color:var(--t1);cursor:text}
+.tb-search input::placeholder{color:var(--t4)}
+.tb-kbd{font-size:11px;background:var(--white);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--t4);flex-shrink:0;font-family:var(--m)}
+.tb-right{display:flex;align-items:center;gap:4px;padding:0 16px 0 24px;margin-left:auto}
+.tb-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;color:var(--t2)}
+.tb-icon:hover{background:var(--hl)}
+.tb-chip{font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:16px;padding:4px 12px;color:var(--t2);background:var(--white);cursor:pointer;margin-right:4px}
+.tb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer}
+
+.body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR: NAVY with Google structure */
+.sb{width:256px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;overflow-y:auto;padding:8px 0 0}
+.sni{display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-weight:400;color:rgba(255,255,255,.6);cursor:pointer;position:relative;transition:background .12s}
+.sni:hover{background:var(--hd);color:rgba(255,255,255,.9)}
+.sni.on{background:var(--teal-nav);color:#fff;font-weight:500}
+.sni.on::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:var(--teal)}
+.sni-ic{position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)}
+.sni.on .sni-ic{color:var(--teal)}
+.sni-badge{margin-left:auto;font-size:11px;font-weight:600;background:var(--teal);color:#fff;border-radius:10px;padding:1px 8px}
+.sb-div{height:1px;background:rgba(255,255,255,.08);margin:4px 0}
+.sb-sec{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:12px 28px 6px}
+.sti{display:flex;align-items:center;height:40px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;position:relative;transition:background .12s}
+.sti:hover{background:var(--hd);color:rgba(255,255,255,.9)}
+.tdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-right:12px}
+.dt{background:var(--teal)}.da{background:var(--amber)}.dr{background:var(--red);animation:pulse 1.8s ease-in-out infinite}
+.sti-b{margin-left:auto;font-size:11px;font-weight:500;background:rgba(255,255,255,.1);border-radius:8px;padding:1px 7px;color:rgba(255,255,255,.5)}
+.stip{display:none;position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:#1a1a2e;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);border-radius:10px;font-size:12px;line-height:1.5;padding:10px 14px;width:220px;z-index:500;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.stip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1a1a2e}
+.sti:hover .stip{display:block;animation:fi .12s ease}
+.tip-t{color:#4ECBA0}.tip-a{color:#FDD663}.tip-r{color:#FF6B6B}
+.tst{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.sb-foot{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.08)}
+.stk{background:rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:10px}
+.stk-top{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.stk-n{font-size:32px;font-weight:500;color:#fff;line-height:1;letter-spacing:-.03em}
+.stk-l{font-size:13px;font-weight:500;color:rgba(255,255,255,.5)}
+.stk-s{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:10px}
+.stk-d{display:flex;gap:5px}
+.sd{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12)}
+.sd.f{background:rgba(255,255,255,.4)}.sd.t{background:var(--teal)}
+.qrow{display:flex;align-items:center;gap:8px}
+.qdots{display:flex;gap:3px}
+.qd{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12)}
+.qd.u{background:rgba(255,255,255,.4)}.qd.w{background:var(--amber)}
+.qlbl{font-size:12px;color:rgba(255,255,255,.3)}
+
+/* FEED */
+.fm{flex:1;overflow-y:auto;background:var(--bg)}
+.sig-row{display:flex;gap:12px;padding:20px 24px 0}
+.baro{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 18px;flex-shrink:0;cursor:pointer;transition:box-shadow .15s;min-width:214px}
+.baro:hover{box-shadow:0 2px 8px rgba(60,64,67,.12)}
+.baro-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.baro-bars{display:flex;gap:3px;align-items:flex-end}
+.bb{width:5px;border-radius:2px}.bb.on{background:var(--red)}.bb.off{background:var(--border)}
+.baro-val{font-size:13px;font-weight:600;color:var(--red)}
+.baro-tr{font-size:11px;color:var(--t4);margin-top:2px}
+.baro-ev{font-size:12px;font-weight:400;color:var(--t2);line-height:1.6;padding-top:12px;border-top:1px solid var(--blt)}
+.sig-card{flex:1;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:box-shadow .15s}
+.sig-card:hover{box-shadow:0 2px 8px rgba(60,64,67,.12)}
+.pdot{width:9px;height:9px;border-radius:50%;background:var(--teal);flex-shrink:0;animation:pulse 2.5s ease-in-out infinite}
+.sig-ey{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);margin-bottom:3px}
+.sig-body{font-size:13px;font-weight:400;color:var(--t1);line-height:1.45}
+.sig-chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.sig-ch{font-size:12px;font-weight:500;border:1.5px solid var(--teal-b);border-radius:20px;padding:4px 12px;color:var(--teal);cursor:pointer;transition:background .12s}
+.sig-ch:hover{background:var(--teal-bg)}
+.fw{padding:16px 24px 40px}
+.fhdr{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.flive{display:flex;align-items:center;gap:8px}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2.2s ease-in-out infinite}
+.fttl{font-size:14px;font-weight:600;color:var(--t1);letter-spacing:-.01em}
+.fsep{color:var(--border);margin:0 4px}
+.fts{font-size:13px;color:var(--t4)}
+.fchs{display:flex;gap:6px;margin-left:auto}
+.fch{font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:20px;padding:5px 14px;color:var(--t3);background:var(--white);cursor:pointer;transition:all .15s}
+.fch:hover{border-color:rgba(32,33,36,.25);color:var(--t1)}
+.fch.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+.lcard{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px;display:grid;grid-template-columns:3fr 2fr;transition:box-shadow .15s}
+.lcard:hover{box-shadow:0 2px 10px rgba(60,64,67,.12)}
+.lmain{padding:26px 30px;border-right:1px solid var(--blt)}
+.lright{padding:0}
+.sit{padding:18px 22px;border-bottom:1px solid var(--blt);cursor:pointer;transition:background .12s}
+.sit:last-child{border-bottom:none}
+.sit:hover{background:var(--bg)}
+.sm{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.cat{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t4)}
+.tm{font-size:11px;color:var(--t4)}.tm.fr{color:var(--teal);font-weight:600}
+.bchip{display:none}
+.bpu{display:none}
+.lhl{font-size:21px;font-weight:600;line-height:1.28;letter-spacing:-.025em;color:var(--t1);margin-bottom:10px}
+.lsum{font-size:14px;font-weight:300;line-height:1.75;color:var(--t3);margin-bottom:14px}
+.src{font-size:12px;font-weight:500;color:var(--t4);display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:color .12s}
+.src:hover{color:var(--t1)}.src.t1{color:var(--teal)}.src.t1:hover{color:#147a56}
+.sechl{font-size:14px;font-weight:500;line-height:1.4;letter-spacing:-.01em;color:var(--t1);margin-bottom:6px;margin-top:3px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.gc{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all .15s}
+.gc:hover{border-color:rgba(32,33,36,.18);box-shadow:0 2px 8px rgba(60,64,67,.1);transform:translateY(-2px)}
+.gchl{font-size:14px;font-weight:500;line-height:1.4;letter-spacing:-.01em;color:var(--t1);margin-bottom:8px;margin-top:4px}
+.gcsum{font-size:13px;font-weight:300;line-height:1.65;color:var(--t3);margin-bottom:9px}
+.mc{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.mhdr{padding:14px 22px;border-bottom:1px solid var(--blt);display:flex;align-items:center;justify-content:space-between}
+.mhdr-l{font-size:13px;font-weight:600;color:var(--t2)}.mhdr-c{font-size:12px;color:var(--t4)}
+.mr{display:flex;align-items:center;gap:16px;padding:12px 22px;border-bottom:1px solid var(--blt);cursor:pointer;transition:background .1s}
+.mr:last-child{border-bottom:none}.mr:hover{background:var(--bg)}
+.mcat{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);flex-shrink:0;min-width:84px;cursor:pointer;transition:color .1s}
+.mr:hover .mcat{color:var(--teal)}
+.mhl{font-size:13px;font-weight:400;color:var(--t1);flex:1;line-height:1.35}
+.msrc{font-size:12px;font-weight:500;color:var(--t4);flex-shrink:0}.msrc.t1{color:var(--teal)}
+
+/* RIGHT PANEL */
+.rp{width:268px;flex-shrink:0;background:var(--white);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.rps{padding:20px;border-bottom:1px solid var(--blt)}
+.rpl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;display:flex;align-items:center;gap:7px}
+.rpsub{font-size:12px;color:var(--t4);margin-bottom:14px;font-style:italic}
+.cbox{background:var(--white);border-left:3px solid var(--teal);border-radius:0;padding:14px 14px 14px 16px}
+.cbody{font-size:13px;font-weight:400;line-height:1.65;color:var(--t1);margin-bottom:12px}
+.ctags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.ctag{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--teal-b);border-radius:4px;padding:3px 9px;color:var(--teal);background:rgba(255,255,255,.7)}
+.cpbtn{display:flex;align-items:center;gap:7px;width:100%;background:var(--white);border:1.5px solid var(--teal-b);border-radius:8px;padding:8px 12px;font-family:var(--f);font-size:12px;font-weight:500;color:var(--teal);cursor:pointer;transition:all .15s}
+.cpbtn:hover{background:var(--teal-bg)}.cpbtn.copied{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
+.crow{padding:11px 0;border-bottom:1px solid var(--blt)}.crow:last-child{border-bottom:none}
+.cdate{font-size:12px;font-weight:600;margin-bottom:2px}
+.cu{color:var(--teal)}.cs{color:var(--amber)}.cn{color:var(--t4)}
+.ctitle{font-size:13px;font-weight:400;color:var(--t1);line-height:1.35}
+.cadd{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:var(--teal);margin-top:4px;cursor:pointer;opacity:.7;transition:opacity .12s}
+.cadd:hover{opacity:1}
+.rpmore{font-size:12px;font-weight:500;color:var(--teal);margin-top:12px;display:block;cursor:pointer}
+.rpfoot{padding:14px 20px;margin-top:auto;border-top:1px solid var(--blt);display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .12s}
+.rpfoot:hover{background:var(--hl)}
+.rpfoot-l{font-size:13px;font-weight:400;color:var(--t3)}
+.ri{padding:11px 0;border-bottom:1px solid var(--blt);cursor:pointer}.ri:last-child{border-bottom:none}
+.ri:hover .rttl{color:var(--teal)}
+.rttl{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:3px;transition:color .1s}
+.rmeta{font-size:11px;color:var(--t4)}
+.di{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--blt);cursor:pointer}.di:last-child{border-bottom:none}
+.dic{width:32px;height:32px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dn{font-size:12px;font-weight:500;color:var(--t1)}.dm{font-size:11px;color:var(--t4);margin-top:1px}
+.upbtn{display:flex;align-items:center;gap:7px;width:100%;background:var(--white);border:1.5px solid var(--teal-b);border-radius:8px;padding:9px 13px;font-family:var(--f);font-size:12px;font-weight:500;color:var(--teal);cursor:pointer;transition:all .15s;margin-top:12px}
+.upbtn:hover{background:var(--teal-bg)}
+
+/* SEARCH OVERLAY */
+.ov{display:none;position:fixed;inset:0;background:rgba(10,22,40,.55);backdrop-filter:blur(3px);z-index:200;align-items:flex-start;justify-content:center;padding-top:80px}
+.ov.open{display:flex;animation:fi .15s ease}
+.smo{width:100%;max-width:660px;background:var(--white);border-radius:24px;box-shadow:0 16px 48px rgba(0,0,0,.3);overflow:hidden;animation:su .18s ease}
+.smbar{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--blt)}
+.smbar input{flex:1;border:none;outline:none;background:transparent;font-family:var(--f);font-size:16px;font-weight:400;color:var(--t1)}
+.smbar input::placeholder{color:var(--t4)}
+.smesc{font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:2px 9px;color:var(--t4);cursor:pointer;flex-shrink:0;font-family:var(--m)}
+.smsl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t4);padding:10px 22px 2px}
+.smss{font-size:12px;color:var(--t4);padding:2px 22px 8px;font-style:italic}
+.smit{display:flex;align-items:center;gap:14px;padding:10px 22px;cursor:pointer;transition:background .1s}
+.smit:hover{background:var(--bg)}
+.smic{width:36px;height:36px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.smtx{font-size:14px;font-weight:400;color:var(--t1)}
+.smsb{font-size:12px;color:var(--t4);margin-top:2px}
+.smft{border-top:1px solid var(--blt);padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+.smhi{font-size:12px;color:var(--t4)}
+.smgo{display:flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+.smgo:hover{background:var(--navy2)}
+
+/* RESEARCH */
+.rm{flex:1;overflow-y:auto;background:var(--bg)}
+.rh{background:var(--white);border-bottom:1px solid var(--border);padding:56px 40px 38px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.rl{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.rlm{width:44px;height:44px;border-radius:10px;background:var(--navy);display:flex;align-items:center;justify-content:center}
+.rwm{font-size:24px;font-weight:500;letter-spacing:-.025em;color:var(--t1)}
+.rtag{font-size:16px;font-weight:300;color:var(--t3);margin-bottom:26px;line-height:1.5;max-width:480px}
+.rtag strong{font-weight:500;color:var(--t1)}
+.rsb{width:100%;max-width:580px;height:52px;background:var(--white);border:1px solid var(--border);border-radius:26px;display:flex;align-items:center;padding:0 8px 0 22px;gap:12px;box-shadow:0 1px 6px rgba(60,64,67,.18);transition:box-shadow .2s;margin-bottom:8px}
+.rsb:hover,.rsb:focus-within{box-shadow:0 2px 14px rgba(60,64,67,.22)}
+.rsb input{flex:1;border:none;outline:none;background:transparent;font-family:var(--f);font-size:15px;font-weight:300;color:var(--t1)}
+.rsb input::placeholder{color:var(--t4)}
+.rsbtn{width:38px;height:38px;border-radius:20px;background:var(--navy);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0}
+.rsbtn:hover{background:var(--navy2)}
+.rprin{font-size:12px;color:var(--t4);margin-bottom:20px;max-width:480px;line-height:1.6}
+.rprin strong{font-weight:500;color:var(--t3)}
+.rsugs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:620px;margin-bottom:18px}
+.rsug{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:8px 18px;font-size:13px;font-weight:400;color:var(--t2);cursor:pointer;transition:all .15s}
+.rsug:hover{background:var(--bg);border-color:rgba(32,33,36,.25);color:var(--t1)}
+.rstat{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t4)}
+.rpulse{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 2.2s ease-in-out infinite}
+.rb{padding:28px;max-width:820px;margin:0 auto;width:100%}
+.rdiv{display:flex;align-items:center;gap:14px;margin-bottom:18px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t4)}
+.rdiv::after{content:'';flex:1;height:1px;background:var(--blt)}
+.ac{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}
+.aq{display:flex;align-items:flex-start;gap:14px;padding:16px 24px;background:var(--bg);border-bottom:1px solid var(--blt)}
+.aqic{width:30px;height:30px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.aqtx{font-size:15px;font-weight:400;color:var(--t1);font-style:italic;line-height:1.4;padding-top:2px}
+.ab{padding:24px}
+.abtx{font-size:14px;font-weight:300;line-height:1.85;color:var(--t1);margin-bottom:22px}
+.cite{font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-bg);border-radius:4px;padding:1px 5px;cursor:pointer}
+.slbl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t4);margin-bottom:10px;padding-top:18px;border-top:1px solid var(--blt)}
+.srow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--blt);cursor:pointer}.srow:last-child{border-bottom:none}
+.srow:hover .sttl{color:var(--teal)}
+.snum{width:24px;height:24px;border-radius:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--t4);flex-shrink:0}
+.sttl{font-size:13px;font-weight:500;color:var(--t1);transition:color .12s}.smt{font-size:12px;color:var(--t4);margin-top:1px}
+.afoot{background:var(--bg);border-top:1px solid var(--blt);padding:12px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.afs{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t4)}
+.afd{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.afv{position:relative;cursor:default}.afv:hover .aftip{display:block}
+.aftip{display:none;position:absolute;bottom:calc(100%+8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:rgba(255,255,255,.9);border-radius:8px;font-size:12px;line-height:1.55;padding:10px 14px;width:280px;z-index:100;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.aftip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a1a2e}
+.uc{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:40px}
+.uhdr{padding:20px 24px;border-bottom:1px solid var(--blt)}
+.utt{font-size:15px;font-weight:600;color:var(--t1)}.usb{font-size:13px;font-weight:300;color:var(--t3);margin-top:4px;line-height:1.5}
+.uzone{margin:20px 24px 24px;border:2px dashed var(--border);border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s}
+.uzone:hover{border-color:var(--teal);background:var(--teal-bg)}
+.uic{width:52px;height:52px;border-radius:14px;background:var(--bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.umain{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:4px}.uhint{font-size:13px;font-weight:300;color:var(--t3)}.utyp{font-size:12px;color:var(--t4);margin-top:6px}
+
+.toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:500;z-index:300;pointer-events:none;white-space:nowrap}
+.toast.show{display:block;animation:toast 3s ease forwards}
+
+.s-new{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:#fff;background:var(--teal);border-radius:4px;padding:2px 6px;flex-shrink:0}
+.s-viewed{font-size:10px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--t4);background:var(--blt);border-radius:4px;padding:2px 6px;
+  flex-shrink:0;display:none}
+.sr .s-new{display:none}
+.sr .s-viewed{display:inline-flex}
+.sr .lhl,.sr .gchl,.sr .sechl,.sr .mhl{opacity:.45}
+.sr .lsum,.sr .gcsum{opacity:.35}
+.caught{display:none;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--teal)}
+.caught.on{display:flex}
+
+.bm{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;
+  border:1px solid var(--border);background:var(--white);color:var(--t4);margin-left:auto}
+.bm:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
+.bm.saved{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
+.bm.saved svg{fill:var(--teal)}
+
+/* SAVE POPOVER */
+.save-pop{
+  display:none;position:absolute;z-index:300;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);
+  padding:0;width:220px;overflow:hidden;
+}
+.save-pop.open{display:block;animation:su .15s ease}
+.sp-head{padding:12px 14px 8px;font-size:11px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--t4);
+  border-bottom:1px solid var(--blt)}
+.sp-item{display:flex;align-items:center;gap:10px;padding:9px 14px;
+  cursor:pointer;transition:background .1s;font-size:13px;color:var(--t2)}
+.sp-item:hover{background:var(--bg);color:var(--t1)}
+.sp-item svg{flex-shrink:0;color:var(--t4)}
+.sp-item.selected{color:var(--teal)}
+.sp-item.selected svg{color:var(--teal)}
+.sp-new{display:flex;align-items:center;gap:8px;padding:8px 14px;
+  border-top:1px solid var(--blt);cursor:pointer;
+  font-size:12px;font-weight:500;color:var(--teal);transition:background .1s}
+.sp-new:hover{background:var(--teal-bg)}
+/* ANNOTATION PANEL */
+.ann-panel{
+  display:none;position:absolute;z-index:300;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);
+  padding:14px;width:280px;
+}
+.ann-panel.open{display:block;animation:su .15s ease}
+.ann-panel textarea{
+  width:100%;border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-family:var(--f);font-size:13px;
+  color:var(--t1);resize:none;height:80px;outline:none;
+  transition:border-color .15s;line-height:1.5;
+}
+.ann-panel textarea:focus{border-color:var(--teal)}
+.ann-panel textarea::placeholder{color:var(--t4)}
+.ann-actions{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.ann-save-btn{background:var(--navy);color:#fff;border:none;border-radius:7px;
+  padding:6px 14px;font-family:var(--f);font-size:12px;font-weight:500;cursor:pointer}
+.ann-save-btn:hover{background:var(--navy2)}
+.ann-cancel{font-size:12px;color:var(--t4);cursor:pointer;transition:color .1s}
+.ann-cancel:hover{color:var(--t1)}
+/* ANNOTATION INDICATOR */
+.ann-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);
+  position:absolute;top:-2px;right:-2px;display:none}
+.bm.annotated .ann-dot{display:block}
+
+
+/* VIEW SWITCHER */
+.view-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:0 16px 0 0;
+}
+.view-btn{
+  font-size:11px;font-weight:500;
+  border:1px solid var(--border);border-radius:20px;
+  padding:4px 12px;color:var(--t3);
+  background:var(--white);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.view-btn:hover{border-color:rgba(32,33,36,.25);color:var(--t1)}
+.view-btn.von{
+  background:var(--navy);color:#fff;
+  border-color:var(--navy);
+}
+.view-label{
+  font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--t4);
+  padding-right:8px;white-space:nowrap;
+}
+
+/* SEGMENT OVERLAY */
+.seg-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(10,22,40,.6);
+  backdrop-filter:blur(4px);
+  z-index:300;
+  align-items:center;justify-content:center;
+}
+.seg-overlay.open{display:flex;animation:fi .2s ease}
+.seg-modal{
+  background:var(--white);border-radius:20px;
+  width:100%;max-width:540px;
+  box-shadow:0 24px 64px rgba(0,0,0,.25);
+  overflow:hidden;
+  animation:su .2s ease;
+}
+.seg-hdr{
+  padding:28px 32px 20px;text-align:center;
+  border-bottom:1px solid var(--blt);
+}
+.seg-hdr h2{
+  font-size:20px;font-weight:600;letter-spacing:-.02em;
+  color:var(--t1);margin-bottom:6px;
+}
+.seg-hdr p{font-size:13px;color:var(--t3);line-height:1.5}
+.seg-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;padding:0;
+}
+.seg-opt{
+  display:flex;flex-direction:column;gap:6px;
+  padding:20px 24px;cursor:pointer;
+  border-right:1px solid var(--blt);
+  border-bottom:1px solid var(--blt);
+  transition:background .15s;
+}
+.seg-opt:nth-child(2n){border-right:none}
+.seg-opt:nth-last-child(-n+2){border-bottom:none}
+.seg-opt:hover{background:var(--bg)}
+.seg-opt.seg-on{background:var(--teal-bg);border-color:var(--teal-b)}
+.seg-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--bg);display:flex;align-items:center;
+  justify-content:center;margin-bottom:4px;
+}
+.seg-opt.seg-on .seg-icon{background:var(--teal-bg)}
+.seg-name{font-size:13px;font-weight:600;color:var(--t1)}
+.seg-desc{font-size:11px;color:var(--t3);line-height:1.45}
+.seg-footer{
+  padding:18px 32px;border-top:1px solid var(--blt);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.seg-save{
+  background:var(--navy);color:#fff;border:none;
+  border-radius:10px;padding:10px 24px;
+  font-family:var(--f);font-size:13px;font-weight:500;
+  cursor:pointer;transition:background .15s;
+}
+.seg-save:hover{background:var(--navy2)}
+.seg-skip{font-size:12px;color:var(--t4);cursor:pointer;transition:color .15s}
+.seg-skip:hover{color:var(--t1)}
+
+/* RIGHT PANEL SECTIONS: hide/show by view */
+.rp-investment{display:none}
+.rp-ngo{display:none}
+.rp-journalism{display:none}
+.rp-esg{display:none}
+.rp-default{display:block}
+
+</style></head><body>
+<div class="page" style="display:block;position:relative;height:100%;overflow:hidden" id="pg-feed">
+  <div class="tb">
+    <div class="tb-burger"><svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <div class="tb-logo">
+      <div class="tb-mark"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10c0-4 3.5-7 7-7s7 3 7 7" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="14" r="2.5" fill="white"/></svg></div>
+      <div><span class="tb-wm">Tideline</span><span class="tb-sub">Ocean Intelligence</span></div>
     </div>
-    <div style="display:flex;align-items:center;gap:4px;padding:0 16px 0 24px;margin-left:auto">
-      <span style="font-size:12px;font-weight:500;border:1px solid #DADCE0;border-radius:16px;padding:4px 12px;color:#3C4043;background:#FFFFFF;margin-right:4px">Individual</span>
-      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0A1628,#1D9E75);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">LM</div>
+    <div class="tb-search" onclick="openSearch()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#9AA0A6" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="#9AA0A6" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input placeholder="Search or ask Tideline anything" readonly onclick="openSearch()"/>
+      <span class="tb-kbd">⌘K</span>
+    </div>
+    <div class="view-bar">
+      <span class="view-label">View</span>
+      <button class="view-btn von" id="vb-default" onclick="setView('default')">All</button>
+      <button class="view-btn" id="vb-investment" onclick="setView('investment')">Investment</button>
+      <button class="view-btn" id="vb-ngo" onclick="setView('ngo')">NGO &amp; Policy</button>
+      <button class="view-btn" id="vb-journalism" onclick="setView('journalism')">Journalism</button>
+      <button class="view-btn" id="vb-esg" onclick="setView('esg')">ESG</button>
+    </div>
+    <div class="tb-right">
+      <div class="tb-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2a5 5 0 015 5c0 2.5-.8 4-1.5 5H5.5C4.8 11 4 9.5 4 7a5 5 0 015-5zM7.5 14.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <span class="tb-chip">Individual</span>
+      <div class="tb-av">LM</div>
     </div>
   </div>
-
-  <!-- BODY -->
-  <div style="display:flex;flex:1;overflow:hidden">
-
-    <!-- SIDEBAR — from real app -->
-    <div style="width:256px;background:#0A1628;display:flex;flex-direction:column;height:100%;overflow-y:auto;flex-shrink:0">
-      <div style="padding:8px 0 0">
-        <!-- Feed — active -->
-        <a href="#" style="display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-family:var(--font-sans);color:#fff;background:rgba(29,158,117,.14);font-weight:500;text-decoration:none;position:relative">
-          <span style="position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:#1D9E75"></span>
-          <span style="position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#1D9E75">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>
-          </span>Feed
-        </a>
-        <!-- Calendar -->
-        <a href="#" style="display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-family:var(--font-sans);color:rgba(255,255,255,.6);background:transparent;font-weight:400;text-decoration:none;position:relative">
-          <span style="position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="16" height="15" rx="2"/><path d="M6 1v2M12 1v2M1 8h16"/></svg>
-          </span>Calendar
-        </a>
-        <!-- Library -->
-        <a href="#" style="display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-family:var(--font-sans);color:rgba(255,255,255,.6);background:transparent;font-weight:400;text-decoration:none;position:relative">
-          <span style="position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h12v15l-6-4-6 4V2z"/></svg>
-          </span>Library
-        </a>
-        <!-- Workspace -->
-        <a href="#" style="display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-family:var(--font-sans);color:rgba(255,255,255,.6);background:transparent;font-weight:400;text-decoration:none;position:relative">
-          <span style="position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="16" height="13" rx="2"/><path d="M6 3V1M12 3V1"/></svg>
-          </span>Workspace
-        </a>
-        <!-- Research -->
-        <a href="#" style="display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-family:var(--font-sans);color:rgba(255,255,255,.6);background:transparent;font-weight:400;text-decoration:none;position:relative">
-          <span style="position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M13 13l4 4"/></svg>
-          </span>Research
-        </a>
-        <!-- Directory -->
-        <a href="#" style="display:flex;align-items:center;height:48px;padding:0 28px 0 72px;font-size:14px;font-family:var(--font-sans);color:rgba(255,255,255,.6);background:transparent;font-weight:400;text-decoration:none;position:relative">
-          <span style="position:absolute;left:24px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4)">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="6" r="3"/><path d="M8.5 7.5l2-1M8.5 8.5l1 1"/></svg>
-          </span>Directory
-        </a>
-      </div>
-
-      <div style="height:1px;background:rgba(255,255,255,.08);margin:4px 0"></div>
-      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:12px 28px 6px">Trackers</div>
-
-      <!-- Tracker items -->
-      <div style="display:flex;align-items:center;height:38px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.55);gap:10px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0"></span>BBNJ Treaty
-        <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,.08);border-radius:5px;padding:1px 6px;color:rgba(255,255,255,.4)">3 today</span>
-      </div>
-      <div style="display:flex;align-items:center;height:38px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.55);gap:10px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#F9AB00;flex-shrink:0"></span>ISA Mining
-        <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,.08);border-radius:5px;padding:1px 6px;color:rgba(255,255,255,.4)">1 today</span>
-      </div>
-      <div style="display:flex;align-items:center;height:38px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.55);gap:10px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#D93025;animation:pulse 1.8s ease infinite;flex-shrink:0"></span>IUU Enforcement
-        <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,.08);border-radius:5px;padding:1px 6px;color:rgba(255,255,255,.4)">2 today</span>
-      </div>
-      <div style="display:flex;align-items:center;height:38px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.55);gap:10px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0"></span>30x30 Protection
-      </div>
-      <div style="display:flex;align-items:center;height:38px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.55);gap:10px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0"></span>IMO Shipping
-      </div>
-      <div style="display:flex;align-items:center;height:38px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.55);gap:10px">
-        <span style="width:8px;height:8px;border-radius:50%;background:#F9AB00;flex-shrink:0"></span>Blue Finance
-        <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,.08);border-radius:5px;padding:1px 6px;color:rgba(255,255,255,.4)">1 today</span>
-      </div>
-
-      <div style="height:1px;background:rgba(255,255,255,.08);margin:4px 0"></div>
-      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:12px 28px 6px">Workspace</div>
-      <a href="#" style="display:flex;align-items:center;height:40px;padding:0 20px 0 28px;font-size:13px;color:rgba(255,255,255,.3);text-decoration:none">
-        <span style="width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);flex-shrink:0;margin-right:12px;display:flex;align-items:center;justify-content:center">
-          <svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M3.5 1v5M1 3.5h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-        </span>New project
-      </a>
-
-      <!-- Streak widget — from real app -->
-      <div style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding:16px">
-        <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:10px">
-          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px">
-            <span style="font-size:32px;font-weight:500;color:#fff;line-height:1;letter-spacing:-.03em">12</span>
-            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">day streak</span>
-          </div>
-          <div style="font-size:12px;color:rgba(255,255,255,.3);margin-bottom:10px">Since 14 March</div>
-          <div style="display:flex;gap:5px">
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:#1D9E75"></span>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="display:flex;gap:3px">
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:#F9AB00"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12)"></span>
-            <span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12)"></span>
-          </div>
-          <span style="font-size:12px;color:rgba(255,255,255,.3)">8 queries today</span>
-        </div>
+  <div class="body">
+    <div class="sb">
+      <div class="sni on"><div class="sni-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg></div>Feed</div>
+      <div class="sni"><div class="sni-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="16" height="15" rx="2"/><path d="M6 1v2M12 1v2M1 8h16"/></svg></div>Calendar</div>
+      <div class="sni"><div class="sni-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h12v15l-6-4-6 4V2z"/></svg></div>Library<span class="sni-badge">3</span></div>
+      <div class="sni"><div class="sni-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="16" height="13" rx="2"/><path d="M6 3V1M12 3V1"/></svg></div>Workspace<span class="sni-badge">2</span></div>
+      <div class="sni" onclick="showPage('pg-research')"><div class="sni-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M13 13l4 4"/></svg></div>Research</div>
+      <div class="sni" onclick="showPage('pg-entities')"><div class="sni-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="12" cy="12" r="3"/><path d="M8.5 8.5l1 1" stroke-width="1.5"/><circle cx="12" cy="6" r="3"/><path d="M9 6h0"/><path d="M8.5 7.5l2-1"/></svg></div>Directory</div>
+      <div class="sb-div"></div><div class="sb-sec">Trackers</div>
+      <div class="sti"><span class="tdot dt"></span>BBNJ Treaty<span class="sti-b">3 today</span><div class="stip"><div class="tst tip-t">● Active: in force</div>87 ratifications. Pacific bloc deposit confirmed 06:42.</div></div>
+      <div class="sti"><span class="tdot da"></span>ISA Mining<span class="sti-b">1 today</span><div class="stip"><div class="tst tip-a">● Developing: watch</div>Council vote deferred to July. 3 states signalled opposition.</div></div>
+      <div class="sti" style="border-right:2px solid var(--red)"><span class="tdot dr"></span>IUU Enforcement<span class="sti-b">2 today</span><div class="stip"><div class="tst tip-r">● Enforcement action</div>Vessel detained under falsified flag. Port state action 03:30.</div></div>
+      <div class="sti"><span class="tdot dt"></span>30x30 Protection<div class="stip"><div class="tst tip-t">● Active</div>Chile MPA. Global ocean coverage 24.3% toward 30% target.</div></div>
+      <div class="sti"><span class="tdot da"></span>Blue Finance<span class="sti-b">1 today</span><div class="stip"><div class="tst tip-a">● Developing</div>IFC framework published. 7 new blue bonds in pipeline.</div></div>
+      <div class="sb-div"></div><div class="sb-sec">Workspace</div>
+      <div class="sti" style="font-size:13px"><span class="tdot dt"></span>ISA Deep-Sea Watch<span class="sti-b">4 new</span></div>
+      <div class="sti" style="font-size:13px"><span class="tdot da"></span>BBNJ Implementation<span class="sti-b">7 items</span></div>
+      <div class="sti" style="color:rgba(255,255,255,.3);font-size:13px"><div style="width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M3.5 1v5M1 3.5h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>New project</div>
+      <div class="sb-foot">
+        <div class="stk"><div class="stk-top"><span class="stk-n">12</span><span class="stk-l">day streak</span></div><div class="stk-s">Since 14 March</div><div class="stk-d"><div class="sd f"></div><div class="sd f"></div><div class="sd f"></div><div class="sd f"></div><div class="sd f"></div><div class="sd f"></div><div class="sd t"></div></div></div>
+        <div class="qrow"><div class="qdots"><div class="qd u"></div><div class="qd u"></div><div class="qd u"></div><div class="qd u"></div><div class="qd u"></div><div class="qd u"></div><div class="qd u"></div><div class="qd w"></div><div class="qd"></div><div class="qd"></div></div><span class="qlbl">8 queries today</span></div>
       </div>
     </div>
 
-    <!-- MAIN FEED CONTENT -->
-    <main style="flex:1;overflow-y:auto;background:#F8F9FA">
-      <div style="padding:16px 24px 40px">
+    <div class="fm">
+      
 
-        <!-- Filter bar -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-          <button style="font-size:12px;font-weight:600;background:#0A1628;color:white;border:none;border-radius:16px;padding:5px 14px;cursor:pointer;font-family:var(--font-sans)">All</button>
-          <button style="font-size:12px;font-weight:500;background:white;color:#5F6368;border:1px solid #DADCE0;border-radius:16px;padding:5px 14px;cursor:pointer;font-family:var(--font-sans)">Investment</button>
-          <button style="font-size:12px;font-weight:500;background:white;color:#5F6368;border:1px solid #DADCE0;border-radius:16px;padding:5px 14px;cursor:pointer;font-family:var(--font-sans)">NGO &amp; Policy</button>
-          <button style="font-size:12px;font-weight:500;background:white;color:#5F6368;border:1px solid #DADCE0;border-radius:16px;padding:5px 14px;cursor:pointer;font-family:var(--font-sans)">Journalism</button>
-          <button style="font-size:12px;font-weight:500;background:white;color:#5F6368;border:1px solid #DADCE0;border-radius:16px;padding:5px 14px;cursor:pointer;font-family:var(--font-sans)">ESG</button>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-            <span style="width:7px;height:7px;border-radius:50%;background:#1D9E75;animation:pulse 2s ease infinite"></span>
-            <span style="font-size:12px;color:#9AA0A6">Live</span>
-          </div>
-        </div>
-
-        <!-- Story cards -->
-        <!-- 1 -->
-        <div style="background:white;border:1px solid #DADCE0;border-radius:12px;padding:16px 20px;margin-bottom:10px;cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#1D9E75;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);border-radius:4px;padding:2px 7px">Ocean Governance</span>
-            <span style="font-size:10px;font-weight:600;background:#1D9E75;color:white;border-radius:3px;padding:1px 5px">New</span>
-            <span style="font-size:11px;color:#9AA0A6;margin-left:auto">2 min ago</span>
-          </div>
-          <div style="font-size:15px;font-weight:600;color:#202124;line-height:1.35;margin-bottom:6px;letter-spacing:-.01em">BBNJ ratification: third instrument deposit confirmed as Pacific bloc signals alignment</div>
-          <div style="font-size:13px;font-weight:300;color:#5F6368;line-height:1.6;margin-bottom:10px">A third Pacific island state has deposited its instrument of ratification, bringing the total to 87 — past the 60 required for entry into force. Analysts suggest full implementation procedures could begin within 90 days.</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:12px;font-weight:500;color:#1D9E75">IISD Reporting Services ↗</span>
-            <div style="display:flex;gap:6px">
-              <button style="font-size:11px;font-weight:500;background:white;border:1px solid #DADCE0;border-radius:6px;padding:4px 10px;color:#5F6368;cursor:pointer;font-family:var(--font-sans)">Save</button>
-              <button style="font-size:11px;font-weight:500;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);border-radius:6px;padding:4px 10px;color:#1D9E75;cursor:pointer;font-family:var(--font-sans)">Add to project</button>
+      <div class="fw">
+        <div class="fhdr">
+          <div class="flive">
+            <span class="ldot" id="fdot"></span>
+            <span class="fttl">What you've missed</span>
+            <span class="fsep">·</span>
+            <span id="ucnt" class="fts">12 unread</span>
+            <div class="caught" id="caught">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block"></span>
+              All caught up
             </div>
           </div>
+          <div style="display:flex;align-items:center;gap:14px;margin-left:auto">
+            <span onclick="markAll()" style="font-size:12px;font-weight:500;color:var(--teal);cursor:pointer;opacity:.65" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.65">Mark all read</span>
+            <div class="fchs"><span class="fch on">All</span><span class="fch">Governance</span><span class="fch">Mining</span><span class="fch">Finance</span><span class="fch">Climate</span></div></div>
         </div>
 
-        <!-- 2 -->
-        <div style="background:white;border:1px solid #DADCE0;border-radius:12px;padding:16px 20px;margin-bottom:10px;cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#F9AB00;background:rgba(249,171,0,.08);border:1px solid rgba(249,171,0,.2);border-radius:4px;padding:2px 7px">Deep-Sea Mining</span>
-            <span style="font-size:10px;font-weight:600;background:#1D9E75;color:white;border-radius:3px;padding:1px 5px">New</span>
-            <span style="font-size:11px;color:#9AA0A6;margin-left:auto">18 min ago</span>
-          </div>
-          <div style="font-size:15px;font-weight:600;color:#202124;line-height:1.35;margin-bottom:6px;letter-spacing:-.01em">ISA Council defers exploitation code vote as pressure mounts from Pacific bloc</div>
-          <div style="font-size:13px;font-weight:300;color:#5F6368;line-height:1.6;margin-bottom:10px">The International Seabed Authority Council has voted to defer adoption of exploitation regulations to its July 2026 session, the third consecutive delay. Three sponsoring states have formally linked their vote to progress on BBNJ implementation.</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:12px;font-weight:500;color:#1D9E75">Bloomberg Law ↗</span>
-            <div style="display:flex;gap:6px">
-              <button style="font-size:11px;font-weight:500;background:white;border:1px solid #DADCE0;border-radius:6px;padding:4px 10px;color:#5F6368;cursor:pointer;font-family:var(--font-sans)">Save</button>
-              <button style="font-size:11px;font-weight:500;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);border-radius:6px;padding:4px 10px;color:#1D9E75;cursor:pointer;font-family:var(--font-sans)">Add to project</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3 -->
-        <div style="background:white;border:1px solid #DADCE0;border-radius:12px;padding:16px 20px;margin-bottom:10px;cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#185FA5;background:rgba(24,95,165,.07);border:1px solid rgba(24,95,165,.18);border-radius:4px;padding:2px 7px">Climate</span>
-            <span style="font-size:11px;color:#9AA0A6;margin-left:auto">1 hr ago</span>
-          </div>
-          <div style="font-size:15px;font-weight:600;color:#202124;line-height:1.35;margin-bottom:6px;letter-spacing:-.01em">IMO MEPC 83 adopts revised carbon intensity framework for shipping</div>
-          <div style="font-size:13px;font-weight:300;color:#5F6368;line-height:1.6;margin-bottom:10px">The Marine Environment Protection Committee adopted a strengthened Carbon Intensity Indicator methodology at its 83rd session, tightening correction factors for vessels trading in high-emission routes.</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:12px;font-weight:500;color:#1D9E75">IMO Official Publications ↗</span>
-            <div style="display:flex;gap:6px">
-              <button style="font-size:11px;font-weight:500;background:white;border:1px solid #DADCE0;border-radius:6px;padding:4px 10px;color:#5F6368;cursor:pointer;font-family:var(--font-sans)">Save</button>
-              <button style="font-size:11px;font-weight:500;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);border-radius:6px;padding:4px 10px;color:#1D9E75;cursor:pointer;font-family:var(--font-sans)">Add to project</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4 -->
-        <div style="background:white;border:1px solid #DADCE0;border-radius:12px;padding:16px 20px;margin-bottom:10px;cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#1D9E75;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);border-radius:4px;padding:2px 7px">Blue Finance</span>
-            <span style="font-size:10px;font-weight:600;background:#1D9E75;color:white;border-radius:3px;padding:1px 5px">New</span>
-            <span style="font-size:11px;color:#9AA0A6;margin-left:auto">2 hr ago</span>
-          </div>
-          <div style="font-size:15px;font-weight:600;color:#202124;line-height:1.35;margin-bottom:6px;letter-spacing:-.01em">IFC framework triggers blue bond expansion in emerging markets</div>
-          <div style="font-size:13px;font-weight:300;color:#5F6368;line-height:1.6;margin-bottom:10px">The International Finance Corporation has published updated guidance linking blue bond issuance eligibility to verified ocean outcome metrics, expected to unlock up to $4bn in new issuance over the next 18 months.</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:12px;font-weight:500;color:#1D9E75">IFC Publications ↗</span>
-            <div style="display:flex;gap:6px">
-              <button style="font-size:11px;font-weight:500;background:white;border:1px solid #DADCE0;border-radius:6px;padding:4px 10px;color:#5F6368;cursor:pointer;font-family:var(--font-sans)">Save</button>
-              <button style="font-size:11px;font-weight:500;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);border-radius:6px;padding:4px 10px;color:#1D9E75;cursor:pointer;font-family:var(--font-sans)">Add to project</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5 -->
-        <div style="background:white;border:1px solid #DADCE0;border-radius:12px;padding:16px 20px;margin-bottom:10px;cursor:pointer;opacity:.7">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#D93025;background:rgba(217,48,37,.06);border:1px solid rgba(217,48,37,.15);border-radius:4px;padding:2px 7px">IUU Enforcement</span>
-            <span style="font-size:11px;color:#9AA0A6;margin-left:auto">4 hr ago</span>
-          </div>
-          <div style="font-size:15px;font-weight:600;color:#202124;line-height:1.35;margin-bottom:6px;letter-spacing:-.01em">Vessel detained under falsified flag in West African port state action</div>
-          <div style="font-size:13px;font-weight:300;color:#5F6368;line-height:1.6;margin-bottom:10px">Port state control authorities detained a vessel carrying documentation inconsistent with its stated flag registration. The case has been referred to INTERPOL's Fisheries Crime Working Group.</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:12px;font-weight:500;color:#1D9E75">Maritime Executive ↗</span>
-            <div style="display:flex;gap:6px">
-              <button style="font-size:11px;font-weight:500;background:white;border:1px solid #DADCE0;border-radius:6px;padding:4px 10px;color:#5F6368;cursor:pointer;font-family:var(--font-sans)">Save</button>
-              <button style="font-size:11px;font-weight:500;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);border-radius:6px;padding:4px 10px;color:#1D9E75;cursor:pointer;font-family:var(--font-sans)">Add to project</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </main>
-
-    <!-- RIGHT PANEL — from real app -->
-    <div style="width:268px;flex-shrink:0;background:#FFFFFF;border-left:1px solid #DADCE0;display:flex;flex-direction:column;height:100%;overflow-y:auto">
-      <!-- Connections -->
-      <div style="padding:20px;border-bottom:1px solid #E8EAED">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9AA0A6;margin-bottom:4px;display:flex;align-items:center;gap:7px">
-          <span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;animation:pulse 2.5s ease-in-out infinite"></span>
-          Tideline connections
-        </div>
-        <div style="font-size:12px;color:#9AA0A6;font-style:italic;margin-bottom:14px">Patterns across trackers today.</div>
-        <div style="border-left:3px solid #1D9E75;padding:14px 14px 14px 16px">
-          <div style="font-size:13px;line-height:1.65;color:#202124;margin-bottom:12px">The ISA deferral and accelerating BBNJ ratification are directly linked. Three sponsoring states are conditioning their ISA vote on BBNJ implementation terms.</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(29,158,117,.22);border-radius:4px;padding:3px 9px;color:#1D9E75">ISA Mining</span>
-            <span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(29,158,117,.22);border-radius:4px;padding:3px 9px;color:#1D9E75">BBNJ Treaty</span>
-          </div>
-          <button style="display:flex;align-items:center;gap:7px;width:100%;background:#FFFFFF;border:1.5px solid rgba(29,158,117,.22);border-radius:8px;padding:8px 12px;font-family:var(--font-sans);font-size:12px;font-weight:500;color:#1D9E75;cursor:pointer">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4 4V3a1.5 1.5 0 011.5-1.5h5A1.5 1.5 0 0112 3v5a1.5 1.5 0 01-1.5 1.5H9" stroke="currentColor" stroke-width="1.3"/></svg>
-            Copy for meeting
-          </button>
-        </div>
-      </div>
-      <!-- Regulatory calendar — from real app -->
-      <div style="padding:20px;border-bottom:1px solid #E8EAED">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9AA0A6;margin-bottom:12px">Regulatory calendar</div>
-        <div style="padding:11px 0;border-bottom:1px solid #E8EAED">
-          <div style="font-size:12px;font-weight:600;color:#D93025;margin-bottom:2px">31 Mar &mdash; 1 day</div>
-          <div style="font-size:13px;color:#202124;line-height:1.35">EU CSRD Ocean Reporting Deadline</div>
-        </div>
-        <div style="padding:11px 0;border-bottom:1px solid #E8EAED">
-          <div style="font-size:12px;font-weight:600;color:#D93025;margin-bottom:2px">3 Apr &mdash; 4 days</div>
-          <div style="font-size:13px;color:#202124;line-height:1.35">OSPAR Fisheries Recovery Zones</div>
-        </div>
-        <div style="padding:11px 0;border-bottom:1px solid #E8EAED">
-          <div style="font-size:12px;font-weight:600;color:#F9AB00;margin-bottom:2px">30 Apr &mdash; 31 days</div>
-          <div style="font-size:13px;color:#202124;line-height:1.35">ISA Environmental Safeguard Review</div>
-        </div>
-        <div style="padding:11px 0;border-bottom:1px solid #E8EAED">
-          <div style="font-size:12px;font-weight:600;color:#F9AB00;margin-bottom:2px">16 May &mdash; 47 days</div>
-          <div style="font-size:13px;color:#202124;line-height:1.35">ISWG-GHG 17</div>
-        </div>
-        <a href="#" style="font-size:12px;font-weight:500;color:#1D9E75;margin-top:12px;display:block">View full calendar &rarr;</a>
-      </div>
-      <div style="padding:14px 20px;border-top:1px solid #E8EAED;display:flex;align-items:center;gap:8px;cursor:pointer">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9AA0A6" stroke-width="1.3"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
-        <span style="font-size:13px;color:#5F6368">Settings &amp; sources</span>
-      </div>
-      <div style="padding:10px 20px;border-top:1px solid #E8EAED">
-        <a href="#" style="font-size:12px;font-weight:500;color:#1D9E75;cursor:pointer">How Tideline works &rarr;</a>
-      </div>
-    </div>
-
+        <div class="lcard" id="s1" onclick="openArticle()" style="cursor:pointer">
+          <div class="lmain">
+            <div class="sm"><span class="s-new">New</span><span class="s-viewed">Viewed</span><span class="cat">Ocean Governance</span></div>
+            <div class="lhl">BBNJ ratification: third deposit confirmed as Pacific bloc signals alignment</div>
+            <div class="lsum">The UN Treaty Collection confirmed a third instrument of ratification from a Pacific island state, bringing the total to 87: past the 60 required for entry into force. Analysts suggest coordinated timing with the July ISA session, accelerating implementation by an estimated two quarters.</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px"><span class="src t1">IISD Reporting Services ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s1" onclick="openSavePop('s1',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s1"></div>
+      </button>
+      <div class="save-pop" id="pop-s1">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s1','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s1','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s1','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s1','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
   </div>
 </div>
-</body>
-</html>
+<div class="ann-panel" id="ann-s1">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s1"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s1')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s1')">Save note</button>
+  </div>
+</div>
+    </div></div>
+          </div>
+          <div class="lright">
+            <div class="sit" id="s2" onclick="markRead('s2')" style="cursor:pointer"><div class="sm"><span class="s-new">New</span><span class="s-viewed">Viewed</span><span class="cat">Deep-Sea Mining</span></div><div class="sechl">ISA Council defers exploitation code vote as sponsoring state pressure mounts</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><span class="src t1">ISA / Bloomberg Law ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s2" onclick="openSavePop('s2',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s2"></div>
+      </button>
+      <div class="save-pop" id="pop-s2">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s2','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s2','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s2','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s2','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s2">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s2"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s2')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s2')">Save note</button>
+  </div>
+</div>
+    </div></div></div>
+            <div class="sit" id="s3" onclick="markRead('s3')" style="cursor:pointer"><div class="sm"><span class="s-new">New</span><span class="s-viewed">Viewed</span><span class="cat">Blue Finance</span></div><div class="sechl">Sovereign blue bond pipeline doubles as IFC publishes revised certification framework</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><span class="src t1">IFC / Climate Bonds Initiative ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s3" onclick="openSavePop('s3',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s3"></div>
+      </button>
+      <div class="save-pop" id="pop-s3">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s3','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s3','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s3','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s3','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s3">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s3"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s3')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s3')">Save note</button>
+  </div>
+</div>
+    </div></div></div>
+          </div>
+        </div>
+
+        <div class="g3">
+          <div class="gc" id="s4" onclick="markRead('s4')" style="cursor:pointer"><div class="sm"><span class="s-new">New</span><span class="s-viewed">Viewed</span><span class="cat">IUU Fishing</span><span class="tm fr">03:30</span></div><div class="gchl">Pacific coast guard intercepts vessel under falsified flag documentation</div><div class="gcsum">Port state authorities detained vessel pending investigation into registration and catch records.</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px"><span class="src">Maritime Executive ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s4" onclick="openSavePop('s4',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s4"></div>
+      </button>
+      <div class="save-pop" id="pop-s4">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s4','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s4','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s4','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s4','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s4">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s4"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s4')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s4')">Save note</button>
+  </div>
+</div>
+    </div></div></div>
+          <div class="gc" id="s5" onclick="markRead('s5')" style="cursor:pointer"><div class="sm"><span class="s-new">New</span><span class="s-viewed">Viewed</span><span class="cat">Climate</span><span class="tm fr">02:15</span></div><div class="gchl">IPCC confirms accelerated Southern Ocean acidification exceeds 2019 projections</div><div class="gcsum">Argo float data shows pH declining 40% faster than the most pessimistic scenario six years ago.</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px"><span class="src t1">IPCC / Nature Climate Change ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s5" onclick="openSavePop('s5',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s5"></div>
+      </button>
+      <div class="save-pop" id="pop-s5">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s5','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s5','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s5','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s5','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s5">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s5"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s5')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s5')">Save note</button>
+  </div>
+</div>
+    </div></div></div>
+          <div class="gc" id="s6" onclick="markRead('s6')" style="cursor:pointer"><div class="sm"><span class="s-new">New</span><span class="s-viewed">Viewed</span><span class="cat">30x30</span><span class="tm" style="color:var(--t4)">01:44</span></div><div class="gchl">Chile announces 740,000km² MPA ahead of CBD COP target review</div><div class="gcsum">Covers Nazca-Desventuradas seamount chain. Chile's protected EEZ now at 42%.</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px"><span class="src">IUCN / El Mercurio ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s6" onclick="openSavePop('s6',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s6"></div>
+      </button>
+      <div class="save-pop" id="pop-s6">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s6','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s6','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s6','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s6','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s6">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s6"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s6')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s6')">Save note</button>
+  </div>
+</div>
+    </div></div></div>
+        </div>
+
+        <div class="mc">
+          <div class="mhdr"><span class="mhdr-l">More from Tideline</span><span class="mhdr-c">38 stories today</span></div>
+          <div class="mr" id="s7" onclick="markRead('s7')" style="cursor:pointer"><span class="s-new" style="margin-right:6px">New</span><span class="s-viewed" style="margin-right:6px">Viewed</span><span class="mcat">Shipping</span><span class="mhl">IMO MEPC 83 adopts revised carbon intensity framework for bulk carriers over 25,000 DWT</span><span class="msrc t1">IMO ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s7a" onclick="openSavePop('s7a',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s7a"></div>
+      </button>
+      <div class="save-pop" id="pop-s7a">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s7a','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s7a','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s7a','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s7a','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s7a">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s7a"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s7a')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s7a')">Save note</button>
+  </div>
+</div>
+    </div></div>
+          <div class="mr" id="s8" onclick="markRead('s8')" style="cursor:pointer"><span class="s-new" style="margin-right:6px">New</span><span class="s-viewed" style="margin-right:6px">Viewed</span><span class="mcat">Governance</span><span class="mhl">OSPAR opens consultation on revised North-East Atlantic fisheries recovery zones</span><span class="msrc">OSPAR ↗</span></div>
+          <div class="mr sr" id="s9" onclick="markRead('s9')" style="cursor:pointer"><span class="s-new" style="margin-right:6px">New</span><span class="s-viewed" style="margin-right:6px">Viewed</span><span class="mcat">Blue Finance</span><span class="mhl">Fiji prices $150m sovereign blue bond with TNFD-aligned reporting covenant</span><span class="msrc t1">Reuters ↗</span></div>
+          <div class="mr sr" id="s10" onclick="markRead('s10')" style="cursor:pointer"><span class="s-new" style="margin-right:6px">New</span><span class="s-viewed" style="margin-right:6px">Viewed</span><span class="mcat">IUU Fishing</span><span class="mhl">INTERPOL Operation Liberterra identifies 136 vessels under investigation across 40 flag states</span><span class="msrc t1">INTERPOL ↗</span></div>
+          <div class="mr sr" id="s11" onclick="markRead('s11')" style="cursor:pointer"><span class="s-new" style="margin-right:6px">New</span><span class="s-viewed" style="margin-right:6px">Viewed</span><span class="mcat">Deep-Sea Mining</span><span class="mhl">Norway opens second licensing round for seabed mineral extraction in the Norwegian Sea</span><span class="msrc">Offshore Energy ↗</span><div style="position:relative;flex-shrink:0">
+      <button class="bm" id="bm-s8a" onclick="openSavePop('s8a',event)" title="Save to library">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h8v10l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div class="ann-dot" id="dot-s8a"></div>
+      </button>
+      <div class="save-pop" id="pop-s8a">
+  <div class="sp-head">Save to project</div>
+  <div class="sp-item selected" onclick="saveToProject('s8a','unsaved')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h8v12l-4-3-4 3V1z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".15"/></svg>
+    Library (general)
+  </div>
+  <div class="sp-item" onclick="saveToProject('s8a','bbnj')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    BBNJ Implementation
+  </div>
+  <div class="sp-item" onclick="saveToProject('s8a','isa')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/></svg>
+    ISA Deep-Sea Watch
+  </div>
+  <div class="sp-new" onclick="saveToProject('s8a','new')">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    New project...
+  </div>
+</div>
+<div class="ann-panel" id="ann-s8a">
+  <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">Add a note</div>
+  <textarea placeholder="Why is this relevant? What should you remember?..." id="note-s8a"></textarea>
+  <div class="ann-actions">
+    <span class="ann-cancel" onclick="cancelAnn('s8a')">Cancel</span>
+    <button class="ann-save-btn" onclick="saveNote('s8a')">Save note</button>
+  </div>
+</div>
+    </div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div class="rps"><div class="rpl"><span class="ldot"></span>Tideline connections</div><div class="rpsub">Patterns across trackers today.</div>
+        <div class="cbox"><div class="cbody">The ISA deferral and accelerating BBNJ ratification are directly linked. Three sponsoring states are conditioning their ISA vote on BBNJ implementation terms.</div><div class="ctags"><span class="ctag">ISA Mining</span><span class="ctag">BBNJ Treaty</span></div>
+          <button class="cpbtn" onclick="cpM(this)"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4 4V3a1.5 1.5 0 011.5-1.5h5A1.5 1.5 0 0112 3v5a1.5 1.5 0 01-1.5 1.5H9" stroke="currentColor" stroke-width="1.3"/></svg>Copy for meeting</button>
+        </div>
+      </div>
+
+      <!-- INVESTMENT VIEW -->
+      <div class="rp-investment">
+        <div class="rps">
+          <div class="rpl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 9l3-3 2.5 2.5 3-4 2 1.5" stroke="var(--teal)" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Entity watchlist
+          </div>
+          <div class="rpsub">Your tracked organisations &amp; funds.</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="padding:10px 0;border-bottom:1px solid var(--blt);display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--t1)">IFC Blue Finance</div>
+                <div style="font-size:11px;color:var(--teal);margin-top:1px">1 new today</div>
+              </div>
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--teal)"></span>
+            </div>
+            <div style="padding:10px 0;border-bottom:1px solid var(--blt);display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--t1)">Climate Bonds Initiative</div>
+                <div style="font-size:11px;color:var(--t4);margin-top:1px">No new today</div>
+              </div>
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--border)"></span>
+            </div>
+            <div style="padding:10px 0;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--t1)">Pacific Sovereign Bonds</div>
+                <div style="font-size:11px;color:var(--amber);margin-top:1px">Market activity</div>
+              </div>
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--amber)"></span>
+            </div>
+          </div>
+          <a class="rpmore" style="margin-top:10px;display:block">Manage watchlist →</a>
+        </div>
+        <div class="rps">
+          <div class="rpl">Portfolio exposure</div>
+          <div class="rpsub">Stories affecting your watchlist.</div>
+          <div style="padding:10px 0;border-bottom:1px solid var(--blt)">
+            <div style="font-size:12px;font-weight:500;color:var(--t1);margin-bottom:3px;line-height:1.4">IFC certification framework affects 7 blue bonds in pipeline</div>
+            <div style="font-size:11px;color:var(--teal)">Blue Finance tracker ↗</div>
+          </div>
+          <div style="padding:10px 0">
+            <div style="font-size:12px;font-weight:500;color:var(--t1);margin-bottom:3px;line-height:1.4">BBNJ ratification accelerates implementation timeline</div>
+            <div style="font-size:11px;color:var(--teal)">BBNJ tracker ↗</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NGO VIEW -->
+      <div class="rp-ngo">
+        <div class="rps">
+          <div class="rpl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 9V7l6-6 2 2-6 6H1z" stroke="var(--teal)" stroke-width="1.2"/></svg>
+            Draft generation
+          </div>
+          <div class="rpsub">Save time on reports &amp; responses.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div onclick="showPage('pg-research')" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-size:12px;font-weight:500;color:var(--t1);margin-bottom:3px">Situation report</div>
+              <div style="font-size:11px;color:var(--t3);line-height:1.4">Draft a 2-page update on BBNJ developments this week</div>
+            </div>
+            <div onclick="showPage('pg-research')" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-size:12px;font-weight:500;color:var(--t1);margin-bottom:3px">Consultation response</div>
+              <div style="font-size:11px;color:var(--t3);line-height:1.4">Outline a response to the OSPAR North-East Atlantic proposal</div>
+            </div>
+            <div onclick="showPage('pg-research')" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-size:12px;font-weight:500;color:var(--t1);margin-bottom:3px">Briefing note</div>
+              <div style="font-size:11px;color:var(--t3);line-height:1.4">Summarise the ISA deferral for a non-technical audience</div>
+            </div>
+          </div>
+        </div>
+        <div class="rps">
+          <div class="rpl">Upcoming consultations</div>
+          <div style="padding:10px 0;border-bottom:1px solid var(--blt)">
+            <div style="font-size:12px;font-weight:600;color:var(--teal);margin-bottom:2px">Closes 3 Apr: 8 days</div>
+            <div style="font-size:13px;font-weight:400;color:var(--t1)">OSPAR North-East Atlantic Fisheries</div>
+          </div>
+          <div style="padding:10px 0">
+            <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:2px">Closes 30 Apr: 35 days</div>
+            <div style="font-size:13px;font-weight:400;color:var(--t1)">ISA Environmental Safeguards Review</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JOURNALISM VIEW -->
+      <div class="rp-journalism">
+        <div class="rps">
+          <div class="rpl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.5" stroke="var(--teal)" stroke-width="1.2"/><path d="M8 8l3 3" stroke="var(--teal)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Recently updated entities
+          </div>
+          <div class="rpsub">New mentions in the last 24h.</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div onclick="showPage('pg-entities')" style="padding:10px 0;border-bottom:1px solid var(--blt);cursor:pointer;display:flex;align-items:center;justify-content:space-between" onmouseover="this.querySelector('div').style.color='var(--teal)'" onmouseout="this.querySelector('div').style.color='var(--t1)'">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--t1);transition:color .12s">International Seabed Authority</div>
+                <div style="font-size:11px;color:var(--t4);margin-top:1px">3 new mentions today</div>
+              </div>
+              <span style="font-size:10px;font-weight:700;background:var(--teal);color:#fff;border-radius:4px;padding:2px 6px">New</span>
+            </div>
+            <div onclick="showPage('pg-entities')" style="padding:10px 0;border-bottom:1px solid var(--blt);cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--t1)">Michael Lodge</div>
+                <div style="font-size:11px;color:var(--t4);margin-top:1px">2 new mentions today</div>
+              </div>
+              <span style="font-size:10px;font-weight:700;background:var(--teal);color:#fff;border-radius:4px;padding:2px 6px">New</span>
+            </div>
+            <div onclick="showPage('pg-entities')" style="padding:10px 0;cursor:pointer">
+              <div style="font-size:13px;font-weight:500;color:var(--t1)">Pacific Island Forum</div>
+              <div style="font-size:11px;color:var(--t4);margin-top:1px">1 new mention today</div>
+            </div>
+          </div>
+          <a class="rpmore">View all entities →</a>
+        </div>
+        <div class="rps">
+          <div class="rpl">Archive search</div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:6px 14px;margin-bottom:10px">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="#9AA0A6" stroke-width="1.3"/><path d="M9 9l3 3" stroke="#9AA0A6" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <input onclick="showPage('pg-research')" placeholder="Search the archive..." style="border:none;outline:none;background:transparent;font-family:var(--f);font-size:12px;color:var(--t1);flex:1;cursor:pointer" readonly/>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span onclick="showPage('pg-research')" style="font-size:11px;border:1px solid var(--border);border-radius:20px;padding:3px 9px;color:var(--t3);cursor:pointer">ISA 2024–25</span>
+            <span onclick="showPage('pg-research')" style="font-size:11px;border:1px solid var(--border);border-radius:20px;padding:3px 9px;color:var(--t3);cursor:pointer">BBNJ timeline</span>
+            <span onclick="showPage('pg-research')" style="font-size:11px;border:1px solid var(--border);border-radius:20px;padding:3px 9px;color:var(--t3);cursor:pointer">Enforcement Q1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESG VIEW -->
+      <div class="rp-esg">
+        <div class="rps">
+          <div class="rpl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4"/><path d="M6 3v3l2 1" stroke="var(--teal)" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Compliance deadlines
+          </div>
+          <div class="rpsub">Upcoming regulatory obligations.</div>
+          <div style="padding:10px 0;border-bottom:1px solid var(--blt)">
+            <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:3px">31 Mar: 5 days</div>
+            <div style="font-size:13px;font-weight:500;color:var(--t1);margin-bottom:3px">EU CSRD Ocean Reporting</div>
+            <div style="font-size:11px;color:var(--t3)">Mandatory disclosure for in-scope companies</div>
+          </div>
+          <div style="padding:10px 0;border-bottom:1px solid var(--blt)">
+            <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:3px">14 Jul: 109 days</div>
+            <div style="font-size:13px;font-weight:500;color:var(--t1);margin-bottom:3px">ISA Council Session 29</div>
+            <div style="font-size:11px;color:var(--t3)">Seabed mineral extraction regulations</div>
+          </div>
+          <div style="padding:10px 0">
+            <div style="font-size:12px;font-weight:600;color:var(--t4);margin-bottom:3px">Q4 2026</div>
+            <div style="font-size:13px;font-weight:500;color:var(--t1);margin-bottom:3px">TNFD v2 Ocean Guidance</div>
+            <div style="font-size:11px;color:var(--t3)">Updated ocean-specific disclosure metrics</div>
+          </div>
+        </div>
+        <div class="rps">
+          <div class="rpl">TNFD tags in your library</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;background:var(--teal-bg);border:1px solid var(--teal-b);border-radius:20px;padding:3px 10px;color:var(--teal)">Governance · 8</span>
+            <span style="font-size:11px;font-weight:600;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--t3)">Strategy · 3</span>
+            <span style="font-size:11px;font-weight:600;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--t3)">Metrics · 5</span>
+            <span style="font-size:11px;font-weight:600;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--t3)">Risk · 2</span>
+          </div>
+          <a class="rpmore" onclick="showPage('pg-research')">Generate TNFD summary →</a>
+        </div>
+      </div>
+      <div class="rp-default"><div class="rps" style="flex:1"><div class="rpl">Regulatory calendar</div>
+        <div class="crow"><div class="cdate cu">31 Mar: 5 days</div><div class="ctitle">EU CSRD Ocean Reporting Deadline</div><div class="cadd" onclick="showToast('Added to calendar')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x=".5" y="1.5" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 .5v1M8 .5v1M.5 4h10M5.5 6v3M4 7.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Add to calendar</div></div>
+        <div class="crow"><div class="cdate cs">3 Apr: 8 days</div><div class="ctitle">BBNJ Preparatory Committee</div><div class="cadd" onclick="showToast('Added to calendar')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x=".5" y="1.5" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 .5v1M8 .5v1M.5 4h10M5.5 6v3M4 7.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Add to calendar</div></div>
+        <div class="crow"><div class="cdate cn">14 Jul</div><div class="ctitle">ISA Council Session 29</div></div>
+        <div class="crow"><div class="cdate cn">22 Sep</div><div class="ctitle">UN Ocean Conference 2026</div></div>
+        <a class="rpmore">View full calendar →</a>
+      </div>
+      <div class="rpfoot"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--t4)" stroke-width="1.3"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg><span class="rpfoot-l">Settings &amp; sources</span></div><div style="padding:10px 20px;border-top:1px solid var(--blt)"><a style="font-size:12px;font-weight:500;color:var(--teal);cursor:pointer;text-decoration:none">How Tideline works →</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESEARCH PAGE -->
+
+</body></html>
