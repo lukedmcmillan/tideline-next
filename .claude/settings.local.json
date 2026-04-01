@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/luke.mcmillan/tideline-next -name prisma* -o -name schema*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git rebase:*)",
+      "Bash(find C:Usersluke.mcmillantideline-next -name .env* -o -name *.sql -o -name *migration*)",
+      "Bash(grep -r \"is_pro\\\\|subscription\\\\|trial_end\\\\|payment\" C:Usersluke.mcmillantideline-next --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"webhook\\\\|stripe.webhooks\\\\|Stripe.Event\\\\|signing.secret\" C:Usersluke.mcmillantideline-next --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"schema\\\\|CREATE TABLE\\\\|ALTER TABLE\" C:Usersluke.mcmillantideline-next --include=*.sql --include=*.ts --include=*.tsx)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep -n subscription? /c/Users/luke.mcmillan/tideline-next/node_modules/stripe/types/Invoices.d.ts)",
+      "Bash(grep -n subscription.*: /c/Users/luke.mcmillan/tideline-next/node_modules/stripe/types/Invoices.d.ts)",
+      "Bash(grep -B2 -A2 items.*: /c/Users/luke.mcmillan/tideline-next/node_modules/stripe/types/Subscriptions.d.ts)",
+      "Bash(curl:*)",
+      "Bash(python3 -m json.tool)",
+      "Bash(npm install:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(f''''{e[governance_bodies][abbreviation]:8} {e[significance]:10} {e[starts_at][:10]}  {e[title][:80]}''''\\) for e in d[''''events'''']]\")",
+      "Bash(git rm:*)",
+      "Bash(openssl rand:*)",
+      "Bash(npx vercel:*)",
+      "Bash(node -e \"const c=[];process.stdin.on\\(''''data'''',d=>c.push\\(d\\)\\);process.stdin.on\\(''''end'''',\\(\\)=>console.log\\(JSON.stringify\\(JSON.parse\\(Buffer.concat\\(c\\).toString\\(\\)\\),null,2\\)\\)\\)\")",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(node -e \"const c=[];process.stdin.on\\(''''data'''',d=>c.push\\(d\\)\\);process.stdin.on\\(''''end'''',\\(\\)=>{try{console.log\\(JSON.stringify\\(JSON.parse\\(Buffer.concat\\(c\\).toString\\(\\)\\),null,2\\)\\)}catch\\(e\\){console.log\\(Buffer.concat\\(c\\).toString\\(\\)\\)}}\\)\")",
+      "Bash(node:*)"
+    ]
+  }
+}
