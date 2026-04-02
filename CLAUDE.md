@@ -104,3 +104,16 @@ All pages use **inline styles** (`style={{...}}`), not Tailwind utility classes 
 ## Always read before building
 
 Before writing any copy or building any UI component, read MESSAGING_HOUSE.md in the root of this project and apply every rule in it without being asked.
+
+## Workspace Design Standard
+
+The project creation panel established in April 2026 is the visual standard for all workspace UI.
+Key rules:
+- White background, left-aligned content, 48px left padding
+- Grid gaps as borders (1px #E8EAED background, white cards)
+- Selected state: teal top border 3px + #E6F4F1 background
+- Underline-only inputs (Material Design style, no box borders)
+- DM Sans only, no serif, no monospace except status bar
+- Buttons: 4px radius, teal primary, right-aligned actions
+- Never dark backgrounds in workspace content area
+- This style must be preserved across all future workspace changes

@@ -8,21 +8,20 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 
 // ── Design tokens ────────────────────────────────────────────────────────
-const BG     = "#F8F9FA";
-const WHITE  = "#FFFFFF";
-const NAVY   = "#0A1628";
-const NAVY2  = "#0D1F35";
-const TEAL   = "#1D9E75";
-const T1     = "#202124";
-const T2     = "#3C4043";
-const T3     = "#5F6368";
-const T4     = "#9AA0A6";
-const BORDER = "#DADCE0";
-const BLT    = "#E8EAED";
-const F      = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+const BG    = "#F9FAFB";
+const WHITE = "#FFFFFF";
+const TEAL  = "#0E7C86";
+const T1    = "#111827";
+const T2    = "#374151";
+const T3    = "#6B7280";
+const T4    = "#9CA3AF";
+const BD    = "#E5E7EB";
+const R     = 4;
+const F     = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+const M     = "var(--font-mono), 'DM Mono', monospace";
 
-interface NewStory { id: string; title: string; source_name: string; topic: string; published_at: string; short_summary?: string | null }
-interface SourceStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null }
+interface SourceStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null; source_type?: string }
+interface AskResult { answer: string; sources?: { title: string; source_name: string; published_at: string; link: string; source_type: string; similarity: number }[] }
 
 function decodeHtml(str: string): string {
   return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&#8217;/g, "\u2019").replace(/&#8216;/g, "\u2018").replace(/&#8220;/g, "\u201C").replace(/&#8221;/g, "\u201D").replace(/&#8211;/g, "-").replace(/&#8212;/g, "\u2014").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, c) => String.fromCharCode(parseInt(c)));
@@ -30,6 +29,10 @@ function decodeHtml(str: string): string {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function todayStr() {
+  return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
 const TOPIC_MAP: Record<string, string[]> = {
@@ -51,130 +54,406 @@ function detectTopics(text: string): string[] {
   return [...topics];
 }
 
-// ── Dismissed banners ────────────────────────────────────────────────────
-function isDismissed(docId: string): boolean {
-  try { const raw = localStorage.getItem("tideline_dismissed_banners"); if (raw) return JSON.parse(raw).includes(docId); } catch {} return false;
+function isPrimary(t?: string) { return t === "gov" || t === "reg"; }
+
+const PLACEHOLDERS: Record<string, string[]> = {
+  governance: ["What changed in BBNJ ratification this week?", "Summarise the latest ISA Council session"],
+  dsm: ["What is the ISA moratorium status?", "Summarise the deep-sea mining debate"],
+  iuu: ["What are the latest IUU enforcement actions?", "Summarise China DWF enforcement this month"],
+  bluefinance: ["What blue bonds were issued recently?", "Summarise active debt-for-nature swaps"],
+};
+const DEF_PH = ["What changed in ocean governance this week?", "Summarise the ISA moratorium debate"];
+
+function getPlaceholder(topics: string[]): string {
+  for (const t of topics) { if (PLACEHOLDERS[t]) return PLACEHOLDERS[t][Math.floor(Math.random() * 2)]; }
+  return DEF_PH[Math.floor(Math.random() * 2)];
 }
-function dismissBanner(docId: string) {
-  try { const raw = localStorage.getItem("tideline_dismissed_banners"); const arr: string[] = raw ? JSON.parse(raw) : []; if (!arr.includes(docId)) arr.push(docId); localStorage.setItem("tideline_dismissed_banners", JSON.stringify(arr.slice(-50))); } catch {}
-}
 
-// ── New stories banner ───────────────────────────────────────────────────
-function NewStoriesBanner({ docId, topics, since, createdAt }: { docId: string; topics: string[]; since: string; createdAt?: string }) {
-  const [stories, setStories] = useState<NewStory[]>([]);
-  const [dismissed, setDismissed] = useState(() => isDismissed(docId));
-  const isNew = createdAt && since && Math.abs(new Date(since).getTime() - new Date(createdAt).getTime()) < 60000;
+// ── Button styles ────────────────────────────────────────────────────────
+const btnSec = (ov?: React.CSSProperties): React.CSSProperties => ({
+  height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center",
+  padding: "0 12px", fontSize: 13, fontWeight: 500, fontFamily: F,
+  border: `1px solid ${BD}`, borderRadius: R, cursor: "pointer",
+  background: WHITE, color: T2, ...ov,
+});
 
-  useEffect(() => {
-    if (dismissed || isNew || topics.length === 0 || !since) return;
-    fetch(`/api/projects/new-stories?topics=${topics.join(",")}&since=${since}`)
-      .then(r => r.ok ? r.json() : { stories: [] })
-      .then(d => setStories(d.stories || []))
-      .catch(() => {});
-  }, [topics.join(","), since, dismissed, isNew]);
+const btnPri = (ov?: React.CSSProperties): React.CSSProperties => ({
+  height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center",
+  padding: "0 14px", fontSize: 13, fontWeight: 500, fontFamily: F,
+  border: "none", borderRadius: R, cursor: "pointer",
+  background: TEAL, color: WHITE, ...ov,
+});
 
-  if (dismissed || isNew || stories.length === 0) return null;
+// ── Field schemas per project type ────────────────────────────────────────
+interface FieldDef { key: string; label: string; type: "text" | "textarea" | "date" | "select"; options?: string[]; rows?: number; defaultValue?: string }
 
+const FIELD_SCHEMAS: Record<string, FieldDef[]> = {
+  situation_report: [
+    { key: "topic", label: "Topic", type: "text" },
+    { key: "as_of", label: "As of date", type: "date", defaultValue: new Date().toISOString().split("T")[0] },
+  ],
+  regulatory_watch: [
+    { key: "regulation", label: "Regulation or Treaty", type: "text" },
+    { key: "jurisdiction", label: "Jurisdiction", type: "text" },
+    { key: "current_status", label: "Current Status", type: "text" },
+    { key: "next_deadline", label: "Next Deadline", type: "date" },
+  ],
+  investigation: [
+    { key: "subject", label: "Subject", type: "text" },
+    { key: "hypothesis", label: "Hypothesis", type: "textarea", rows: 3 },
+    { key: "confidence", label: "Confidence Level", type: "select", options: ["Low", "Building", "Strong"] },
+  ],
+  briefing_note: [
+    { key: "topic", label: "Topic", type: "text" },
+    { key: "prepared_for", label: "Prepared for", type: "text" },
+    { key: "date", label: "Date", type: "date", defaultValue: new Date().toISOString().split("T")[0] },
+    { key: "time_to_read", label: "Time to read", type: "select", options: ["2 minutes", "5 minutes", "10 minutes"] },
+  ],
+  deal_monitor: [
+    { key: "deal_name", label: "Deal or Instrument name", type: "text" },
+    { key: "parties", label: "Parties involved", type: "text" },
+    { key: "deal_size", label: "Deal size", type: "text" },
+    { key: "stage", label: "Current stage", type: "select", options: ["Rumoured", "Announced", "In Progress", "Closed", "Fallen Through"] },
+  ],
+};
+
+// ── Field input styles ───────────────────────────────────────────────────
+const fieldInput: React.CSSProperties = {
+  width: "100%", height: 36, border: "none", borderBottom: "2px solid #E0E0E0",
+  borderRadius: 0, fontSize: 14, fontFamily: F, color: "#202124",
+  padding: "0 0 4px 0", background: "transparent", outline: "none",
+};
+
+const fieldLabel: React.CSSProperties = {
+  display: "block", fontFamily: F, fontSize: 12, fontWeight: 500, color: "#202124", marginBottom: 4,
+};
+
+// ── Structured fields component ──────────────────────────────────────────
+function StructuredFields({ schema, fields, onChange }: {
+  schema: FieldDef[];
+  fields: Record<string, string>;
+  onChange: (key: string, value: string) => void;
+}) {
   return (
-    <div style={{ padding: "12px 24px", background: "rgba(29,158,117,.07)", borderBottom: `1px solid rgba(29,158,117,.15)`, display: "flex", alignItems: "flex-start", gap: 10 }}>
-      <span style={{ width: 7, height: 7, borderRadius: "50%", background: TEAL, marginTop: 5, flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: T1, marginBottom: 4 }}>{stories.length} new {stories.length === 1 ? "story" : "stories"} on {topics[0] || "your topics"} since your last visit</div>
-        {stories.map(s => (
-          <a key={s.id} href={`/platform/story/${s.id}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: TEAL, lineHeight: 1.5, textDecoration: "none" }}>
-            {decodeHtml(s.title).slice(0, 70)}{decodeHtml(s.title).length > 70 ? "..." : ""}
-          </a>
-        ))}
-      </div>
-      <button onClick={() => { setDismissed(true); dismissBanner(docId); }} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: T3, fontSize: 14, flexShrink: 0 }}>{"\u00D7"}</button>
+    <div>
+      {schema.map(f => (
+        <div key={f.key} style={{ marginBottom: 24 }}>
+          <label style={fieldLabel}>{f.label}</label>
+          {f.type === "textarea" ? (
+            <textarea
+              value={fields[f.key] || ""}
+              onChange={e => onChange(f.key, e.target.value)}
+              rows={f.rows || 3}
+              style={{ ...fieldInput, height: "auto", minHeight: 60, resize: "vertical", lineHeight: 1.6 }}
+              onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
+              onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = "#E0E0E0"; }}
+            />
+          ) : f.type === "select" ? (
+            <select
+              value={fields[f.key] || ""}
+              onChange={e => onChange(f.key, e.target.value)}
+              style={{ ...fieldInput, cursor: "pointer", appearance: "none" }}
+              onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
+              onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = "#E0E0E0"; }}
+            >
+              <option value="">Select...</option>
+              {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          ) : (
+            <input
+              type={f.type === "date" ? "date" : "text"}
+              value={fields[f.key] || ""}
+              onChange={e => onChange(f.key, e.target.value)}
+              style={fieldInput}
+              onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
+              onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = "#E0E0E0"; }}
+            />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
 
-// ── /ask overlay ─────────────────────────────────────────────────────────
-function AskOverlay({ editor, onClose }: { editor: ReturnType<typeof useEditor>; onClose: () => void }) {
+// ── Project types ────────────────────────────────────────────────────────
+const PROJECT_TYPES = [
+  {
+    id: "situation_report", label: "Situation Report", desc: "What is happening with a topic right now",
+    icon: <svg width="24" height="24" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke={TEAL} strokeWidth="1.5"/><line x1="10" y1="5" x2="10" y2="11" stroke={TEAL} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  },
+  {
+    id: "regulatory_watch", label: "Regulatory Watch", desc: "Track developments affecting a regulation or treaty",
+    icon: <svg width="24" height="24" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 7v6c0 3.5 3.5 5.5 7 8 3.5-2.5 7-4.5 7-8V7l-7-5z" stroke={TEAL} strokeWidth="1.5" strokeLinejoin="round"/></svg>,
+  },
+  {
+    id: "investigation", label: "Investigation", desc: "Build a case file on a developing story",
+    icon: <svg width="24" height="24" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke={TEAL} strokeWidth="1.5"/><line x1="12.5" y1="12.5" x2="17" y2="17" stroke={TEAL} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  },
+  {
+    id: "briefing_note", label: "Briefing Note", desc: "Prepare to speak or present on a topic",
+    icon: <svg width="24" height="24" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="1.5" stroke={TEAL} strokeWidth="1.5"/><line x1="7" y1="6" x2="13" y2="6" stroke={TEAL} strokeWidth="1.2"/><line x1="7" y1="9" x2="13" y2="9" stroke={TEAL} strokeWidth="1.2"/><line x1="7" y1="12" x2="11" y2="12" stroke={TEAL} strokeWidth="1.2"/></svg>,
+  },
+  {
+    id: "deal_monitor", label: "Deal Monitor", desc: "Track a transaction or financing instrument",
+    icon: <svg width="24" height="24" viewBox="0 0 20 20" fill="none"><polyline points="3,15 7,9 11,12 17,4" stroke={TEAL} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  },
+];
+
+// ── Project creation panel ───────────────────────────────────────────────
+function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: string) => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const canCreate = selected && name.trim().length > 0 && !creating;
+
+  const handleCreate = async () => {
+    if (!canCreate) return;
+    setCreating(true);
+    onCreate(name.trim(), selected!);
+  };
+
+  return (
+    <div style={{ background: WHITE, minHeight: "100vh", padding: "32px 0 40px 48px" }}>
+      <div style={{ maxWidth: 560 }}>
+        {/* Heading */}
+        <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 400, color: "#202124", letterSpacing: "-0.5px", margin: 0 }}>New project</h1>
+        <p style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: "#80868B", margin: "8px 0 20px" }}>Select a type, name your project, and start.</p>
+
+        {/* Card grid — gap-as-border technique */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "#E8EAED", marginBottom: 24 }}>
+          {PROJECT_TYPES.map((pt, i) => {
+            const isSelected = selected === pt.id;
+            const isLast = i === PROJECT_TYPES.length - 1;
+            return (
+              <div
+                key={pt.id}
+                onClick={() => setSelected(pt.id)}
+                style={{
+                  gridColumn: isLast ? "1 / -1" : undefined,
+                  padding: 14, cursor: "pointer",
+                  background: isSelected ? "#E6F4F1" : WHITE,
+                  borderTop: isSelected ? `3px solid ${TEAL}` : "3px solid transparent",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "#F8F9FA"; }}
+                onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = WHITE; }}
+              >
+                <div style={{ marginBottom: 8 }}>{pt.icon}</div>
+                <div style={{ fontFamily: F, fontSize: 15, fontWeight: 500, color: isSelected ? TEAL : "#202124", marginBottom: 4 }}>{pt.label}</div>
+                <div style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "#80868B", lineHeight: 1.4 }}>{pt.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Project name — Material underline input */}
+        <div style={{ marginTop: 16 }}>
+          <label style={{ display: "block", fontFamily: F, fontSize: 12, fontWeight: 500, color: "#5F6368", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>Project name</label>
+          <input
+            value={name} onChange={e => setName(e.target.value)}
+            placeholder="Name your project"
+            style={{
+              width: "100%", height: 40, padding: 0, fontSize: 16, fontFamily: F,
+              color: "#202124", background: "transparent",
+              border: "none", borderBottom: "2px solid #E8EAED",
+              borderRadius: 0, outline: "none",
+            }}
+            onFocus={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = TEAL; }}
+            onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = "#E8EAED"; }}
+            onKeyDown={e => { if (e.key === "Enter" && canCreate) handleCreate(); }}
+          />
+        </div>
+
+        {/* Action row */}
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginTop: 20 }}>
+          <span
+            onClick={() => { setSelected(null); setName(""); }}
+            style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: "#5F6368", cursor: "pointer", marginRight: 24 }}
+          >Cancel</span>
+          <button
+            onClick={handleCreate}
+            disabled={!canCreate}
+            style={{
+              height: 36, padding: "0 24px", fontSize: 14, fontWeight: 500, fontFamily: F,
+              color: canCreate ? WHITE : "#BDC1C6",
+              background: canCreate ? TEAL : "#F1F3F4",
+              border: "none", borderRadius: 4, cursor: canCreate ? "pointer" : "not-allowed",
+              boxShadow: canCreate ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
+            }}
+          >
+            {creating ? "Creating..." : "Create"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Left sidebar ─────────────────────────────────────────────────────────
+function WorkspaceSidebar({ projects, activeProject, onSelect, onNewProject }: {
+  projects: { name: string; count: number }[];
+  activeProject: string;
+  onSelect: (name: string) => void;
+  onNewProject: () => void;
+}) {
+  return (
+    <aside style={{
+      width: 220, background: BG, borderRight: `1px solid ${BD}`,
+      minHeight: "100vh", flexShrink: 0, display: "flex", flexDirection: "column", padding: "20px 0",
+    }}>
+      <div style={{ padding: "0 16px 14px", fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+        Projects
+      </div>
+      {projects.map(p => (
+        <button key={p.name} onClick={() => onSelect(p.name)} style={{
+          display: "flex", alignItems: "center", gap: 8, width: "100%",
+          padding: "8px 16px", background: "none", border: "none",
+          borderLeft: p.name === activeProject ? `3px solid ${TEAL}` : "3px solid transparent",
+          cursor: "pointer", textAlign: "left",
+        }}>
+          <span style={{
+            fontFamily: F, fontSize: 14, flex: 1,
+            color: p.name === activeProject ? T1 : T3,
+            fontWeight: p.name === activeProject ? 500 : 400,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>{p.name}</span>
+          {p.count > 0 && (
+            <span style={{ fontFamily: F, fontSize: 10, color: T4, background: WHITE, border: `1px solid ${BD}`, borderRadius: 10, padding: "1px 7px" }}>{p.count}</span>
+          )}
+        </button>
+      ))}
+      <button onClick={onNewProject} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 16px", fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, background: "none", border: "none", cursor: "pointer", marginTop: 4 }}>
+        + New project
+      </button>
+
+      <div style={{ padding: "20px 16px 10px", borderTop: `1px solid ${BD}`, marginTop: 16 }}>
+        <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase" }}>Trackers</div>
+      </div>
+      {[
+        { label: "BBNJ Treaty", href: "/tracker/bbnj" },
+        { label: "ISA Mining", href: "/tracker/isa" },
+        { label: "IUU Fishing", href: "/tracker/iuu" },
+        { label: "30x30", href: "/tracker/30x30" },
+        { label: "Blue Finance", href: "/tracker/blue-finance" },
+      ].map(t => (
+        <a key={t.label} href={t.href} style={{ display: "block", padding: "6px 16px", fontFamily: F, fontSize: 13, color: T3, textDecoration: "none" }}>{t.label}</a>
+      ))}
+    </aside>
+  );
+}
+
+// ── Research panel ───────────────────────────────────────────────────────
+function ResearchPanel({ editor, topics }: { editor: ReturnType<typeof useEditor> | null; topics: string[] }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  const [result, setResult] = useState<AskResult | null>(null);
+  const [sources, setSources] = useState<SourceStory[]>([]);
+  const [placeholder] = useState(() => getPlaceholder(topics));
 
   const submit = async () => {
-    if (!query.trim() || loading || !editor) return;
-    setLoading(true);
+    if (!query.trim() || loading) return;
+    setLoading(true); setResult(null); setSources([]);
     try {
       const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
       const d = await r.json();
       if (d.answer) {
-        editor.chain().focus().insertContent({
-          type: "blockquote",
-          content: [
-            { type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: d.answer }] },
-            { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: "Tideline Research" }, { type: "text", text: ` \u00B7 ${query.trim()}` }] },
-          ],
-        }).run();
+        setResult(d);
+        fetch("/api/stories?limit=8").then(r2 => r2.ok ? r2.json() : { stories: [] }).then(d2 => setSources(d2.stories || [])).catch(() => {});
       }
     } catch {}
-    onClose();
+    setLoading(false);
+  };
+
+  const insertAnswer = () => {
+    if (!editor || !result?.answer) return;
+    editor.chain().focus().insertContent({
+      type: "blockquote",
+      content: [
+        { type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: result.answer }] },
+        { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: "Tideline Research" }, { type: "text", text: ` \u00B7 ${query.trim()}` }] },
+      ],
+    }).run();
+    setResult(null); setQuery("");
+  };
+
+  const insertCitation = (s: SourceStory) => {
+    if (!editor) return;
+    const blocks: any[] = [
+      { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: decodeHtml(s.title) }] },
+      { type: "paragraph", content: [{ type: "text", text: `${s.source_name || "Source"}${s.published_at ? ` \u00B7 ${fmtDate(s.published_at)}` : ""}` }] },
+    ];
+    if (s.short_summary) blocks.push({ type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: s.short_summary }] });
+    editor.chain().focus().insertContent({ type: "blockquote", content: blocks }).run();
   };
 
   return (
-    <div style={{ marginBottom: 16, padding: "12px 16px", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,.06)" }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke={TEAL} strokeWidth="1.3"/><path d="M9.5 9.5l3 3" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/></svg>
-        <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); if (e.key === "Escape") onClose(); }} placeholder="Ask Tideline anything about ocean governance..." style={{ flex: 1, border: "none", outline: "none", fontSize: 13, fontFamily: F, color: T1, background: "transparent" }} />
-        <button onClick={submit} disabled={!query.trim() || loading} style={{ height: 28, fontSize: 12, fontWeight: 500, fontFamily: F, color: "#fff", background: query.trim() && !loading ? NAVY : T4, border: "none", borderRadius: 4, padding: "0 12px", cursor: query.trim() ? "pointer" : "default" }}>
-          {loading ? "Asking..." : "Ask"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Sources slide-out panel ──────────────────────────────────────────────
-function SourcesPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [sources, setSources] = useState<SourceStory[]>([]);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    fetch("/api/stories?limit=8").then(r => r.ok ? r.json() : { stories: [] }).then(d => setSources(d.stories || [])).catch(() => {});
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open, onClose]);
-
-  return (
-    <div ref={panelRef} style={{
-      position: "fixed", right: 0, top: 64, width: 320, height: "calc(100vh - 64px)",
-      background: WHITE, boxShadow: open ? "-4px 0 16px rgba(0,0,0,.08)" : "none",
-      transform: open ? "translateX(0)" : "translateX(320px)",
-      transition: "transform 0.2s ease",
-      zIndex: 150, display: "flex", flexDirection: "column", overflowY: "auto",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${BLT}` }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: T1 }}>Your sources</div>
-          <div style={{ fontSize: 12, color: T4, marginTop: 2 }}>Click + Insert to add a reference to your document</div>
+    <div style={{ width: 300, background: BG, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh", overflowY: "auto" }}>
+      <div style={{ padding: "16px 16px 14px", borderBottom: `1px solid ${BD}` }}>
+        <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Ask Tideline</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); }} placeholder={placeholder}
+            style={{ flex: 1, height: 32, padding: "0 10px", fontSize: 13, fontFamily: M, color: T1, background: WHITE, border: `1px solid ${BD}`, borderRadius: R, outline: "none" }} />
+          <button onClick={submit} disabled={!query.trim() || loading} style={btnPri({ height: 32, background: query.trim() && !loading ? TEAL : T4, cursor: query.trim() && !loading ? "pointer" : "default" })}>
+            {loading ? "Asking..." : "Ask"}
+          </button>
         </div>
-        <button onClick={onClose} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer", color: T3, fontSize: 14, flexShrink: 0 }}>{"\u00D7"}</button>
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-        {sources.map(s => (
-          <div key={s.id} style={{ padding: "12px 20px", borderBottom: `1px solid ${BLT}` }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.35, marginBottom: 4 }}>{decodeHtml(s.title).slice(0, 60)}{decodeHtml(s.title).length > 60 ? "..." : ""}</div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 11, color: T4 }}>{s.source_name} {s.published_at ? `\u00B7 ${fmtDate(s.published_at)}` : ""}</span>
-              <button onClick={() => window.dispatchEvent(new CustomEvent("tideline:insert-citation", { detail: { title: s.title, source_name: s.source_name, published_at: s.published_at, short_summary: s.short_summary } }))} style={{ height: 28, fontSize: 12, fontWeight: 500, fontFamily: F, color: T2, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "0 10px", cursor: "pointer" }}>+ Insert</button>
-            </div>
+
+      {result && (
+        <div style={{ padding: 16, borderBottom: `1px solid ${BD}` }}>
+          <div style={{ background: WHITE, border: `1px solid ${BD}`, borderRadius: R, padding: "14px 16px" }}>
+            <div style={{ fontFamily: F, fontSize: 14, color: T1, lineHeight: 1.7, marginBottom: 12 }}>{result.answer}</div>
+            {result.sources && result.sources.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                {result.sources.slice(0, 4).map((s, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: isPrimary(s.source_type) ? "rgba(14,124,134,.1)" : "#F3F4F6", color: isPrimary(s.source_type) ? TEAL : T4 }}>
+                      {isPrimary(s.source_type) ? "PRIMARY" : "SECONDARY"}
+                    </span>
+                    <span style={{ fontFamily: F, fontSize: 12, color: T3 }}>{s.source_name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={insertAnswer} style={{ width: "100%", height: 32, fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: R, cursor: "pointer" }}>
+              Insert into document
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {sources.length === 0 && !result && (
+        <div style={{ padding: "32px 16px", textAlign: "center" }}>
+          <div style={{ fontFamily: F, fontSize: 13, color: T4 }}>Ask a question to see relevant sources</div>
+        </div>
+      )}
+
+      {sources.length > 0 && (
+        <>
+          <div style={{ padding: "16px 16px 6px" }}>
+            <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase" }}>Sources</div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
+            {sources.map(s => (
+              <div key={s.id} style={{ padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
+                <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>
+                  {decodeHtml(s.title).slice(0, 70)}{decodeHtml(s.title).length > 70 ? "..." : ""}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: isPrimary(s.source_type) ? "rgba(14,124,134,.1)" : "#F3F4F6", color: isPrimary(s.source_type) ? TEAL : T4 }}>
+                      {isPrimary(s.source_type) ? "PRIMARY" : "SECONDARY"}
+                    </span>
+                    <span style={{ fontFamily: F, fontSize: 11, color: T4 }}>{s.source_name}</span>
+                  </div>
+                  <button onClick={() => insertCitation(s)} style={btnSec({ height: 24, fontSize: 11, padding: "0 8px" })}>Insert</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -186,26 +465,47 @@ function WorkspaceContent() {
 
   const [docId, setDocId] = useState<string | null>(null);
   const [docContent, setDocContent] = useState<any>(null);
-  const [docUpdatedAt, setDocUpdatedAt] = useState<string | undefined>();
-  const [docCreatedAt, setDocCreatedAt] = useState<string | undefined>();
   const [title, setTitle] = useState("");
-  const [titleFocused, setTitleFocused] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [showSources, setShowSources] = useState(false);
   const [showAsk, setShowAsk] = useState(false);
-  const [sourceCount, setSourceCount] = useState(0);
+  const [askInitialQuery, setAskInitialQuery] = useState("");
   const [ready, setReady] = useState(false);
+  const [showCreatePanel, setShowCreatePanel] = useState(false);
   const [detectedTopics, setDetectedTopics] = useState<string[]>([]);
+  const [projects, setProjects] = useState<{ name: string; count: number }[]>([]);
+  const [activeProject, setActiveProject] = useState("Workspace");
+  const [wordCount, setWordCount] = useState(0);
+  const [projectType, setProjectType] = useState<string | null>(null);
+  const [fields, setFields] = useState<Record<string, string>>({});
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLocal = docId === "local";
 
-  // Boot: load or create document
+  // Boot
   useEffect(() => {
-    const projectName = projectParam || "Workspace";
     let cancelled = false;
     async function boot() {
       try {
+        let projectName = projectParam || "";
+        const recentRes = await fetch("/api/projects");
+        if (recentRes.ok) {
+          const recentData = await recentRes.json();
+          const projList = recentData.projects || [];
+          setProjects(projList);
+          if (!projectName && projList.length > 0) {
+            projectName = projList[0].name;
+            if (projList[0].project_type) setProjectType(projList[0].project_type);
+          }
+        }
+
+        // No projects and no param — show creation panel
+        if (!projectName) {
+          setShowCreatePanel(true);
+          setReady(true);
+          return;
+        }
+        setActiveProject(projectName);
+
         const projRes = await fetch(`/api/projects/${encodeURIComponent(projectName)}`);
         if (projRes.ok) {
           const d = await projRes.json();
@@ -215,14 +515,13 @@ function WorkspaceContent() {
             if (docRes.ok) {
               const doc = await docRes.json();
               setDocId(doc.id); setDocContent(doc.content || null);
-              setDocUpdatedAt(doc.updated_at); setDocCreatedAt(doc.created_at);
+              if (doc.content?.fields) setFields(doc.content.fields);
               if (doc.title && doc.title !== "Untitled document" && doc.title !== "Project brief") setTitle(doc.title);
               setReady(true); return;
             }
           }
         }
         if (cancelled) return;
-        // Create new doc
         const createRes = await fetch("/api/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ project_name: projectName, title: "Untitled document" }) });
         if (createRes.ok) {
           const created = await createRes.json();
@@ -237,36 +536,26 @@ function WorkspaceContent() {
     return () => { cancelled = true; };
   }, [projectParam]);
 
-  // Fetch source count
-  useEffect(() => {
-    fetch("/api/stories?limit=8").then(r => r.ok ? r.json() : { stories: [] }).then(d => setSourceCount((d.stories || []).length)).catch(() => {});
-  }, []);
-
-  // Auto-save
-  const doSave = useCallback((ed: ReturnType<typeof useEditor>) => {
+  // Auto-save (fields + notes)
+  const doSave = useCallback((ed: ReturnType<typeof useEditor>, currentFields?: Record<string, string>) => {
     if (!ed || isLocal || !docId) return;
     setSaveStatus("saving");
-    fetch(`/api/documents/${docId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: ed.getJSON(), content_text: ed.getText() }) })
+    const content = { fields: currentFields || fields, notes: ed.getJSON() };
+    fetch(`/api/documents/${docId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, content_text: ed.getText() }) })
       .then(() => { setSaveStatus("saved"); setTimeout(() => setSaveStatus("idle"), 2000); })
       .catch(() => setSaveStatus("idle"));
-  }, [docId, isLocal]);
+  }, [docId, isLocal, fields]);
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit,
-      Placeholder.configure({ placeholder: "Start writing your brief, notes, or draft response. Type /ask to query Tideline intelligence." }),
-      Typography,
-    ],
+    extensions: [StarterKit, Placeholder.configure({ placeholder: "Add notes, evidence, or draft content here..." }), Typography],
     editorProps: {
-      attributes: { style: `outline:none;min-height:calc(100vh - 200px);font-family:${F};font-size:14px;line-height:1.75;color:${T1};` },
+      attributes: { style: `outline:none;min-height:200px;font-family:${F};font-size:14px;line-height:1.7;color:${T1};` },
       handleKeyDown: (_view, event) => {
         if (event.key === " " && editor) {
           const { $head } = editor.state.selection;
-          const text = $head.parent.textContent;
-          if (text.endsWith("/ask")) {
-            const from = $head.pos - 4;
-            editor.chain().deleteRange({ from, to: $head.pos }).run();
+          if ($head.parent.textContent.endsWith("/ask")) {
+            editor.chain().deleteRange({ from: $head.pos - 4, to: $head.pos }).run();
             setShowAsk(true);
             return true;
           }
@@ -274,153 +563,167 @@ function WorkspaceContent() {
         return false;
       },
     },
-    content: docContent || undefined,
+    content: docContent?.notes || docContent || undefined,
     autofocus: "end",
     onUpdate: ({ editor: ed }) => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => doSave(ed), 2000);
+      const text = ed.getText();
+      setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
     },
   });
 
-  // Citation insert from sources panel
-  useEffect(() => {
-    const handler = (e: Event) => {
-      if (!editor) return;
-      const d = (e as CustomEvent).detail;
-      if (!d?.title) return;
-      const blocks: any[] = [
-        { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: decodeHtml(d.title) }] },
-        { type: "paragraph", content: [{ type: "text", text: `${d.source_name || "Source"}${d.published_at ? ` \u00B7 ${fmtDate(d.published_at)}` : ""}` }] },
-      ];
-      if (d.short_summary) blocks.push({ type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: d.short_summary }] });
-      editor.chain().focus("end").insertContent({ type: "blockquote", content: blocks }).run();
-    };
-    window.addEventListener("tideline:insert-citation", handler);
-    return () => window.removeEventListener("tideline:insert-citation", handler);
-  }, [editor]);
-
-  // Cleanup
   useEffect(() => { return () => { if (saveTimer.current) clearTimeout(saveTimer.current); }; }, []);
 
   const saveTitle = (val: string) => {
     if (isLocal || !docId) return;
     const t = val.trim() || "Untitled document";
-    const tags = detectTopics(t);
-    setDetectedTopics(tags);
-    fetch(`/api/documents/${docId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: t, tags }) }).catch(() => {});
+    setDetectedTopics(detectTopics(t));
+    fetch(`/api/documents/${docId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: t, tags: detectTopics(t) }) }).catch(() => {});
+  };
+
+  const handleCreateProject = async (name: string, type: string) => {
+    try {
+      const projRes = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, project_type: type }),
+      });
+      if (!projRes.ok) return;
+      const projData = await projRes.json();
+      const newDocId = projData.document_id;
+      if (!newDocId) return;
+
+      // Set defaults from schema
+      const schema = FIELD_SCHEMAS[type] || [];
+      const defaults: Record<string, string> = {};
+      for (const f of schema) { if (f.defaultValue) defaults[f.key] = f.defaultValue; }
+
+      setDocId(newDocId);
+      setTitle(name);
+      setActiveProject(name);
+      setProjectType(type);
+      setFields(defaults);
+      setProjects(prev => [{ name, count: 0 }, ...prev]);
+
+      // Save initial content
+      if (editor) editor.commands.clearContent();
+      fetch(`/api/documents/${newDocId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: { fields: defaults, notes: null }, title: name }),
+      }).catch(() => {});
+
+      setShowCreatePanel(false);
+    } catch {}
+  };
+
+  const handleFieldChange = (key: string, value: string) => {
+    const updated = { ...fields, [key]: value };
+    setFields(updated);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => { if (editor) doSave(editor, updated); }, 2000);
   };
 
   if (!ready) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: T4, fontSize: 13, fontFamily: F }}>Loading...</div>;
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: WHITE, color: T4, fontSize: 13, fontFamily: F }}>Loading...</div>;
+  }
+
+  if (showCreatePanel) {
+    return <CreateProjectPanel onCreate={handleCreateProject} />;
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: F, position: "relative" }}>
+    <div style={{ display: "flex", height: "100vh", fontFamily: F }}>
       <style>{`
         .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: ${T4}; pointer-events: none; height: 0; }
         .ProseMirror { outline: none; }
-        .ProseMirror h2 { font-size: 18px; font-weight: 600; margin: 24px 0 8px; font-family: ${F}; }
+        .ProseMirror h2 { font-size: 18px; font-weight: 600; margin: 20px 0 8px; font-family: ${F}; color: ${T1}; }
         .ProseMirror p { margin: 0 0 8px; }
-        .ProseMirror ul { padding-left: 20px; margin: 0 0 8px; }
+        .ProseMirror ul { padding-left: 24px; margin: 0 0 8px; }
         .ProseMirror li { margin: 0 0 4px; }
-        .ProseMirror blockquote { border-left: 2px solid ${TEAL}; padding: 12px 16px; background: rgba(29,158,117,.06); margin: 12px 0; border-radius: 6px; }
-        .ProseMirror blockquote p { color: ${T2}; font-size: 13px; line-height: 1.65; }
+        .ProseMirror blockquote { border-left: 2px solid ${TEAL}; padding: 12px 16px; background: rgba(14,124,134,.04); margin: 12px 0; border-radius: ${R}px; }
+        .ProseMirror blockquote p { color: ${T2}; font-size: 13px; line-height: 1.6; }
         .ProseMirror blockquote p:first-child { font-weight: 500; }
+        .ws-toolbar { display: none; }
+        .ProseMirror:focus-within ~ .ws-toolbar-anchor .ws-toolbar { display: flex; }
       `}</style>
 
-      {/* ── TOP BAR ── */}
-      <div style={{ height: 56, background: WHITE, boxShadow: "0 1px 3px rgba(0,0,0,.08)", display: "flex", alignItems: "center", padding: "0 20px", flexShrink: 0, zIndex: 10 }}>
-        {/* Left: breadcrumb + title */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-          <a href="/platform/workspace" style={{ fontSize: 13, color: T3, textDecoration: "none", whiteSpace: "nowrap" }}>{"\u2190"} Workspace</a>
-          <span style={{ color: BLT }}>/</span>
-          <input
-            value={title} onChange={e => setTitle(e.target.value)}
-            onFocus={() => setTitleFocused(true)}
-            onBlur={() => { setTitleFocused(false); saveTitle(title); }}
-            placeholder="Untitled project"
-            style={{ flex: 1, fontSize: 14, fontWeight: 500, color: title ? T1 : T4, fontFamily: F, border: "none", outline: "none", background: "transparent", minWidth: 0 }}
-          />
+      <WorkspaceSidebar projects={projects} activeProject={activeProject} onSelect={(name) => { window.location.href = `/platform/workspace?project=${encodeURIComponent(name)}`; }} onNewProject={() => setShowCreatePanel(true)} />
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: WHITE }}>
+        {/* Toolbar */}
+        <div style={{ height: 44, display: "flex", alignItems: "center", padding: "0 16px", gap: 4, borderBottom: `2px solid ${TEAL}`, flexShrink: 0, background: WHITE }}>
+          <button onClick={() => { setAskInitialQuery(""); setShowAsk(!showAsk); }} style={btnSec({ color: showAsk ? TEAL : T2, borderColor: showAsk ? TEAL : BD })}>Ask Tideline</button>
+          <div style={{ flex: 1 }} />
+          <button onClick={() => { if (!isLocal && docId) window.open(`/api/documents/${docId}/export`, "_blank"); }} style={btnPri({ height: 28 })}>Export to Word</button>
         </div>
 
-        {/* Right: save status + buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <span style={{ fontSize: 12, color: T4, whiteSpace: "nowrap" }}>
-            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved \u2713" : ""}
+        {/* Content area */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 0 100px" }}>
+            {/* Ask overlay */}
+            {showAsk && (
+              <div style={{ marginBottom: 20, padding: "14px 16px", background: WHITE, border: `1px solid ${BD}`, borderRadius: R }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input autoFocus value={askInitialQuery || undefined} onChange={e => setAskInitialQuery(e.target.value)} onKeyDown={e => { if (e.key === "Escape") setShowAsk(false); }} placeholder={getPlaceholder(detectedTopics)}
+                    style={{ flex: 1, height: 32, padding: "0 10px", fontSize: 13, fontFamily: M, color: T1, background: BG, border: `1px solid ${BD}`, borderRadius: R, outline: "none" }} />
+                  <button onClick={() => setShowAsk(false)} style={btnSec({ height: 32 })}>Close</button>
+                </div>
+              </div>
+            )}
+
+            {/* Title */}
+            <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => saveTitle(title)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }} placeholder="Untitled project"
+              style={{ width: "100%", fontSize: 28, fontWeight: 600, fontFamily: F, color: title ? "#202124" : T4, border: "none", outline: "none", background: "transparent", padding: 0 }} />
+            <div style={{ height: 1, background: "#E0E0E0", margin: "14px 0 28px" }} />
+
+            {/* Structured fields */}
+            {projectType && FIELD_SCHEMAS[projectType] && (
+              <>
+                <StructuredFields schema={FIELD_SCHEMAS[projectType]} fields={fields} onChange={handleFieldChange} />
+                <div style={{ height: 1, background: "#E0E0E0", margin: "24px 0" }} />
+              </>
+            )}
+
+            {/* Notes section label */}
+            <div style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 }}>Notes</div>
+
+            {/* Tiptap notes editor */}
+            <EditorContent editor={editor} />
+
+            {/* Selection-only format toolbar */}
+            {editor && !editor.state.selection.empty && (
+              <div style={{ position: "fixed", top: 100, left: "50%", transform: "translateX(-50%)", zIndex: 20, display: "flex", gap: 2, padding: "4px 6px", background: "#202124", borderRadius: 6, boxShadow: "0 4px 12px rgba(0,0,0,.2)" }}>
+                {[
+                  { label: "Bold", cmd: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold") },
+                  { label: "Italic", cmd: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive("italic") },
+                  { label: "H2", cmd: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive("heading", { level: 2 }) },
+                  { label: "List", cmd: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList") },
+                ].map(b => (
+                  <button key={b.label} onMouseDown={e => { e.preventDefault(); b.cmd(); }} style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: 500, fontFamily: F, color: "#fff", background: b.active ? "rgba(255,255,255,.2)" : "transparent", border: "none", borderRadius: 4, cursor: "pointer" }}>{b.label}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status bar */}
+        <div style={{ height: 32, display: "flex", alignItems: "center", padding: "0 20px", borderTop: "1px solid #E5E7EB", background: BG, flexShrink: 0 }}>
+          <span style={{ fontFamily: M, fontSize: 11, color: T4 }}>
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Draft"}{" \u00B7 "}{wordCount} {wordCount === 1 ? "word" : "words"}{" \u00B7 "}{activeProject}
           </span>
-          {/* Sources button — outlined */}
-          <button onClick={() => setShowSources(!showSources)} style={{
-            height: 36, display: "flex", alignItems: "center", gap: 6, padding: "0 16px",
-            fontSize: 14, fontWeight: 500, fontFamily: F, color: T2, background: WHITE,
-            border: `1px solid ${BORDER}`, borderRadius: 4, cursor: "pointer",
-          }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M3 2h8v11l-4-2.5L3 13V2z"/></svg>
-            Sources ({sourceCount})
-          </button>
-          {/* Export button — primary raised */}
-          <button onClick={() => { if (!isLocal && docId) window.open(`/api/documents/${docId}/export`, "_blank"); }} style={{
-            height: 36, display: "flex", alignItems: "center", gap: 6, padding: "0 16px",
-            fontSize: 14, fontWeight: 500, fontFamily: F, color: "#fff", background: NAVY,
-            border: "none", borderRadius: 4, cursor: "pointer",
-          }}>
-            Export to Word {"\u2193"}
-          </button>
         </div>
       </div>
 
-      {/* ── NEW STORIES BANNER ── */}
-      {!isLocal && docId && docUpdatedAt && detectedTopics.length > 0 && (
-        <NewStoriesBanner docId={docId} topics={detectedTopics} since={docUpdatedAt} createdAt={docCreatedAt} />
-      )}
-
-      {/* ── EDITOR BODY ── */}
-      <div style={{ flex: 1, overflowY: "auto", background: BG }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 120px" }}>
-          {/* /ask overlay */}
-          {showAsk && <AskOverlay editor={editor} onClose={() => setShowAsk(false)} />}
-
-          {/* Document title */}
-          <input
-            value={title} onChange={e => setTitle(e.target.value)}
-            onFocus={() => setTitleFocused(true)}
-            onBlur={() => { setTitleFocused(false); saveTitle(title); }}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }}
-            placeholder="Untitled project"
-            style={{ width: "100%", fontSize: 32, fontWeight: 500, color: title ? T1 : T4, fontFamily: F, border: "none", outline: "none", background: "transparent", padding: 0 }}
-          />
-          {/* Divider */}
-          <div style={{ height: 1, background: BLT, margin: "16px 0 24px" }} />
-          {/* Editor */}
-          <EditorContent editor={editor} />
-          {editor && editor.isEmpty && (
-            <div style={{ fontSize: 12, color: T4, marginTop: 8 }}>Type /ask to query Tideline intelligence inline</div>
-          )}
-        </div>
-      </div>
-
-      {/* ── SOURCES PANEL ── */}
-      <SourcesPanel open={showSources} onClose={() => setShowSources(false)} />
-
-      {/* ── FLOATING FORMAT BAR ── */}
-      {editor && !editor.state.selection.empty && (
-        <div style={{ position: "fixed", top: 130, left: "50%", transform: "translateX(-50%)", zIndex: 20, display: "flex", gap: 2, padding: "4px 6px", background: NAVY, borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.2)" }}>
-          {[
-            { label: "B", cmd: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold") },
-            { label: "I", cmd: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive("italic") },
-            { label: "H2", cmd: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive("heading", { level: 2 }) },
-            { label: "\u2022", cmd: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList") },
-          ].map(b => (
-            <button key={b.label} onMouseDown={e => { e.preventDefault(); b.cmd(); }} style={{ width: 28, height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center", border: "none", borderRadius: 4, background: b.active ? "rgba(255,255,255,.2)" : "transparent", color: "#fff", cursor: "pointer", fontFamily: F, fontSize: 12, fontWeight: 600 }}>{b.label}</button>
-          ))}
-        </div>
-      )}
+      <ResearchPanel editor={editor} topics={detectedTopics} />
     </div>
   );
 }
 
 export default function WorkspacePage() {
   return (
-    <Suspense fallback={<div style={{ padding: "40px", textAlign: "center", color: "#9AA0A6", fontSize: 13 }}>Loading workspace...</div>}>
+    <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: WHITE, color: "#9CA3AF", fontSize: 13 }}>Loading workspace...</div>}>
       <WorkspaceContent />
     </Suspense>
   );
