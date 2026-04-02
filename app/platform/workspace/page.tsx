@@ -252,6 +252,7 @@ function WorkspaceContent() {
   }, [docId, isLocal]);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder: "Start writing your brief, notes, or draft response. Type /ask to query Tideline intelligence." }),
