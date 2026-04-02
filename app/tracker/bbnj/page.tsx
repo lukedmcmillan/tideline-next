@@ -491,6 +491,122 @@ function CountryTable({ countries }: { countries: Country[] }) {
   );
 }
 
+// ─── Tracker Event Types ──────────────────────────────────────────────────────
+
+interface TrackerEvent {
+  id: string;
+  event_date: string;
+  title: string;
+  summary: string | null;
+  source_url: string | null;
+  event_type: string;
+}
+
+interface FeedStory {
+  id: string;
+  title: string;
+  source_name: string;
+  published_at: string;
+  short_summary: string | null;
+}
+
+const EVENT_TYPE_COLORS: Record<string, string> = {
+  milestone: "#0E7C86",
+  setback: "#DC2626",
+  update: "#9CA3AF",
+};
+
+// ─── Recent Events Timeline ──────────────────────────────────────────────────
+
+function RecentEvents({ events }: { events: TrackerEvent[] }) {
+  return (
+    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "20px", marginBottom: 40, marginTop: 40 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 20, fontFamily: SANS }}>Recent Events</div>
+      {events.length === 0 ? (
+        <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS, fontStyle: "italic", padding: "20px 0" }}>No events recorded yet</div>
+      ) : (
+        events.map((e) => (
+          <div key={e.id} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ paddingTop: 5, flexShrink: 0 }}>
+              <span style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: EVENT_TYPE_COLORS[e.event_type] || EVENT_TYPE_COLORS.update,
+              }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: MUTED, marginBottom: 4 }}>
+                {new Date(e.event_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, marginBottom: 4, lineHeight: 1.4 }}>
+                {e.title}
+              </div>
+              {e.summary && (
+                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 300, color: MUTED, lineHeight: 1.6 }}>
+                  {e.summary}
+                </div>
+              )}
+              {e.source_url && (
+                <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SANS, fontSize: 11, color: BLUE, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+                  Source &#8599;
+                </a>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// ─── Recent Stories from Feed ────────────────────────────────────────────────
+
+function RecentStories({ stories }: { stories: FeedStory[] }) {
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 16, fontFamily: SANS }}>Related Stories from Tideline</div>
+      {stories.length === 0 ? (
+        <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "20px", fontSize: 13, color: MUTED, fontFamily: SANS, fontStyle: "italic" }}>No stories matched to this tracker yet</div>
+      ) : (
+        stories.map((s) => (
+          <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
+            <div style={{
+              background: WHITE,
+              border: "1px solid #E4E4E4",
+              padding: "16px 20px",
+              marginBottom: 8,
+              borderRadius: 6,
+              transition: "box-shadow 0.15s",
+            }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+            >
+              <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, lineHeight: 1.4, marginBottom: 4 }}>
+                {s.title}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: MUTED }}>
+                  {s.source_name}
+                </span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: MUTED }}>
+                  {new Date(s.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                </span>
+              </div>
+              {s.short_summary && (
+                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 300, color: MUTED, lineHeight: 1.6 }}>
+                  {s.short_summary}
+                </div>
+              )}
+            </div>
+          </a>
+        ))
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BBNJTracker() {
@@ -498,6 +614,8 @@ export default function BBNJTracker() {
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
+  const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
 
   useEffect(() => {
     fetch("/api/treaty-status")
@@ -509,6 +627,16 @@ export default function BBNJTracker() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    fetch("/api/tracker-events?slug=bbnj&limit=20")
+      .then((r) => r.json())
+      .then((data) => setTrackerEvents(data.events || []))
+      .catch(() => {});
+
+    fetch("/api/stories?limit=5&tracker=bbnj")
+      .then((r) => r.json())
+      .then((data) => setFeedStories(data.stories || []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -564,6 +692,8 @@ export default function BBNJTracker() {
               <TimelineChart timeline={timeline} />
             </div>
             <CountryTable countries={countries} />
+            <RecentEvents events={trackerEvents} />
+            <RecentStories stories={feedStories} />
           </>
         )}
       </div>
