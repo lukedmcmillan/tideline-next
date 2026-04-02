@@ -77,3 +77,33 @@ export async function getSubscriptionStatus(email: string): Promise<{
 export function hasAccess(status: SubStatus): boolean {
   return status === "active" || status === "trialing";
 }
+
+export type AccessLevel = "active" | "trial" | "expired" | "none";
+
+export interface SubscriptionAccess {
+  status: AccessLevel;
+  canReadFeed: boolean;
+  canReadTrackers: boolean;
+  canUseAgent: boolean;
+  daysRemaining: number | null;
+}
+
+export async function getSubscriptionAccess(email: string): Promise<SubscriptionAccess> {
+  const sub = await getSubscriptionStatus(email);
+
+  if (sub.status === "active") {
+    return { status: "active", canReadFeed: true, canReadTrackers: true, canUseAgent: true, daysRemaining: null };
+  }
+
+  if (sub.status === "trialing" && sub.trialEnd) {
+    const msLeft = new Date(sub.trialEnd).getTime() - Date.now();
+    const daysRemaining = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    return { status: "trial", canReadFeed: true, canReadTrackers: false, canUseAgent: false, daysRemaining };
+  }
+
+  if (sub.status === "canceled" || sub.status === "past_due") {
+    return { status: "expired", canReadFeed: false, canReadTrackers: false, canUseAgent: false, daysRemaining: null };
+  }
+
+  return { status: "none", canReadFeed: false, canReadTrackers: false, canUseAgent: false, daysRemaining: null };
+}
