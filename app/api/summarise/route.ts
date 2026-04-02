@@ -122,6 +122,30 @@ async function fetchArticleText(url: string): Promise<string | null> {
   } catch { return null }
 }
 
+function matchStoryToThreads(storyId: string, title: string, shortSummary: string, fullSummary: string, sourceName: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+  fetch(`${baseUrl}/api/threads/match`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      story_id: storyId,
+      title,
+      short_summary: shortSummary,
+      full_summary: fullSummary,
+      source_name: sourceName,
+    }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.total_matches > 0) {
+        console.log(`[Thread Match] Story "${title}" matched ${data.total_matches} thread(s):`, data.matches.map((m: { thread_title: string; confidence: string }) => `${m.thread_title} (${m.confidence})`).join(', '))
+      }
+    })
+    .catch((err) => {
+      console.error('[Thread Match] Non-blocking error:', err.message)
+    })
+}
+
 export async function POST(request: Request) {
   const { storyId } = await request.json()
   if (!storyId) return NextResponse.json({ error: 'storyId required' }, { status: 400 })
@@ -139,6 +163,7 @@ export async function POST(request: Request) {
           if (abstract) {
             const short_summary = abstract.slice(0, 300).trim() + (abstract.length > 300 ? '...' : '')
             await supabase.from('stories').update({ short_summary, full_summary: abstract }).eq('id', storyId)
+            matchStoryToThreads(storyId, story.title, short_summary, abstract, story.source_name)
             return NextResponse.json({ short_summary, full_summary: abstract })
           }
         }
@@ -213,6 +238,7 @@ Respond in this exact JSON format with no markdown:
     const text = message.content[0].type === 'text' ? message.content[0].text : ''
     const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
     await supabase.from('stories').update({ short_summary: parsed.short_summary, full_summary: parsed.full_summary }).eq('id', storyId)
+    matchStoryToThreads(storyId, story.title, parsed.short_summary, parsed.full_summary, story.source_name)
     return NextResponse.json({ short_summary: parsed.short_summary, full_summary: parsed.full_summary })
   } catch (err) {
     console.error('Summary error:', err)
