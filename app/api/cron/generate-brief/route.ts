@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import Anthropic from "@anthropic-ai/sdk";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
 function decodeHtml(str: string): string {
   return str
@@ -149,7 +154,81 @@ export async function GET(request: Request) {
     const subjectLine = `Tideline \u00B7 ${dateStr} \u00B7 ${storyList.length} stories`;
     const htmlContent = compileHtml(storyList, dateStr);
 
-    // Upsert into brief_buffer
+    // ── Quality gate ──────────────────────────────────────────────────
+    let qualityResult: { passed: boolean; failed_items: { index: number; reason: string }[]; overall_quality: string } | null = null;
+
+    try {
+      const summaryList = storyList
+        .map((s, i) => `${i + 1}. "${decodeHtml(s.title)}" — ${s.short_summary || "(no summary)"}`)
+        .join("\n");
+
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 800,
+        system: "You are a hostile senior editor at a B2B intelligence publication. Your job is to reject briefs that contain vague summaries, AI-sounding language, cause advocacy, or anything below the standard of a professional policy intelligence product. Return JSON only. No markdown.",
+        messages: [{
+          role: "user",
+          content: `Review these summaries. For each, mark pass or fail. Fail if: uses phrases like "significant implications", "key stakeholders", "it is crucial", "in conclusion", or similar filler. Fail if the first sentence does not state a concrete fact. Fail if the tone is advocacy rather than intelligence. Return this exact JSON: { "passed": boolean, "failed_items": [{ "index": number, "reason": "string" }], "overall_quality": "publish"|"review"|"reject" }\n\n${summaryList}`,
+        }],
+      });
+
+      const text = message.content[0].type === "text" ? message.content[0].text : "";
+      qualityResult = JSON.parse(text.replace(/```json|```/g, "").trim());
+      console.log(`[Quality Gate] Result: ${qualityResult!.overall_quality}, failed: ${qualityResult!.failed_items?.length || 0}/${storyList.length}`);
+    } catch (err) {
+      console.error("[Quality Gate] Failed, proceeding with upsert:", err);
+    }
+
+    const overallQuality = qualityResult?.overall_quality || "publish";
+    const failedCount = qualityResult?.failed_items?.length || 0;
+
+    // Log quality result
+    await supabase.from("brief_quality_log").insert({
+      date: todayDate,
+      overall_quality: overallQuality,
+      failed_count: failedCount,
+      raw_feedback: qualityResult ? JSON.stringify(qualityResult) : null,
+    });
+
+    // If rejected: do not upsert, send alert email, return
+    if (overallQuality === "reject") {
+      console.log("[Quality Gate] Brief REJECTED. Sending alert.");
+      try {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Tideline <brief@thetideline.co>",
+            to: "lukedmcmillan@hotmail.com",
+            subject: `Brief REJECTED — ${dateStr}`,
+            html: `<div style="font-family:sans-serif;max-width:560px;margin:40px auto;padding:24px;">
+              <h2 style="color:#D93025;margin:0 0 12px;">Brief rejected by quality gate</h2>
+              <p style="color:#3C4043;font-size:14px;line-height:1.6;">${failedCount} of ${storyList.length} summaries failed editorial review.</p>
+              <h3 style="color:#202124;font-size:14px;margin:20px 0 8px;">Failed items:</h3>
+              <ul style="font-size:13px;color:#5F6368;line-height:1.7;">
+                ${(qualityResult?.failed_items || []).map((f) => `<li><strong>#${f.index}:</strong> ${f.reason}</li>`).join("")}
+              </ul>
+              <p style="font-size:12px;color:#9AA0A6;margin-top:24px;">This brief was not sent to subscribers. Review and regenerate manually.</p>
+            </div>`,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("[Quality Gate] Alert email failed:", emailErr);
+      }
+
+      return NextResponse.json({
+        status: "rejected",
+        overall_quality: "reject",
+        failed_count: failedCount,
+        story_count: storyList.length,
+        date: todayDate,
+      });
+    }
+
+    // Upsert into brief_buffer (with needs_review flag if quality is "review")
     const { error: upsertError } = await supabase
       .from("brief_buffer")
       .upsert(
@@ -158,6 +237,7 @@ export async function GET(request: Request) {
           subject_line: subjectLine,
           html_content: htmlContent,
           story_count: storyList.length,
+          needs_review: overallQuality === "review",
         },
         { onConflict: "date" }
       );
@@ -171,6 +251,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status: "buffered",
+      overall_quality: overallQuality,
+      failed_count: failedCount,
       story_count: storyList.length,
       date: todayDate,
     });
