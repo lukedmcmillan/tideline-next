@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // 1. Generate query embedding
     const embedding = await getEmbedding(query.trim());
 
-    let sources: { title: string; source_name: string; published_at: string; link: string; source_type: string; similarity: number }[] = [];
+    let sources: { title: string; source_name: string; published_at: string; link: string; source_type: string; similarity: number; short_summary: string | null }[] = [];
     let sourcesContext = "";
 
     if (embedding) {
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
                 title: s.title,
                 source_name: s.source_name,
                 published_at: s.published_at,
+                short_summary: s.short_summary,
                 link: s.link,
                 source_type: s.source_type,
                 similarity: m.similarity,
