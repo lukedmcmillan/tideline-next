@@ -324,6 +324,7 @@ function LinkedInDraft({ storyId }: { storyId: string }) {
           onChange={setPostText}
           loading={loading}
           onClose={() => setOpen(false)}
+          storyId={storyId}
         />
       )}
     </>
