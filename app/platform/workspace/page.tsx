@@ -6,6 +6,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
+import IntelligenceThread from "@/components/workspace/IntelligenceThread";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const BG    = "#F9FAFB";
@@ -464,6 +465,9 @@ function IntelligencePanel({ editor, topics, projectId }: {
 
       {/* Scrollable entries area */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
+        {/* Intelligence Thread narrative */}
+        <IntelligenceThread projectId={projectId} />
+
         {/* New items banner */}
         {unreviewed.length > 0 && (
           <div onClick={markAllReviewed} style={{ background: "#E6F4F1", padding: "8px 12px", marginBottom: 12, cursor: "pointer", borderRadius: R }}>
