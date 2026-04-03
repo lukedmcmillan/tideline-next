@@ -277,6 +277,116 @@ function ExpertContext({ storyId }: { storyId: string }) {
   );
 }
 
+// ── LinkedIn draft ───────────────────────────────────────────────────────
+function LinkedInDraft({ storyId }: { storyId: string }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [postText, setPostText] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const generate = async () => {
+    setOpen(true);
+    if (postText) return; // already generated
+    setLoading(true);
+    try {
+      const r = await fetch("/api/story/linkedin-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ story_id: storyId }),
+      });
+      const d = await r.json();
+      if (d.post_text) setPostText(d.post_text);
+    } catch {}
+    setLoading(false);
+  };
+
+  const copyPost = () => {
+    navigator.clipboard.writeText(postText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const charCount = postText.length;
+  const overLimit = charCount > 700;
+
+  return (
+    <>
+      <button
+        onClick={generate}
+        style={{
+          ...btnStyle,
+          color: open ? TEAL : T3,
+          border: `1.5px solid ${open ? "rgba(29,158,117,.3)" : BORDER}`,
+          cursor: "pointer",
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={open ? TEAL : "currentColor"} strokeWidth="1.3">
+          <rect x="1.5" y="1.5" width="11" height="11" rx="2" />
+          <path d="M4.5 6V9.5M4.5 4.2v.1" strokeLinecap="round" />
+          <path d="M6.5 9.5V6.8c0-.7.5-1 1-1s1 .3 1 1V9.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Draft LinkedIn post
+      </button>
+
+      {open && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+          background: WHITE, borderTop: `1px solid ${BORDER}`,
+          boxShadow: "0 -8px 30px rgba(0,0,0,.1)",
+          padding: "20px 24px 24px",
+          maxHeight: "50vh", overflowY: "auto",
+        }}>
+          <div style={{ maxWidth: 600, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>LinkedIn post draft</span>
+              <button onClick={() => setOpen(false)} style={{ fontFamily: F, fontSize: 12, color: T4, background: "none", border: "none", cursor: "pointer" }}>Close</button>
+            </div>
+
+            {loading ? (
+              <div style={{ fontSize: 13, color: T4, padding: "20px 0" }}>Generating draft...</div>
+            ) : (
+              <>
+                <textarea
+                  value={postText}
+                  onChange={e => setPostText(e.target.value)}
+                  rows={8}
+                  style={{
+                    width: "100%", resize: "vertical", border: `1px solid ${BLT}`,
+                    borderRadius: 8, padding: "12px 14px", fontSize: 13, lineHeight: 1.65,
+                    color: T1, fontFamily: F, background: BG, outline: "none",
+                  }}
+                />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+                  <span style={{
+                    fontFamily: F, fontSize: 11,
+                    color: overLimit ? RED : T4,
+                  }}>
+                    {charCount} / 700 chars {overLimit ? "(over optimal length)" : ""}
+                  </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={copyPost} style={{
+                      fontSize: 12, fontWeight: 500, fontFamily: F,
+                      color: "#fff", background: TEAL,
+                      border: "none", borderRadius: 8, padding: "7px 16px",
+                      cursor: "pointer",
+                    }}>
+                      {copied ? "Copied!" : "Copy post"}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ fontFamily: F, fontSize: 11, color: T4, marginTop: 10 }}>
+                  Edit before posting. Always verify facts.
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────
 export default function StoryPage() {
   const params = useParams();
@@ -378,6 +488,7 @@ export default function StoryPage() {
           <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             <SaveToLibrary storyId={id} />
             <SaveToProject storyId={id} />
+            <LinkedInDraft storyId={id} />
           </div>
         </div>
 
