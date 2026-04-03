@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LinkedInDraftPanel from "@/components/LinkedInDraftPanel";
-
 const BG     = "#F8F9FA";
 const WHITE  = "#FFFFFF";
 const TEAL   = "#1D9E75";
@@ -105,59 +103,11 @@ function Src({ name, t1, link }: { name: string; t1: boolean; link?: string }) {
   );
 }
 
-function DraftPostBtn({ storyId, onDraft }: { storyId: string; onDraft: (storyId: string) => void }) {
-  return (
-    <button
-      onClick={(e) => { e.stopPropagation(); onDraft(storyId); }}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 4,
-        fontSize: 12, fontFamily: F, fontWeight: 400,
-        color: T3, background: "none", border: "none",
-        cursor: "pointer", padding: 0,
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#0E7C86"; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T3; }}
-    >
-      <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3">
-        <rect x="1.5" y="1.5" width="11" height="11" rx="2" />
-        <path d="M4.5 6V9.5M4.5 4.2v.1" strokeLinecap="round" />
-        <path d="M6.5 9.5V6.8c0-.7.5-1 1-1s1 .3 1 1V9.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      Draft post
-    </button>
-  );
-}
-
 export default function FeedPage() {
   const router = useRouter();
   const [read, setRead] = useState<Set<string>>(() => loadReadSet());
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
-  const [draftOpen, setDraftOpen] = useState(false);
-  const [draftLoading, setDraftLoading] = useState(false);
-  const [draftText, setDraftText] = useState("");
-  const [draftError, setDraftError] = useState<string | null>(null);
-
-  const handleDraft = async (storyId: string) => {
-    setDraftOpen(true);
-    setDraftText("");
-    setDraftError(null);
-    setDraftLoading(true);
-    try {
-      const r = await fetch("/api/story/linkedin-draft", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ story_id: storyId }),
-      });
-      const d = await r.json();
-      if (d.post_text) setDraftText(d.post_text);
-      else setDraftError("Could not generate post. Try again.");
-    } catch {
-      setDraftError("Could not generate post. Try again.");
-    }
-    setDraftLoading(false);
-  };
-
   useEffect(() => {
     fetch("/api/stories?limit=50")
       .then((r) => {
@@ -232,10 +182,7 @@ export default function FeedPage() {
             </div>
             <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{decodeHtml(lead.title)}</div>
             {lead.short_summary && <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 14 }}>{lead.short_summary}</div>}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Src name={lead.source_name} t1={isPro(lead)} link={lead.link} />
-              <DraftPostBtn storyId={lead.id} onDraft={handleDraft} />
-            </div>
+            <Src name={lead.source_name} t1={isPro(lead)} link={lead.link} />
           </div>
           <div>
             {LEAD.slice(1, 3).map((s, i) => (
@@ -266,10 +213,7 @@ export default function FeedPage() {
               </div>
               <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{decodeHtml(s.title)}</div>
               {s.short_summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.short_summary}</div>}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <Src name={s.source_name} t1={isPro(s)} link={s.link} />
-                <DraftPostBtn storyId={s.id} onDraft={handleDraft} />
-              </div>
+              <Src name={s.source_name} t1={isPro(s)} link={s.link} />
             </div>
           ))}
         </div>
@@ -294,15 +238,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {draftOpen && (
-        <LinkedInDraftPanel
-          postText={draftText}
-          onChange={setDraftText}
-          loading={draftLoading}
-          onClose={() => setDraftOpen(false)}
-          error={draftError}
-        />
-      )}
     </div>
   );
 }
