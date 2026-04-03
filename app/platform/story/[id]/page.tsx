@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import LinkedInDraftPanel from "@/components/LinkedInDraftPanel";
 
 // ── Design tokens (match layout.tsx) ─────────────────────────────────────
 const BG     = "#F8F9FA";
@@ -282,11 +283,9 @@ function LinkedInDraft({ storyId }: { storyId: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [postText, setPostText] = useState("");
-  const [copied, setCopied] = useState(false);
-
   const generate = async () => {
     setOpen(true);
-    if (postText) return; // already generated
+    if (postText) return;
     setLoading(true);
     try {
       const r = await fetch("/api/story/linkedin-draft", {
@@ -299,16 +298,6 @@ function LinkedInDraft({ storyId }: { storyId: string }) {
     } catch {}
     setLoading(false);
   };
-
-  const copyPost = () => {
-    navigator.clipboard.writeText(postText).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  const charCount = postText.length;
-  const overLimit = charCount > 700;
 
   return (
     <>
@@ -330,58 +319,12 @@ function LinkedInDraft({ storyId }: { storyId: string }) {
       </button>
 
       {open && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-          background: WHITE, borderTop: `1px solid ${BORDER}`,
-          boxShadow: "0 -8px 30px rgba(0,0,0,.1)",
-          padding: "20px 24px 24px",
-          maxHeight: "50vh", overflowY: "auto",
-        }}>
-          <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>LinkedIn post draft</span>
-              <button onClick={() => setOpen(false)} style={{ fontFamily: F, fontSize: 12, color: T4, background: "none", border: "none", cursor: "pointer" }}>Close</button>
-            </div>
-
-            {loading ? (
-              <div style={{ fontSize: 13, color: T4, padding: "20px 0" }}>Generating draft...</div>
-            ) : (
-              <>
-                <textarea
-                  value={postText}
-                  onChange={e => setPostText(e.target.value)}
-                  rows={8}
-                  style={{
-                    width: "100%", resize: "vertical", border: `1px solid ${BLT}`,
-                    borderRadius: 8, padding: "12px 14px", fontSize: 13, lineHeight: 1.65,
-                    color: T1, fontFamily: F, background: BG, outline: "none",
-                  }}
-                />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-                  <span style={{
-                    fontFamily: F, fontSize: 11,
-                    color: overLimit ? RED : T4,
-                  }}>
-                    {charCount} / 700 chars {overLimit ? "(over optimal length)" : ""}
-                  </span>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={copyPost} style={{
-                      fontSize: 12, fontWeight: 500, fontFamily: F,
-                      color: "#fff", background: TEAL,
-                      border: "none", borderRadius: 8, padding: "7px 16px",
-                      cursor: "pointer",
-                    }}>
-                      {copied ? "Copied!" : "Copy post"}
-                    </button>
-                  </div>
-                </div>
-                <div style={{ fontFamily: F, fontSize: 11, color: T4, marginTop: 10 }}>
-                  Edit before posting. Always verify facts.
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <LinkedInDraftPanel
+          postText={postText}
+          onChange={setPostText}
+          loading={loading}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
   );

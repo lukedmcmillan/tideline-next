@@ -25,6 +25,9 @@ export async function POST(req: NextRequest) {
 
   if (!story) return NextResponse.json({ error: "Story not found" }, { status: 404 });
 
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const seed = Math.floor(Math.random() * 1000);
+
   const msg = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 400,
@@ -39,7 +42,11 @@ export async function POST(req: NextRequest) {
 - Ends with a question to drive comments
 - NO hashtags. NO emojis. NO 'Excited to share'
 
-Source: ${story.title}. ${story.short_summary || ""}`,
+Source: ${story.title}. ${story.short_summary || ""}
+
+Today's date is ${today}. The person posting is a professional in the ocean sector. Write a post that feels personally authored, not templated. Vary the opening structure — do not start with the story headline. Choose a different angle, implication, or question each time this is called.
+
+Variation seed: ${seed} — use this to ensure your response is uniquely structured each time.`,
       },
     ],
   });
