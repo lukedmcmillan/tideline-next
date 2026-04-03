@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import "@/styles/landing.css";
+import EarlyAccessModal from "@/components/EarlyAccessModal";
 
 const roles: Record<string, { q: string; body: string; feats: { icon: string; title: string; body: string }[] }> = {
   policy: {
@@ -54,6 +55,7 @@ const roles: Record<string, { q: string; body: string; feats: { icon: string; ti
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<"brief" | "workspace">("brief");
   const [activeRole, setActiveRole] = useState("policy");
+  const [showEarlyAccess, setShowEarlyAccess] = useState(false);
 
   const role = roles[activeRole];
 
@@ -61,7 +63,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: "'Google Sans', sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
       {/* Top bar */}
       <div className="topbar">
-        <p>Founding member pricing closes <strong>30 April 2026</strong> {"\u00A3"}29/month, locked for life. <a href="#pricing">Claim a spot {"\u2192"}</a></p>
+        <p>Founding member pricing closes <strong>30 April 2026</strong> {"\u00A3"}29/month, locked for life. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
       </div>
 
       {/* Nav */}
@@ -83,8 +85,8 @@ export default function LandingPage() {
             <a href="#" className="nav-link">Methodology</a>
           </div>
           <div className="nav-actions">
-            <button className="btn-text">Log in</button>
-            <button className="btn-contained">Start free trial</button>
+            <button className="btn-text" onClick={() => setShowEarlyAccess(true)}>Log in</button>
+            <button className="btn-contained" onClick={() => setShowEarlyAccess(true)}>Join early access</button>
           </div>
         </div>
       </nav>
@@ -143,8 +145,8 @@ export default function LandingPage() {
             </p>
 
             <div className="hero-actions fi d3">
-              <button className="btn-hero">Start free no card required</button>
-              <button className="btn-outline">See the platform</button>
+              <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Join early access</button>
+              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See how it works</button>
             </div>
 
             <div className="hero-meta fi d4">
@@ -655,7 +657,7 @@ export default function LandingPage() {
             <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>Founding Member closes 30 April 2026</div>
             <div style={{fontSize:"16px",fontWeight:500,color:"#fff"}}>{"\u00A3"}29/month. Full platform. Locked for life. <span style={{color:"rgba(255,255,255,0.5)",fontWeight:400}}>Not a discount an identity.</span></div>
           </div>
-          <button className="p-btn p-btn-filled" style={{whiteSpace:"nowrap",padding:"10px 24px",background:"var(--blue)",borderRadius:"var(--radius-md)"}}>Claim a founding spot {"\u2192"}</button>
+          <button className="p-btn p-btn-filled" style={{whiteSpace:"nowrap",padding:"10px 24px",background:"var(--blue)",borderRadius:"var(--radius-md)"}} onClick={() => setShowEarlyAccess(true)}>Claim a founding spot {"\u2192"}</button>
         </div>
 
         <div className="pricing-grid">
@@ -675,7 +677,7 @@ export default function LandingPage() {
                 <li>Generate Report to Word or PDF</li>
                 <li>Entity directory</li>
               </ul>
-              <button className="p-btn p-btn-tonal">Claim founding member spot</button>
+              <button className="p-btn p-btn-tonal" onClick={() => setShowEarlyAccess(true)}>Claim founding member spot</button>
             </div>
           </div>
 
@@ -694,7 +696,7 @@ export default function LandingPage() {
                 <li>Unlimited /ask queries</li>
                 <li>Priority support</li>
               </ul>
-              <button className="p-btn p-btn-filled">Start free no card required</button>
+              <button className="p-btn p-btn-filled" onClick={() => setShowEarlyAccess(true)}>Join early access</button>
             </div>
           </div>
 
@@ -713,14 +715,14 @@ export default function LandingPage() {
                 <li>Reports with full provenance trail</li>
                 <li>Priority support</li>
               </ul>
-              <button className="p-btn p-btn-outlined">Talk to us</button>
+              <button className="p-btn p-btn-outlined" onClick={() => setShowEarlyAccess(true)}>Talk to us</button>
             </div>
           </div>
         </div>
 
         <p className="p-note">
-          NGO or academic? <a href="#">50% off apply here</a> &nbsp;{"\u00B7"}&nbsp;
-          Need more than 10 seats? <a href="#">Enterprise pricing</a>
+          NGO or academic? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>50% off apply here</a> &nbsp;{"\u00B7"}&nbsp;
+          Need more than 10 seats? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Enterprise pricing</a>
         </p>
       </section>
 
@@ -737,6 +739,8 @@ export default function LandingPage() {
           <span className="footer-copy">{"\u00A9"} 2026 Tideline</span>
         </div>
       </footer>
+
+      {showEarlyAccess && <EarlyAccessModal onClose={() => setShowEarlyAccess(false)} />}
     </div>
   );
 }
