@@ -20,11 +20,11 @@ export async function GET(req: NextRequest) {
   // Check if user needs onboarding
   const { data: user } = await supabase
     .from("users")
-    .select("topics")
+    .select("topics, sector")
     .eq("email", email)
     .single();
 
   const needsOnboarding = !user?.topics || (Array.isArray(user.topics) && user.topics.length === 0);
 
-  return NextResponse.json({ ...result, needsOnboarding });
+  return NextResponse.json({ ...result, needsOnboarding, sector: user?.sector || null });
 }

@@ -1,15 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const NAVY = "#0a1628";
 const BLUE = "#1d6fa4";
+const TEAL = "#0E7C86";
 const WHITE = "#ffffff";
 const OFF_WHITE = "#f8f9fa";
 const BORDER = "#e2e8f0";
 const MUTED = "#64748b";
 const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 const SERIF = "Georgia, 'Times New Roman', serif";
+
+const SECTORS = [
+  "Marine & ocean research",
+  "Policy & regulation",
+  "NGO & conservation",
+  "Shipping & maritime",
+  "Aquaculture & seafood",
+  "Finance & investment",
+  "Legal & compliance",
+  "Energy & offshore",
+  "Consulting & advisory",
+  "Media & journalism",
+];
 
 const TOPICS = [
   { id: "coral-reefs", label: "Coral Reefs" },
@@ -103,11 +117,42 @@ const TIMEZONES = [
 ];
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<"topics" | "timezone">("topics");
+  const [step, setStep] = useState<"sector" | "topics" | "timezone">("sector");
+  const [sector, setSector] = useState<string | null>(null);
+  const [sectorSaving, setSectorSaving] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState(new Set<string>());
   const [timezone, setTimezone] = useState("Europe/London");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [checkingSkip, setCheckingSkip] = useState(true);
+
+  // Skip sector step if already set
+  useEffect(() => {
+    fetch("/api/subscription-status")
+      .then(r => r.json())
+      .then(d => {
+        if (d.sector) {
+          setSector(d.sector);
+          setStep("topics");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCheckingSkip(false));
+  }, []);
+
+  const handleSectorContinue = async () => {
+    if (!sector) return;
+    setSectorSaving(true);
+    try {
+      await fetch("/api/user/sector", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sector }),
+      });
+    } catch {}
+    setSectorSaving(false);
+    setStep("topics");
+  };
 
   const toggleTopic = (id: string) => {
     setSelectedTopics((prev) => {
@@ -162,22 +207,81 @@ export default function OnboardingPage() {
       </div>
 
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "52px 40px 100px" }}>
+        {checkingSkip ? (
+          <div style={{ fontSize: 13, color: MUTED, padding: "40px 0", textAlign: "center" }}>Loading...</div>
+        ) : (
+        <>
         {/* Progress */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 52 }}>
-          {[{ key: "topics", label: "Choose topics" }, { key: "timezone", label: "Set timezone" }].map((s, i) => {
+          {[{ key: "sector", label: "Your sector" }, { key: "topics", label: "Choose topics" }, { key: "timezone", label: "Set timezone" }].map((s, i) => {
+            const stepOrder = ["sector", "topics", "timezone"];
+            const currentIdx = stepOrder.indexOf(step);
+            const thisIdx = stepOrder.indexOf(s.key);
             const active = step === s.key;
-            const done = step === "timezone" && s.key === "topics";
+            const done = thisIdx < currentIdx;
             return (
               <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div style={{ width: 24, height: 24, borderRadius: "50%", background: done ? "#22c55e" : active ? NAVY : BORDER, color: done || active ? WHITE : MUTED, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
-                  {done ? "✓" : i + 1}
+                  {done ? "\u2713" : i + 1}
                 </div>
                 <span style={{ fontSize: 12, color: active ? NAVY : MUTED, fontWeight: active ? 600 : 400, fontFamily: SANS }}>{s.label}</span>
-                {i < 1 && <div style={{ width: 28, height: 1, background: BORDER, marginLeft: 4 }} />}
+                {i < 2 && <div style={{ width: 28, height: 1, background: BORDER, marginLeft: 4 }} />}
               </div>
             );
           })}
         </div>
+
+        {/* Step 0: Sector */}
+        {step === "sector" && (
+          <div>
+            <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: `1px solid ${BORDER}` }}>
+              <h1 style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: "#202124", margin: "0 0 8px" }}>
+                What best describes your work?
+              </h1>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: "#5F6368", margin: 0 }}>
+                This helps Tideline personalise your experience.
+              </p>
+            </div>
+
+            <div className="sector-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 36 }}>
+              {SECTORS.map(s => {
+                const sel = sector === s;
+                return (
+                  <div
+                    key={s}
+                    onClick={() => setSector(s)}
+                    style={{
+                      padding: 16, cursor: "pointer",
+                      background: sel ? "#E6F4F1" : WHITE,
+                      border: sel ? `2px solid ${TEAL}` : `1px solid #E8EAED`,
+                      borderRadius: 4,
+                      fontFamily: SANS, fontSize: 14, fontWeight: 500,
+                      color: sel ? TEAL : "#202124",
+                      transition: "all 0.1s",
+                    }}
+                  >
+                    {s}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={handleSectorContinue}
+              disabled={!sector || sectorSaving}
+              style={{
+                padding: "13px 28px",
+                background: sector && !sectorSaving ? TEAL : "#94a3b8",
+                border: "none", color: WHITE,
+                fontSize: 14, fontWeight: 500, fontFamily: SANS,
+                cursor: sector && !sectorSaving ? "pointer" : "not-allowed",
+                borderRadius: 4,
+              }}
+            >
+              {sectorSaving ? "Saving..." : "Continue"}
+            </button>
+          </div>
+        )}
 
         {/* Step 1: Topics */}
         {step === "topics" && (
@@ -273,10 +377,18 @@ export default function OnboardingPage() {
               {submitting ? "Saving..." : "Open your feed →"}
             </button>
 
-            <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", fontFamily: SANS, textDecoration: "underline", marginTop: 20, padding: 0, display: "block" }}>← Back</button>
+            <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", fontFamily: SANS, textDecoration: "underline", marginTop: 20, padding: 0, display: "block" }}>{"\u2190"} Back</button>
           </div>
         )}
+        </>
+        )}
       </div>
+
+      <style>{`
+        @media (max-width: 600px) {
+          .sector-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
