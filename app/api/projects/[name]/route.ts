@@ -65,7 +65,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ name
     }
   } catch {}
 
+  // Look up project_id from projects table
+  const { data: proj } = await supabase
+    .from("projects")
+    .select("id, project_type")
+    .eq("user_id", userId)
+    .eq("name", projectName)
+    .single();
+
   return NextResponse.json({
+    project_id: proj?.id || null,
+    project_type: proj?.project_type || null,
     project_name: projectName,
     stories,
     documents: docs || [],

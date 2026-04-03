@@ -344,23 +344,97 @@ function WorkspaceSidebar({ projects, activeProject, onSelect, onNewProject }: {
 }
 
 // ── Research panel ───────────────────────────────────────────────────────
-function ResearchPanel({ editor, topics }: { editor: ReturnType<typeof useEditor> | null; topics: string[] }) {
+// ── Entry type ────────────────────────────────────────────────────────────
+interface AutoEntry {
+  id: string;
+  story_id: string;
+  entry_type: string;
+  content: string;
+  reviewed: boolean;
+  accepted: boolean;
+  dismissed: boolean;
+  inserted_at: string;
+  story_title: string | null;
+  story_source: string | null;
+  story_date: string | null;
+}
+
+const CONF_BADGE: Record<string, { bg: string; color: string }> = {
+  STRONG: { bg: "#E6F4F1", color: TEAL },
+  MODERATE: { bg: "#F3F4F6", color: "#6B7280" },
+  WEAK: { bg: "#F9FAFB", color: "#9CA3AF" },
+};
+
+// ── Intelligence panel (right column) ────────────────────────────────────
+function IntelligencePanel({ editor, topics, projectId }: {
+  editor: ReturnType<typeof useEditor> | null;
+  topics: string[];
+  projectId: string | null;
+}) {
+  const [entries, setEntries] = useState<AutoEntry[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AskResult | null>(null);
-  const [sources, setSources] = useState<SourceStory[]>([]);
   const [placeholder] = useState(() => getPlaceholder(topics));
+
+  // Fetch entries when projectId changes
+  useEffect(() => {
+    if (!projectId) return;
+    fetch(`/api/project-entries/${projectId}`)
+      .then(r => r.ok ? r.json() : { entries: [] })
+      .then(d => setEntries(d.entries || []))
+      .catch(() => {});
+  }, [projectId]);
+
+  const visible = entries.filter(e => !e.dismissed);
+  const unreviewed = visible.filter(e => !e.reviewed);
+  const hasEntries = visible.length > 0;
+
+  const patchEntry = (entryId: string, update: Record<string, boolean>) => {
+    if (!projectId) return;
+    fetch(`/api/project-entries/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entry_id: entryId, ...update }),
+    }).catch(() => {});
+  };
+
+  const markAllReviewed = () => {
+    for (const e of unreviewed) {
+      patchEntry(e.id, { reviewed: true });
+    }
+    setEntries(prev => prev.map(e => ({ ...e, reviewed: true })));
+  };
+
+  const acceptEntry = (entry: AutoEntry) => {
+    if (!editor) return;
+    editor.chain().focus("end").insertContent({
+      type: "paragraph",
+      content: [
+        { type: "text", marks: [{ type: "bold" }], text: entry.content },
+      ],
+    }).insertContent({
+      type: "paragraph",
+      content: [
+        { type: "text", text: `${entry.story_source || "Source"} \u00B7 ${entry.story_date ? fmtDate(entry.story_date) : ""}` },
+      ],
+    }).run();
+    patchEntry(entry.id, { accepted: true });
+    setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, accepted: true } : e));
+  };
+
+  const dismissEntry = (entryId: string) => {
+    patchEntry(entryId, { dismissed: true });
+    setEntries(prev => prev.map(e => e.id === entryId ? { ...e, dismissed: true } : e));
+  };
 
   const submit = async () => {
     if (!query.trim() || loading) return;
-    setLoading(true); setResult(null); setSources([]);
+    setLoading(true); setResult(null);
     try {
       const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
       const d = await r.json();
-      if (d.answer) {
-        setResult(d);
-        fetch("/api/stories?limit=8").then(r2 => r2.ok ? r2.json() : { stories: [] }).then(d2 => setSources(d2.stories || [])).catch(() => {});
-      }
+      if (d.answer) setResult(d);
     } catch {}
     setLoading(false);
   };
@@ -377,83 +451,100 @@ function ResearchPanel({ editor, topics }: { editor: ReturnType<typeof useEditor
     setResult(null); setQuery("");
   };
 
-  const insertCitation = (s: SourceStory) => {
-    if (!editor) return;
-    const blocks: any[] = [
-      { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: decodeHtml(s.title) }] },
-      { type: "paragraph", content: [{ type: "text", text: `${s.source_name || "Source"}${s.published_at ? ` \u00B7 ${fmtDate(s.published_at)}` : ""}` }] },
-    ];
-    if (s.short_summary) blocks.push({ type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: s.short_summary }] });
-    editor.chain().focus().insertContent({ type: "blockquote", content: blocks }).run();
-  };
-
   return (
-    <div style={{ width: 300, background: BG, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh", overflowY: "auto" }}>
-      <div style={{ padding: "16px 16px 14px", borderBottom: `1px solid ${BD}` }}>
-        <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Ask Tideline</div>
+    <div style={{ width: 300, background: "#F8F9FA", borderLeft: "1px solid #E8EAED", flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh" }}>
+      {/* Header */}
+      <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "1px" }}>Intelligence</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasEntries ? TEAL : "#9CA3AF" }} />
+          <span style={{ fontFamily: F, fontSize: 11, color: hasEntries ? TEAL : "#9CA3AF" }}>{hasEntries ? "Live" : "Monitoring"}</span>
+        </span>
+      </div>
+
+      {/* Scrollable entries area */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
+        {/* New items banner */}
+        {unreviewed.length > 0 && (
+          <div onClick={markAllReviewed} style={{ background: "#E6F4F1", padding: "8px 12px", marginBottom: 12, cursor: "pointer", borderRadius: R }}>
+            <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL }}>{"\u25CF"} {unreviewed.length} new since your last visit</span>
+          </div>
+        )}
+
+        {/* Entry cards */}
+        {visible.map(e => (
+          <div key={e.id} style={{ background: WHITE, border: "1px solid #E8EAED", padding: 12, marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontFamily: F, fontSize: 11, color: "#9CA3AF" }}>
+                {e.inserted_at ? fmtDate(e.inserted_at) : ""}
+              </span>
+              {e.entry_type && (
+                <span style={{
+                  fontFamily: F, fontSize: 10, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
+                  ...(CONF_BADGE[e.entry_type.toUpperCase()] || CONF_BADGE.MODERATE),
+                }}>
+                  {e.entry_type}
+                </span>
+              )}
+            </div>
+            <div style={{
+              fontFamily: F, fontSize: 13, color: "#202124", lineHeight: 1.5, marginBottom: 4,
+              display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
+            }}>
+              {e.content}
+            </div>
+            {e.story_source && (
+              <div style={{ fontFamily: F, fontSize: 11, color: "#9CA3AF", marginBottom: 8 }}>{e.story_source}</div>
+            )}
+            {!e.accepted && (
+              <div style={{ display: "flex", gap: 12 }}>
+                <button onClick={() => acceptEntry(e)} style={{ fontFamily: F, fontSize: 11, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  {"\u2713"} Add to notes
+                </button>
+                <button onClick={() => dismissEntry(e.id)} style={{ fontFamily: F, fontSize: 11, color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  {"\u2715"} Dismiss
+                </button>
+              </div>
+            )}
+            {e.accepted && (
+              <span style={{ fontFamily: F, fontSize: 11, color: TEAL }}>{"\u2713"} Added</span>
+            )}
+          </div>
+        ))}
+
+        {/* Empty state */}
+        {visible.length === 0 && (
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: "#202124", marginBottom: 4 }}>Monitoring this topic</div>
+            <div style={{ fontFamily: F, fontSize: 12, color: "#9CA3AF" }}>Intelligence files here automatically overnight.</div>
+          </div>
+        )}
+
+        {/* Ask result */}
+        {result && (
+          <div style={{ background: WHITE, border: "1px solid #E8EAED", padding: 12, marginTop: 12 }}>
+            <div style={{ fontFamily: F, fontSize: 13, color: "#202124", lineHeight: 1.6, marginBottom: 8 }}>{result.answer}</div>
+            <button onClick={insertAnswer} style={{ fontFamily: F, fontSize: 11, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              {"\u2713"} Add to notes
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Ask input — sticky bottom */}
+      <div style={{ borderTop: "1px solid #E8EAED", padding: "12px 16px", flexShrink: 0 }}>
         <div style={{ display: "flex", gap: 6 }}>
           <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); }} placeholder={placeholder}
-            style={{ flex: 1, height: 32, padding: "0 10px", fontSize: 13, fontFamily: M, color: T1, background: WHITE, border: `1px solid ${BD}`, borderRadius: R, outline: "none" }} />
-          <button onClick={submit} disabled={!query.trim() || loading} style={btnPri({ height: 32, background: query.trim() && !loading ? TEAL : T4, cursor: query.trim() && !loading ? "pointer" : "default" })}>
-            {loading ? "Asking..." : "Ask"}
+            style={{ flex: 1, padding: "8px 12px", fontSize: 13, fontFamily: F, color: "#202124", background: WHITE, border: "1px solid #E8EAED", borderRadius: 0, outline: "none" }} />
+          <button onClick={submit} disabled={!query.trim() || loading} style={{
+            padding: "8px 16px", fontSize: 12, fontWeight: 500, fontFamily: F,
+            color: WHITE, background: query.trim() && !loading ? TEAL : "#9CA3AF",
+            border: "none", borderRadius: 0, cursor: query.trim() && !loading ? "pointer" : "default",
+          }}>
+            {loading ? "..." : "Ask"}
           </button>
         </div>
       </div>
-
-      {result && (
-        <div style={{ padding: 16, borderBottom: `1px solid ${BD}` }}>
-          <div style={{ background: WHITE, border: `1px solid ${BD}`, borderRadius: R, padding: "14px 16px" }}>
-            <div style={{ fontFamily: F, fontSize: 14, color: T1, lineHeight: 1.7, marginBottom: 12 }}>{result.answer}</div>
-            {result.sources && result.sources.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                {result.sources.slice(0, 4).map((s, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: isPrimary(s.source_type) ? "rgba(14,124,134,.1)" : "#F3F4F6", color: isPrimary(s.source_type) ? TEAL : T4 }}>
-                      {isPrimary(s.source_type) ? "PRIMARY" : "SECONDARY"}
-                    </span>
-                    <span style={{ fontFamily: F, fontSize: 12, color: T3 }}>{s.source_name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button onClick={insertAnswer} style={{ width: "100%", height: 32, fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: R, cursor: "pointer" }}>
-              Insert into document
-            </button>
-          </div>
-        </div>
-      )}
-
-      {sources.length === 0 && !result && (
-        <div style={{ padding: "32px 16px", textAlign: "center" }}>
-          <div style={{ fontFamily: F, fontSize: 13, color: T4 }}>Ask a question to see relevant sources</div>
-        </div>
-      )}
-
-      {sources.length > 0 && (
-        <>
-          <div style={{ padding: "16px 16px 6px" }}>
-            <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase" }}>Sources</div>
-          </div>
-          <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
-            {sources.map(s => (
-              <div key={s.id} style={{ padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
-                <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>
-                  {decodeHtml(s.title).slice(0, 70)}{decodeHtml(s.title).length > 70 ? "..." : ""}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: isPrimary(s.source_type) ? "rgba(14,124,134,.1)" : "#F3F4F6", color: isPrimary(s.source_type) ? TEAL : T4 }}>
-                      {isPrimary(s.source_type) ? "PRIMARY" : "SECONDARY"}
-                    </span>
-                    <span style={{ fontFamily: F, fontSize: 11, color: T4 }}>{s.source_name}</span>
-                  </div>
-                  <button onClick={() => insertCitation(s)} style={btnSec({ height: 24, fontSize: 11, padding: "0 8px" })}>Insert</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
     </div>
   );
 }
@@ -476,6 +567,7 @@ function WorkspaceContent() {
   const [activeProject, setActiveProject] = useState("Workspace");
   const [wordCount, setWordCount] = useState(0);
   const [projectType, setProjectType] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -509,6 +601,8 @@ function WorkspaceContent() {
         const projRes = await fetch(`/api/projects/${encodeURIComponent(projectName)}`);
         if (projRes.ok) {
           const d = await projRes.json();
+          if (d.project_id) setProjectId(d.project_id);
+          if (d.project_type) setProjectType(d.project_type);
           const docs = d.documents || [];
           if (!cancelled && docs.length > 0) {
             const docRes = await fetch(`/api/documents/${docs[0].id}`);
@@ -603,6 +697,7 @@ function WorkspaceContent() {
       setTitle(name);
       setActiveProject(name);
       setProjectType(type);
+      setProjectId(projData.project_id);
       setFields(defaults);
       setProjects(prev => [{ name, count: 0 }, ...prev]);
 
@@ -716,7 +811,7 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <ResearchPanel editor={editor} topics={detectedTopics} />
+      <IntelligencePanel editor={editor} topics={detectedTopics} projectId={projectId} />
     </div>
   );
 }
