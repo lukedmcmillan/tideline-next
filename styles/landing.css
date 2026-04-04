@@ -136,18 +136,18 @@
 }
 .wheel-track {
   display: flex; flex-direction: column;
-  animation: spin 24s cubic-bezier(0.4,0,0.2,1) infinite;
+  animation: wheelScroll 24s cubic-bezier(0.4,0,0.2,1) infinite;
 }
-@keyframes spin {
-  0%,10%    { transform: translateY(0); }
-  13%,23%   { transform: translateY(-64px); }
-  26%,36%   { transform: translateY(-128px); }
-  39%,49%   { transform: translateY(-192px); }
-  52%,62%   { transform: translateY(-256px); }
-  65%,75%   { transform: translateY(-320px); }
-  78%,88%   { transform: translateY(-384px); }
-  91%,99%   { transform: translateY(-448px); }
-  100%      { transform: translateY(-512px); }
+@keyframes wheelScroll {
+  0%, 10% { transform: translateY(0); }
+  12.5%, 22.5% { transform: translateY(-64px); }
+  25%, 35% { transform: translateY(-128px); }
+  37.5%, 47.5% { transform: translateY(-192px); }
+  50%, 60% { transform: translateY(-256px); }
+  62.5%, 72.5% { transform: translateY(-320px); }
+  75%, 85% { transform: translateY(-384px); }
+  87.5%, 97.5% { transform: translateY(-448px); }
+  100% { transform: translateY(-512px); }
 }
 .wheel-item {
   height: 64px; display: flex; align-items: center;
@@ -800,4 +800,31 @@
   .hero-h1 { font-size: 44px; }
   .section-title { font-size: 24px; }
   .p-price { font-size: 32px; }
+}
+
+/* ── MOBILE SUMMARY / DESKTOP-ONLY ── */
+.mobile-summary { display: none; }
+.desktop-only { display: block; }
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-summary { display: block !important; }
+}
+
+/* ── WHY CHIPS (MOBILE) ── */
+.why-chips { display: none; }
+.why-chip { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.12); border-radius: 20px; padding: 8px 16px; white-space: nowrap; }
+@media (max-width: 768px) {
+  .why-chips { display: flex !important; overflow-x: auto; gap: 10px; padding-bottom: 16px; margin-bottom: 24px; }
+  .why-grid { display: none !important; }
+}
+
+/* ── CROSSCURRENT RESPONSIVE ── */
+@media (max-width: 768px) {
+  .cc-chain { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .cc-alerts { grid-template-columns: 1fr !important; }
+}
+
+/* ── TIER GRID RESPONSIVE ── */
+@media (max-width: 768px) {
+  .tier-grid { grid-template-columns: 1fr !important; }
 }

@@ -63,7 +63,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: "'Google Sans', sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
       {/* Top bar */}
       <div className="topbar">
-        <p>Founding member pricing closes <strong>30 April 2026</strong> {"\u00A3"}29/month, locked for life. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
+        <p>Founding member pricing is available during beta. {"\u00A3"}29/month, locked for life. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
       </div>
 
       {/* Nav */}
@@ -82,7 +82,7 @@ export default function LandingPage() {
             <a href="#platform" className="nav-link">Platform</a>
             <a href="#who" className="nav-link">Who it&apos;s for</a>
             <a href="#pricing" className="nav-link">Pricing</a>
-            <a href="#" className="nav-link">Methodology</a>
+            <a href="#methodology" className="nav-link">Methodology</a>
           </div>
           <div className="nav-actions">
             <button className="btn-text" onClick={() => setShowEarlyAccess(true)}>Log in</button>
@@ -141,7 +141,7 @@ export default function LandingPage() {
             </div>
 
             <p className="hero-body fi d3">
-              The ocean sector runs across too many platforms, too many sources, and still misses things. Tideline is one destination where the live feed, the research library, the workspace, and the calendar all live together. Log on. Do the work.
+              Everyone working in the ocean sector is spread across too many platforms, too many sources, and still missing things. Tideline is one destination where the live feed, the research library, the workspace, and the calendar all live together. Log on. Do the work.
             </p>
 
             <div className="hero-actions fi d3">
@@ -276,12 +276,19 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div className="desktop-only">
       {/* Why now */}
       <section className="why">
         <div className="why-inner">
           <span className="section-label">Why now</span>
           <h2 className="section-title" style={{color:"#fff"}}>The ocean is where the next decade gets decided.</h2>
           <p className="section-sub">The ocean now sits at the centre of the energy transition, the climate crisis, the biggest shift in international law in a generation, and a wave of capital looking for somewhere to go. The professionals navigating that shift are currently doing it without the tools the moment requires.</p>
+
+          <div className="why-chips">
+            {["Energy","Climate & Carbon","Capital & Finance","Food & Fisheries","Law & Governance","Geopolitics"].map(c=>(
+              <span key={c} className="why-chip">{c}</span>
+            ))}
+          </div>
 
           <div className="why-grid">
             <div className="why-card">
@@ -348,6 +355,49 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Crosscurrent */}
+      <section style={{background:"#e8f5f0",padding:"80px 24px",borderTop:"1px solid var(--border)"}}>
+        <div style={{maxWidth:"1200px",margin:"0 auto"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"12px"}}>
+            <span style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--blue)",animation:"pulse 2.2s ease-in-out infinite"}}/>
+            <span style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)"}}>Only on Tideline</span>
+          </div>
+          <h2 className="section-title" style={{marginBottom:"12px"}}>Crosscurrent</h2>
+          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,maxWidth:"620px",marginBottom:"48px"}}>Tideline reads across 100+ sources simultaneously and surfaces connections that no individual source would make. A regulatory ruling connected to a financial disclosure connected to an enforcement pattern, flagged before anyone reports on it.</p>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr auto 1fr",gap:"16px",alignItems:"center",marginBottom:"40px"}} className="cc-chain">
+            <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"20px"}}>
+              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"8px"}}>Source A {"\u00B7"} Tier 1</div>
+              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>IMO MEPC 82 adopts 2030 GHG intensity targets</div>
+              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>Regulatory decision {"\u00B7"} IMO</div>
+            </div>
+            <div style={{fontSize:"20px",color:"var(--blue)",fontWeight:700}}>+</div>
+            <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"20px"}}>
+              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"8px"}}>Source B {"\u00B7"} Tier 2</div>
+              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>4 blue bond issuances cite IMO compliance in prospectus</div>
+              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>Financial disclosure {"\u00B7"} Bloomberg</div>
+            </div>
+            <div style={{fontSize:"20px",color:"var(--blue)",fontWeight:700}}>=</div>
+            <div style={{background:"var(--ink)",borderRadius:"var(--radius-lg)",padding:"20px"}}>
+              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"8px"}}>Crosscurrent connection</div>
+              <div style={{fontSize:"14px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>These bonds are now materially exposed to stricter targets</div>
+              <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>Flagged 48 hours before press reported it</div>
+            </div>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}} className="cc-alerts">
+            <div style={{background:"#fff",borderLeft:"3px solid var(--blue)",borderRadius:"0 var(--radius-md) var(--radius-md) 0",padding:"16px 20px"}}>
+              <div style={{fontSize:"13px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>ISA moratorium coalition conditioning votes on BBNJ implementation terms</div>
+              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>3 sponsoring states linked across 2 trackers</div>
+            </div>
+            <div style={{background:"#fff",borderLeft:"3px solid var(--blue)",borderRadius:"0 var(--radius-md) var(--radius-md) 0",padding:"16px 20px"}}>
+              <div style={{fontSize:"13px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>Shipping ESG disclosures diverging from vessel tracking data on 12 routes</div>
+              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>Enforcement risk flagged across 3 source types</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Platform features */}
       <section className="section" id="platform-features">
         <span className="section-label">The platform</span>
@@ -366,15 +416,15 @@ export default function LandingPage() {
         </div>
 
         <div className="features-grid">
-          <div className="feat">
+          <div className="feat" style={{borderLeft:"3px solid #1D9E75"}}>
             <span className="feat-num">01 {"\u00B7"} Production</span>
-            <div className="feat-title">Workspace &amp; Generate Report</div>
+            <div className="feat-title" style={{fontSize:"19px"}}>Workspace &amp; Generate Report</div>
             <div className="feat-body">Save sources, annotate, draft. Notes convert to a structured report in one click. Export to Word or PDF. Your name on it. Tideline invisible.</div>
             <div className="feat-note">The consultation response that takes <strong>three days</strong> takes <strong>three hours.</strong> The client briefing that required a morning of research arrives before your second coffee.</div>
           </div>
-          <div className="feat">
+          <div className="feat" style={{borderLeft:"3px solid #1D9E75"}}>
             <span className="feat-num">02 {"\u00B7"} Research</span>
-            <div className="feat-title">The research library</div>
+            <div className="feat-title" style={{fontSize:"19px"}}>The research library</div>
             <div className="feat-body">Every primary governing body document: treaty text, official publications, regulatory records, in one searchable library. Ask real questions in plain language and get direct answers with full source attribution.</div>
             <div className="feat-note"><strong>Sources identified as primary or secondary</strong> on every answer, so you can follow the chain yourself. No guessing where it came from. No dead ends.</div>
           </div>
@@ -593,7 +643,7 @@ export default function LandingPage() {
                   <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> Every deadline in your calendar. Nothing slips.
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--ink)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> One destination. Log on. Do the work.
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> One platform instead of six.
                 </div>
               </div>
             </div>
@@ -601,7 +651,7 @@ export default function LandingPage() {
               <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"20px"}}>What you get back</div>
               <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--secondary)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2191"}</span> 3{"\u2013"}4 hours per week
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2191"}</span> One platform instead of six
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--secondary)",lineHeight:1.5}}>
                   <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2191"}</span> Confidence you haven&apos;t missed something
@@ -613,7 +663,7 @@ export default function LandingPage() {
                   <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2191"}</span> Institutional memory that outlasts any one person
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--secondary)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2191"}</span> The ability to respond first
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2191"}</span> The source on your desk before it's in the news
                 </div>
               </div>
             </div>
@@ -621,11 +671,50 @@ export default function LandingPage() {
         </div>
       </div>
 
+      </div>{/* end desktop-only */}
+
+      <div className="mobile-summary">
+        <div style={{padding:"48px 24px",background:"#fff"}}>
+          <div style={{maxWidth:"600px",margin:"0 auto"}}>
+            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"16px"}}>What it does</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+              {[
+                {t:"Live feed",d:"100+ sources. Updated continuously. Five minutes to know what moved."},
+                {t:"Research library",d:"Ask questions in plain language. Get cited answers from primary sources."},
+                {t:"Workspace",d:"Save sources. Draft reports. Export to Word. Your name on it."},
+                {t:"Crosscurrent",d:"Connections across sources that no single feed would surface."},
+              ].map((c,i)=>(
+                <div key={i} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",padding:"16px"}}>
+                  <div style={{fontSize:"14px",fontWeight:600,color:"var(--ink)",marginBottom:"4px"}}>{c.t}</div>
+                  <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.5}}>{c.d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:"24px",background:"var(--surface)",display:"flex",gap:"8px",overflowX:"auto",justifyContent:"center",flexWrap:"wrap"}}>
+          {["Policy & NGO","Finance","Legal","Science","Shipping","Corporate"].map(s=>(
+            <span key={s} style={{fontSize:"12px",fontWeight:500,color:"var(--secondary)",background:"#fff",border:"1px solid var(--border)",borderRadius:"20px",padding:"6px 14px",whiteSpace:"nowrap"}}>{s}</span>
+          ))}
+        </div>
+
+        <div style={{padding:"32px 24px",background:"var(--ink)",margin:"0 24px",borderRadius:"var(--radius-lg)"}}>
+          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"12px"}}>Founding Member {"\u00B7"} Beta pricing</div>
+          <div style={{fontSize:"28px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>{"\u00A3"}29<span style={{fontSize:"16px",color:"rgba(255,255,255,0.5)"}}>/month</span></div>
+          <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"20px"}}>Full platform. Locked for life.</div>
+          <button className="btn-hero" onClick={() => setShowEarlyAccess(true)} style={{width:"100%"}}>Join early access</button>
+        </div>
+      </div>
+
       {/* Founder quote */}
       <div style={{borderTop:"1px solid var(--border)",padding:"64px 24px",background:"#fff"}}>
         <div style={{maxWidth:"720px",margin:"0 auto",textAlign:"center"}}>
           <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"28px"}}>From the founder</div>
-          <blockquote style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"clamp(20px,2.5vw,26px)",fontWeight:400,color:"var(--ink)",lineHeight:1.55,letterSpacing:"-0.01em",marginBottom:"32px",fontStyle:"normal"}}>
+          <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"clamp(22px,2.8vw,30px)",fontWeight:400,color:"var(--ink)",marginBottom:"32px"}}>
+            Built by someone who needed it. Which is why it works.
+          </div>
+          <blockquote style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"16px",fontWeight:400,color:"var(--secondary)",lineHeight:1.55,letterSpacing:"-0.01em",fontStyle:"normal",textAlign:"left",borderLeft:"3px solid #1D9E75",paddingLeft:"20px"}}>
             {"\u201C"}I built Tideline because it didn&apos;t exist. Every day working in the ocean sector meant too many tabs, too many sources, work scattered across platforms that didn&apos;t talk to each other. I needed one place to read, research, draft, track, and produce.
             <br/><br/>
             This is that place.{"\u201D"}
@@ -648,13 +737,13 @@ export default function LandingPage() {
       {/* Pricing */}
       <section className="section" id="pricing">
         <span className="section-label">Pricing</span>
-        <h2 className="section-title">14 days free. No card. No commitment.</h2>
-        <p className="section-sub">Start with a full trial. Cancel any time. If you&apos;re reading this before 30 April 2026, founding member pricing {"\u00A3"}29/month, locked for life is still available.</p>
+        <h2 className="section-title">Register your interest. Be first when we launch.</h2>
+        <p className="section-sub">Tideline is in beta. Register now to secure founding member pricing and be first in when the full platform opens. This is what it will cost, and founding members lock their price for life.</p>
 
         {/* Founding member prominence */}
         <div style={{background:"var(--ink)",borderRadius:"var(--radius-lg)",padding:"20px 24px",marginBottom:"32px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"16px"}}>
           <div>
-            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>Founding Member closes 30 April 2026</div>
+            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>Founding Member {"\u00B7"} Beta pricing</div>
             <div style={{fontSize:"16px",fontWeight:500,color:"#fff"}}>{"\u00A3"}29/month. Full platform. Locked for life. <span style={{color:"rgba(255,255,255,0.5)",fontWeight:400}}>Not a discount an identity.</span></div>
           </div>
           <button className="p-btn p-btn-filled" style={{whiteSpace:"nowrap",padding:"10px 24px",background:"var(--blue)",borderRadius:"var(--radius-md)"}} onClick={() => setShowEarlyAccess(true)}>Claim a founding spot {"\u2192"}</button>
@@ -667,7 +756,7 @@ export default function LandingPage() {
               <div className="p-price">{"\u00A3"}29<sub>/mo</sub></div>
               <div className="p-per">Locked for life. Never increases.</div>
               <div className="p-desc">Full platform access at the price that reflects where Tideline is now. Not a discount. An identity.</div>
-              <div className="p-badge">Closes 30 Apr 2026</div>
+              <div className="p-badge">Beta pricing</div>
             </div>
             <div className="p-body">
               <ul className="p-feats">
@@ -724,6 +813,33 @@ export default function LandingPage() {
           NGO or academic? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>50% off apply here</a> &nbsp;{"\u00B7"}&nbsp;
           Need more than 10 seats? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Enterprise pricing</a>
         </p>
+      </section>
+
+      {/* Source methodology */}
+      <section className="section" id="methodology">
+        <span className="section-label">Source methodology</span>
+        <h2 className="section-title">Every source is labelled. Every answer is cited.</h2>
+        <p className="section-sub">Tideline classifies every source into three tiers. The tier is visible on every story, every research answer, and every Crosscurrent alert. You always know where it came from.</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="tier-grid">
+          <div style={{background:"#fff",border:"2px solid var(--blue)",borderRadius:"var(--radius-lg)",padding:"24px"}}>
+            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"12px"}}>Tier 1 {"\u00B7"} Primary</div>
+            <div style={{fontSize:"15px",fontWeight:600,color:"var(--ink)",marginBottom:"8px"}}>Governing body documents</div>
+            <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.6}}>Official regulatory publications, treaty text, governing body records, decision documents. Direct from the institution.</div>
+            <div style={{fontSize:"12px",color:"var(--tertiary)",marginTop:"12px"}}>Examples: IMO, OSPAR, IWC, FAO, UNEP</div>
+          </div>
+          <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"24px"}}>
+            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"12px"}}>Tier 2 {"\u00B7"} Specialist press</div>
+            <div style={{fontSize:"15px",fontWeight:600,color:"var(--ink)",marginBottom:"8px"}}>Industry and legal reporting</div>
+            <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.6}}>Specialist maritime, legal, and financial publications with editorial standards and domain expertise.</div>
+            <div style={{fontSize:"12px",color:"var(--tertiary)",marginTop:"12px"}}>Examples: Lloyd&apos;s List, Bloomberg Law, Reuters, TradeWinds</div>
+          </div>
+          <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"24px"}}>
+            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"12px"}}>Tier 3 {"\u00B7"} Context</div>
+            <div style={{fontSize:"15px",fontWeight:600,color:"var(--ink)",marginBottom:"8px"}}>Supporting publications</div>
+            <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.6}}>NGO publications, conference proceedings, academic preprints, and general press. Useful for context, not cited as primary evidence.</div>
+            <div style={{fontSize:"12px",color:"var(--tertiary)",marginTop:"12px"}}>Examples: NGO reports, academic preprints, conference proceedings</div>
+          </div>
+        </div>
       </section>
 
       {/* Footer */}
