@@ -171,8 +171,6 @@ export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
   const url = new URL(request.url)
   const querySecret = url.searchParams.get('secret')
-  console.log("[fetch-feeds] CRON_SECRET loaded:", !!process.env.CRON_SECRET);
-  console.log("[fetch-feeds] Header received:", authHeader?.substring(0, 10));
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && querySecret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
