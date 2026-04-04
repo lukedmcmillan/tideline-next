@@ -81,10 +81,10 @@ export default function EarlyAccessModal({ onClose }: { onClose: () => void }) {
           /* Form */
           <>
             <h2 style={{ fontFamily: F, fontSize: 20, fontWeight: 500, color: TEXT, margin: "0 0 8px" }}>
-              Join the early access list
+              Join Tideline as a founding member.
             </h2>
             <p style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: SEC, margin: "0 0 28px" }}>
-              Tideline launches in 2026. Be first in.
+              Founding members get the price, the access, and the ear of the person building it.
             </p>
             <input
               type="email"

@@ -782,9 +782,9 @@ export default function LandingPage() {
               <ul className="p-feats">
                 <li>Live feed: 100+ sources, updated continuously</li>
                 <li>10 live regulatory trackers</li>
-                <li>Workspace with /ask: primary sources only</li>
+                <li>Workspace with research library</li>
                 <li>Generate Report to Word or PDF</li>
-                <li>Entity directory</li>
+                <li>Regulatory deadline calendar</li>
               </ul>
               <button className="p-btn p-btn-tonal" onClick={() => setShowEarlyAccess(true)}>Claim founding member spot</button>
             </div>
