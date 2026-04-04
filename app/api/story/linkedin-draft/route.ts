@@ -37,20 +37,15 @@ export async function POST(req: NextRequest) {
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
   const seed = Math.floor(Math.random() * 1000);
 
-  // Sector prompt injection
-  const sectorPrompt = sector
-    ? `\n\nThe person posting works in: ${sector}. Write the post from the perspective and language of someone in that field. Use the vocabulary, concerns, and framing that a ${sector} professional would naturally use. Do not mention the sector explicitly in the post.`
-    : "";
-
   // Angle prompt injection
   const angleInstructions: Record<string, string> = {
     implications: `Focus on the professional implications and consequences for people working in ${sector || "the ocean sector"}. What does this mean for their day to day work or strategy?`,
     urgency: "Frame this around why the timing matters right now. What is happening in the broader context that makes this development particularly significant this week or month?",
     contrarian: "Find the angle most people are missing or not talking about. What is the underreported implication, the counterintuitive reading, or the question this story raises that nobody is asking yet?",
   };
-  const anglePrompt = angle && angleInstructions[angle]
-    ? `\n\nAngle instruction: ${angleInstructions[angle]}`
-    : "";
+  const angleText = angle && angleInstructions[angle]
+    ? angleInstructions[angle]
+    : "No specific angle. Write from whatever perspective feels most natural for this story.";
 
   const msg = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
@@ -58,19 +53,57 @@ export async function POST(req: NextRequest) {
     messages: [
       {
         role: "user",
-        content: `Write a 150-word professional LinkedIn post about this ocean governance development. Requirements:
-- Opens with a specific fact or development, not 'I'
-- Professional tone for ocean sector audience
-- Specific and grounded in the story only
-- One clear insight or implication
-- Ends with a question to drive comments
-- NO hashtags. NO emojis. NO 'Excited to share'
+        content: `You are writing a first draft that a professional will edit and make their own. Your job is to give them a strong starting point, not a finished post. Write something they will want to react to, refine, and rewrite in their own voice. Do not be too polished. Leave room for their personality.
 
-Source: ${story.title}. ${story.short_summary || ""}
+You are a senior professional in the ocean sector writing a LinkedIn post about a development in your field. You have 15 years of experience. You write the way experienced professionals actually write, not the way AI writes.
 
-Today's date is ${today}. The person posting is a professional in the ocean sector. Write a post that feels personally authored, not templated. Vary the opening structure — do not start with the story headline. Choose a different angle, implication, or question each time this is called.${sectorPrompt}${anglePrompt}
+VOICE RULES — non-negotiable:
+- No em dashes. Use commas, full stops, or restructure the sentence.
+- No colons to introduce lists in the middle of a post
+- No bullet points or numbered lists
+- No hashtags
+- No emojis
+- No passive voice where active voice works
+- Never start the post with the word I
+- No throat-clearing — the first sentence must be the point, not a preamble
+- Maximum 150 words. Shorter is better.
 
-Variation seed: ${seed} — use this to ensure your response is uniquely structured each time.`,
+BANNED WORDS — never use any of these:
+groundbreaking, crucial, vital, exciting, thrilled, delighted, proud, honoured, innovative, game-changing, landscape, ecosystem, leverage, dive deep, unpack, journey, space (as in 'in this space'), nuanced, robust, seamless, dynamic, transformative, unprecedented, pivotal, holistic, actionable, impactful
+
+BANNED PHRASES — never use any of these constructions:
+- It is not X, it is Y
+- This is not about X, it is about Y
+- The real question is...
+- What most people miss is...
+- This changes everything
+- Worth paying attention to
+- Something worth noting
+- The truth is...
+- Simply put
+- Make no mistake
+- Now more than ever
+- In today's world
+- At the end of the day
+- I am excited to share
+- It is with great pleasure
+- And yet... (starting a sentence)
+- This is not just about...
+
+STRUCTURE:
+- Opening line: a specific fact, number, development, or observation. Not a vague statement, not a question, not a preamble.
+- Middle: one clear implication or insight grounded only in this story. No speculation beyond what the story supports.
+- Close: either a specific question that practitioners in this field would actually debate, or a short declarative observation. Not a call to action. Not an invitation to comment.
+
+QUALITY TEST — before returning the post, ask yourself: could a specific experienced professional in this field have written this on a Tuesday evening because the story genuinely caught their attention? If it sounds like it was generated, rewrite it.
+
+SOURCE: ${story.title}. ${story.short_summary || ""}
+SECTOR CONTEXT: ${sector || "General ocean sector professional"}
+ANGLE: ${angleText}
+VARIATION SEED: ${seed}
+DATE: ${today}
+
+Write one post only. No preamble, no explanation, no 'here is your post'. Just the post itself.`,
       },
     ],
   });
