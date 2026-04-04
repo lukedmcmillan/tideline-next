@@ -828,3 +828,25 @@
 @media (max-width: 768px) {
   .tier-grid { grid-template-columns: 1fr !important; }
 }
+
+/* ── MOBILE CHIPS HORIZONTAL SCROLL ── */
+.who-chips-mobile {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 24px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  justify-content: flex-start;
+  background: var(--surface);
+}
+.who-chips-mobile::-webkit-scrollbar { display: none; }
+
+/* ── HIDE FULL PRICING ON MOBILE ── */
+@media (max-width: 768px) {
+  #pricing { display: none !important; }
+}
+
+/* ── MOBILE FOUNDER QUOTE GAP ── */
+.mobile-founder-quote { margin-bottom: 0; }

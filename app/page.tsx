@@ -63,7 +63,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: "'Google Sans', sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
       {/* Top bar */}
       <div className="topbar">
-        <p>Founding member pricing is available during beta. {"\u00A3"}29/month, locked for life. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
+        <p>Founding member pricing: {"\u00A3"}39/month, locked for life. Price increases when we leave beta. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
       </div>
 
       {/* Nav */}
@@ -152,7 +152,7 @@ export default function LandingPage() {
             <div className="hero-meta fi d4">
               <span>14-day free trial</span>
               <span>Cancel any time</span>
-              <span>Founding price: {"\u00A3"}29/month</span>
+              <span>Full platform access</span>
             </div>
           </div>
 
@@ -677,12 +677,12 @@ export default function LandingPage() {
         <div style={{padding:"48px 24px",background:"#fff"}}>
           <div style={{maxWidth:"600px",margin:"0 auto"}}>
             <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"16px"}}>What it does</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr",gap:"12px"}}>
               {[
-                {t:"Live feed",d:"100+ sources. Updated continuously. Five minutes to know what moved."},
-                {t:"Research library",d:"Ask questions in plain language. Get cited answers from primary sources."},
-                {t:"Workspace",d:"Save sources. Draft reports. Export to Word. Your name on it."},
-                {t:"Crosscurrent",d:"Connections across sources that no single feed would surface."},
+                {t:"Live feed",d:"100+ sources monitored continuously. Know what moved the moment it moves. One click to the original source."},
+                {t:"Research library",d:"Ask real questions in plain language. Get cited answers from primary governing body documents. Follow the source chain yourself."},
+                {t:"Workspace",d:"Save sources, annotate, draft. Generate a structured report in one click. Export to Word. Your name on it."},
+                {t:"Crosscurrent",d:"Reads across all 100+ sources simultaneously. Surfaces connections no single source would make. Only on Tideline."},
               ].map((c,i)=>(
                 <div key={i} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",padding:"16px"}}>
                   <div style={{fontSize:"14px",fontWeight:600,color:"var(--ink)",marginBottom:"4px"}}>{c.t}</div>
@@ -693,16 +693,35 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{padding:"24px",background:"var(--surface)",display:"flex",gap:"8px",overflowX:"auto",justifyContent:"center",flexWrap:"wrap"}}>
+        <div className="who-chips-mobile">
           {["Policy & NGO","Finance","Legal","Science","Shipping","Corporate"].map(s=>(
-            <span key={s} style={{fontSize:"12px",fontWeight:500,color:"var(--secondary)",background:"#fff",border:"1px solid var(--border)",borderRadius:"20px",padding:"6px 14px",whiteSpace:"nowrap"}}>{s}</span>
+            <span key={s} style={{fontSize:"12px",fontWeight:500,color:"var(--secondary)",background:"#fff",border:"1px solid var(--border)",borderRadius:"20px",padding:"6px 14px",whiteSpace:"nowrap",flexShrink:0}}>{s}</span>
           ))}
         </div>
 
-        <div style={{padding:"32px 24px",background:"var(--ink)",margin:"0 24px",borderRadius:"var(--radius-lg)"}}>
-          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"12px"}}>Founding Member {"\u00B7"} Beta pricing</div>
-          <div style={{fontSize:"28px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>{"\u00A3"}29<span style={{fontSize:"16px",color:"rgba(255,255,255,0.5)"}}>/month</span></div>
-          <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"20px"}}>Full platform. Locked for life.</div>
+        <div className="mobile-founder-quote" style={{padding:"32px 24px",textAlign:"center"}}>
+          <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"20px",fontWeight:400,color:"var(--ink)",marginBottom:"20px"}}>
+            Built by someone who needed it. Which is why it works.
+          </div>
+          <blockquote style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"15px",fontWeight:400,color:"var(--secondary)",lineHeight:1.55,fontStyle:"normal",borderLeft:"3px solid #1D9E75",paddingLeft:"16px",textAlign:"left",margin:"0 auto",maxWidth:"400px"}}>
+            {"\u201C"}I built Tideline because it didn&apos;t exist. Every day working in the ocean sector meant too many tabs, too many sources, work scattered across platforms that didn&apos;t talk to each other. I needed one place to read, research, draft, track, and produce. This is that place.{"\u201D"}
+          </blockquote>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"12px",marginTop:"16px"}}>
+            <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--ink)",display:"grid",placeItems:"center",flexShrink:0}}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 11 Q5.5 7 9 11 Q12.5 15 16 11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><path d="M2 7.5 Q5.5 3.5 9 7.5 Q12.5 11.5 16 7.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            </div>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)"}}>Luke McMillan</div>
+              <div style={{fontSize:"13px",color:"var(--tertiary)"}}>Founder, Tideline</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:"32px 24px",background:"var(--ink)",margin:"0 24px",borderRadius:"var(--radius-lg)",marginTop:"0"}}>
+          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"12px"}}>Founding Member {"\u00B7"} Live now</div>
+          <div style={{fontSize:"28px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>{"\u00A3"}39<span style={{fontSize:"16px",color:"rgba(255,255,255,0.5)"}}>/month</span></div>
+          <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"8px"}}>Locked for life. Price increases when we leave beta.</div>
+          <div style={{fontSize:"13px",color:"rgba(255,255,255,0.5)",marginBottom:"20px"}}>Founding members get the price, the access, and the ear of the person building it.</div>
           <button className="btn-hero" onClick={() => setShowEarlyAccess(true)} style={{width:"100%"}}>Join early access</button>
         </div>
       </div>
@@ -737,14 +756,15 @@ export default function LandingPage() {
       {/* Pricing */}
       <section className="section" id="pricing">
         <span className="section-label">Pricing</span>
-        <h2 className="section-title">Register your interest. Be first when we launch.</h2>
-        <p className="section-sub">Tideline is in beta. Register now to secure founding member pricing and be first in when the full platform opens. This is what it will cost, and founding members lock their price for life.</p>
+        <h2 className="section-title">Join as a founding member. Your price is locked for life.</h2>
+        <p className="section-sub">The platform is live and growing week by week. Founding members join now at {"\u00A3"}39/month, locked for life. The price increases when we leave beta. It never increases for you.</p>
 
         {/* Founding member prominence */}
         <div style={{background:"var(--ink)",borderRadius:"var(--radius-lg)",padding:"20px 24px",marginBottom:"32px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"16px"}}>
           <div>
-            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>Founding Member {"\u00B7"} Beta pricing</div>
-            <div style={{fontSize:"16px",fontWeight:500,color:"#fff"}}>{"\u00A3"}29/month. Full platform. Locked for life. <span style={{color:"rgba(255,255,255,0.5)",fontWeight:400}}>Not a discount an identity.</span></div>
+            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"6px"}}>Founding Member {"\u00B7"} Live now</div>
+            <div style={{fontSize:"16px",fontWeight:500,color:"#fff"}}>{"\u00A3"}39/month. Full platform. Locked for life. <span style={{color:"rgba(255,255,255,0.5)",fontWeight:400}}>Not a discount. An identity.</span></div>
+            <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginTop:"6px"}}>Founding members get the price, the access, and the ear of the person building it.</div>
           </div>
           <button className="p-btn p-btn-filled" style={{whiteSpace:"nowrap",padding:"10px 24px",background:"var(--blue)",borderRadius:"var(--radius-md)"}} onClick={() => setShowEarlyAccess(true)}>Claim a founding spot {"\u2192"}</button>
         </div>
@@ -753,10 +773,10 @@ export default function LandingPage() {
           <div className="p-card">
             <div className="p-head">
               <span className="p-tier">Founding Member</span>
-              <div className="p-price">{"\u00A3"}29<sub>/mo</sub></div>
+              <div className="p-price">{"\u00A3"}39<sub>/mo</sub></div>
               <div className="p-per">Locked for life. Never increases.</div>
-              <div className="p-desc">Full platform access at the price that reflects where Tideline is now. Not a discount. An identity.</div>
-              <div className="p-badge">Beta pricing</div>
+              <div className="p-desc">Full platform access at the price that reflects where Tideline is now. Not a discount. An identity. Founding members get the price, the access, and the ear of the person building it.</div>
+              <div className="p-badge">Price locks on joining</div>
             </div>
             <div className="p-body">
               <ul className="p-feats">
@@ -773,14 +793,14 @@ export default function LandingPage() {
           <div className="p-card featured">
             <div className="p-head">
               <span className="p-tier">Individual</span>
-              <div className="p-price">{"\u00A3"}79<sub>/mo</sub></div>
-              <div className="p-per">or {"\u00A3"}790/year two months free</div>
-              <div className="p-desc">For the professional who needs to know, stay ahead, and produce before the working day starts.</div>
+              <div className="p-price">{"\u00A3"}99<sub>/mo</sub></div>
+              <div className="p-per">or {"\u00A3"}990/year two months free</div>
+              <div className="p-desc">For the professional who needs to know what moved, produce the work, and stay ahead of everyone else.</div>
             </div>
             <div className="p-body">
               <ul className="p-feats">
                 <li>Everything in Founding Member</li>
-                <li>Cross-tracker connections automatic</li>
+                <li>Crosscurrent: connections across sources identified automatically</li>
                 <li>Regulatory deadline calendar</li>
                 <li>Unlimited /ask queries</li>
                 <li>Priority support</li>
@@ -792,7 +812,7 @@ export default function LandingPage() {
           <div className="p-card">
             <div className="p-head">
               <span className="p-tier">Team</span>
-              <div className="p-price">{"\u00A3"}399<sub>/mo</sub></div>
+              <div className="p-price">{"\u00A3"}699<sub>/mo</sub></div>
               <div className="p-per">10 seats. Intelligence that outlasts anyone.</div>
               <div className="p-desc">For organisations where ocean intelligence needs to be shared and built into institutional memory.</div>
             </div>
