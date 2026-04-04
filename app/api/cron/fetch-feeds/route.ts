@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { extractEntities } from '@/lib/entities'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -226,14 +227,19 @@ export async function GET(request: Request) {
       }
       if (item.description) storyData.description = item.description
 
-      const { error } = await supabase
+      const { data: upserted, error } = await supabase
         .from('stories')
         .upsert(storyData, { onConflict: 'link', ignoreDuplicates: true })
+        .select('id, title, short_summary, full_summary')
 
       if (error) {
         totalSkipped++
       } else {
         totalSaved++
+        // Fire-and-forget entity extraction for new stories
+        if (upserted && upserted.length > 0) {
+          extractEntities(upserted[0]).catch(() => {})
+        }
       }
     }
 
