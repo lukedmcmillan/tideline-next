@@ -58,7 +58,7 @@ export async function getSubscriptionStatus(email: string): Promise<{
 
   if (trial) {
     const trialEnd = new Date(trial.signed_up_at);
-    trialEnd.setDate(trialEnd.getDate() + 14);
+    trialEnd.setDate(trialEnd.getDate() + 7);
 
     if (trialEnd > new Date()) {
       return {

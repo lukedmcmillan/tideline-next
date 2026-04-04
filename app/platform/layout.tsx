@@ -28,6 +28,98 @@ const IcWork = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
 const IcSearch = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M13 13l4 4"/></svg>;
 const IcDir = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="3"/><circle cx="12" cy="12" r="3"/><path d="M8.5 8.5l1 1"/><circle cx="12" cy="6" r="3"/><path d="M8.5 7.5l2-1"/></svg>;
 
+// ── Trial Banner ─────────────────────────────────────────────────────────
+function TrialBanner() {
+  const [status, setStatus] = useState<string | null>(null);
+  const [days, setDays] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const wasDismissed = typeof window !== "undefined" && sessionStorage.getItem("tideline_trial_banner_dismissed") === "1";
+    if (wasDismissed) setDismissed(true);
+
+    fetch("/api/subscription-status")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) {
+          setStatus(d.status);
+          setDays(d.trialDaysRemaining);
+        }
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  if (!loaded) return null;
+
+  // Expired trial overlay
+  if (status === "canceled" || status === "expired") {
+    return (
+      <div style={{
+        position: "absolute", inset: 0, zIndex: 50,
+        background: WHITE, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: "60px 24px", textAlign: "center",
+      }}>
+        <div style={{ fontFamily: F, fontSize: 24, fontWeight: 600, color: T1, marginBottom: 12 }}>
+          Your trial has ended
+        </div>
+        <div style={{ fontFamily: F, fontSize: 15, fontWeight: 400, color: T3, marginBottom: 32 }}>
+          Choose a plan to continue using Tideline.
+        </div>
+        <a href="/pricing" style={{
+          display: "inline-block", background: TEAL, color: "#fff",
+          fontFamily: F, fontSize: 14, fontWeight: 500,
+          padding: "12px 32px", borderRadius: 4, textDecoration: "none",
+        }}>
+          View plans
+        </a>
+      </div>
+    );
+  }
+
+  // Active or no subscription: hide banner
+  if (status !== "trialing" || days === null) return null;
+
+  // Dismissed for this session
+  if (dismissed) return null;
+
+  const urgent = days <= 3;
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    if (typeof window !== "undefined") sessionStorage.setItem("tideline_trial_banner_dismissed", "1");
+  };
+
+  return (
+    <div style={{
+      position: "sticky", top: 0, zIndex: 40, width: "100%",
+      background: urgent ? "rgba(249,171,0,0.08)" : "rgba(29,158,117,0.08)",
+      borderLeft: `3px solid ${urgent ? AMBER : TEAL}`,
+      padding: "12px 20px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+    }}>
+      <span style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T1 }}>
+        You have {days} {days === 1 ? "day" : "days"} left in your free trial. Founding member pricing: £39/month, locked for life.
+      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
+        <a href="/pricing" style={{
+          fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, textDecoration: "none",
+        }}>
+          Become a founding member
+        </a>
+        <button onClick={handleDismiss} style={{
+          background: "none", border: "none", cursor: "pointer",
+          fontSize: 16, color: T3, padding: 0, lineHeight: 1,
+        }}>
+          {"\u2715"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Tracker tooltips ──────────────────────────────────────────────────────
 const TIPS: Record<string, { st: string; c: string; d: string }> = {
   "BBNJ Treaty": { st: "Active \u2014 in force", c: TEAL, d: "87 ratifications. Pacific bloc deposit confirmed 06:42." },
@@ -644,7 +736,8 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         </div>
 
         {/* Main */}
-        <main className="main-ml" style={{ flex: 1, overflowY: "auto", background: BG }}>
+        <main className="main-ml" style={{ flex: 1, overflowY: "auto", background: BG, position: "relative" }}>
+          <TrialBanner />
           {children}
         </main>
 

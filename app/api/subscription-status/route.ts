@@ -26,5 +26,11 @@ export async function GET(req: NextRequest) {
 
   const needsOnboarding = !user?.topics || (Array.isArray(user.topics) && user.topics.length === 0);
 
-  return NextResponse.json({ ...result, needsOnboarding, sector: user?.sector || null });
+  let trialDaysRemaining: number | null = null;
+  if (result.status === "trialing" && result.trialEnd) {
+    const msLeft = new Date(result.trialEnd).getTime() - Date.now();
+    trialDaysRemaining = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+  }
+
+  return NextResponse.json({ ...result, needsOnboarding, sector: user?.sector || null, trialDaysRemaining });
 }
