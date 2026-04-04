@@ -27,7 +27,12 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(node -e \"const c=[];process.stdin.on\\(''''data'''',d=>c.push\\(d\\)\\);process.stdin.on\\(''''end'''',\\(\\)=>{try{console.log\\(JSON.stringify\\(JSON.parse\\(Buffer.concat\\(c\\).toString\\(\\)\\),null,2\\)\\)}catch\\(e\\){console.log\\(Buffer.concat\\(c\\).toString\\(\\)\\)}}\\)\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:3000/api/threads/match -H 'Content-Type: application/json' -d '{:*)",
+      "Bash(npx next:*)",
+      "Bash(voice, your take.\" Secondary: \"Here 's a starting point. Make it yours.\":*)"
     ]
   }
 }
