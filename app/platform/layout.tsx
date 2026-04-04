@@ -49,12 +49,13 @@ function trackerColor(t: TrackerData): string {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories }: {
+function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, onShortcuts }: {
   onNav?: () => void;
   urgentCount?: number;
   trackerData?: TrackerData[];
   projectData?: ProjectData[];
   recentStories?: RecentStory[];
+  onShortcuts?: () => void;
 }) {
   const path = usePathname();
   const [hTip, setHTip] = useState<string | null>(null);
@@ -171,6 +172,20 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories }
           </div>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>8 queries today</span>
         </div>
+        {onShortcuts && (
+          <button
+            onClick={onShortcuts}
+            style={{
+              width: 28, height: 28, borderRadius: "50%",
+              background: "transparent", border: "1px solid rgba(255,255,255,.15)",
+              fontFamily: M, fontSize: 13, color: "rgba(255,255,255,.4)",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              marginTop: 8,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = TEAL; (e.currentTarget as HTMLElement).style.color = TEAL; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,.15)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.4)"; }}
+          >?</button>
+        )}
       </div>
     </div>
   );
@@ -369,10 +384,178 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
   );
 }
 
+// ── Quick Note Panel ─────────────────────────────────────────────────────
+function QuickNotePanel({ projects, onClose }: {
+  projects: ProjectData[];
+  onClose: () => void;
+}) {
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<{ id: string; name: string } | null>(null);
+  const [projectList, setProjectList] = useState<{ id: string; name: string }[]>([]);
+  const [picking, setPicking] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then(r => r.ok ? r.json() : { projects: [] })
+      .then(d => {
+        const list = (d.projects || []).map((p: any) => ({ id: p.id || "", name: p.name }));
+        setProjectList(list);
+        if (list.length === 1) {
+          setSelectedProject(list[0]);
+        } else if (list.length === 0) {
+          setSelectedProject(null);
+        } else {
+          setPicking(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const save = async () => {
+    if (!note.trim() || !selectedProject || saving) return;
+    setSaving(true);
+    try {
+      await fetch("/api/workspace/quick-note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: selectedProject.id, content: note.trim() }),
+      });
+    } catch {}
+    setSaving(false);
+    setToast(`Saved to ${selectedProject.name}`);
+    setTimeout(() => { setToast(null); onClose(); }, 2000);
+  };
+
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") { onClose(); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); save(); }
+  };
+
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
+
+  if (toast) {
+    return (
+      <div style={{
+        position: "fixed", bottom: 24, right: 24, zIndex: 9999,
+        background: TEAL, color: "#fff", fontFamily: F, fontSize: 13, fontWeight: 500,
+        padding: "10px 16px", borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,.12)",
+      }}>
+        {toast}
+      </div>
+    );
+  }
+
+  return (
+    <div onKeyDown={handleKey} style={{
+      position: "fixed", bottom: 24, right: 24, zIndex: 9999,
+      width: 320, background: WHITE,
+      border: `1px solid ${BLT}`, borderRadius: 4,
+      boxShadow: "0 4px 12px rgba(0,0,0,.12)",
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", padding: "10px 12px 8px", gap: 8 }}>
+        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1 }}>Quick note</span>
+        {selectedProject && (
+          <span style={{ fontFamily: M, fontSize: 11, color: TEAL }}>{selectedProject.name}</span>
+        )}
+        <button onClick={onClose} style={{ marginLeft: "auto", fontFamily: F, fontSize: 14, color: "#80868B", background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1 }}>{"\u2715"}</button>
+      </div>
+
+      {/* Project picker */}
+      {picking && !selectedProject ? (
+        <div style={{ padding: "0 12px 12px" }}>
+          <div style={{ fontFamily: F, fontSize: 12, color: "#80868B", marginBottom: 8 }}>Select a project:</div>
+          {projectList.map(p => (
+            <button key={p.id} onClick={() => { setSelectedProject(p); setPicking(false); }} style={{
+              display: "block", width: "100%", textAlign: "left",
+              padding: "8px 10px", fontFamily: F, fontSize: 13, color: T1,
+              background: "none", border: `1px solid ${BLT}`, borderRadius: 4,
+              cursor: "pointer", marginBottom: 4,
+            }}>{p.name}</button>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Textarea */}
+          <textarea
+            autoFocus
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Note to your project..."
+            rows={4}
+            style={{
+              width: "100%", border: "none", outline: "none", resize: "none",
+              padding: 12, fontFamily: F, fontSize: 13, color: T1,
+              lineHeight: 1.5, background: "transparent",
+            }}
+          />
+
+          {/* Footer */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderTop: `1px solid ${BLT}` }}>
+            <span style={{ fontFamily: F, fontSize: 12, color: "#80868B" }}>
+              {selectedProject ? `Saved to ${selectedProject.name}` : ""}
+            </span>
+            <button
+              onClick={save}
+              disabled={!note.trim() || saving}
+              style={{
+                height: 28, padding: "0 12px", borderRadius: 4,
+                fontFamily: F, fontSize: 12, fontWeight: 500,
+                color: note.trim() && !saving ? "#fff" : "#BDC1C6",
+                background: note.trim() && !saving ? TEAL : "#F1F3F4",
+                border: "none", cursor: note.trim() && !saving ? "pointer" : "not-allowed",
+              }}
+            >
+              {saving ? "Saving..." : `Save (${isMac ? "\u2318" : "Ctrl"}\u23CE)`}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Shortcuts Modal ──────────────────────────────────────────────────────
+function ShortcutsModal({ onClose }: { onClose: () => void }) {
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
+  const kbd = (label: string) => (
+    <span style={{ fontFamily: M, fontSize: 12, color: T1, background: "#F1F3F4", border: `1px solid ${BLT}`, padding: "4px 8px", borderRadius: 4 }}>{label}</span>
+  );
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: WHITE, maxWidth: 400, width: "100%", borderRadius: 4, padding: 28, position: "relative" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#80868B", padding: 0, lineHeight: 1 }}>{"\u2715"}</button>
+        <div style={{ fontFamily: F, fontSize: 16, fontWeight: 500, color: T1, marginBottom: 20 }}>Keyboard shortcuts</div>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F1F3F4" }}>
+            <span style={{ fontFamily: F, fontSize: 13, color: T3 }}>Quick note to active project</span>
+            <span style={{ display: "flex", gap: 4 }}>{kbd(isMac ? "Cmd" : "Ctrl")}{kbd("Shift")}{kbd("N")}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F1F3F4" }}>
+            <span style={{ fontFamily: F, fontSize: 13, color: T3 }}>Search</span>
+            <span style={{ display: "flex", gap: 4 }}>{kbd(isMac ? "Cmd" : "Ctrl")}{kbd("K")}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F1F3F4" }}>
+            <span style={{ fontFamily: F, fontSize: 13, color: T3 }}>Close panel</span>
+            <span style={{ display: "flex", gap: 4 }}>{kbd("Esc")}</span>
+          </div>
+        </div>
+        <div style={{ fontFamily: F, fontSize: 12, color: "#80868B", marginTop: 16 }}>More shortcuts coming soon.</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Layout ────────────────────────────────────────────────────────────────
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
   const [sbOpen, setSbOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [quickNoteOpen, setQuickNoteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [urgentCount, setUrgentCount] = useState(0);
   const [trackerData, setTrackerData] = useState<TrackerData[]>([]);
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
@@ -395,7 +578,8 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
 
   const handleKey = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setSearchOpen(true); }
-    if (e.key === "Escape") setSearchOpen(false);
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "n" || e.key === "N")) { e.preventDefault(); setQuickNoteOpen(true); }
+    if (e.key === "Escape") { setSearchOpen(false); setQuickNoteOpen(false); }
   }, []);
 
   useEffect(() => {
@@ -449,14 +633,14 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         {sbOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.4)" }} onClick={() => setSbOpen(false)}>
             <div style={{ width: 280, height: "100%", background: NAVY }} onClick={e => e.stopPropagation()}>
-              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} />
+              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} />
             </div>
           </div>
         )}
 
         {/* Desktop sidebar */}
         <div className="sb-desktop" style={{ flexShrink: 0 }}>
-          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} />
+          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} />
         </div>
 
         {/* Main */}
@@ -469,6 +653,8 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {quickNoteOpen && <QuickNotePanel projects={projectData} onClose={() => setQuickNoteOpen(false)} />}
+      {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} />}
     </div>
   );
 }

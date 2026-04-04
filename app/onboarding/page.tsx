@@ -117,7 +117,7 @@ const TIMEZONES = [
 ];
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<"sector" | "topics" | "timezone">("sector");
+  const [step, setStep] = useState<"sector" | "topics" | "timezone" | "shortcut">("sector");
   const [sector, setSector] = useState<string | null>(null);
   const [sectorSaving, setSectorSaving] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState(new Set<string>());
@@ -180,6 +180,14 @@ export default function OnboardingPage() {
         setSubmitting(false);
         return;
       }
+      // Show shortcut tip if not already shown
+      try {
+        if (typeof localStorage !== "undefined" && !localStorage.getItem("tideline_shortcut_shown")) {
+          setStep("shortcut");
+          setSubmitting(false);
+          return;
+        }
+      } catch {}
       window.location.href = "/platform/feed";
     } catch {
       setError("Something went wrong. Please try again.");
@@ -378,6 +386,48 @@ export default function OnboardingPage() {
             </button>
 
             <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", fontFamily: SANS, textDecoration: "underline", marginTop: 20, padding: 0, display: "block" }}>{"\u2190"} Back</button>
+          </div>
+        )}
+        {/* Step: Shortcut tip */}
+        {step === "shortcut" && (
+          <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 20 }}>
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke={TEAL} strokeWidth="1.5"/>
+              <path d="M6 12h2M10 12h4M18 12h-2M8 8h2M14 8h2M8 16h8" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/>
+            </svg>
+            <h1 style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: "#202124", margin: "0 0 8px" }}>
+              One shortcut worth knowing
+            </h1>
+            <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: "#5F6368", margin: "0 0 24px" }}>
+              Press this anywhere on Tideline to instantly save a thought to your active project.
+            </p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+              {(typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent)
+                ? ["Cmd", "Shift", "N"]
+                : ["Ctrl", "Shift", "N"]
+              ).map((k, i) => (
+                <span key={i}>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: "#202124", background: "#F1F3F4", border: "1px solid #E8EAED", padding: "6px 10px", borderRadius: 4 }}>{k}</span>
+                  {i < 2 && <span style={{ color: "#9CA3AF", margin: "0 2px" }}>+</span>}
+                </span>
+              ))}
+            </div>
+            <p style={{ fontFamily: SANS, fontSize: 13, color: "#80868B", margin: "0 0 28px" }}>
+              Works anywhere on the platform. Saves to your active project.
+            </p>
+            <button
+              onClick={() => {
+                try { localStorage.setItem("tideline_shortcut_shown", "true"); } catch {}
+                window.location.href = "/platform/feed";
+              }}
+              style={{
+                width: "100%", height: 40, background: TEAL, border: "none",
+                color: WHITE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+                borderRadius: 4, cursor: "pointer",
+              }}
+            >
+              Got it, take me in
+            </button>
           </div>
         )}
         </>
