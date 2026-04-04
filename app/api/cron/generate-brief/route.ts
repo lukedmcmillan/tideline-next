@@ -163,9 +163,9 @@ export async function GET(request: Request) {
         .join("\n");
 
       const message = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 800,
-        system: "You are a hostile senior editor at a B2B intelligence publication. Your job is to reject briefs that contain vague summaries, AI-sounding language, cause advocacy, or anything below the standard of a professional policy intelligence product. Return JSON only. No markdown.",
+        system: [{ type: "text", text: "You are a hostile senior editor at a B2B intelligence publication. Your job is to reject briefs that contain vague summaries, AI-sounding language, cause advocacy, or anything below the standard of a professional policy intelligence product. Return JSON only. No markdown.", cache_control: { type: "ephemeral" } }],
         messages: [{
           role: "user",
           content: `Review these summaries. For each, mark pass or fail. Fail if: uses phrases like "significant implications", "key stakeholders", "it is crucial", "in conclusion", or similar filler. Fail if the first sentence does not state a concrete fact. Fail if the tone is advocacy rather than intelligence. Return this exact JSON: { "passed": boolean, "failed_items": [{ "index": number, "reason": "string" }], "overall_quality": "publish"|"review"|"reject" }\n\n${summaryList}`,

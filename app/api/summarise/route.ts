@@ -193,14 +193,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ short_summary: unavailable, full_summary: unavailable })
     }
 
-    const prompt = `You are a factual intelligence editor at Tideline, an ocean and marine policy briefing platform. Readers are sector experts: NGO policy teams, corporate ESG leads, shipping compliance officers, blue finance investors, and ocean researchers.
-
-Article title: "${story.title}"
-Source: ${story.source_name}
-URL: ${story.link}
-
-ARTICLE CONTENT:
-${articleText}
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1200,
+      messages: [{ role: 'user', content: [
+        { type: 'text', text: `You are a factual intelligence editor at Tideline, an ocean and marine policy briefing platform. Readers are sector experts: NGO policy teams, corporate ESG leads, shipping compliance officers, blue finance investors, and ocean researchers.
 
 STRICT ACCURACY RULES:
 - Base every factual claim solely on the article content above. Nothing else.
@@ -227,12 +224,9 @@ Do NOT begin with the same sentence as the short summary. Do not begin with a re
 If the article does not contain enough information to answer any of these three points, say so in one short sentence rather than speculating.
 
 Respond in this exact JSON format with no markdown:
-{"short_summary":"...","full_summary":"..."}`
-
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1200,
-      messages: [{ role: 'user', content: prompt }],
+{"short_summary":"...","full_summary":"..."}`, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: `Article title: "${story.title}"\nSource: ${story.source_name}\nURL: ${story.link}\n\nARTICLE CONTENT:\n${articleText}` },
+      ] }],
     })
 
     const text = message.content[0].type === 'text' ? message.content[0].text : ''

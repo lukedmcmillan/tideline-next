@@ -78,9 +78,9 @@ export async function GET(request: Request) {
         for (const story of newStories.slice(0, 5)) {
           try {
             const message = await anthropic.messages.create({
-              model: "claude-sonnet-4-20250514",
+              model: "claude-haiku-4-5-20251001",
               max_tokens: 300,
-              system: "You are a research assistant for an ocean intelligence platform. Generate a brief project entry summarising why this story matters to the project. Return JSON only. No markdown.",
+              system: [{ type: "text", text: "You are a research assistant for an ocean intelligence platform. Generate a brief project entry summarising why this story matters to the project. Return JSON only. No markdown.", cache_control: { type: "ephemeral" } }],
               messages: [{
                 role: "user",
                 content: `Project: "${project.name}" (type: ${project.project_type || "general"})\nStory: "${story.title}"\nSummary: ${story.short_summary}\nSource: ${story.source_name}\n\nReturn this exact JSON: { "entry_type": "development" or "evidence" or "deadline" or "context", "content": "1-2 sentence explanation of why this matters to the project" }`,

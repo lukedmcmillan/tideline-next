@@ -52,9 +52,9 @@ export async function GET(request: Request) {
       storiesProcessed++;
       try {
         const message = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 800,
-          system: "You are an ocean governance analyst extracting structured intelligence. Return JSON only. No markdown.",
+          system: [{ type: "text", text: "You are an ocean governance analyst extracting structured intelligence. Return JSON only. No markdown.", cache_control: { type: "ephemeral" } }],
           messages: [{
             role: "user",
             content: `Story: ${story.title}. ${story.short_summary}. Source: ${story.source_name}. Does this story represent a governance event for any of these trackers: bbnj, isa, iuu, 30x30, imo_shipping, whaling, msp, arctic? If yes return array of event objects. If no governance events, return empty array. Each object must have: { "tracker_slug": string, "event_type": "milestone" or "setback" or "update", "event_title": "max 12 words", "event_summary": "max 40 words", "significance_score": 0-100, "source_url": "${story.link}", "source_name": "${story.source_name}" }`,

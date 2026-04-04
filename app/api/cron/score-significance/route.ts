@@ -45,9 +45,9 @@ export async function GET(request: Request) {
     for (const story of stories) {
       try {
         const message = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 300,
-          system: 'You are an ocean governance analyst. Score this story and return JSON only. No markdown. No explanation.',
+          system: [{ type: 'text', text: 'You are an ocean governance analyst. Score this story and return JSON only. No markdown. No explanation.', cache_control: { type: 'ephemeral' } }],
           messages: [{
             role: 'user',
             content: `Story headline: ${story.title}. Summary: ${story.short_summary}. Return this exact JSON: { "score": 0-100, "trackers": [] } where trackers is an array of slugs from this list only: bbnj, isa, iuu, 30x30, blue_finance, imo_shipping, whaling, ocean_carbon, msp, arctic. Score meaning: 0-30 = routine update, 31-60 = noteworthy, 61-75 = significant development, 76-100 = major policy shift. Only include tracker slugs this story directly affects. Return only valid JSON.`,

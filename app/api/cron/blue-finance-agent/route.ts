@@ -51,9 +51,9 @@ export async function GET(request: Request) {
       storiesProcessed++;
       try {
         const message = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 800,
-          system: "You are a blue finance analyst extracting structured deal intelligence. Return JSON only. No markdown.",
+          system: [{ type: "text", text: "You are a blue finance analyst extracting structured deal intelligence. Return JSON only. No markdown.", cache_control: { type: "ephemeral" } }],
           messages: [{
             role: "user",
             content: `Story: ${story.title}. ${story.short_summary}. Source: ${story.source_name}. Does this story represent a blue finance event? If yes return array of event objects. If no events, return empty array. Each object must have: { "tracker_slug": "blue_finance", "event_type": "deal_announced" or "deal_closed" or "framework_published" or "rating_issued" or "setback" or "update", "event_title": "max 12 words", "event_summary": "max 40 words", "significance_score": 0-100, "source_url": "${story.link}", "source_name": "${story.source_name}" }`,

@@ -57,9 +57,9 @@ Return this exact JSON format:
 Each evidence_note must be one sentence explaining specifically what this story adds to that thread hypothesis. If no matches, return { "matches": [] }`
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1200,
-      system: 'You are an investigative intelligence assistant for Tideline, an ocean intelligence platform. You will be given a news story summary and a list of open investigative threads. Your job is to identify which threads this story adds evidence to. Be conservative. Only match when the connection is genuinely meaningful, not superficial. For each match, assign a confidence level: STRONG, MODERATE, or WEAK. STRONG means the story directly advances the thread hypothesis. MODERATE means it is relevant context. WEAK means it is tangentially related. Return JSON only. No explanation. No markdown.',
+      system: [{ type: 'text', text: 'You are an investigative intelligence assistant for Tideline, an ocean intelligence platform. You will be given a news story summary and a list of open investigative threads. Your job is to identify which threads this story adds evidence to. Be conservative. Only match when the connection is genuinely meaningful, not superficial. For each match, assign a confidence level: STRONG, MODERATE, or WEAK. STRONG means the story directly advances the thread hypothesis. MODERATE means it is relevant context. WEAK means it is tangentially related. Return JSON only. No explanation. No markdown.', cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userMessage }],
     })
 

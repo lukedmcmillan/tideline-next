@@ -96,12 +96,11 @@ async function extractMeetingsWithClaude(
     // Truncate to avoid token limits
     const content = pageContent.slice(0, 12000);
 
-    const prompt = `You are extracting upcoming meetings and sessions from an official intergovernmental organisation webpage.
-
-Organisation: ${bodyName} (${bodyAbbreviation})
-
-PAGE CONTENT:
-${content}
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2000,
+      messages: [{ role: "user", content: [
+        { type: "text", text: `You are extracting upcoming meetings and sessions from an official intergovernmental organisation webpage.
 
 STRICT RULES:
 - Only extract actual meetings, sessions, conferences, consultations, or deadlines
@@ -114,12 +113,9 @@ STRICT RULES:
 Return JSON array only, no markdown:
 [{"title":"Meeting title","starts_at":"YYYY-MM-DD","ends_at":"YYYY-MM-DD or null","location":"City, Country or Virtual","event_type":"meeting|session|conference|deadline|consultation","description":"One sentence description if available, null otherwise"}]
 
-If no valid meetings are found, return: []`;
-
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }],
+If no valid meetings are found, return: []`, cache_control: { type: "ephemeral" } },
+        { type: "text", text: `Organisation: ${bodyName} (${bodyAbbreviation})\n\nPAGE CONTENT:\n${content}` },
+      ] }],
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "[]";
@@ -224,14 +220,11 @@ async function classifySignificance(
   bodyName: string
 ): Promise<void> {
   try {
-    const prompt = `You are assessing the significance of an ocean governance meeting for professional subscribers — NGO policy officers, corporate ESG analysts, blue finance investors, shipping compliance teams, fisheries managers.
-
-Meeting: ${event.title}
-Body: ${bodyName} (${event.bodyAbbreviation})
-Date: ${event.startsAt}
-Location: ${event.location || "Unknown"}
-Description: ${event.description || "Not available"}
-Topics: ${event.topics.join(", ")}
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 500,
+      messages: [{ role: "user", content: [
+        { type: "text", text: `You are assessing the significance of an ocean governance meeting for professional subscribers — NGO policy officers, corporate ESG analysts, blue finance investors, shipping compliance teams, fisheries managers.
 
 Classify significance as EXACTLY one of:
 - critical: A decision-making session where binding votes, quota adoptions, treaty amendments, or major policy shifts are expected. Examples: ISA Council voting on mining code, CCAMLR Commission annual meeting, ICCAT annual meeting with quota decisions, MEPC session adopting emissions regulations.
@@ -245,12 +238,9 @@ STRICT RULES FOR PREDICTIONS:
 - If the meeting hasn't published an agenda yet, expected_decisions should be empty.
 
 Return JSON only:
-{"significance":"critical|important|routine","significance_reason":"One factual sentence explaining classification. No hedging.","audience_tags":["ngos","corporate_esg","blue_finance","shipping_compliance","fisheries_industry","researchers"],"expected_decisions":[{"description":"what","type":"vote|adoption|review|deadline","expected_outcome":"adoption_likely|contested|likely_deferred|unknown"}]}`;
-
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 500,
-      messages: [{ role: "user", content: prompt }],
+{"significance":"critical|important|routine","significance_reason":"One factual sentence explaining classification. No hedging.","audience_tags":["ngos","corporate_esg","blue_finance","shipping_compliance","fisheries_industry","researchers"],"expected_decisions":[{"description":"what","type":"vote|adoption|review|deadline","expected_outcome":"adoption_likely|contested|likely_deferred|unknown"}]}`, cache_control: { type: "ephemeral" } },
+        { type: "text", text: `Meeting: ${event.title}\nBody: ${bodyName} (${event.bodyAbbreviation})\nDate: ${event.startsAt}\nLocation: ${event.location || "Unknown"}\nDescription: ${event.description || "Not available"}\nTopics: ${event.topics.join(", ")}` },
+      ] }],
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";

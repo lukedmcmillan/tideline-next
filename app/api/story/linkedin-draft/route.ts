@@ -48,12 +48,15 @@ export async function POST(req: NextRequest) {
     : "No specific angle. Write from whatever perspective feels most natural for this story.";
 
   const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 400,
     messages: [
       {
         role: "user",
-        content: `You are writing a first draft that a professional will edit and make their own. Your job is to give them a strong starting point, not a finished post. Write something they will want to react to, refine, and rewrite in their own voice. Do not be too polished. Leave room for their personality.
+        content: [
+          {
+            type: "text",
+            text: `You are writing a first draft that a professional will edit and make their own. Your job is to give them a strong starting point, not a finished post. Write something they will want to react to, refine, and rewrite in their own voice. Do not be too polished. Leave room for their personality.
 
 You are a senior professional in the ocean sector writing a LinkedIn post about a development in your field. You have 15 years of experience. You write the way experienced professionals actually write, not the way AI writes.
 
@@ -95,15 +98,20 @@ STRUCTURE:
 - Middle: one clear implication or insight grounded only in this story. No speculation beyond what the story supports.
 - Close: either a specific question that practitioners in this field would actually debate, or a short declarative observation. Not a call to action. Not an invitation to comment.
 
-QUALITY TEST — before returning the post, ask yourself: could a specific experienced professional in this field have written this on a Tuesday evening because the story genuinely caught their attention? If it sounds like it was generated, rewrite it.
-
-SOURCE: ${story.title}. ${story.short_summary || ""}
+QUALITY TEST — before returning the post, ask yourself: could a specific experienced professional in this field have written this on a Tuesday evening because the story genuinely caught their attention? If it sounds like it was generated, rewrite it.`,
+            cache_control: { type: "ephemeral" },
+          },
+          {
+            type: "text",
+            text: `SOURCE: ${story.title}. ${story.short_summary || ""}
 SECTOR CONTEXT: ${sector || "General ocean sector professional"}
 ANGLE: ${angleText}
 VARIATION SEED: ${seed}
 DATE: ${today}
 
 Write one post only. No preamble, no explanation, no 'here is your post'. Just the post itself.`,
+          },
+        ],
       },
     ],
   });

@@ -38,9 +38,9 @@ export async function POST(req: NextRequest) {
 
     // 5. Call Anthropic
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1500,
-      system: "You are Tideline's primary source research assistant. Answer questions about ocean governance using only the official documents provided — treaty text, governing body decisions, ISA publications, IMO circulars, UN resolutions. Never use outside knowledge. Never paraphrase a secondary source as if it were primary. For any claim you cannot directly ground in the provided chunks, append [please confirm source] inline. If you cannot answer from the provided chunks say so explicitly. Return prose followed by a Sources list: issuing body, document type, and date for each chunk used.",
+      system: [{ type: "text", text: "You are Tideline's primary source research assistant. Answer questions about ocean governance using only the official documents provided — treaty text, governing body decisions, ISA publications, IMO circulars, UN resolutions. Never use outside knowledge. Never paraphrase a secondary source as if it were primary. For any claim you cannot directly ground in the provided chunks, append [please confirm source] inline. If you cannot answer from the provided chunks say so explicitly. Return prose followed by a Sources list: issuing body, document type, and date for each chunk used.", cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: `Question: ${query.trim()}\n\nPrimary source documents:\n${context}` }],
     });
 
