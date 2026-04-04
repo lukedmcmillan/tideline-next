@@ -240,7 +240,10 @@ export async function GET(request: Request) {
         totalSaved++
         // Fire-and-forget entity extraction for new stories
         if (upserted && upserted.length > 0) {
-          extractEntities(upserted[0]).catch(() => {})
+          const s = upserted[0]
+          extractEntities(s)
+            .then(() => supabase.from('stories').update({ entities_extracted: true }).eq('id', s.id))
+            .catch(() => {})
         }
       }
     }

@@ -16,42 +16,41 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get story IDs already processed
-  const { data: existingMentions } = await supabase
-    .from("entity_mentions")
-    .select("story_id");
-
-  const processedIds = new Set((existingMentions || []).map((m: { story_id: string }) => m.story_id));
-
-  // Fetch all stories (paginate if needed)
-  const { data: allStories } = await supabase
+  // Fetch stories not yet processed
+  const { data: toProcess } = await supabase
     .from("stories")
     .select("id, title, short_summary, full_summary")
+    .or("entities_extracted.eq.false,entities_extracted.is.null")
     .order("published_at", { ascending: false })
-    .limit(200);
-
-  const toProcess = (allStories || [])
-    .filter((s) => !processedIds.has(s.id))
-    .slice(0, 50);
-
-  const totalRemaining = (allStories || []).filter((s) => !processedIds.has(s.id)).length;
+    .limit(50);
 
   let processed = 0;
   let skipped = 0;
 
-  for (const story of toProcess) {
+  for (const story of toProcess || []) {
     try {
       await extractEntities(story);
       processed++;
     } catch {
       skipped++;
     }
+    // Mark as processed regardless of whether entities were found
+    await supabase
+      .from("stories")
+      .update({ entities_extracted: true })
+      .eq("id", story.id);
   }
+
+  // Count remaining
+  const { count } = await supabase
+    .from("stories")
+    .select("id", { count: "exact", head: true })
+    .or("entities_extracted.eq.false,entities_extracted.is.null");
 
   return NextResponse.json({
     processed,
     skipped,
-    total_remaining: Math.max(0, totalRemaining - processed),
-    batch_size: toProcess.length,
+    total_remaining: count ?? 0,
+    batch_size: (toProcess || []).length,
   });
 }
