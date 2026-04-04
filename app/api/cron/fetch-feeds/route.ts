@@ -169,6 +169,8 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
+  console.log("[fetch-feeds] CRON_SECRET loaded:", !!process.env.CRON_SECRET);
+  console.log("[fetch-feeds] Header received:", authHeader?.substring(0, 10));
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
