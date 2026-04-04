@@ -61,9 +61,9 @@ export const authOptions = {
     secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
   }),
   pages: {
-    signIn: '/login',
-    verifyRequest: '/login?verify=1',
-    error: '/login?error=1',
+    signIn: '/sign-in',
+    verifyRequest: '/sign-in?verify=1',
+    error: '/sign-in?error=1',
   },
   debug: true,
   session: {
@@ -71,6 +71,11 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      if (url.startsWith(baseUrl)) return url
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      return `${baseUrl}/platform/feed`
+    },
     async signIn({ user }: { user: any }) {
       if (!user?.email) return false
 

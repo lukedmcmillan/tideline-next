@@ -2,16 +2,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // AUTH BYPASS: uncomment the block below to re-enable auth protection
-  // const sessionToken =
-  //   request.cookies.get('__Secure-next-auth.session-token')?.value ||
-  //   request.cookies.get('next-auth.session-token')?.value
-  //
-  // if (!sessionToken) {
-  //   const loginUrl = new URL('/login', request.url)
-  //   loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
-  //   return NextResponse.redirect(loginUrl)
-  // }
+  const sessionToken =
+    request.cookies.get('__Secure-next-auth.session-token')?.value ||
+    request.cookies.get('next-auth.session-token')?.value
+
+  if (!sessionToken) {
+    const signInUrl = new URL('/sign-in', request.url)
+    signInUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    return NextResponse.redirect(signInUrl)
+  }
 
   return NextResponse.next()
 }
