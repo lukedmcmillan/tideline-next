@@ -3,17 +3,14 @@
 import { useState } from "react";
 
 const WHITE = "#FFFFFF";
-const BG = "#F8F9FA";
-const RED = "#D93025";
-const TEAL = "#1D9E75";
 const T1 = "#202124";
-const T4 = "#9AA0A6";
-const BLT = "#E8EAED";
-const BORDER = "#DADCE0";
-const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-
 const T3 = "#5F6368";
+const T4 = "#80868B";
+const BLT = "#E8EAED";
 const TEAL_H = "#0E7C86";
+const RED_OVER = "#C0392B";
+const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+const M = "var(--font-mono), 'DM Mono', monospace";
 
 const ANGLES = [
   { key: "implications", label: "What this means for your sector" },
@@ -60,91 +57,153 @@ export default function LinkedInDraftPanel({ postText, onChange, loading, onClos
   const overLimit = charCount > 700;
 
   return (
-    <div style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: WHITE, borderTop: `1px solid ${BORDER}`,
-      boxShadow: "0 -8px 30px rgba(0,0,0,.1)",
-      padding: "20px 24px 24px",
-      maxHeight: "50vh", overflowY: "auto",
-    }}>
-      <div style={{ maxWidth: 600, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>LinkedIn post draft</span>
-          <button onClick={onClose} style={{ fontFamily: F, fontSize: 12, color: T4, background: "none", border: "none", cursor: "pointer" }}>Close</button>
+    /* Overlay */
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+        zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      {/* Panel */}
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: WHITE, width: 560,
+          maxWidth: "calc(100vw - 48px)", maxHeight: "calc(100vh - 96px)",
+          borderRadius: 4, boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+          display: "flex", flexDirection: "column", overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          height: 56, padding: "0 24px",
+          borderBottom: `1px solid ${BLT}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexShrink: 0,
+        }}>
+          <span style={{ fontFamily: F, fontSize: 16, fontWeight: 500, color: T1 }}>
+            Edit freely. Your name, your voice, your take.
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              fontSize: 24, color: T3, background: "none",
+              border: "none", cursor: "pointer", padding: 0, lineHeight: 1,
+            }}
+          >{"\u2715"}</button>
         </div>
 
-        {loading ? (
-          <div style={{ fontSize: 13, color: T4, padding: "20px 0" }}>Generating draft...</div>
-        ) : error ? (
-          <div style={{ fontSize: 13, color: RED, padding: "20px 0" }}>{error}</div>
-        ) : (
-          <>
-            <div style={{ fontFamily: F, fontSize: 16, fontWeight: 500, color: T1, marginBottom: 16 }}>
-              Edit freely. Your name, your voice, your take.
-            </div>
-            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T3, marginBottom: 16 }}>
-              Here&apos;s a starting point. Make it yours.
-            </div>
-            <textarea
-              value={rewriting ? "Rewriting..." : postText}
-              onChange={e => { if (!rewriting) onChange(e.target.value); }}
-              disabled={rewriting}
-              rows={8}
-              style={{
-                width: "100%", resize: "vertical", border: `1px solid ${BLT}`,
-                borderRadius: 8, padding: "12px 14px", fontSize: 13, lineHeight: 1.65,
-                color: rewriting ? T4 : T1, fontFamily: F, background: BG, outline: "none",
-                opacity: rewriting ? 0.6 : 1,
-              }}
-            />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-              <span style={{
-                fontFamily: F, fontSize: 11,
-                color: overLimit ? RED : T4,
-              }}>
-                {charCount} / 700 chars {overLimit ? "(over optimal length)" : ""}
+        {/* Body */}
+        <div style={{ padding: 24, flex: 1, overflowY: "auto" }}>
+          {loading ? (
+            <div style={{
+              minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{ fontFamily: F, fontSize: 14, color: T4, fontStyle: "italic" }}>
+                Writing your draft...
               </span>
-              <button onClick={copyPost} style={{
-                fontSize: 12, fontWeight: 500, fontFamily: F,
-                color: "#fff", background: TEAL,
-                border: "none", borderRadius: 8, padding: "7px 16px",
-                cursor: "pointer",
-              }}>
-                {copied ? "Copied. Edit before you post." : "Copy to clipboard"}
-              </button>
             </div>
-            <div style={{ fontFamily: F, fontSize: 11, color: T4, marginTop: 10 }}>
-              Edit before posting. Always verify facts.
+          ) : error ? (
+            <div style={{
+              minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{ fontFamily: F, fontSize: 14, color: RED_OVER }}>
+                Could not generate draft. Try again.
+              </span>
             </div>
-
-            {storyId && (
-              <div style={{ marginTop: 14, borderTop: `1px solid ${BLT}`, paddingTop: 14 }}>
-                <div style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: T3, marginBottom: 8 }}>
-                  Try a different starting point:
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {ANGLES.map(a => (
-                    <button
-                      key={a.key}
-                      onClick={() => handleAngle(a.key)}
-                      disabled={rewriting}
-                      style={{
-                        fontFamily: F, fontSize: 13,
-                        border: `1px solid ${BLT}`, borderRadius: 4,
-                        padding: "6px 14px", background: "none",
-                        color: rewriting ? T4 : T3,
-                        cursor: rewriting ? "not-allowed" : "pointer",
-                      }}
-                      onMouseEnter={e => { if (!rewriting) { (e.currentTarget as HTMLElement).style.borderColor = TEAL_H; (e.currentTarget as HTMLElement).style.color = TEAL_H; } }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = BLT; (e.currentTarget as HTMLElement).style.color = rewriting ? T4 : T3; }}
-                    >
-                      {a.label}
-                    </button>
-                  ))}
-                </div>
+          ) : (
+            <>
+              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T3, marginBottom: 16 }}>
+                Here&apos;s a starting point. Make it yours.
               </div>
-            )}
-          </>
+
+              <textarea
+                value={rewriting ? "Rewriting..." : postText}
+                onChange={e => { if (!rewriting) onChange(e.target.value); }}
+                disabled={rewriting}
+                style={{
+                  width: "100%", minHeight: 160, border: "none",
+                  borderBottom: `2px solid ${BLT}`, borderRadius: 0,
+                  padding: "8px 0", fontSize: 15, lineHeight: 1.65,
+                  color: rewriting ? T4 : T1, fontFamily: F,
+                  background: "transparent", outline: "none",
+                  resize: "vertical", opacity: rewriting ? 0.5 : 1,
+                }}
+                onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL_H; }}
+                onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = BLT; }}
+              />
+
+              <div style={{
+                fontFamily: M, fontSize: 11, color: overLimit ? RED_OVER : T4,
+                textAlign: "right", marginTop: 6,
+              }}>
+                {charCount} / 700
+              </div>
+
+              {/* Angle buttons */}
+              {storyId && (
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: T3, marginBottom: 10 }}>
+                    Try a different starting point:
+                  </div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {ANGLES.map(a => (
+                      <button
+                        key={a.key}
+                        onClick={() => handleAngle(a.key)}
+                        disabled={rewriting}
+                        style={{
+                          fontFamily: F, fontSize: 13, fontWeight: 400,
+                          border: `1px solid ${BLT}`, borderRadius: 4,
+                          padding: "6px 14px", background: WHITE,
+                          color: T3, cursor: rewriting ? "default" : "pointer",
+                          opacity: rewriting ? 0.5 : 1,
+                        }}
+                        onMouseEnter={e => { if (!rewriting) { (e.currentTarget as HTMLElement).style.borderColor = TEAL_H; (e.currentTarget as HTMLElement).style.color = TEAL_H; } }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = BLT; (e.currentTarget as HTMLElement).style.color = T3; }}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!loading && !error && (
+          <div style={{
+            padding: "16px 24px", borderTop: `1px solid ${BLT}`,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            flexShrink: 0,
+          }}>
+            <button
+              onClick={copyPost}
+              disabled={!postText}
+              style={{
+                height: 36, padding: "0 20px", borderRadius: 4,
+                fontFamily: F, fontSize: 14, fontWeight: 500,
+                color: "#fff", background: TEAL_H,
+                border: "none", cursor: postText ? "pointer" : "default",
+                opacity: postText ? 1 : 0.5,
+              }}
+            >
+              {copied ? "Copied. Edit before you post." : "Copy to clipboard"}
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                fontFamily: F, fontSize: 14, fontWeight: 400,
+                color: T3, background: "none", border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         )}
       </div>
     </div>
