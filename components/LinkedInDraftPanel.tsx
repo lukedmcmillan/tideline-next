@@ -79,6 +79,12 @@ export default function LinkedInDraftPanel({ postText, onChange, loading, onClos
           <div style={{ fontSize: 13, color: RED, padding: "20px 0" }}>{error}</div>
         ) : (
           <>
+            <div style={{ fontFamily: F, fontSize: 16, fontWeight: 500, color: T1, marginBottom: 16 }}>
+              Edit freely. Your name, your voice, your take.
+            </div>
+            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T3, marginBottom: 16 }}>
+              Here&apos;s a starting point. Make it yours.
+            </div>
             <textarea
               value={rewriting ? "Rewriting..." : postText}
               onChange={e => { if (!rewriting) onChange(e.target.value); }}
@@ -104,7 +110,7 @@ export default function LinkedInDraftPanel({ postText, onChange, loading, onClos
                 border: "none", borderRadius: 8, padding: "7px 16px",
                 cursor: "pointer",
               }}>
-                {copied ? "Copied!" : "Copy post"}
+                {copied ? "Copied. Edit before you post." : "Copy to clipboard"}
               </button>
             </div>
             <div style={{ fontFamily: F, fontSize: 11, color: T4, marginTop: 10 }}>
@@ -114,7 +120,7 @@ export default function LinkedInDraftPanel({ postText, onChange, loading, onClos
             {storyId && (
               <div style={{ marginTop: 14, borderTop: `1px solid ${BLT}`, paddingTop: 14 }}>
                 <div style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: T3, marginBottom: 8 }}>
-                  Try a different angle:
+                  Try a different starting point:
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {ANGLES.map(a => (
