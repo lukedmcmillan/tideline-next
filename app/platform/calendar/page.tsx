@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import DesktopOnly from "@/components/DesktopOnly";
 
 // ── Design tokens (match layout.tsx) ─────────────────────────────────────
 const BG     = "#F8F9FA";
@@ -368,6 +369,7 @@ export default function CalendarPage() {
   const upcoming = data ? filterItems(data.upcoming, tab) : [];
 
   return (
+    <DesktopOnly featureName="Calendar">
     <div style={{ padding: "16px 24px 40px" }}>
       {/* Header */}
       <div
@@ -448,5 +450,6 @@ export default function CalendarPage() {
         </>
       )}
     </div>
+    </DesktopOnly>
   );
 }

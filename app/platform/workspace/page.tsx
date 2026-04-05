@@ -7,6 +7,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 import IntelligenceThread from "@/components/workspace/IntelligenceThread";
+import DesktopOnly from "@/components/DesktopOnly";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const BG    = "#F9FAFB";
@@ -822,8 +823,10 @@ function WorkspaceContent() {
 
 export default function WorkspacePage() {
   return (
-    <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: WHITE, color: "#9CA3AF", fontSize: 13 }}>Loading workspace...</div>}>
-      <WorkspaceContent />
-    </Suspense>
+    <DesktopOnly featureName="Workspace">
+      <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: WHITE, color: "#9CA3AF", fontSize: 13 }}>Loading workspace...</div>}>
+        <WorkspaceContent />
+      </Suspense>
+    </DesktopOnly>
   );
 }

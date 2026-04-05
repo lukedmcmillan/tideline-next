@@ -3,6 +3,7 @@
 import { useState } from "react";
 import "@/styles/landing.css";
 import EarlyAccessModal from "@/components/EarlyAccessModal";
+import Header from "@/components/Header";
 
 const roles: Record<string, { q: string; body: string; feats: { icon: string; title: string; body: string }[] }> = {
   policy: {
@@ -61,35 +62,16 @@ export default function LandingPage() {
 
   return (
     <div style={{ fontFamily: "'Google Sans', sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
-      {/* Top bar */}
+      {/* Promo bar */}
       <div className="topbar">
         <p>Founding member pricing: {"\u00A3"}39/month, locked for life. Price increases when we leave beta. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
       </div>
 
       {/* Nav */}
-      <nav className="nav">
-        <div className="nav-inner">
-          <a href="#" className="nav-logo">
-            <div className="nav-logo-mark">
-              <svg viewBox="0 0 18 18" fill="none">
-                <path d="M2 11 Q5.5 7 9 11 Q12.5 15 16 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M2 7.5 Q5.5 3.5 9 7.5 Q12.5 11.5 16 7.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <span className="nav-logo-name">Tideline</span>
-          </a>
-          <div className="nav-links">
-            <a href="#platform" className="nav-link">Platform</a>
-            <a href="#who" className="nav-link">Who it&apos;s for</a>
-            <a href="#pricing" className="nav-link">Pricing</a>
-            <a href="#methodology" className="nav-link">Methodology</a>
-          </div>
-          <div className="nav-actions">
-            <button className="btn-text" onClick={() => setShowEarlyAccess(true)}>Log in</button>
-            <button className="btn-contained" onClick={() => setShowEarlyAccess(true)}>Join early access</button>
-          </div>
-        </div>
-      </nav>
+      <Header
+        onLoginClick={() => setShowEarlyAccess(true)}
+        onJoinClick={() => setShowEarlyAccess(true)}
+      />
 
       {/* Hero */}
       <section>

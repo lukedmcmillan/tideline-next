@@ -93,23 +93,23 @@ function TrialBanner() {
   };
 
   return (
-    <div style={{
+    <div className="trial-banner-wrap" style={{
       position: "sticky", top: 0, zIndex: 40, width: "100%",
       background: urgent ? "rgba(249,171,0,0.08)" : "rgba(29,158,117,0.08)",
       borderLeft: `3px solid ${urgent ? AMBER : TEAL}`,
       padding: "12px 20px",
       display: "flex", alignItems: "center", justifyContent: "space-between",
     }}>
-      <span style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T1 }}>
-        You have {days} {days === 1 ? "day" : "days"} left in your free trial. Founding member pricing: £39/month, locked for life.
+      <span className="trial-text" style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T1 }}>
+        {days} {days === 1 ? "day" : "days"} left {"\u00B7"} {"\u00A3"}39/month founding member
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
-        <a href="/pricing" style={{
+        <a className="trial-link" href="/pricing" style={{
           fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, textDecoration: "none",
         }}>
-          Become a founding member
+          Upgrade
         </a>
-        <button onClick={handleDismiss} style={{
+        <button className="trial-dismiss" onClick={handleDismiss} style={{
           background: "none", border: "none", cursor: "pointer",
           fontSize: 16, color: T3, padding: 0, lineHeight: 1,
         }}>
@@ -421,7 +421,7 @@ function RightPanel() {
         </div>
       </div>
 
-      {/* Calendar widget — always visible */}
+      {/* Calendar widget, always visible */}
       <CalendarWidget />
 
       {/* Footer */}
@@ -642,6 +642,43 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── Mobile Tab Bar ───────────────────────────────────────────────────────
+function MobileTabBar() {
+  const path = usePathname();
+  const tabs = [
+    { label: "Feed", href: "/platform/feed", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg> },
+    { label: "Trackers", href: "/tracker/bbnj", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg> },
+    { label: "Saved", href: "/platform/library", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 3h12v15l-6-4-6 4V3z"/></svg> },
+    { label: "Account", href: "/platform/workspace", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="10" cy="7" r="3.5"/><path d="M3 18c0-3.5 3-6 7-6s7 2.5 7 6"/></svg> },
+  ];
+  const isActive = (href: string) => {
+    if (href === "/platform/feed") return path === "/platform" || path === "/platform/feed";
+    return path?.startsWith(href) || false;
+  };
+  return (
+    <nav className="mobile-tab-bar" style={{
+      position: "fixed", bottom: 0, left: 0, right: 0,
+      height: 56, background: WHITE, borderTop: `1px solid ${BLT}`,
+      display: "flex", alignItems: "center", justifyContent: "space-around",
+      zIndex: 99,
+    }}>
+      {tabs.map(t => {
+        const on = isActive(t.href);
+        return (
+          <a key={t.label} href={t.href} style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            gap: 2, textDecoration: "none",
+            color: on ? TEAL : T4,
+          }}>
+            {t.icon}
+            <span style={{ fontFamily: F, fontSize: 12, fontWeight: on ? 500 : 400 }}>{t.label}</span>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
 // ── Layout ────────────────────────────────────────────────────────────────
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
   const [sbOpen, setSbOpen] = useState(false);
@@ -688,6 +725,16 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         .rp-desktop{}
         @media(max-width:1279px){.rp-desktop{display:none!important}}
         @media(max-width:767px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
+        .mobile-tab-bar{display:none}
+        @media(max-width:768px){
+          .trial-banner-wrap{position:fixed!important;top:auto!important;bottom:56px!important;left:0!important;right:0!important;z-index:100!important;background:#fff!important;border-top:1px solid #E8EAED!important;border-left:none!important;padding:12px 20px!important}
+          .trial-banner-wrap .trial-text{font-size:13px!important;color:#5F6368!important}
+          .trial-banner-wrap .trial-link{font-size:13px!important;color:#1D9E75!important}
+          .trial-banner-wrap .trial-dismiss{display:none!important}
+          .mobile-tab-bar{display:flex!important}
+          .top-bar-search{display:none!important}
+          .top-bar-right-tier{display:none!important}
+        }
       `}</style>
 
       {/* Top bar */}
@@ -707,14 +754,14 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
           </div>
         </a>
         {/* Search */}
-        <div onClick={() => setSearchOpen(true)} style={{ flex: 1, maxWidth: 560, height: 42, background: BG, border: "1px solid transparent", borderRadius: 24, display: "flex", alignItems: "center", padding: "0 14px 0 16px", gap: 10, cursor: "text", transition: "all .2s" }}>
+        <div className="top-bar-search" onClick={() => setSearchOpen(true)} style={{ flex: 1, maxWidth: 560, height: 42, background: BG, border: "1px solid transparent", borderRadius: 24, display: "flex", alignItems: "center", padding: "0 14px 0 16px", gap: 10, cursor: "text", transition: "all .2s" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke={T4} strokeWidth="1.5"/><path d="M11 11l3.5 3.5" stroke={T4} strokeWidth="1.5" strokeLinecap="round"/></svg>
           <span style={{ flex: 1, fontSize: 14, color: T4 }}>Search or ask Tideline anything</span>
           <span style={{ fontSize: 11, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "1px 6px", color: T4, fontFamily: M }}>{"\u2318"}K</span>
         </div>
         {/* Right */}
         <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px 0 24px", marginLeft: "auto" }}>
-          <span style={{ fontSize: 12, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 12px", color: T2, background: WHITE, marginRight: 4 }}>Individual</span>
+          <span className="top-bar-right-tier" style={{ fontSize: 12, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 12px", color: T2, background: WHITE, marginRight: 4 }}>Individual</span>
           <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${NAVY},${TEAL})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>LM</div>
         </div>
       </div>
@@ -748,6 +795,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       {quickNoteOpen && <QuickNotePanel projects={projectData} onClose={() => setQuickNoteOpen(false)} />}
       {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} />}
+      <MobileTabBar />
     </div>
   );
 }

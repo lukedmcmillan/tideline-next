@@ -32,7 +32,12 @@
       "Bash(python -m json.tool)",
       "Bash(curl -s -X POST http://localhost:3000/api/threads/match -H 'Content-Type: application/json' -d '{:*)",
       "Bash(npx next:*)",
-      "Bash(voice, your take.\" Secondary: \"Here 's a starting point. Make it yours.\":*)"
+      "Bash(voice, your take.\" Secondary: \"Here 's a starting point. Make it yours.\":*)",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(grep -A2 '\"\"paths\"\"' tsconfig.json)",
+      "Bash(claude mcp:*)"
     ]
   }
 }

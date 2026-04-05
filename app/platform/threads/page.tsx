@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import DesktopOnly from "@/components/DesktopOnly";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const BG     = "#F8F9FA";
@@ -233,6 +234,7 @@ export default function ThreadsPage() {
   const totalFlagged = threads.reduce((sum, t) => sum + t.evidence.filter(e => !e.reviewed).length, 0);
 
   return (
+    <DesktopOnly featureName="Crosscurrent">
     <div style={{ minHeight: "100vh", background: BG, fontFamily: F }}>
       {/* Header */}
       <div style={{ background: NAVY, padding: "32px 40px 28px" }}>
@@ -282,5 +284,6 @@ export default function ThreadsPage() {
         ))}
       </div>
     </div>
+    </DesktopOnly>
   );
 }

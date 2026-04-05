@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import EarlyAccessModal from "@/components/EarlyAccessModal";
+import Header from "@/components/Header";
 
 const TEAL = "#1D9E75";
 
@@ -134,6 +135,11 @@ export default function PricingPage() {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
+      <Header
+        currentPage="#pricing"
+        onLoginClick={() => setShowModal(true)}
+        onJoinClick={() => setShowModal(true)}
+      />
       <div
         style={{
           maxWidth: 1000,

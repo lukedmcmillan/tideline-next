@@ -1,73 +1,217 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
-const NAVY = "#0a1628";
-const BLUE = "#1d6fa4";
-const WHITE = "#ffffff";
-const OFF_WHITE = "#f8f9fa";
-const BORDER_LIGHT = "#e8e8e8";
-const MUTED = "#666";
-const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
-const SERIF = "Georgia, serif";
+const TEAL = "#1D9E75";
+const TEAL_HOVER = "#178a65";
+const INK = "#202124";
+const SECONDARY = "#5F6368";
+const BORDER = "#E8EAED";
+const WHITE = "#FFFFFF";
+const F = "'DM Sans', system-ui, sans-serif";
 
-function WhoItsForDropdown() {
-  const [open, setOpen] = useState(false);
+const NAV_LINKS = [
+  { label: "Platform", href: "#platform" },
+  { label: "Who it\u2019s for", href: "#who" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "Methodology", href: "#methodology" },
+];
 
-  const items = [
-    { title: "NGO & Policy Teams", desc: "For organisations tracking regulatory change across multiple issues simultaneously." },
-    { title: "Corporate & ESG", desc: "For sustainability teams monitoring supply chain exposure, blue finance, and ocean risk." },
-    { title: "Ocean Investors & Funds", desc: "For blue economy VCs, impact funds, and ESG analysts tracking deals, regulation, and science." },
-    { title: "Journalists & Researchers", desc: "For professionals who need primary sources fast — not news aggregation." },
-  ];
+export default function Header({
+  currentPage,
+  showNav = true,
+  onJoinClick,
+  onLoginClick,
+}: {
+  currentPage?: string;
+  showNav?: boolean;
+  onJoinClick?: () => void;
+  onLoginClick?: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div style={{ position: "relative" }} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", fontFamily: SANS, fontWeight: 400, display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
-        Who It&apos;s For <span style={{ fontSize: 9, opacity: 0.6 }}>▾</span>
-      </button>
-      {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 16px)", left: "50%", transform: "translateX(-50%)", background: WHITE, border: `1px solid ${BORDER_LIGHT}`, padding: "8px", width: 480, zIndex: 200, boxShadow: "0 4px 24px rgba(0,0,0,0.12)" }}>
-          <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%) rotate(45deg)", width: 10, height: 10, background: WHITE, border: `1px solid ${BORDER_LIGHT}`, borderRight: "none", borderBottom: "none" }} />
-          {items.map((item, i) => (
-            <a key={i} href="/start" style={{ display: "flex", flexDirection: "column", gap: 4, padding: "12px 14px", textDecoration: "none", borderBottom: i < items.length - 1 ? `1px solid ${BORDER_LIGHT}` : "none" }}
-              onMouseEnter={e => (e.currentTarget.style.background = OFF_WHITE)}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, fontFamily: SERIF }}>{item.title}</div>
-              <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, fontFamily: SANS }}>{item.desc}</div>
+    <div ref={menuRef} style={{ position: "sticky", top: 0, zIndex: 100, background: WHITE }}>
+      <style>{`
+        .hdr-nav-links { display: flex; align-items: center; gap: 32px; }
+        .hdr-actions { display: flex; align-items: center; gap: 12px; }
+        .hdr-burger { display: none; }
+        .hdr-mobile-menu { display: none; }
+        .hdr-nav-link:hover { color: ${INK} !important; }
+        .hdr-join-btn:hover { background: ${TEAL_HOVER} !important; }
+        @media (max-width: 768px) {
+          .hdr-nav-links { display: none !important; }
+          .hdr-actions { display: none !important; }
+          .hdr-burger { display: flex !important; }
+          .hdr-mobile-menu { display: block !important; }
+        }
+      `}</style>
+
+      {/* Header bar */}
+      <div style={{
+        borderBottom: `1px solid ${BORDER}`,
+        height: 64,
+      }}>
+        <div style={{
+          maxWidth: 1200, margin: "0 auto", padding: "0 24px",
+          height: "100%",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          {/* Left: logo */}
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: "#0A1628",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M2 11 Q5.5 7 9 11 Q12.5 15 16 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M2 7.5 Q5.5 3.5 9 7.5 Q12.5 11.5 16 7.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: F, fontSize: 18, fontWeight: 600, color: INK }}>Tideline</span>
+          </a>
+
+          {/* Centre: nav links (desktop only) */}
+          {showNav && (
+            <div className="hdr-nav-links">
+              {NAV_LINKS.map(l => (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  className="hdr-nav-link"
+                  style={{
+                    fontFamily: F, fontSize: 14, fontWeight: 400,
+                    color: currentPage === l.href ? TEAL : SECONDARY,
+                    textDecoration: "none",
+                  }}
+                >
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Right: actions (desktop only) */}
+          {showNav && (
+            <div className="hdr-actions">
+              <button
+                onClick={onLoginClick}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontFamily: F, fontSize: 14, fontWeight: 500,
+                  color: TEAL, padding: 0,
+                }}
+              >
+                Log in
+              </button>
+              <button
+                className="hdr-join-btn"
+                onClick={onJoinClick}
+                style={{
+                  background: TEAL, color: WHITE, border: "none",
+                  fontFamily: F, fontSize: 14, fontWeight: 500,
+                  padding: "8px 18px", borderRadius: 6, cursor: "pointer",
+                }}
+              >
+                Join early access
+              </button>
+            </div>
+          )}
+
+          {/* Hamburger (mobile only) */}
+          {showNav && (
+            <button
+              className="hdr-burger"
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                width: 40, height: 40,
+                alignItems: "center", justifyContent: "center",
+                background: "none", border: "none", cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              {menuOpen ? (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 4l12 12M16 4L4 16" stroke={INK} strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M2 5h16M2 10h16M2 15h16" stroke={INK} strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile dropdown menu */}
+      {showNav && menuOpen && (
+        <div
+          className="hdr-mobile-menu"
+          style={{
+            background: WHITE,
+            borderBottom: `1px solid ${BORDER}`,
+            padding: "16px 24px",
+          }}
+        >
+          {NAV_LINKS.map((l, i) => (
+            <a
+              key={l.label}
+              href={l.href}
+              onClick={closeMenu}
+              style={{
+                display: "block",
+                padding: "14px 0",
+                borderBottom: i < NAV_LINKS.length - 1 ? "1px solid #F1F3F4" : "none",
+                fontFamily: F, fontSize: 15, fontWeight: 400,
+                color: INK, textDecoration: "none",
+              }}
+            >
+              {l.label}
             </a>
           ))}
-          <div style={{ borderTop: `1px solid ${BORDER_LIGHT}`, padding: "12px 14px 6px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 11, color: MUTED, fontFamily: SANS }}>10 days free · No credit card required</span>
-            <a href="/start" style={{ padding: "6px 16px", background: BLUE, color: WHITE, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: SANS, textDecoration: "none", borderRadius: 2 }}>Begin trial →</a>
-          </div>
+
+          <button
+            onClick={() => { closeMenu(); onLoginClick?.(); }}
+            style={{
+              width: "100%", height: 44, marginTop: 8,
+              background: WHITE, border: `1px solid ${BORDER}`,
+              borderRadius: 6, fontFamily: F, fontSize: 14,
+              fontWeight: 500, color: INK, cursor: "pointer",
+            }}
+          >
+            Log in
+          </button>
+          <button
+            onClick={() => { closeMenu(); onJoinClick?.(); }}
+            style={{
+              width: "100%", height: 44, marginTop: 8,
+              background: TEAL, border: "none",
+              borderRadius: 6, fontFamily: F, fontSize: 14,
+              fontWeight: 500, color: WHITE, cursor: "pointer",
+            }}
+          >
+            Join early access
+          </button>
         </div>
       )}
     </div>
-  );
-}
-
-export default function Header() {
-  return (
-    <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
-      <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}`, position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="/" style={{ fontSize: 22, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
-            <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)", display: "inline-block" }} />
-            <span style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)", fontFamily: SANS }}>Ocean Intelligence</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Live Feed</a>
-            <WhoItsForDropdown />
-            <a href="/trackers" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Trackers</a>
-            <a href="/#pricing" style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Pricing</a>
-            <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-            <a href="/start" style={{ padding: "8px 20px", background: BLUE, color: WHITE, fontSize: 13, fontWeight: 700, borderRadius: 2, fontFamily: SANS, textDecoration: "none" }}>Try Pro free →</a>
-          </div>
-        </div>
-      </div>
-    </>
   );
 }

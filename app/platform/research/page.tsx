@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import DesktopOnly from "@/components/DesktopOnly";
 
 const BG      = "#F8F9FA";
 const WHITE   = "#FFFFFF";
@@ -160,6 +161,7 @@ export default function ResearchPage() {
   const today = new Date().toISOString().split("T")[0];
 
   return (
+    <DesktopOnly featureName="Research library">
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
       <style>{`@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.65)}}`}</style>
 
@@ -265,9 +267,10 @@ export default function ResearchPage() {
           </>
         )}
 
-        {/* Upload section — always visible */}
+        {/* Upload section, always visible */}
         <UploadSection />
       </div>
     </div>
+    </DesktopOnly>
   );
 }

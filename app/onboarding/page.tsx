@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Header from "@/components/Header";
 
 const TEAL = "#1D9E75";
 const TEAL_PALE = "#E6F4F1";
@@ -206,7 +207,8 @@ export default function OnboardingPage() {
   const stepIndex = STEPS.indexOf(step);
 
   return (
-    <div style={{ minHeight: "100vh", background: WHITE, fontFamily: SANS }}>
+    <div style={{ minHeight: "100vh", background: SURFACE, fontFamily: SANS }}>
+      <Header showNav={false} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -246,12 +248,11 @@ export default function OnboardingPage() {
               <div
                 key={s}
                 style={{
-                  width: i <= stepIndex ? 8 : 6,
-                  height: i <= stepIndex ? 8 : 6,
-                  borderRadius: "50%",
-                  background: i <= stepIndex ? TEAL : WHITE,
-                  border: i <= stepIndex ? "none" : `1px solid ${BORDER}`,
-                  transition: "all 0.2s",
+                  width: i <= stepIndex ? 10 : 8,
+                  height: i <= stepIndex ? 10 : 8,
+                  borderRadius: i <= stepIndex ? 5 : 4,
+                  background: i <= stepIndex ? TEAL : BORDER,
+                  transition: "width 0.2s, background 0.2s",
                 }}
               />
             ))}
@@ -260,10 +261,10 @@ export default function OnboardingPage() {
           {/* Step 1: Sector */}
           {step === "sector" && (
             <div>
-              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: INK, margin: "0 0 6px" }}>
+              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: INK, margin: "0 0 6px" }}>
                 What best describes your work?
               </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 24px" }}>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 28px" }}>
                 This helps Tideline personalise your experience.
               </p>
 
@@ -285,7 +286,7 @@ export default function OnboardingPage() {
                         fontSize: 14,
                         fontWeight: 500,
                         color: sel ? TEAL : INK,
-                        transition: "border-color 0.15s",
+                        transition: "border-color 0.15s, background 0.15s",
                       }}
                     >
                       {s}
@@ -319,14 +320,14 @@ export default function OnboardingPage() {
           {/* Step 2: Topics */}
           {step === "topics" && (
             <div>
-              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: INK, margin: "0 0 6px" }}>
+              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: INK, margin: "0 0 6px" }}>
                 What do you need to track?
               </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 24px" }}>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 28px" }}>
                 Pick at least 3 topics. These shape your live feed. You can change them anytime.
               </p>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                 {TOPICS.map((t) => {
                   const sel = selectedTopics.has(t.id);
                   return (
@@ -354,7 +355,7 @@ export default function OnboardingPage() {
               </div>
 
               <div style={{ fontFamily: MONO, fontSize: 11, color: TERTIARY, marginBottom: 24 }}>
-                {selectedTopics.size} of {TOPICS.length} selected · minimum 3
+                {selectedTopics.size} selected · minimum 3
               </div>
 
               <button
@@ -391,10 +392,10 @@ export default function OnboardingPage() {
           {/* Step 3: Timezone */}
           {step === "timezone" && (
             <div>
-              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: INK, margin: "0 0 6px" }}>
+              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: INK, margin: "0 0 6px" }}>
                 What timezone are you in?
               </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 24px" }}>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 28px" }}>
                 Tideline uses your timezone for deadline alerts and regulatory calendar sync.
               </p>
 
@@ -408,7 +409,7 @@ export default function OnboardingPage() {
                   onChange={(e) => setTimezone(e.target.value)}
                   style={{
                     width: "100%",
-                    height: 40,
+                    height: 44,
                     padding: "0 12px",
                     border: `1px solid ${BORDER}`,
                     borderRadius: 6,
@@ -416,7 +417,6 @@ export default function OnboardingPage() {
                     fontFamily: SANS,
                     background: WHITE,
                     color: INK,
-                    appearance: "auto",
                   }}
                 >
                   {TIMEZONES.map((group) => (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DesktopOnly from "@/components/DesktopOnly";
 
 const BG     = "#F8F9FA";
 const WHITE  = "#FFFFFF";
@@ -30,6 +31,7 @@ export default function DirectoryPage() {
   const filters = ["All", "Organisations", "Vessels", "People"];
 
   return (
+    <DesktopOnly featureName="Directory">
     <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
       {/* Entity list */}
       <div style={{ width: 320, flexShrink: 0, background: WHITE, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column" }}>
@@ -139,5 +141,6 @@ export default function DirectoryPage() {
         </div>
       )}
     </div>
+    </DesktopOnly>
   );
 }
