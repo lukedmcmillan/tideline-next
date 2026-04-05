@@ -96,7 +96,11 @@ export async function POST(req: NextRequest) {
       const subscriptionId = session.subscription as string | null;
 
       if (email) {
-        await syncUserStatus(email, "active", subscriptionId ?? undefined);
+        const tier = session.metadata?.tier;
+        const updateData: Record<string, unknown> = { subscription_status: "active" };
+        if (subscriptionId) updateData.stripe_subscription_id = subscriptionId;
+        if (tier) updateData.subscription_tier = tier;
+        await supabase.from("users").update(updateData).eq("email", email);
 
         // Also sync the subscriptions table if there's a subscription
         if (subscriptionId) {

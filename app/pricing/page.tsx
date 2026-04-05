@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import EarlyAccessModal from "@/components/EarlyAccessModal";
 
 const TEAL = "#1D9E75";
 
@@ -72,13 +73,14 @@ const tiers = [
     cta: "Talk to us",
     tier: "team",
     outlined: true,
-    href: "mailto:luke@oceanrising.co",
+    href: "mailto:luke@thetideline.co",
     highlighted: false,
   },
 ];
 
 export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [status, setStatus] = useState<{
     status: string;
     trialEnd: string | null;
@@ -99,6 +101,11 @@ export default function PricingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tier }),
       });
+      if (r.status === 401) {
+        setLoading(null);
+        setShowModal(true);
+        return;
+      }
       const d = await r.json();
       if (d.url) window.location.href = d.url;
       else setLoading(null);
@@ -395,6 +402,8 @@ export default function PricingPage() {
           7 days free, no card required. Cancel any time.
         </p>
       </div>
+
+      {showModal && <EarlyAccessModal onClose={() => setShowModal(false)} />}
 
       <style>{`
         @media (max-width: 768px) {
