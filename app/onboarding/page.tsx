@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react";
 
-const NAVY = "#0a1628";
-const BLUE = "#1d6fa4";
-const TEAL = "#0E7C86";
+const TEAL = "#1D9E75";
+const TEAL_PALE = "#E6F4F1";
+const TEAL_HOVER = "#178a65";
+const INK = "#202124";
+const SECONDARY = "#5F6368";
+const TERTIARY = "#9AA0A6";
+const BORDER = "#E8EAED";
+const SURFACE = "#F8F9FA";
 const WHITE = "#ffffff";
-const OFF_WHITE = "#f8f9fa";
-const BORDER = "#e2e8f0";
-const MUTED = "#64748b";
-const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
-const SERIF = "Georgia, 'Times New Roman', serif";
+const SANS = "'DM Sans', sans-serif";
+const MONO = "'DM Mono', monospace";
 
 const SECTORS = [
   "NGO & conservation",
@@ -116,6 +118,8 @@ const TIMEZONES = [
   },
 ];
 
+const STEPS = ["sector", "topics", "timezone", "shortcut"] as const;
+
 export default function OnboardingPage() {
   const [step, setStep] = useState<"sector" | "topics" | "timezone" | "shortcut">("sector");
   const [sector, setSector] = useState<string | null>(null);
@@ -199,250 +203,324 @@ export default function OnboardingPage() {
     }
   };
 
-  const CSS = `
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    .topic-btn { transition: all 0.1s ease; }
-    .topic-btn:hover { border-color: ${BLUE} !important; color: ${BLUE} !important; }
-    select:focus, input:focus { outline: none; border-color: ${BLUE} !important; box-shadow: 0 0 0 3px rgba(29,111,164,0.12); }
-  `;
+  const stepIndex = STEPS.indexOf(step);
 
   return (
-    <div style={{ minHeight: "100vh", background: OFF_WHITE, fontFamily: SANS }}>
-      <style>{CSS}</style>
+    <div style={{ minHeight: "100vh", background: WHITE, fontFamily: SANS }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .ob-sector-card:hover { border-color: #BDC1C6 !important; }
+        .ob-sector-card.selected:hover { border-color: ${TEAL} !important; }
+        .ob-topic-chip:hover { border-color: #BDC1C6 !important; }
+        .ob-topic-chip.selected:hover { border-color: ${TEAL} !important; }
+        .ob-btn:hover:not(:disabled) { background: ${TEAL_HOVER} !important; }
+        .ob-select:focus { border-color: ${TEAL} !important; outline: none; }
+        @media (max-width: 480px) {
+          .ob-card { border: none !important; border-radius: 0 !important; padding: 24px 20px !important; }
+          .ob-sector-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (min-width: 481px) {
+          .ob-sector-grid { grid-template-columns: 1fr 1fr; }
+        }
+      `}</style>
 
-      {/* Header */}
-      <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}`, padding: "0 20px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", height: 56, display: "flex", alignItems: "center" }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em" }}>TIDELINE</span>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "52px 40px 100px" }}>
+      <div
+        className="ob-card"
+        style={{
+          maxWidth: 480,
+          margin: "48px auto 32px",
+          background: WHITE,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 12,
+          padding: 32,
+        }}
+      >
         {checkingSkip ? (
-          <div style={{ fontSize: 13, color: MUTED, padding: "40px 0", textAlign: "center" }}>Loading...</div>
+          <div style={{ fontSize: 13, color: TERTIARY, padding: "40px 0", textAlign: "center" }}>Loading...</div>
         ) : (
         <>
-        {/* Progress */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 52 }}>
-          {[{ key: "sector", label: "Your sector" }, { key: "topics", label: "Choose topics" }, { key: "timezone", label: "Set timezone" }].map((s, i) => {
-            const stepOrder = ["sector", "topics", "timezone"];
-            const currentIdx = stepOrder.indexOf(step);
-            const thisIdx = stepOrder.indexOf(s.key);
-            const active = step === s.key;
-            const done = thisIdx < currentIdx;
-            return (
-              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", background: done ? "#22c55e" : active ? NAVY : BORDER, color: done || active ? WHITE : MUTED, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
-                  {done ? "\u2713" : i + 1}
-                </div>
-                <span style={{ fontSize: 12, color: active ? NAVY : MUTED, fontWeight: active ? 600 : 400, fontFamily: SANS }}>{s.label}</span>
-                {i < 2 && <div style={{ width: 28, height: 1, background: BORDER, marginLeft: 4 }} />}
-              </div>
-            );
-          })}
-        </div>
+          {/* Progress dots */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 32 }}>
+            {STEPS.map((s, i) => (
+              <div
+                key={s}
+                style={{
+                  width: i <= stepIndex ? 8 : 6,
+                  height: i <= stepIndex ? 8 : 6,
+                  borderRadius: "50%",
+                  background: i <= stepIndex ? TEAL : WHITE,
+                  border: i <= stepIndex ? "none" : `1px solid ${BORDER}`,
+                  transition: "all 0.2s",
+                }}
+              />
+            ))}
+          </div>
 
-        {/* Step 0: Sector */}
-        {step === "sector" && (
-          <div>
-            <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: `1px solid ${BORDER}` }}>
-              <h1 style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: "#202124", margin: "0 0 8px" }}>
+          {/* Step 1: Sector */}
+          {step === "sector" && (
+            <div>
+              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: INK, margin: "0 0 6px" }}>
                 What best describes your work?
               </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: "#5F6368", margin: 0 }}>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 24px" }}>
                 This helps Tideline personalise your experience.
               </p>
+
+              <div className="ob-sector-grid" style={{ display: "grid", gap: 10, marginBottom: 24 }}>
+                {SECTORS.map(s => {
+                  const sel = sector === s;
+                  return (
+                    <div
+                      key={s}
+                      className={`ob-sector-card${sel ? " selected" : ""}`}
+                      onClick={() => setSector(s)}
+                      style={{
+                        padding: "14px 16px",
+                        cursor: "pointer",
+                        background: sel ? TEAL_PALE : WHITE,
+                        border: sel ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
+                        borderRadius: 8,
+                        fontFamily: SANS,
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: sel ? TEAL : INK,
+                        transition: "border-color 0.15s",
+                      }}
+                    >
+                      {s}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                className="ob-btn"
+                onClick={handleSectorContinue}
+                disabled={!sector || sectorSaving}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  background: sector && !sectorSaving ? TEAL : BORDER,
+                  border: "none",
+                  color: sector && !sectorSaving ? WHITE : TERTIARY,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  fontFamily: SANS,
+                  cursor: sector && !sectorSaving ? "pointer" : "not-allowed",
+                  borderRadius: 6,
+                }}
+              >
+                {sectorSaving ? "Saving..." : "Continue"}
+              </button>
             </div>
+          )}
 
-            <div className="sector-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 36 }}>
-              {SECTORS.map(s => {
-                const sel = sector === s;
-                return (
-                  <div
-                    key={s}
-                    onClick={() => setSector(s)}
-                    style={{
-                      padding: 16, cursor: "pointer",
-                      background: sel ? "#E6F4F1" : WHITE,
-                      border: sel ? `2px solid ${TEAL}` : `1px solid #E8EAED`,
-                      borderRadius: 4,
-                      fontFamily: SANS, fontSize: 14, fontWeight: 500,
-                      color: sel ? TEAL : "#202124",
-                      transition: "all 0.1s",
-                    }}
-                  >
-                    {s}
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={handleSectorContinue}
-              disabled={!sector || sectorSaving}
-              style={{
-                padding: "13px 28px",
-                background: sector && !sectorSaving ? TEAL : "#94a3b8",
-                border: "none", color: WHITE,
-                fontSize: 14, fontWeight: 500, fontFamily: SANS,
-                cursor: sector && !sectorSaving ? "pointer" : "not-allowed",
-                borderRadius: 4,
-              }}
-            >
-              {sectorSaving ? "Saving..." : "Continue"}
-            </button>
-          </div>
-        )}
-
-        {/* Step 1: Topics */}
-        {step === "topics" && (
-          <div>
-            <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: BLUE, marginBottom: 12, fontFamily: SANS }}>Step 1</div>
-              <h1 style={{ fontSize: 34, fontWeight: 700, color: NAVY, margin: "0 0 14px", fontFamily: SERIF, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+          {/* Step 2: Topics */}
+          {step === "topics" && (
+            <div>
+              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: INK, margin: "0 0 6px" }}>
                 What do you need to track?
               </h1>
-              <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.7, maxWidth: 560, fontFamily: SANS }}>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 24px" }}>
                 Pick at least 3 topics. These shape your live feed. You can change them anytime.
               </p>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                {TOPICS.map((t) => {
+                  const sel = selectedTopics.has(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      className={`ob-topic-chip${sel ? " selected" : ""}`}
+                      onClick={() => toggleTopic(t.id)}
+                      style={{
+                        padding: "6px 14px",
+                        border: sel ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`,
+                        background: sel ? TEAL_PALE : WHITE,
+                        color: sel ? TEAL : SECONDARY,
+                        cursor: "pointer",
+                        fontSize: 13,
+                        fontWeight: sel ? 500 : 400,
+                        borderRadius: 20,
+                        fontFamily: SANS,
+                        transition: "border-color 0.15s",
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div style={{ fontFamily: MONO, fontSize: 11, color: TERTIARY, marginBottom: 24 }}>
+                {selectedTopics.size} of {TOPICS.length} selected · minimum 3
+              </div>
+
+              <button
+                className="ob-btn"
+                onClick={() => setStep("timezone")}
+                disabled={selectedTopics.size < 3}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  background: selectedTopics.size >= 3 ? TEAL : BORDER,
+                  border: "none",
+                  color: selectedTopics.size >= 3 ? WHITE : TERTIARY,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  cursor: selectedTopics.size < 3 ? "not-allowed" : "pointer",
+                  borderRadius: 6,
+                  fontFamily: SANS,
+                }}
+              >
+                {selectedTopics.size < 3
+                  ? `Select at least 3 topics (${selectedTopics.size} selected)`
+                  : `Continue: ${selectedTopics.size} topic${selectedTopics.size !== 1 ? "s" : ""} selected`}
+              </button>
+
+              <button
+                onClick={() => setStep("sector")}
+                style={{ background: "none", border: "none", color: TERTIARY, fontSize: 13, cursor: "pointer", fontFamily: SANS, marginTop: 16, padding: 0, display: "block" }}
+              >
+                {"\u2190"} Back
+              </button>
             </div>
+          )}
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-              <button onClick={() => setSelectedTopics(new Set(TOPICS.map((t) => t.id)))} style={{ padding: "6px 14px", border: `1px solid ${BORDER}`, background: WHITE, color: NAVY, cursor: "pointer", fontSize: 12, fontFamily: SANS, borderRadius: 3 }}>Select all</button>
-              <button onClick={() => setSelectedTopics(new Set())} style={{ padding: "6px 14px", border: `1px solid ${BORDER}`, background: WHITE, color: NAVY, cursor: "pointer", fontSize: 12, fontFamily: SANS, borderRadius: 3 }}>Clear all</button>
-              {selectedTopics.size > 0 && <span style={{ fontSize: 12, color: BLUE, fontWeight: 600, fontFamily: SANS }}>{selectedTopics.size} selected</span>}
-            </div>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 36 }}>
-              {TOPICS.map((t) => {
-                const sel = selectedTopics.has(t.id);
-                return (
-                  <button key={t.id} className="topic-btn" onClick={() => toggleTopic(t.id)}
-                    style={{ padding: "8px 15px", border: `1.5px solid ${sel ? NAVY : BORDER}`, background: sel ? NAVY : WHITE, color: sel ? WHITE : NAVY, cursor: "pointer", fontSize: 13, fontWeight: sel ? 600 : 400, borderRadius: 3, fontFamily: SANS }}>
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setStep("timezone")}
-              disabled={selectedTopics.size < 3}
-              style={{ padding: "13px 28px", background: selectedTopics.size < 3 ? "#94a3b8" : BLUE, border: "none", color: WHITE, fontSize: 14, fontWeight: 700, cursor: selectedTopics.size < 3 ? "not-allowed" : "pointer", borderRadius: 3, fontFamily: SANS }}
-            >
-              {selectedTopics.size < 3
-                ? `Select at least 3 topics (${selectedTopics.size} selected)`
-                : `Continue: ${selectedTopics.size} topic${selectedTopics.size !== 1 ? "s" : ""} selected`}
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Timezone */}
-        {step === "timezone" && (
-          <div style={{ maxWidth: 500 }}>
-            <div style={{ marginBottom: 36 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: BLUE, marginBottom: 12, fontFamily: SANS }}>Step 2</div>
-              <h1 style={{ fontSize: 34, fontWeight: 700, color: NAVY, margin: "0 0 14px", fontFamily: SERIF, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+          {/* Step 3: Timezone */}
+          {step === "timezone" && (
+            <div>
+              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: INK, margin: "0 0 6px" }}>
                 What timezone are you in?
               </h1>
-              <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.7, fontFamily: SANS }}>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 24px" }}>
                 Tideline uses your timezone for deadline alerts and regulatory calendar sync.
               </p>
-            </div>
 
-            <div style={{ marginBottom: 28 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 8, fontFamily: SANS, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                Your timezone
-              </label>
-              <select
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${BORDER}`, fontSize: 15, fontFamily: SANS, borderRadius: 3, background: WHITE, color: NAVY, appearance: "auto" }}
-              >
-                {TIMEZONES.map((group) => (
-                  <optgroup key={group.region} label={group.region}>
-                    {group.zones.map((tz) => (
-                      <option key={tz.value} value={tz.value}>{tz.label}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-
-            {/* Summary */}
-            <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "14px 18px", borderRadius: 3, marginBottom: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 8, fontFamily: SANS }}>Your dashboard</div>
-              <div style={{ fontSize: 13, color: NAVY, fontFamily: SANS, lineHeight: 1.6 }}>
-                {selectedTopics.size} topic{selectedTopics.size !== 1 ? "s" : ""} selected
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: "block", fontFamily: SANS, fontSize: 13, fontWeight: 500, color: SECONDARY, marginBottom: 6 }}>
+                  Your timezone
+                </label>
+                <select
+                  className="ob-select"
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  style={{
+                    width: "100%",
+                    height: 40,
+                    padding: "0 12px",
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 6,
+                    fontSize: 14,
+                    fontFamily: SANS,
+                    background: WHITE,
+                    color: INK,
+                    appearance: "auto",
+                  }}
+                >
+                  {TIMEZONES.map((group) => (
+                    <optgroup key={group.region} label={group.region}>
+                      {group.zones.map((tz) => (
+                        <option key={tz.value} value={tz.value}>{tz.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
-              <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: BLUE, fontSize: 12, cursor: "pointer", fontFamily: SANS, padding: 0, marginTop: 6 }}>Edit topics →</button>
+
+              <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 6, marginBottom: 24 }}>
+                <div style={{ fontFamily: MONO, fontSize: 11, color: TERTIARY, marginBottom: 6 }}>Your selections</div>
+                <div style={{ fontSize: 13, color: INK, fontFamily: SANS, lineHeight: 1.6 }}>
+                  {selectedTopics.size} topic{selectedTopics.size !== 1 ? "s" : ""} selected
+                </div>
+                <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: TEAL, fontSize: 12, cursor: "pointer", fontFamily: SANS, padding: 0, marginTop: 4 }}>Edit topics</button>
+              </div>
+
+              {error && <p style={{ fontSize: 13, color: "#ef4444", marginBottom: 16, fontFamily: SANS }}>{error}</p>}
+
+              <button
+                className="ob-btn"
+                onClick={handleFinish}
+                disabled={submitting}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  background: submitting ? BORDER : TEAL,
+                  border: "none",
+                  color: submitting ? TERTIARY : WHITE,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  cursor: submitting ? "not-allowed" : "pointer",
+                  borderRadius: 6,
+                  fontFamily: SANS,
+                }}
+              >
+                {submitting ? "Saving..." : "Open your feed"}
+              </button>
+
+              <button
+                onClick={() => setStep("topics")}
+                style={{ background: "none", border: "none", color: TERTIARY, fontSize: 13, cursor: "pointer", fontFamily: SANS, marginTop: 16, padding: 0, display: "block" }}
+              >
+                {"\u2190"} Back
+              </button>
             </div>
+          )}
 
-            {error && <p style={{ fontSize: 13, color: "#ef4444", marginBottom: 16, fontFamily: SANS }}>{error}</p>}
-
-            <button
-              onClick={handleFinish}
-              disabled={submitting}
-              style={{ width: "100%", padding: "14px", background: submitting ? "#94a3b8" : BLUE, border: "none", color: WHITE, fontSize: 15, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer", borderRadius: 3, fontFamily: SANS }}
-            >
-              {submitting ? "Saving..." : "Open your feed →"}
-            </button>
-
-            <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", fontFamily: SANS, textDecoration: "underline", marginTop: 20, padding: 0, display: "block" }}>{"\u2190"} Back</button>
-          </div>
-        )}
-        {/* Step: Shortcut tip */}
-        {step === "shortcut" && (
-          <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 20 }}>
-              <rect x="2" y="4" width="20" height="16" rx="2" stroke={TEAL} strokeWidth="1.5"/>
-              <path d="M6 12h2M10 12h4M18 12h-2M8 8h2M14 8h2M8 16h8" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/>
-            </svg>
-            <h1 style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: "#202124", margin: "0 0 8px" }}>
-              One shortcut worth knowing
-            </h1>
-            <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: "#5F6368", margin: "0 0 24px" }}>
-              Press this anywhere on Tideline to instantly save a thought to your active project.
-            </p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
-              {(typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent)
-                ? ["Cmd", "Shift", "N"]
-                : ["Ctrl", "Shift", "N"]
-              ).map((k, i) => (
-                <span key={i}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: "#202124", background: "#F1F3F4", border: "1px solid #E8EAED", padding: "6px 10px", borderRadius: 4 }}>{k}</span>
-                  {i < 2 && <span style={{ color: "#9CA3AF", margin: "0 2px" }}>+</span>}
-                </span>
-              ))}
+          {/* Step 4: Shortcut tip */}
+          {step === "shortcut" && (
+            <div style={{ textAlign: "center" }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 16 }}>
+                <rect x="2" y="4" width="20" height="16" rx="2" stroke={TEAL} strokeWidth="1.5"/>
+                <path d="M6 12h2M10 12h4M18 12h-2M8 8h2M14 8h2M8 16h8" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+              <h1 style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: INK, margin: "0 0 8px" }}>
+                One shortcut worth knowing
+              </h1>
+              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 auto 24px", maxWidth: 320 }}>
+                Press this anywhere on Tideline to instantly save a thought to your active project.
+              </p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
+                {(typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent)
+                  ? ["Cmd", "Shift", "N"]
+                  : ["Ctrl", "Shift", "N"]
+                ).map((k, i) => (
+                  <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 13, color: INK, background: "#F1F3F4", border: `1px solid ${BORDER}`, padding: "4px 10px", borderRadius: 4 }}>{k}</span>
+                    {i < 2 && <span style={{ color: TERTIARY }}>+</span>}
+                  </span>
+                ))}
+              </div>
+              <p style={{ fontFamily: SANS, fontSize: 13, color: TERTIARY, margin: "0 0 28px" }}>
+                Works anywhere on the platform. Saves to your active project.
+              </p>
+              <button
+                className="ob-btn"
+                onClick={() => {
+                  try { localStorage.setItem("tideline_shortcut_shown", "true"); } catch {}
+                  window.location.href = "/platform/feed";
+                }}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  background: TEAL,
+                  border: "none",
+                  color: WHITE,
+                  fontFamily: SANS,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  borderRadius: 6,
+                  cursor: "pointer",
+                }}
+              >
+                Got it, take me in
+              </button>
             </div>
-            <p style={{ fontFamily: SANS, fontSize: 13, color: "#80868B", margin: "0 0 28px" }}>
-              Works anywhere on the platform. Saves to your active project.
-            </p>
-            <button
-              onClick={() => {
-                try { localStorage.setItem("tideline_shortcut_shown", "true"); } catch {}
-                window.location.href = "/platform/feed";
-              }}
-              style={{
-                width: "100%", height: 40, background: TEAL, border: "none",
-                color: WHITE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
-                borderRadius: 4, cursor: "pointer",
-              }}
-            >
-              Got it, take me in
-            </button>
-          </div>
-        )}
+          )}
         </>
         )}
       </div>
-
-      <style>{`
-        @media (max-width: 600px) {
-          .sector-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 }

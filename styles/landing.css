@@ -835,11 +835,13 @@
   flex-wrap: nowrap;
   overflow-x: auto;
   gap: 8px;
-  padding: 24px;
+  padding: 16px 24px;
+  padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   justify-content: flex-start;
   background: var(--surface);
+  margin-bottom: 0;
 }
 .who-chips-mobile::-webkit-scrollbar { display: none; }
 

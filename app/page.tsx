@@ -674,17 +674,17 @@ export default function LandingPage() {
       </div>{/* end desktop-only */}
 
       <div className="mobile-summary">
-        <div style={{padding:"48px 24px",background:"#fff"}}>
+        <div style={{padding:"24px",background:"#fff"}}>
           <div style={{maxWidth:"600px",margin:"0 auto"}}>
             <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"16px"}}>What it does</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr",gap:"12px"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
               {[
                 {t:"Live feed",d:"100+ sources monitored continuously. Know what moved the moment it moves. One click to the original source."},
                 {t:"Research library",d:"Ask real questions in plain language. Get cited answers from primary governing body documents. Follow the source chain yourself."},
                 {t:"Workspace",d:"Save sources, annotate, draft. Generate a structured report in one click. Export to Word. Your name on it."},
                 {t:"Crosscurrent",d:"Reads across all 100+ sources simultaneously. Surfaces connections no single source would make. Only on Tideline."},
               ].map((c,i)=>(
-                <div key={i} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",padding:"16px"}}>
+                <div key={i} style={{background:"#fff",border:"1px solid #E8EAED",borderRadius:"8px",padding:"16px",width:"100%"}}>
                   <div style={{fontSize:"14px",fontWeight:600,color:"var(--ink)",marginBottom:"4px"}}>{c.t}</div>
                   <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.5}}>{c.d}</div>
                 </div>
@@ -699,7 +699,7 @@ export default function LandingPage() {
           ))}
         </div>
 
-        <div className="mobile-founder-quote" style={{padding:"32px 24px",textAlign:"center"}}>
+        <div className="mobile-founder-quote" style={{padding:"24px",textAlign:"center"}}>
           <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"20px",fontWeight:400,color:"var(--ink)",marginBottom:"20px"}}>
             Built by someone who needed it. Which is why it works.
           </div>
@@ -717,7 +717,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{padding:"32px 24px",background:"var(--ink)",margin:"0 24px",borderRadius:"var(--radius-lg)",marginTop:"0"}}>
+        <div style={{padding:"16px",background:"var(--ink)",margin:"0 24px",borderRadius:"var(--radius-lg)",marginTop:"0"}}>
           <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"12px"}}>Founding Member {"\u00B7"} Live now</div>
           <div style={{fontSize:"28px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>{"\u00A3"}39<span style={{fontSize:"16px",color:"rgba(255,255,255,0.5)"}}>/month</span></div>
           <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"8px"}}>Locked for life. Price increases when we leave beta.</div>
