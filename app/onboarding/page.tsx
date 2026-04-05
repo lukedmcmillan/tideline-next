@@ -13,15 +13,15 @@ const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
 const SERIF = "Georgia, 'Times New Roman', serif";
 
 const SECTORS = [
-  "Marine & ocean research",
-  "Policy & regulation",
   "NGO & conservation",
-  "Shipping & maritime",
-  "Aquaculture & seafood",
+  "Policy & regulation",
   "Finance & investment",
   "Legal & compliance",
+  "Shipping & maritime",
   "Energy & offshore",
-  "Consulting & advisory",
+  "ESG & sustainability",
+  "Science & research",
+  "Government & public sector",
   "Media & journalism",
 ];
 
@@ -126,11 +126,15 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
   const [checkingSkip, setCheckingSkip] = useState(true);
 
-  // Skip sector step if already set
+  // Redirect if onboarding already done, skip sector if already set
   useEffect(() => {
     fetch("/api/subscription-status")
       .then(r => r.json())
       .then(d => {
+        if (!d.needsOnboarding) {
+          window.location.href = "/platform/feed";
+          return;
+        }
         if (d.sector) {
           setSector(d.sector);
           setStep("topics");
@@ -300,7 +304,7 @@ export default function OnboardingPage() {
                 What do you need to track?
               </h1>
               <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.7, maxWidth: 560, fontFamily: SANS }}>
-                Pick at least 3 topics. These shape your daily brief and feed. You can change them anytime.
+                Pick at least 3 topics. These shape your live feed. You can change them anytime.
               </p>
             </div>
 
@@ -329,7 +333,7 @@ export default function OnboardingPage() {
             >
               {selectedTopics.size < 3
                 ? `Select at least 3 topics (${selectedTopics.size} selected)`
-                : `Continue — ${selectedTopics.size} topic${selectedTopics.size !== 1 ? "s" : ""} selected →`}
+                : `Continue: ${selectedTopics.size} topic${selectedTopics.size !== 1 ? "s" : ""} selected`}
             </button>
           </div>
         )}
@@ -340,10 +344,10 @@ export default function OnboardingPage() {
             <div style={{ marginBottom: 36 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: BLUE, marginBottom: 12, fontFamily: SANS }}>Step 2</div>
               <h1 style={{ fontSize: 34, fontWeight: 700, color: NAVY, margin: "0 0 14px", fontFamily: SERIF, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
-                When should your brief arrive?
+                What timezone are you in?
               </h1>
               <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.7, fontFamily: SANS }}>
-                We deliver your morning brief before 7am in your timezone.
+                Tideline uses your timezone for deadline alerts and regulatory calendar sync.
               </p>
             </div>
 

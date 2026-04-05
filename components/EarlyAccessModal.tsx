@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 
-const TEAL = "#0E7C86";
+const TEAL = "#1D9E75";
 const TEXT = "#202124";
 const SEC = "#5F6368";
 const MUTED = "#9CA3AF";
@@ -12,21 +13,22 @@ const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
 export default function EarlyAccessModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
-  const valid = email.trim().includes("@");
+  const valid = email.trim().includes("@") && email.trim().includes(".");
 
-  const submit = async () => {
+  const handleGoogle = () => {
+    signIn("google", { callbackUrl: "/onboarding" });
+  };
+
+  const handleEmail = async () => {
     if (!valid || submitting) return;
     setSubmitting(true);
     try {
-      await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
+      await signIn("email", { email: email.trim(), callbackUrl: "/onboarding", redirect: false });
+      setEmailSent(true);
     } catch {}
-    setDone(true);
+    setSubmitting(false);
   };
 
   return (
@@ -58,8 +60,8 @@ export default function EarlyAccessModal({ onClose }: { onClose: () => void }) {
           {"\u2715"}
         </button>
 
-        {done ? (
-          /* Success state */
+        {emailSent ? (
+          /* Email sent confirmation */
           <div style={{ textAlign: "center", padding: "8px 0" }}>
             <div style={{
               width: 48, height: 48, borderRadius: "50%", background: TEAL,
@@ -71,27 +73,54 @@ export default function EarlyAccessModal({ onClose }: { onClose: () => void }) {
               </svg>
             </div>
             <div style={{ fontFamily: F, fontSize: 16, fontWeight: 500, color: TEXT, marginBottom: 8 }}>
-              You're on the list.
-            </div>
-            <div style={{ fontFamily: F, fontSize: 14, color: SEC }}>
-              I'll be in touch.
+              Check your email for your sign-in link.
             </div>
           </div>
         ) : (
-          /* Form */
+          /* Sign-in form */
           <>
             <h2 style={{ fontFamily: F, fontSize: 20, fontWeight: 500, color: TEXT, margin: "0 0 8px" }}>
-              Join Tideline as a founding member.
+              Start your 7-day free trial
             </h2>
             <p style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: SEC, margin: "0 0 28px" }}>
-              Founding members get the price, the access, and the ear of the person building it.
+              No card required. Full platform access from day one.
             </p>
+
+            {/* Google OAuth */}
+            <button
+              onClick={handleGoogle}
+              style={{
+                width: "100%", height: 44, fontSize: 14, fontWeight: 500, fontFamily: F,
+                color: "#fff", background: TEAL,
+                border: "none", borderRadius: 4,
+                cursor: "pointer",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#fff"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/>
+              </svg>
+              Continue with Google
+            </button>
+
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
+              <div style={{ flex: 1, height: 1, background: BD }} />
+              <span style={{ fontSize: 12, color: MUTED, fontFamily: F }}>or sign in with email</span>
+              <div style={{ flex: 1, height: 1, background: BD }} />
+            </div>
+
+            {/* Email input */}
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-              placeholder="Your work email"
+              onKeyDown={(e) => { if (e.key === "Enter") handleEmail(); }}
+              placeholder="your@email.com"
               autoFocus
               style={{
                 width: "100%", height: 40, border: "none",
@@ -103,8 +132,10 @@ export default function EarlyAccessModal({ onClose }: { onClose: () => void }) {
               onFocus={(e) => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
               onBlur={(e) => { (e.target as HTMLElement).style.borderBottomColor = BD; }}
             />
+
+            {/* Send magic link */}
             <button
-              onClick={submit}
+              onClick={handleEmail}
               disabled={!valid || submitting}
               style={{
                 width: "100%", height: 40, fontSize: 14, fontWeight: 500, fontFamily: F,
@@ -115,8 +146,12 @@ export default function EarlyAccessModal({ onClose }: { onClose: () => void }) {
                 boxShadow: valid && !submitting ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
               }}
             >
-              {submitting ? "Joining..." : "Join early access"}
+              {submitting ? "Sending..." : "Send magic link"}
             </button>
+
+            <p style={{ fontFamily: F, fontSize: 12, color: MUTED, textAlign: "center", margin: "20px 0 0" }}>
+              Already have an account? The Google button will log you in.
+            </p>
           </>
         )}
       </div>
