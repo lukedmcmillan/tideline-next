@@ -176,10 +176,6 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
 
   return (
     <div style={{ width: 256, background: NAVY, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
-      {/* Logo area */}
-      <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-        <TidelineLogo size="md" theme="dark" />
-      </div>
       {/* Nav */}
       <div style={{ padding: "8px 0 0" }}>
         {nav.map(n => {

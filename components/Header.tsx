@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { TidelineLogo } from "@/components/ui/TidelineLogo";
 
 const TEAL = "#1D9E75";
 const TEAL_HOVER = "#178a65";
@@ -73,19 +74,8 @@ export default function Header({
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           {/* Left: logo */}
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: "#0A1628",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M2 11 Q5.5 7 9 11 Q12.5 15 16 11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M2 7.5 Q5.5 3.5 9 7.5 Q12.5 11.5 16 7.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <span style={{ fontFamily: F, fontSize: 18, fontWeight: 600, color: INK }}>Tideline</span>
+          <a href="/" style={{ textDecoration: "none" }}>
+            <TidelineLogo size="md" theme="light" />
           </a>
 
           {/* Centre: nav links (desktop only) */}

@@ -342,7 +342,7 @@ export default function LandingPage() {
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"12px"}}>
             <span style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--blue)",animation:"pulse 2.2s ease-in-out infinite"}}/>
-            <span style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)"}}>Only on Tideline</span>
+            <span style={{fontFamily:"var(--font-mono), 'DM Mono', monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)"}}>Only on Tideline</span>
           </div>
           <h2 className="section-title" style={{marginBottom:"12px"}}>Crosscurrent</h2>
           <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,maxWidth:"620px",marginBottom:"48px"}}>Tideline reads across 100+ sources simultaneously and surfaces connections that no individual source would make. A regulatory ruling connected to a financial disclosure connected to an enforcement pattern, flagged before anyone reports on it.</p>
