@@ -22,12 +22,12 @@ const F       = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
 const M       = "var(--font-mono), 'DM Mono', monospace";
 
 const ANSWER = `Enforcement of MARPOL Annex VI has intensified measurably since Q3 2025, with port state control detentions for air emissions violations rising 34% year-on-year according to the Tokyo MOU annual report`;
-const ANSWER_B = `. The IMO\u2019s Carbon Intensity Indicator framework, which entered into force in January 2026, has created a new category of compliance exposure \u2014 ships rated D or E for three consecutive years now face mandatory corrective action plans`;
+const ANSWER_B = `. The IMO\u2019s Carbon Intensity Indicator framework, which entered into force in January 2026, has created a new category of compliance exposure. Ships rated D or E for three consecutive years now face mandatory corrective action plans`;
 const ANSWER_C = `. Three enforcement actions in the Tideline IUU tracker in the last 60 days involved Annex VI violations as secondary charges alongside flag state irregularities, suggesting port state authorities are increasingly bundling emissions compliance into broader inspections`;
 
 const SOURCES = [
   { n: 1, title: "Tokyo MOU Annual Report 2025", meta: "Tideline brief \u00b7 14 Jan 2026 \u00b7 Tier 1" },
-  { n: 2, title: "IMO MEPC 83 \u2014 CII Framework", meta: "Tideline tracker entry \u00b7 6 Mar 2026 \u00b7 Tier 1" },
+  { n: 2, title: "IMO MEPC 83: CII Framework", meta: "Tideline tracker entry \u00b7 6 Mar 2026 \u00b7 Tier 1" },
   { n: 3, title: "Tideline IUU Enforcement Tracker", meta: "Last 60 days \u00b7 3 matching events" },
 ];
 
@@ -167,7 +167,7 @@ export default function ResearchPage() {
 
       {/* ── HERO / SEARCH ── */}
       <div style={{ background: WHITE, borderBottom: `1px solid ${BORDER}`, padding: hasAnswer ? "32px 40px 28px" : "56px 40px 38px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", transition: "padding .3s" }}>
-        {/* Logo row — only in empty state */}
+        {/* Logo row: only in empty state */}
         {!hasAnswer && !isLoading && (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -204,7 +204,7 @@ export default function ResearchPage() {
           <strong style={{ fontWeight: 500, color: T3 }}>Tideline reports what sources say. It does not tell you what to conclude.</strong>
         </div>
 
-        {/* Date range — only in empty state */}
+        {/* Date range: only in empty state */}
         {!hasAnswer && !isLoading && (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 8, background: BG, border: `1px solid ${BORDER}`, borderRadius: 24, padding: "6px 16px", fontSize: 12, color: T3, marginBottom: 20 }}>
@@ -256,11 +256,11 @@ export default function ResearchPage() {
           </>
         )}
 
-        {/* Sample answer — empty state only */}
+        {/* Sample answer: empty state only */}
         {!hasAnswer && !isLoading && (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4 }}>
-              Example \u2014 what a research answer looks like
+              Example: what a research answer looks like
               <span style={{ flex: 1, height: 1, background: BLT }} />
             </div>
             <AnswerCard question="What is the current enforcement trend under MARPOL Annex VI?" />

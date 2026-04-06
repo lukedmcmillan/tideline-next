@@ -34,10 +34,10 @@ const SOURCES: ScrapedSource[] = [
     name: "IMO",
     sourceType: "imo",
     urls: [
-      "https://www.imo.org/en/MediaCentre/HotTopics/Pages/Default.aspx",
+      "https://www.imo.org/en/MediaCentre/PressBriefings/Pages/default.aspx",
     ],
     linkPattern:
-      /href="((?:https:\/\/www\.imo\.org)?\/en\/[Mm]edia[Cc]entre\/[Hh]ot[Tt]opics\/[Pp]ages\/[^"]+\.aspx)"/gi,
+      /href="((?:https:\/\/www\.imo\.org)?\/en\/MediaCentre\/PressBriefings\/Pages\/[^"]+\.aspx)"/gi,
     baseUrl: "https://www.imo.org",
     topic: "shipping",
     storySourceType: "reg",

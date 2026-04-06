@@ -40,7 +40,7 @@ function LoginContent() {
     return (
       <div style={{ minHeight: "100vh", background: "#0B1D35", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Mono&family=DM+Sans:wght@400;500;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono&family=DM+Sans:wght@400;500;600;700&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
         `}</style>
         <div style={{ maxWidth: 400, width: "100%", background: "#ffffff", borderRadius: 8, padding: "48px 40px", textAlign: "center" }}>
@@ -57,12 +57,12 @@ function LoginContent() {
   return (
     <div style={{ minHeight: "100vh", background: "#0B1D35", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Mono&family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono&family=DM+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         input:focus { outline: none; border-color: #1D9E75 !important; box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
       `}</style>
       <div style={{ maxWidth: 400, width: "100%", background: "#ffffff", borderRadius: 8, padding: "48px 40px", textAlign: "center" }}>
-        <h1 style={{ fontSize: 36, fontWeight: 400, color: "#0a1628", fontFamily: "'Instrument Serif', Georgia, serif", marginBottom: 4, letterSpacing: "-0.02em" }}>
+        <h1 style={{ fontSize: 36, fontWeight: 700, color: "#0a1628", fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif", marginBottom: 4, letterSpacing: "-0.02em" }}>
           Tideline
         </h1>
         <p style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Mono', monospace", letterSpacing: "0.04em", marginBottom: 36 }}>

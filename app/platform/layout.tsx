@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { TidelineLogo } from "@/components/ui/TidelineLogo";
 
 // ── Design tokens ─────────────────────────────────────────────────────────
 const BG     = "#F8F9FA";
@@ -17,7 +18,7 @@ const T3     = "#5F6368";
 const T4     = "#9AA0A6";
 const BORDER = "#DADCE0";
 const BLT    = "#E8EAED";
-const F      = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+const F      = "var(--font-ui), 'Plus Jakarta Sans', -apple-system, sans-serif";
 const M      = "var(--font-mono), 'DM Mono', monospace";
 
 // ── Icons (inline SVG) ────────────────────────────────────────────────────
@@ -122,8 +123,8 @@ function TrialBanner() {
 
 // ── Tracker tooltips ──────────────────────────────────────────────────────
 const TIPS: Record<string, { st: string; c: string; d: string }> = {
-  "BBNJ Treaty": { st: "Active \u2014 in force", c: TEAL, d: "87 ratifications. Pacific bloc deposit confirmed 06:42." },
-  "ISA Mining": { st: "Developing \u2014 watch", c: AMBER, d: "Council vote deferred to July. 3 states signalled opposition." },
+  "BBNJ Treaty": { st: "Active, in force", c: TEAL, d: "87 ratifications. Pacific bloc deposit confirmed 06:42." },
+  "ISA Mining": { st: "Developing, watch", c: AMBER, d: "Council vote deferred to July. 3 states signalled opposition." },
   "IUU Enforcement": { st: "Enforcement action", c: RED, d: "Vessel detained under falsified flag. Port state action 03:30." },
   "30x30 Protection": { st: "Active", c: TEAL, d: "Chile MPA. Global ocean coverage 24.3% toward 30% target." },
   "Blue Finance": { st: "Developing", c: AMBER, d: "IFC framework published. 7 new blue bonds in pipeline." },
@@ -175,6 +176,10 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
 
   return (
     <div style={{ width: 256, background: NAVY, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
+      {/* Logo area */}
+      <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+        <TidelineLogo size="md" theme="dark" />
+      </div>
       {/* Nav */}
       <div style={{ padding: "8px 0 0" }}>
         {nav.map(n => {
@@ -198,7 +203,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
 
       {/* Divider + Trackers */}
       <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
-      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", padding: "12px 28px 6px" }}>Trackers</div>
+      <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", padding: "20px 20px 8px" }}>Trackers</div>
       {trackers.map(t => (
         <div key={t.name} style={{ position: "relative" }} onMouseEnter={() => setHTip(t.name)} onMouseLeave={() => setHTip(null)}>
           <a href="/tracker/bbnj" style={{
@@ -222,7 +227,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
 
       {/* Workspace */}
       <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
-      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", padding: "12px 28px 6px" }}>Workspace</div>
+      <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", padding: "20px 20px 8px" }}>Workspace</div>
       {(projectData || []).length > 0 ? (projectData || []).map(p => (
         <a key={p.name} href={`/platform/workspace?project=${encodeURIComponent(p.name)}`} style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: TEAL, flexShrink: 0, marginRight: 12 }} />
@@ -295,7 +300,7 @@ function CalendarWidget() {
         { date: "16 May", days: "47 days", title: "ISWG-GHG 17", c: AMBER },
       ].map((e, i) => (
         <div key={i} style={{ padding: "11px 0", borderBottom: `1px solid ${BLT}` }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: e.c, marginBottom: 2 }}>{e.date} {e.days && `\u2014 ${e.days}`}</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: e.c, marginBottom: 2 }}>{e.date} {e.days && `\u00B7 ${e.days}`}</div>
           <div style={{ fontSize: 13, color: T1, lineHeight: 1.35 }}>{e.title}</div>
         </div>
       ))}
@@ -646,10 +651,10 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
 function MobileTabBar() {
   const path = usePathname();
   const tabs = [
-    { label: "Feed", href: "/platform/feed", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg> },
-    { label: "Trackers", href: "/tracker/bbnj", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg> },
-    { label: "Saved", href: "/platform/library", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 3h12v15l-6-4-6 4V3z"/></svg> },
-    { label: "Account", href: "/platform/workspace", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="10" cy="7" r="3.5"/><path d="M3 18c0-3.5 3-6 7-6s7 2.5 7 6"/></svg> },
+    { label: "Feed", href: "/platform/feed", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="8" height="8" rx="1.5"/><rect x="12" y="2" width="8" height="8" rx="1.5"/><rect x="2" y="12" width="8" height="8" rx="1.5"/><rect x="12" y="12" width="8" height="8" rx="1.5"/></svg> },
+    { label: "Trackers", href: "/tracker/bbnj", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><path d="M11 7v4l3 2"/></svg> },
+    { label: "Saved", href: "/platform/library", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 3h12v16l-6-4-6 4V3z"/></svg> },
+    { label: "Account", href: "/platform/workspace", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="8" r="3.5"/><path d="M4 19c0-3.5 3-6 7-6s7 2.5 7 6"/></svg> },
   ];
   const isActive = (href: string) => {
     if (href === "/platform/feed") return path === "/platform" || path === "/platform/feed";
@@ -658,9 +663,10 @@ function MobileTabBar() {
   return (
     <nav className="mobile-tab-bar" style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
-      height: 56, background: WHITE, borderTop: `1px solid ${BLT}`,
+      height: 56, paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      background: WHITE, borderTop: `1px solid ${BLT}`,
       display: "flex", alignItems: "center", justifyContent: "space-around",
-      zIndex: 99,
+      zIndex: 90,
     }}>
       {tabs.map(t => {
         const on = isActive(t.href);
@@ -671,7 +677,7 @@ function MobileTabBar() {
             color: on ? TEAL : T4,
           }}>
             {t.icon}
-            <span style={{ fontFamily: F, fontSize: 12, fontWeight: on ? 500 : 400 }}>{t.label}</span>
+            <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500 }}>{t.label}</span>
           </a>
         );
       })}
@@ -724,9 +730,9 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         a{text-decoration:none;color:inherit}
         .rp-desktop{}
         @media(max-width:1279px){.rp-desktop{display:none!important}}
-        @media(max-width:767px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
+        @media(max-width:1023px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
         .mobile-tab-bar{display:none}
-        @media(max-width:768px){
+        @media(max-width:1023px){
           .trial-banner-wrap{position:fixed!important;top:auto!important;bottom:56px!important;left:0!important;right:0!important;z-index:100!important;background:#fff!important;border-top:1px solid #E8EAED!important;border-left:none!important;padding:12px 20px!important}
           .trial-banner-wrap .trial-text{font-size:13px!important;color:#5F6368!important}
           .trial-banner-wrap .trial-link{font-size:13px!important;color:#1D9E75!important}
@@ -744,24 +750,18 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
         </button>
         {/* Logo */}
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 24px 0 16px", minWidth: 220 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: NAVY, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10c0-4 3.5-7 7-7s7 3 7 7" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="10" cy="14" r="2.5" fill="white"/></svg>
-          </div>
-          <div>
-            <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-.025em", color: T1, display: "block", lineHeight: 1.1 }}>Tideline</span>
-            <span style={{ fontSize: 10, fontWeight: 500, color: T4, letterSpacing: ".04em", textTransform: "uppercase" }}>Ocean Intelligence</span>
-          </div>
+        <a href="/" style={{ display: "flex", alignItems: "center", padding: "0 24px 0 16px", minWidth: 220 }}>
+          <TidelineLogo size="md" theme="light" />
         </a>
         {/* Search */}
         <div className="top-bar-search" onClick={() => setSearchOpen(true)} style={{ flex: 1, maxWidth: 560, height: 42, background: BG, border: "1px solid transparent", borderRadius: 24, display: "flex", alignItems: "center", padding: "0 14px 0 16px", gap: 10, cursor: "text", transition: "all .2s" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke={T4} strokeWidth="1.5"/><path d="M11 11l3.5 3.5" stroke={T4} strokeWidth="1.5" strokeLinecap="round"/></svg>
-          <span style={{ flex: 1, fontSize: 14, color: T4 }}>Search or ask Tideline anything</span>
+          <span style={{ flex: 1, fontSize: 14, fontFamily: F, color: T4 }}>Search or ask Tideline anything</span>
           <span style={{ fontSize: 11, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "1px 6px", color: T4, fontFamily: M }}>{"\u2318"}K</span>
         </div>
         {/* Right */}
         <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px 0 24px", marginLeft: "auto" }}>
-          <span className="top-bar-right-tier" style={{ fontSize: 12, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 12px", color: T2, background: WHITE, marginRight: 4 }}>Individual</span>
+          <span className="top-bar-right-tier" style={{ fontFamily: M, fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE, marginRight: 4 }}>Individual</span>
           <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${NAVY},${TEAL})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>LM</div>
         </div>
       </div>
@@ -770,8 +770,16 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Mobile drawer */}
         {sbOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.4)" }} onClick={() => setSbOpen(false)}>
-            <div style={{ width: 280, height: "100%", background: NAVY }} onClick={e => e.stopPropagation()}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.4)", transition: "opacity 200ms ease" }} onClick={() => setSbOpen(false)}>
+            <div style={{ width: 280, height: "100%", background: NAVY, transform: "translateX(0)", transition: "transform 200ms ease", position: "relative" }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => setSbOpen(false)} style={{
+                position: "absolute", top: 12, right: 12, width: 40, height: 40,
+                borderRadius: 8, background: "rgba(255,255,255,0.15)",
+                border: "none", cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", zIndex: 10,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+              </button>
               <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} />
             </div>
           </div>

@@ -47,7 +47,7 @@ function decodeHtml(str: string): string {
     .replace(/&#8220;/g, "\u201C")
     .replace(/&#8221;/g, "\u201D")
     .replace(/&#8211;/g, "-")
-    .replace(/&#8212;/g, "\u2014")
+    .replace(/&#8212;/g, "-")
     .replace(/&nbsp;/g, ' ')
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)));
 }
@@ -228,7 +228,7 @@ function ExpertContext({ storyId }: { storyId: string }) {
         <textarea
           value={draft}
           onChange={e => setDraft(e.target.value)}
-          placeholder="Got the inside track? Share what this means for the sector — visible to other Tideline subscribers."
+          placeholder="Got the inside track? Share what this means for the sector, visible to other Tideline subscribers."
           rows={3}
           style={{
             width: "100%", resize: "vertical", border: `1px solid ${BLT}`,
@@ -405,6 +405,55 @@ export default function StoryPage() {
 
   return (
     <div style={{ padding: "16px 24px 40px", maxWidth: 720 }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .story-hide-mobile { display: none !important; }
+          .story-source-tag {
+            background: #F1F3F4 !important;
+            color: #5F6368 !important;
+            font-family: 'DM Mono', monospace !important;
+            font-size: 11px !important;
+          }
+          .story-source-type {
+            background: #F1F3F4 !important;
+            color: #5F6368 !important;
+            font-family: 'DM Mono', monospace !important;
+            font-size: 11px !important;
+          }
+          .story-headline {
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            font-family: var(--font-sans), 'DM Sans', system-ui, sans-serif !important;
+          }
+          .story-brief-block {
+            background: none !important;
+            border: none !important;
+            border-left: 3px solid #1D9E75 !important;
+            border-radius: 0 !important;
+            padding: 0 0 0 16px !important;
+          }
+          .story-brief-text {
+            font-size: 15px !important;
+            color: #5F6368 !important;
+            line-height: 1.7 !important;
+            font-weight: 400 !important;
+          }
+          .story-brief-full {
+            font-size: 15px !important;
+            color: #5F6368 !important;
+            line-height: 1.7 !important;
+          }
+          .story-mobile-actions {
+            display: flex !important;
+          }
+          .story-desktop-actions {
+            display: none !important;
+          }
+          .story-byline-actions {
+            display: none !important;
+          }
+        }
+      `}</style>
       {/* Back */}
       <button
         onClick={() => router.push("/platform/feed")}
@@ -425,11 +474,11 @@ export default function StoryPage() {
       <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "26px 28px", marginBottom: 16 }}>
         {/* Byline row */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: sc.bg, color: sc.color, borderRadius: 4 }}>{story.source_name}</span>
-          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4, background: BG, borderRadius: 4, padding: "2px 8px" }}>{story.source_type}</span>
+          <span className="story-source-tag" style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: sc.bg, color: sc.color, borderRadius: 4 }}>{story.source_name}</span>
+          <span className="story-source-type" style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4, background: BG, borderRadius: 4, padding: "2px 8px" }}>{story.source_type}</span>
           {isPro && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: TEAL, background: "rgba(29,158,117,.1)", borderRadius: 4, padding: "2px 7px" }}>Tier 1</span>}
           <span style={{ fontSize: 12, color: T4 }}>{fmtDate(story.published_at)}</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <div className="story-byline-actions" style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             <SaveToLibrary storyId={id} />
             <SaveToProject storyId={id} />
             <LinkedInDraft storyId={id} />
@@ -437,12 +486,12 @@ export default function StoryPage() {
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: F, fontSize: 24, fontWeight: 600, lineHeight: 1.3, letterSpacing: "-.025em", color: T1, marginBottom: 16, margin: 0 }}>
+        <h1 className="story-headline" style={{ fontFamily: F, fontSize: 24, fontWeight: 600, lineHeight: 1.3, letterSpacing: "-.025em", color: T1, marginBottom: 16, margin: 0 }}>
           {decodeHtml(story.title)}
         </h1>
 
         {/* Tracker tags */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14, marginBottom: 0 }}>
+        <div className="story-hide-mobile" style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14, marginBottom: 0 }}>
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", border: `1px solid rgba(29,158,117,.22)`, borderRadius: 4, padding: "3px 9px", color: TEAL, background: "rgba(255,255,255,.7)" }}>{topicTag}</span>
           {story.alert_type && (
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", background: "rgba(217,48,37,.1)", borderRadius: 4, padding: "3px 9px", color: RED }}>{story.alert_type.replace("_", " ")}</span>
@@ -450,12 +499,32 @@ export default function StoryPage() {
         </div>
       </div>
 
+      {/* Mobile action row */}
+      <div className="story-mobile-actions" style={{
+        display: "none", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 16,
+      }}>
+        <SaveToLibrary storyId={id} />
+        <a
+          href={story.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            fontSize: 13, fontWeight: 500, fontFamily: F,
+            color: TEAL, textDecoration: "none",
+          }}
+        >
+          View original {"\u2197"}
+        </a>
+      </div>
+
       {/* Tideline brief */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: TEAL, marginBottom: 10 }}>
+        <div className="story-hide-mobile" style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: TEAL, marginBottom: 10 }}>
           Tideline brief
         </div>
-        <div style={{
+        <div className="story-brief-block" style={{
           background: WHITE, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${TEAL}`,
           borderRadius: 12, padding: "22px 24px",
         }}>
@@ -463,13 +532,13 @@ export default function StoryPage() {
             <div style={{ fontSize: 13, color: T4, lineHeight: 1.6 }}>Generating brief...</div>
           ) : shortSummary ? (
             <>
-              <p style={{ fontSize: 14, lineHeight: 1.75, color: T1, fontFamily: F, margin: 0 }}>
+              <p className="story-brief-text" style={{ fontSize: 14, lineHeight: 1.75, color: T1, fontFamily: F, margin: 0 }}>
                 {shortSummary}
               </p>
               {fullSummary && (
                 <>
                   {expanded && (
-                    <p style={{ fontSize: 14, lineHeight: 1.75, color: T2, fontFamily: F, margin: 0, paddingTop: 16, marginTop: 16, borderTop: `1px solid ${BLT}` }}>
+                    <p className="story-brief-full" style={{ fontSize: 14, lineHeight: 1.75, color: T2, fontFamily: F, margin: 0, paddingTop: 16, marginTop: 16, borderTop: `1px solid ${BLT}` }}>
                       {fullSummary}
                     </p>
                   )}
@@ -486,7 +555,7 @@ export default function StoryPage() {
       </div>
 
       {/* Original source */}
-      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "18px 24px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="story-desktop-actions" style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "18px 24px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 6 }}>Primary source</div>
           <span style={{ fontSize: 13, color: T3 }}>{story.source_name}</span>

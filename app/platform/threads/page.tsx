@@ -238,11 +238,11 @@ export default function ThreadsPage() {
     <div style={{ minHeight: "100vh", background: BG, fontFamily: F }}>
       {/* Header */}
       <div style={{ background: NAVY, padding: "32px 40px 28px" }}>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 400, color: WHITE, margin: 0 }}>
+        <h1 style={{ fontFamily: "var(--font-ui), 'Plus Jakarta Sans', -apple-system, sans-serif", fontSize: 28, fontWeight: 600, color: WHITE, margin: 0 }}>
           Thread Intelligence
         </h1>
         <p style={{ fontFamily: M, fontSize: 12, color: T4, margin: "6px 0 0", letterSpacing: "0.06em" }}>
-          Internal — not subscriber facing
+          Internal - not subscriber facing
         </p>
         <div style={{ display: "flex", gap: 24, marginTop: 16 }}>
           <span style={{ fontFamily: M, fontSize: 12, color: T4 }}>

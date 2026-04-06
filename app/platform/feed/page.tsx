@@ -89,7 +89,7 @@ function decodeHtml(str: string): string {
     .replace(/&#8220;/g, "\u201C")
     .replace(/&#8221;/g, "\u201D")
     .replace(/&#8211;/g, "-")
-    .replace(/&#8212;/g, "\u2014")
+    .replace(/&#8212;/g, "-")
     .replace(/&nbsp;/g, ' ')
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)));
 }

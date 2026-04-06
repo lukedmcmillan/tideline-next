@@ -12,7 +12,7 @@ import DesktopOnly from "@/components/DesktopOnly";
 // ── Design tokens ────────────────────────────────────────────────────────
 const BG    = "#F9FAFB";
 const WHITE = "#FFFFFF";
-const TEAL  = "#0E7C86";
+const TEAL  = "#1D9E75";
 const T1    = "#111827";
 const T2    = "#374151";
 const T3    = "#6B7280";
@@ -26,7 +26,7 @@ interface SourceStory { id: string; title: string; source_name: string; publishe
 interface AskResult { answer: string; sources?: { title: string; source_name: string; published_at: string; link: string; source_type: string; similarity: number }[] }
 
 function decodeHtml(str: string): string {
-  return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&#8217;/g, "\u2019").replace(/&#8216;/g, "\u2018").replace(/&#8220;/g, "\u201C").replace(/&#8221;/g, "\u201D").replace(/&#8211;/g, "-").replace(/&#8212;/g, "\u2014").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, c) => String.fromCharCode(parseInt(c)));
+  return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&#8217;/g, "\u2019").replace(/&#8216;/g, "\u2018").replace(/&#8220;/g, "\u201C").replace(/&#8221;/g, "\u201D").replace(/&#8211;/g, "-").replace(/&#8212;/g, ", ").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, c) => String.fromCharCode(parseInt(c)));
 }
 
 function fmtDate(iso: string) {
@@ -222,7 +222,7 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
         <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 400, color: "#202124", letterSpacing: "-0.5px", margin: 0 }}>New project</h1>
         <p style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: "#80868B", margin: "8px 0 20px" }}>Select a type, name your project, and start.</p>
 
-        {/* Card grid — gap-as-border technique */}
+        {/* Card grid, gap-as-border technique */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "#E8EAED", marginBottom: 24 }}>
           {PROJECT_TYPES.map((pt, i) => {
             const isSelected = selected === pt.id;
@@ -249,7 +249,7 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
           })}
         </div>
 
-        {/* Project name — Material underline input */}
+        {/* Project name, Material underline input */}
         <div style={{ marginTop: 16 }}>
           <label style={{ display: "block", fontFamily: F, fontSize: 12, fontWeight: 500, color: "#5F6368", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>Project name</label>
           <input
@@ -536,7 +536,7 @@ function IntelligencePanel({ editor, topics, projectId }: {
         )}
       </div>
 
-      {/* Ask input — sticky bottom */}
+      {/* Ask input, sticky bottom */}
       <div style={{ borderTop: "1px solid #E8EAED", padding: "12px 16px", flexShrink: 0 }}>
         <div style={{ display: "flex", gap: 6 }}>
           <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); }} placeholder={placeholder}
@@ -595,7 +595,7 @@ function WorkspaceContent() {
           }
         }
 
-        // No projects and no param — show creation panel
+        // No projects and no param. Show creation panel
         if (!projectName) {
           setShowCreatePanel(true);
           setReady(true);

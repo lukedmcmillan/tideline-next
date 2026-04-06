@@ -20,7 +20,7 @@ const M      = "var(--font-mono), 'DM Mono', monospace";
 const ENTITIES = [
   { name: "International Seabed Authority", type: "Org", typeColor: TEAL, mentions: 47, last: "today", snippet: "Council vote on exploitation code deferred to July 2026 session..." },
   { name: "BBNJ Agreement", type: "Treaty", typeColor: T4, mentions: 38, last: "today", snippet: "87 ratifications confirmed, entry into force threshold crossed..." },
-  { name: "IFC \u2014 Blue Finance Framework", type: "Org", typeColor: T4, mentions: 22, last: "today", snippet: "Revised certification framework triggers blue bond pipeline expansion..." },
+  { name: "IFC: Blue Finance Framework", type: "Org", typeColor: T4, mentions: 22, last: "today", snippet: "Revised certification framework triggers blue bond pipeline expansion..." },
   { name: "MV Poseidon Star", type: "Vessel", typeColor: RED, mentions: 8, last: "03:30", snippet: "Detained under falsified flag documentation, port state action confirmed..." },
   { name: "Michael Lodge", type: "Person", typeColor: T4, mentions: 19, last: "05:18", snippet: "ISA Secretary-General, presided over Council session deferral vote..." },
 ];

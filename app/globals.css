@@ -2,19 +2,48 @@
 @import "tailwindcss";
 
 :root {
-  --font-serif: var(--font-libre-baskerville);
-  --font-sans: var(--font-dm-sans);
-  --font-mono: var(--font-dm-mono);
+  --font-ui: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-sans: 'DM Sans', -apple-system, sans-serif;
+
+  /* Brand colours */
+  --navy: #0A1628;
+  --teal: #1D9E75;
+  --teal-light: rgba(29, 158, 117, 0.08);
+  --teal-border: rgba(29, 158, 117, 0.2);
+
+  /* Text */
+  --text-primary: #202124;
+  --text-muted: #5F6368;
+  --text-faint: #9AA0A6;
+
+  /* Borders */
+  --border: #DADCE0;
+  --border-light: #E8EAED;
+
+  /* Surfaces */
+  --bg: #F8F9FA;
+  --surface: #FFFFFF;
 }
 
 body {
-  font-family: var(--font-sans), "DM Sans", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans), "Helvetica Neue", Arial, sans-serif;
   background: #FFFFFF;
   color: #0D0D0D;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, blockquote {
-  font-family: var(--font-serif), "Libre Baskerville", Georgia, serif;
+h1, h2, h3 {
+  font-family: var(--font-ui);
+}
+
+.brief-block {
+  border-left: 3px solid #1D9E75;
+  padding-left: 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-muted);
 }

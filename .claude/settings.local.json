@@ -37,7 +37,8 @@
       "mcp__supabase__apply_migration",
       "Bash(echo \"EXIT:$?\")",
       "Bash(grep -A2 '\"\"paths\"\"' tsconfig.json)",
-      "Bash(claude mcp:*)"
+      "Bash(claude mcp:*)",
+      "WebFetch(domain:www.imo.org)"
     ]
   }
 }
