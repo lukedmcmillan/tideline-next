@@ -9,16 +9,19 @@ import Typography from "@tiptap/extension-typography";
 import IntelligenceThread from "@/components/workspace/IntelligenceThread";
 import DesktopOnly from "@/components/DesktopOnly";
 
-// ── Design tokens ────────────────────────────────────────────────────────
-const BG    = "#F9FAFB";
+// -- Design tokens ---------------------------------------------------------------
+const BG    = "#F8F9FA";
 const WHITE = "#FFFFFF";
+const NAVY  = "#0F1117";
 const TEAL  = "#1D9E75";
-const T1    = "#111827";
-const T2    = "#374151";
-const T3    = "#6B7280";
-const T4    = "#9CA3AF";
-const BD    = "#E5E7EB";
-const R     = 4;
+const T1    = "#202124";
+const T2    = "#3C4043";
+const T3    = "#5F6368";
+const T4    = "#9AA0A6";
+const BD    = "#DADCE0";
+const BLT   = "#E8EAED";
+const R     = 6;
+const FUI   = "var(--font-ui), 'Plus Jakarta Sans', -apple-system, sans-serif";
 const F     = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
 const M     = "var(--font-mono), 'DM Mono', monospace";
 
@@ -71,22 +74,22 @@ function getPlaceholder(topics: string[]): string {
   return DEF_PH[Math.floor(Math.random() * 2)];
 }
 
-// ── Button styles ────────────────────────────────────────────────────────
+// -- Button styles ---------------------------------------------------------------
 const btnSec = (ov?: React.CSSProperties): React.CSSProperties => ({
   height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center",
-  padding: "0 12px", fontSize: 13, fontWeight: 500, fontFamily: F,
+  padding: "0 12px", fontSize: 13, fontWeight: 500, fontFamily: FUI,
   border: `1px solid ${BD}`, borderRadius: R, cursor: "pointer",
   background: WHITE, color: T2, ...ov,
 });
 
 const btnPri = (ov?: React.CSSProperties): React.CSSProperties => ({
   height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center",
-  padding: "0 14px", fontSize: 13, fontWeight: 500, fontFamily: F,
+  padding: "0 14px", fontSize: 13, fontWeight: 500, fontFamily: FUI,
   border: "none", borderRadius: R, cursor: "pointer",
   background: TEAL, color: WHITE, ...ov,
 });
 
-// ── Field schemas per project type ────────────────────────────────────────
+// -- Field schemas per project type -----------------------------------------------
 interface FieldDef { key: string; label: string; type: "text" | "textarea" | "date" | "select"; options?: string[]; rows?: number; defaultValue?: string }
 
 const FIELD_SCHEMAS: Record<string, FieldDef[]> = {
@@ -119,18 +122,18 @@ const FIELD_SCHEMAS: Record<string, FieldDef[]> = {
   ],
 };
 
-// ── Field input styles ───────────────────────────────────────────────────
+// -- Field input styles -----------------------------------------------------------
 const fieldInput: React.CSSProperties = {
   width: "100%", height: 36, border: "none", borderBottom: "2px solid #E0E0E0",
-  borderRadius: 0, fontSize: 14, fontFamily: F, color: "#202124",
+  borderRadius: 0, fontSize: 14, fontFamily: F, color: T1,
   padding: "0 0 4px 0", background: "transparent", outline: "none",
 };
 
 const fieldLabel: React.CSSProperties = {
-  display: "block", fontFamily: F, fontSize: 12, fontWeight: 500, color: "#202124", marginBottom: 4,
+  display: "block", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T1, marginBottom: 4,
 };
 
-// ── Structured fields component ──────────────────────────────────────────
+// -- Structured fields component --------------------------------------------------
 function StructuredFields({ schema, fields, onChange }: {
   schema: FieldDef[];
   fields: Record<string, string>;
@@ -177,7 +180,7 @@ function StructuredFields({ schema, fields, onChange }: {
   );
 }
 
-// ── Project types ────────────────────────────────────────────────────────
+// -- Project types ----------------------------------------------------------------
 const PROJECT_TYPES = [
   {
     id: "situation_report", label: "Situation Report", desc: "What is happening with a topic right now",
@@ -201,7 +204,7 @@ const PROJECT_TYPES = [
   },
 ];
 
-// ── Project creation panel ───────────────────────────────────────────────
+// -- Project creation panel -------------------------------------------------------
 function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -219,11 +222,11 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
     <div style={{ background: WHITE, minHeight: "100vh", padding: "32px 0 40px 48px" }}>
       <div style={{ maxWidth: 560 }}>
         {/* Heading */}
-        <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 400, color: "#202124", letterSpacing: "-0.5px", margin: 0 }}>New project</h1>
-        <p style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: "#80868B", margin: "8px 0 20px" }}>Select a type, name your project, and start.</p>
+        <h1 style={{ fontFamily: FUI, fontSize: 28, fontWeight: 800, color: T1, letterSpacing: "-0.4px", margin: 0 }}>New project</h1>
+        <p style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: T4, margin: "8px 0 20px" }}>Select a type, name your project, and start.</p>
 
         {/* Card grid, gap-as-border technique */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "#E8EAED", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: BLT, marginBottom: 24 }}>
           {PROJECT_TYPES.map((pt, i) => {
             const isSelected = selected === pt.id;
             const isLast = i === PROJECT_TYPES.length - 1;
@@ -238,12 +241,12 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
                   borderTop: isSelected ? `3px solid ${TEAL}` : "3px solid transparent",
                   transition: "background 0.1s",
                 }}
-                onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "#F8F9FA"; }}
+                onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = BG; }}
                 onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = WHITE; }}
               >
                 <div style={{ marginBottom: 8 }}>{pt.icon}</div>
-                <div style={{ fontFamily: F, fontSize: 15, fontWeight: 500, color: isSelected ? TEAL : "#202124", marginBottom: 4 }}>{pt.label}</div>
-                <div style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "#80868B", lineHeight: 1.4 }}>{pt.desc}</div>
+                <div style={{ fontFamily: FUI, fontSize: 15, fontWeight: 500, color: isSelected ? TEAL : T1, marginBottom: 4 }}>{pt.label}</div>
+                <div style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T4, lineHeight: 1.4 }}>{pt.desc}</div>
               </div>
             );
           })}
@@ -251,18 +254,18 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
 
         {/* Project name, Material underline input */}
         <div style={{ marginTop: 16 }}>
-          <label style={{ display: "block", fontFamily: F, fontSize: 12, fontWeight: 500, color: "#5F6368", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 8 }}>Project name</label>
+          <label style={{ display: "block", fontFamily: M, fontSize: 11, fontWeight: 500, color: T3, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Project name</label>
           <input
             value={name} onChange={e => setName(e.target.value)}
             placeholder="Name your project"
             style={{
               width: "100%", height: 40, padding: 0, fontSize: 16, fontFamily: F,
-              color: "#202124", background: "transparent",
-              border: "none", borderBottom: "2px solid #E8EAED",
+              color: T1, background: "transparent",
+              border: "none", borderBottom: `2px solid ${BLT}`,
               borderRadius: 0, outline: "none",
             }}
             onFocus={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = TEAL; }}
-            onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = "#E8EAED"; }}
+            onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = BLT; }}
             onKeyDown={e => { if (e.key === "Enter" && canCreate) handleCreate(); }}
           />
         </div>
@@ -271,16 +274,16 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
         <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginTop: 20 }}>
           <span
             onClick={() => { setSelected(null); setName(""); }}
-            style={{ fontFamily: F, fontSize: 14, fontWeight: 400, color: "#5F6368", cursor: "pointer", marginRight: 24 }}
+            style={{ fontFamily: FUI, fontSize: 14, fontWeight: 400, color: T3, cursor: "pointer", marginRight: 24 }}
           >Cancel</span>
           <button
             onClick={handleCreate}
             disabled={!canCreate}
             style={{
-              height: 36, padding: "0 24px", fontSize: 14, fontWeight: 500, fontFamily: F,
+              height: 36, padding: "0 24px", fontSize: 14, fontWeight: 500, fontFamily: FUI,
               color: canCreate ? WHITE : "#BDC1C6",
               background: canCreate ? TEAL : "#F1F3F4",
-              border: "none", borderRadius: 4, cursor: canCreate ? "pointer" : "not-allowed",
+              border: "none", borderRadius: R, cursor: canCreate ? "pointer" : "not-allowed",
               boxShadow: canCreate ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
             }}
           >
@@ -292,7 +295,7 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
   );
 }
 
-// ── Left sidebar ─────────────────────────────────────────────────────────
+// -- Left sidebar -----------------------------------------------------------------
 function WorkspaceSidebar({ projects, activeProject, onSelect, onNewProject }: {
   projects: { name: string; count: number }[];
   activeProject: string;
@@ -301,36 +304,39 @@ function WorkspaceSidebar({ projects, activeProject, onSelect, onNewProject }: {
 }) {
   return (
     <aside style={{
-      width: 220, background: BG, borderRight: `1px solid ${BD}`,
+      width: 220, background: NAVY, borderRight: "1px solid rgba(255,255,255,0.08)",
       minHeight: "100vh", flexShrink: 0, display: "flex", flexDirection: "column", padding: "20px 0",
     }}>
-      <div style={{ padding: "0 16px 14px", fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+      <div style={{ padding: "0 16px 14px", fontFamily: M, fontSize: 9, fontWeight: 500, color: "#6B7280", letterSpacing: "0.14em", textTransform: "uppercase" }}>
         Projects
       </div>
       {projects.map(p => (
         <button key={p.name} onClick={() => onSelect(p.name)} style={{
           display: "flex", alignItems: "center", gap: 8, width: "100%",
-          padding: "8px 16px", background: "none", border: "none",
+          padding: "8px 16px", background: p.name === activeProject ? "rgba(29,158,117,0.12)" : "none", border: "none",
           borderLeft: p.name === activeProject ? `3px solid ${TEAL}` : "3px solid transparent",
           cursor: "pointer", textAlign: "left",
         }}>
           <span style={{
-            fontFamily: F, fontSize: 14, flex: 1,
-            color: p.name === activeProject ? T1 : T3,
+            fontFamily: F, fontSize: 12.5, flex: 1,
+            color: p.name === activeProject ? TEAL : "#C9CDD4",
             fontWeight: p.name === activeProject ? 500 : 400,
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>{p.name}</span>
           {p.count > 0 && (
-            <span style={{ fontFamily: F, fontSize: 10, color: T4, background: WHITE, border: `1px solid ${BD}`, borderRadius: 10, padding: "1px 7px" }}>{p.count}</span>
+            <span style={{ fontFamily: F, fontSize: 10, color: T4, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "1px 7px" }}>{p.count}</span>
           )}
         </button>
       ))}
-      <button onClick={onNewProject} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 16px", fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, background: "none", border: "none", cursor: "pointer", marginTop: 4 }}>
+      <button onClick={onNewProject} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "calc(100% - 32px)", margin: "8px 16px 0", padding: "8px 0", fontFamily: F, fontSize: 12.5, fontWeight: 500, color: "#C9CDD4", background: "none", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: R, cursor: "pointer" }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = TEAL; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
+      >
         + New project
       </button>
 
-      <div style={{ padding: "20px 16px 10px", borderTop: `1px solid ${BD}`, marginTop: 16 }}>
-        <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T4, letterSpacing: "0.06em", textTransform: "uppercase" }}>Trackers</div>
+      <div style={{ padding: "20px 16px 10px", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 16 }}>
+        <div style={{ fontFamily: M, fontSize: 9, fontWeight: 500, color: "#6B7280", letterSpacing: "0.14em", textTransform: "uppercase" }}>Trackers</div>
       </div>
       {[
         { label: "BBNJ Treaty", href: "/tracker/bbnj" },
@@ -339,14 +345,13 @@ function WorkspaceSidebar({ projects, activeProject, onSelect, onNewProject }: {
         { label: "30x30", href: "/tracker/30x30" },
         { label: "Blue Finance", href: "/tracker/blue-finance" },
       ].map(t => (
-        <a key={t.label} href={t.href} style={{ display: "block", padding: "6px 16px", fontFamily: F, fontSize: 13, color: T3, textDecoration: "none" }}>{t.label}</a>
+        <a key={t.label} href={t.href} style={{ display: "block", padding: "6px 16px", fontFamily: F, fontSize: 12.5, color: "#C9CDD4", textDecoration: "none" }}>{t.label}</a>
       ))}
     </aside>
   );
 }
 
-// ── Research panel ───────────────────────────────────────────────────────
-// ── Entry type ────────────────────────────────────────────────────────────
+// -- Entry type -------------------------------------------------------------------
 interface AutoEntry {
   id: string;
   story_id: string;
@@ -364,10 +369,10 @@ interface AutoEntry {
 const CONF_BADGE: Record<string, { bg: string; color: string }> = {
   STRONG: { bg: "#E6F4F1", color: TEAL },
   MODERATE: { bg: "#F3F4F6", color: "#6B7280" },
-  WEAK: { bg: "#F9FAFB", color: "#9CA3AF" },
+  WEAK: { bg: BG, color: T4 },
 };
 
-// ── Intelligence panel (right column) ────────────────────────────────────
+// -- Intelligence panel (right column) --------------------------------------------
 function IntelligencePanel({ editor, topics, projectId }: {
   editor: ReturnType<typeof useEditor> | null;
   topics: string[];
@@ -454,13 +459,13 @@ function IntelligencePanel({ editor, topics, projectId }: {
   };
 
   return (
-    <div style={{ width: 300, background: "#F8F9FA", borderLeft: "1px solid #E8EAED", flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh" }}>
+    <div style={{ width: 300, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh" }}>
       {/* Header */}
       <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "1px" }}>Intelligence</span>
+        <span style={{ fontFamily: M, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.12em" }}>Intelligence</span>
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasEntries ? TEAL : "#9CA3AF" }} />
-          <span style={{ fontFamily: F, fontSize: 11, color: hasEntries ? TEAL : "#9CA3AF" }}>{hasEntries ? "Live" : "Monitoring"}</span>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasEntries ? TEAL : T4 }} />
+          <span style={{ fontFamily: M, fontSize: 10, color: hasEntries ? TEAL : T4 }}>{hasEntries ? "Live" : "Monitoring"}</span>
         </span>
       </div>
 
@@ -478,14 +483,14 @@ function IntelligencePanel({ editor, topics, projectId }: {
 
         {/* Entry cards */}
         {visible.map(e => (
-          <div key={e.id} style={{ background: WHITE, border: "1px solid #E8EAED", padding: 12, marginBottom: 8 }}>
+          <div key={e.id} style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: F, fontSize: 11, color: "#9CA3AF" }}>
+              <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>
                 {e.inserted_at ? fmtDate(e.inserted_at) : ""}
               </span>
               {e.entry_type && (
                 <span style={{
-                  fontFamily: F, fontSize: 10, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
+                  fontFamily: M, fontSize: 10, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
                   ...(CONF_BADGE[e.entry_type.toUpperCase()] || CONF_BADGE.MODERATE),
                 }}>
                   {e.entry_type}
@@ -493,20 +498,20 @@ function IntelligencePanel({ editor, topics, projectId }: {
               )}
             </div>
             <div style={{
-              fontFamily: F, fontSize: 13, color: "#202124", lineHeight: 1.5, marginBottom: 4,
+              fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.6, marginBottom: 4,
               display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
             }}>
               {e.content}
             </div>
             {e.story_source && (
-              <div style={{ fontFamily: F, fontSize: 11, color: "#9CA3AF", marginBottom: 8 }}>{e.story_source}</div>
+              <div style={{ fontFamily: M, fontSize: 10, color: T4, marginBottom: 8 }}>{e.story_source}</div>
             )}
             {!e.accepted && (
               <div style={{ display: "flex", gap: 12 }}>
                 <button onClick={() => acceptEntry(e)} style={{ fontFamily: F, fontSize: 11, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                   {"\u2713"} Add to notes
                 </button>
-                <button onClick={() => dismissEntry(e.id)} style={{ fontFamily: F, fontSize: 11, color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <button onClick={() => dismissEntry(e.id)} style={{ fontFamily: F, fontSize: 11, color: T4, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                   {"\u2715"} Dismiss
                 </button>
               </div>
@@ -520,15 +525,15 @@ function IntelligencePanel({ editor, topics, projectId }: {
         {/* Empty state */}
         {visible.length === 0 && (
           <div style={{ textAlign: "center", marginTop: 24 }}>
-            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: "#202124", marginBottom: 4 }}>Monitoring this topic</div>
-            <div style={{ fontFamily: F, fontSize: 12, color: "#9CA3AF" }}>Intelligence files here automatically overnight.</div>
+            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, marginBottom: 4 }}>Monitoring this topic</div>
+            <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>Intelligence files here automatically overnight.</div>
           </div>
         )}
 
         {/* Ask result */}
         {result && (
-          <div style={{ background: WHITE, border: "1px solid #E8EAED", padding: 12, marginTop: 12 }}>
-            <div style={{ fontFamily: F, fontSize: 13, color: "#202124", lineHeight: 1.6, marginBottom: 8 }}>{result.answer}</div>
+          <div style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginTop: 12 }}>
+            <div style={{ fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.6, marginBottom: 8 }}>{result.answer}</div>
             <button onClick={insertAnswer} style={{ fontFamily: F, fontSize: 11, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
               {"\u2713"} Add to notes
             </button>
@@ -537,14 +542,14 @@ function IntelligencePanel({ editor, topics, projectId }: {
       </div>
 
       {/* Ask input, sticky bottom */}
-      <div style={{ borderTop: "1px solid #E8EAED", padding: "12px 16px", flexShrink: 0 }}>
+      <div style={{ borderTop: `1px solid ${BD}`, padding: "12px 16px", flexShrink: 0 }}>
         <div style={{ display: "flex", gap: 6 }}>
           <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); }} placeholder={placeholder}
-            style={{ flex: 1, padding: "8px 12px", fontSize: 13, fontFamily: F, color: "#202124", background: WHITE, border: "1px solid #E8EAED", borderRadius: 0, outline: "none" }} />
+            style={{ flex: 1, padding: "8px 12px", fontSize: 13, fontFamily: F, color: T1, background: WHITE, border: `1px solid ${BD}`, borderRadius: 7, outline: "none" }} />
           <button onClick={submit} disabled={!query.trim() || loading} style={{
-            padding: "8px 16px", fontSize: 12, fontWeight: 500, fontFamily: F,
-            color: WHITE, background: query.trim() && !loading ? TEAL : "#9CA3AF",
-            border: "none", borderRadius: 0, cursor: query.trim() && !loading ? "pointer" : "default",
+            padding: "8px 16px", fontSize: 12, fontWeight: 500, fontFamily: FUI,
+            color: WHITE, background: query.trim() && !loading ? TEAL : T4,
+            border: "none", borderRadius: 6, cursor: query.trim() && !loading ? "pointer" : "default",
           }}>
             {loading ? "..." : "Ask"}
           </button>
@@ -554,7 +559,165 @@ function IntelligencePanel({ editor, topics, projectId }: {
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────
+// -- Upload modal -----------------------------------------------------------------
+function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [dest, setDest] = useState<"private" | "network">("private");
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 480, background: WHITE, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ padding: "24px 24px 0" }}>
+          <div style={{ fontFamily: FUI, fontSize: 20, fontWeight: 800, color: T1, marginBottom: 16 }}>Upload a file</div>
+          {/* Drop zone */}
+          <div style={{ border: `2px dashed ${BD}`, borderRadius: 8, padding: "32px 24px", textAlign: "center", marginBottom: 20 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T4} strokeWidth="1.5" style={{ margin: "0 auto 8px", display: "block" }}><path d="M12 16V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" strokeLinecap="round"/></svg>
+            <div style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: T1, marginBottom: 4 }}>Drop your file here</div>
+            <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>PDF, Word, or any document up to 50MB</div>
+          </div>
+          {/* Destinations */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+            <label onClick={() => setDest("private")} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 12, border: `1px solid ${dest === "private" ? TEAL : BD}`, borderRadius: 8, cursor: "pointer", background: dest === "private" ? "rgba(29,158,117,0.08)" : WHITE }}>
+              <input type="radio" checked={dest === "private"} onChange={() => setDest("private")} style={{ marginTop: 2 }} />
+              <div>
+                <div style={{ fontFamily: FUI, fontSize: 13, fontWeight: 600, color: T1 }}>Private cabinet</div>
+                <div style={{ fontFamily: F, fontSize: 12, color: T3 }}>Only you can see this file.</div>
+                {dest === "private" && <div style={{ fontFamily: F, fontSize: 11, color: TEAL, marginTop: 4 }}>Files are end-to-end encrypted and stored securely.</div>}
+              </div>
+            </label>
+            <label onClick={() => setDest("network")} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 12, border: `1px solid ${dest === "network" ? TEAL : BD}`, borderRadius: 8, cursor: "pointer", background: dest === "network" ? "rgba(29,158,117,0.08)" : WHITE }}>
+              <input type="radio" checked={dest === "network"} onChange={() => setDest("network")} style={{ marginTop: 2 }} />
+              <div>
+                <div style={{ fontFamily: FUI, fontSize: 13, fontWeight: 600, color: T1 }}>Add to Tideline Network</div>
+                <div style={{ fontFamily: F, fontSize: 12, color: T3 }}>Shared with the ocean journalism community. Your name stays on it as contributor.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
+          <span style={{ fontFamily: F, fontSize: 12, color: T4 }}>File will also be attached to this workspace</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={onClose} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Cancel</button>
+            <button style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Upload</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -- Export modal ------------------------------------------------------------------
+function ExportModal({ open, onClose, docId, isLocal }: { open: boolean; onClose: () => void; docId: string | null; isLocal: boolean }) {
+  if (!open) return null;
+  const tiles = [
+    { label: "Word (.docx)", desc: "Editable document", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={TEAL} strokeWidth="1.3"><rect x="3" y="2" width="14" height="16" rx="2"/><path d="M7 6h6M7 10h6M7 14h4"/></svg> },
+    { label: "PDF report", desc: "Branded, print-ready", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={TEAL} strokeWidth="1.3"><rect x="3" y="2" width="14" height="16" rx="2"/><path d="M7 8h6M7 12h4"/></svg> },
+    { label: "Shareable link", desc: "Live read-only view", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={TEAL} strokeWidth="1.3"><path d="M8 12l4-4"/><circle cx="6" cy="14" r="2"/><circle cx="14" cy="6" r="2"/></svg> },
+    { label: "Citations (.bib)", desc: "For reference managers", icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={TEAL} strokeWidth="1.3"><path d="M4 4h12v12H4z" rx="1.5"/><path d="M8 8h4M8 11h2"/></svg> },
+  ];
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 420, background: WHITE, borderRadius: 12, padding: 24 }}>
+        <div style={{ fontFamily: FUI, fontSize: 20, fontWeight: 800, color: T1, marginBottom: 20 }}>Export report</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          {tiles.map(t => (
+            <button key={t.label} onClick={() => { if (t.label === "Word (.docx)" && !isLocal && docId) window.open(`/api/documents/${docId}/export`, "_blank"); onClose(); }} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: 16, border: `1px solid ${BD}`, borderRadius: 8, background: WHITE, cursor: "pointer", textAlign: "center" }}>
+              {t.icon}
+              <div style={{ fontFamily: FUI, fontSize: 13, fontWeight: 600, color: T1 }}>{t.label}</div>
+              <div style={{ fontFamily: F, fontSize: 11, color: T3 }}>{t.desc}</div>
+            </button>
+          ))}
+        </div>
+        <div style={{ fontFamily: M, fontSize: 10, color: T4, textAlign: "center", letterSpacing: "0.05em" }}>Exported documents include full source citations and Tideline branding</div>
+      </div>
+    </div>
+  );
+}
+
+// -- Writing assistant ------------------------------------------------------------
+function WritingAssistant({ sourceCount }: { sourceCount: number }) {
+  const [open, setOpen] = useState(false);
+  const [format, setFormat] = useState<string | null>(null);
+  const [tone, setTone] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const formats = ["Situation report", "Executive briefing", "Investigation memo", "Newsletter draft", "Timeline"];
+  const tones = ["Journalistic", "Analytical", "Formal", "Plain English"];
+
+  const pillStyle = (selected: boolean): React.CSSProperties => ({
+    display: "inline-block", padding: "5px 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500,
+    border: `1px solid ${selected ? TEAL : BD}`, borderRadius: 20, cursor: "pointer",
+    background: selected ? "rgba(29,158,117,0.08)" : WHITE, color: selected ? TEAL : T2,
+  });
+
+  const stepNum = (n: number) => (
+    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(29,158,117,0.1)", color: TEAL, fontFamily: M, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{n}</span>
+  );
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", cursor: "pointer" }}>
+        <div style={{ width: 26, height: 26, borderRadius: 6, background: "rgba(139,92,246,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#8B5CF6" strokeWidth="1.3"><path d="M7 2v10M2 7l3-3M9 4l3 3M5 10l-3-3M12 7l-3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: FUI, fontSize: 12.5, fontWeight: 500, color: T1 }}>Writing assistant</div>
+          <div style={{ fontFamily: F, fontSize: 11, color: T3 }}>Turn your notes and sources into a coherent report</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={T4} strokeWidth="1.5" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path d="M3 5l4 4 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </div>
+      {open && (
+        <div style={{ padding: "0 0 0 36px" }}>
+          {/* Step 1 */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
+            {stepNum(1)}
+            <div>
+              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 8 }}>What do you want to write?</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {formats.map(f => <span key={f} onClick={() => setFormat(f)} style={pillStyle(format === f)}>{f}</span>)}
+              </div>
+            </div>
+          </div>
+          {/* Step 2 */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
+            {stepNum(2)}
+            <div>
+              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 8 }}>Tone</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {tones.map(t => <span key={t} onClick={() => setTone(t)} style={pillStyle(tone === t)}>{t}</span>)}
+              </div>
+            </div>
+          </div>
+          {/* Step 3 */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0" }}>
+            {stepNum(3)}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 4 }}>Using your notes + {sourceCount} attached sources</div>
+              <div style={{ fontFamily: F, fontSize: 11, color: T3, marginBottom: 10 }}>Tideline will draft coherently from your evidence. You edit from there.</div>
+              <button onClick={() => { setGenerating(true); setTimeout(() => { setDraft("Draft content will appear here once the backend endpoint is connected."); setGenerating(false); }, 1500); }} disabled={!format || !tone || generating} style={{ width: "100%", height: 36, fontFamily: FUI, fontSize: 13, fontWeight: 500, color: format && tone && !generating ? WHITE : "#BDC1C6", background: format && tone && !generating ? TEAL : "#F1F3F4", border: "none", borderRadius: 6, cursor: format && tone ? "pointer" : "not-allowed" }}>
+                {generating ? "Writing..." : "Generate draft"}
+              </button>
+            </div>
+          </div>
+          {/* Draft output */}
+          {draft && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T4 }}>Your draft. Edit freely</span>
+              </div>
+              <div contentEditable suppressContentEditableWarning style={{ border: `1px solid ${BD}`, borderRadius: 7, padding: 14, fontFamily: F, fontSize: 13.5, lineHeight: 1.75, color: T1, outline: "none", minHeight: 100 }}>
+                {draft}
+              </div>
+            </div>
+          )}
+          {generating && <div style={{ fontFamily: F, fontSize: 12, color: T3, marginTop: 8 }}>Drafting from {sourceCount} sources and your notes...</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -- Main page --------------------------------------------------------------------
 function WorkspaceContent() {
   const searchParams = useSearchParams();
   const projectParam = searchParams.get("project");
@@ -574,6 +737,8 @@ function WorkspaceContent() {
   const [projectType, setProjectType] = useState<string | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLocal = docId === "local";
@@ -738,11 +903,11 @@ function WorkspaceContent() {
       <style>{`
         .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: ${T4}; pointer-events: none; height: 0; }
         .ProseMirror { outline: none; }
-        .ProseMirror h2 { font-size: 18px; font-weight: 600; margin: 20px 0 8px; font-family: ${F}; color: ${T1}; }
+        .ProseMirror h2 { font-size: 18px; font-weight: 600; margin: 20px 0 8px; font-family: ${FUI}; color: ${T1}; }
         .ProseMirror p { margin: 0 0 8px; }
         .ProseMirror ul { padding-left: 24px; margin: 0 0 8px; }
         .ProseMirror li { margin: 0 0 4px; }
-        .ProseMirror blockquote { border-left: 2px solid ${TEAL}; padding: 12px 16px; background: rgba(14,124,134,.04); margin: 12px 0; border-radius: ${R}px; }
+        .ProseMirror blockquote { border-left: 3px solid ${TEAL}; padding: 0 0 0 16px; background: transparent; margin: 12px 0; border-radius: 0; }
         .ProseMirror blockquote p { color: ${T2}; font-size: 13px; line-height: 1.6; }
         .ProseMirror blockquote p:first-child { font-weight: 500; }
         .ws-toolbar { display: none; }
@@ -753,15 +918,27 @@ function WorkspaceContent() {
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: WHITE }}>
         {/* Toolbar */}
-        <div style={{ height: 44, display: "flex", alignItems: "center", padding: "0 16px", gap: 4, borderBottom: `2px solid ${TEAL}`, flexShrink: 0, background: WHITE }}>
-          <button onClick={() => { setAskInitialQuery(""); setShowAsk(!showAsk); }} style={btnSec({ color: showAsk ? TEAL : T2, borderColor: showAsk ? TEAL : BD })}>Ask Tideline</button>
+        <div style={{ height: 44, display: "flex", alignItems: "center", padding: "0 36px", gap: 8, borderBottom: `1px solid ${BD}`, flexShrink: 0, background: WHITE }}>
+          <button onClick={() => { setAskInitialQuery(""); setShowAsk(!showAsk); }} style={{ ...btnSec({ color: showAsk ? TEAL : T2, borderColor: showAsk ? TEAL : BD }), gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M2 3h10v7H5l-3 2V3z" strokeLinejoin="round"/></svg>
+            Ask Tideline
+          </button>
+          <button style={{ ...btnSec(), gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M7 2v10M2 7l3-3M9 4l3 3M5 10l-3-3M12 7l-3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Writing assistant
+          </button>
+          <div style={{ width: 1, height: 20, background: BD }} />
+          <button onClick={() => setUploadOpen(true)} style={{ ...btnSec(), gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M7 10V2M7 2L4 5M7 2l3 3" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 9v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9" strokeLinecap="round"/></svg>
+            Upload file
+          </button>
           <div style={{ flex: 1 }} />
-          <button onClick={() => { if (!isLocal && docId) window.open(`/api/documents/${docId}/export`, "_blank"); }} style={btnPri({ height: 28 })}>Export to Word</button>
+          <button onClick={() => setExportOpen(true)} style={{ height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 14px", fontSize: 13, fontWeight: 500, fontFamily: FUI, border: "none", borderRadius: 6, cursor: "pointer", background: "#202124", color: WHITE }}>Export report</button>
         </div>
 
         {/* Content area */}
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 0 100px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 36px 100px" }}>
             {/* Ask overlay */}
             {showAsk && (
               <div style={{ marginBottom: 20, padding: "14px 16px", background: WHITE, border: `1px solid ${BD}`, borderRadius: R }}>
@@ -773,21 +950,24 @@ function WorkspaceContent() {
               </div>
             )}
 
+            {/* Writing assistant */}
+            <WritingAssistant sourceCount={0} />
+
             {/* Title */}
             <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => saveTitle(title)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }} placeholder="Untitled project"
-              style={{ width: "100%", fontSize: 28, fontWeight: 600, fontFamily: F, color: title ? "#202124" : T4, border: "none", outline: "none", background: "transparent", padding: 0 }} />
-            <div style={{ height: 1, background: "#E0E0E0", margin: "14px 0 28px" }} />
+              style={{ width: "100%", fontSize: 28, fontWeight: 800, fontFamily: FUI, color: title ? T1 : T4, border: "none", outline: "none", background: "transparent", padding: 0, letterSpacing: "-0.4px" }} />
+            <div style={{ height: 1, background: BD, margin: "14px 0 28px" }} />
 
             {/* Structured fields */}
             {projectType && FIELD_SCHEMAS[projectType] && (
               <>
                 <StructuredFields schema={FIELD_SCHEMAS[projectType]} fields={fields} onChange={handleFieldChange} />
-                <div style={{ height: 1, background: "#E0E0E0", margin: "24px 0" }} />
+                <div style={{ height: 1, background: BD, margin: "24px 0" }} />
               </>
             )}
 
             {/* Notes section label */}
-            <div style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 }}>Notes</div>
+            <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 12 }}>Notes</div>
 
             {/* Tiptap notes editor */}
             <EditorContent editor={editor} />
@@ -801,7 +981,7 @@ function WorkspaceContent() {
                   { label: "H2", cmd: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive("heading", { level: 2 }) },
                   { label: "List", cmd: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList") },
                 ].map(b => (
-                  <button key={b.label} onMouseDown={e => { e.preventDefault(); b.cmd(); }} style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: 500, fontFamily: F, color: "#fff", background: b.active ? "rgba(255,255,255,.2)" : "transparent", border: "none", borderRadius: 4, cursor: "pointer" }}>{b.label}</button>
+                  <button key={b.label} onMouseDown={e => { e.preventDefault(); b.cmd(); }} style={{ height: 28, padding: "0 10px", fontSize: 12, fontWeight: 500, fontFamily: FUI, color: "#fff", background: b.active ? "rgba(255,255,255,.2)" : "transparent", border: "none", borderRadius: 4, cursor: "pointer" }}>{b.label}</button>
                 ))}
               </div>
             )}
@@ -809,7 +989,7 @@ function WorkspaceContent() {
         </div>
 
         {/* Status bar */}
-        <div style={{ height: 32, display: "flex", alignItems: "center", padding: "0 20px", borderTop: "1px solid #E5E7EB", background: BG, flexShrink: 0 }}>
+        <div style={{ height: 32, display: "flex", alignItems: "center", padding: "0 20px", borderTop: `1px solid ${BD}`, background: BG, flexShrink: 0 }}>
           <span style={{ fontFamily: M, fontSize: 11, color: T4 }}>
             {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Draft"}{" \u00B7 "}{wordCount} {wordCount === 1 ? "word" : "words"}{" \u00B7 "}{activeProject}
           </span>
@@ -817,6 +997,9 @@ function WorkspaceContent() {
       </div>
 
       <IntelligencePanel editor={editor} topics={detectedTopics} projectId={projectId} />
+
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />
     </div>
   );
 }
@@ -824,7 +1007,7 @@ function WorkspaceContent() {
 export default function WorkspacePage() {
   return (
     <DesktopOnly featureName="Workspace">
-      <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: WHITE, color: "#9CA3AF", fontSize: 13 }}>Loading workspace...</div>}>
+      <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: WHITE, color: T4, fontSize: 13 }}>Loading workspace...</div>}>
         <WorkspaceContent />
       </Suspense>
     </DesktopOnly>
