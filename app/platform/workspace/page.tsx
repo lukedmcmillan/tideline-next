@@ -1331,6 +1331,14 @@ function WorkspaceContent() {
   const [exportOpen, setExportOpen] = useState(false);
   const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
   const [toast, setToast] = useState<string | null>(null);
+  const [draftExists, setDraftExists] = useState(false);
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+  const [slashMenu, setSlashMenu] = useState<{ open: boolean; x: number; y: number; query: string; selected: number }>({ open: false, x: 0, y: 0, query: "", selected: 0 });
+  const slashMenuRef = useRef(slashMenu);
+  useEffect(() => { slashMenuRef.current = slashMenu; }, [slashMenu]);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!toast) return;
@@ -1358,6 +1366,77 @@ function WorkspaceContent() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLocal = docId === "local";
+
+  // Slash command definitions. Note: spec showed em dashes, replaced with commas per CLAUDE_RULES.md (no em dashes).
+  const SLASH_COMMANDS = [
+    { name: "Heading", desc: "Large section title", icon: "H", insert: "## " },
+    { name: "Source", desc: "Link to an attached source", icon: "S", insert: "[[Source: ]]" },
+    { name: "Quote", desc: "Block quote with attribution", icon: "\u201C", insert: "\"\", " },
+    { name: "To-do", desc: "Action item to follow up", icon: "\u2610", insert: "[ ] " },
+    { name: "Date", desc: "Insert today's date", icon: "D", insert: "__DATE__" },
+    { name: "Divider", desc: "Horizontal rule", icon: "\u2015", insert: "\n---\n" },
+  ];
+
+  // Placeholder source count for the intelligence timeline. TODO: wire to real source history table when available.
+  const placeholderSourceCount = 5;
+
+  // Fetch draft indicator status (Feature 5)
+  useEffect(() => {
+    if (!projectId) { setDraftExists(false); setDraftUpdatedAt(null); return; }
+    let cancelled = false;
+    fetch(`/api/projects/${encodeURIComponent(projectId)}/draft`)
+      .then(r => r.ok ? r.json() : { draft: null })
+      .then(d => {
+        if (cancelled) return;
+        if (d?.draft) { setDraftExists(true); setDraftUpdatedAt(d.draft.updated_at || null); }
+        else { setDraftExists(false); setDraftUpdatedAt(null); }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [projectId]);
+
+  // Global keyboard shortcuts (Feature 3)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const inField = tag === "INPUT" || tag === "SELECT";
+      const k = e.key.toLowerCase();
+      if (k === "k") {
+        if (inField) return;
+        e.preventDefault();
+        // TODO: wire to a dedicated search bar when one exists in the workspace
+        titleInputRef.current?.focus();
+      } else if (k === "u") {
+        e.preventDefault();
+        setUploadOpen(true);
+      } else if (e.key === "/") {
+        e.preventDefault();
+        setDockPanel(p => p === "ask" ? "none" : "ask");
+      } else if (k === "d") {
+        e.preventDefault();
+        setDockPanel(p => p === "draft" ? "none" : "draft");
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  function applySlashCommand(cmd: typeof SLASH_COMMANDS[number]) {
+    if (!editor) return;
+    const { $head } = editor.state.selection;
+    const lineStart = $head.pos - $head.parentOffset;
+    let insertText = cmd.insert;
+    if (cmd.name === "Date") {
+      const d = new Date();
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      insertText = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, `;
+    }
+    editor.chain().focus().deleteRange({ from: lineStart, to: $head.pos }).insertContent(insertText).run();
+    setSlashMenu({ open: false, x: 0, y: 0, query: "", selected: 0 });
+  }
 
   // Boot
   useEffect(() => {
@@ -1432,6 +1511,28 @@ function WorkspaceContent() {
     editorProps: {
       attributes: { style: `outline:none;min-height:200px;font-family:${F};font-size:14px;line-height:1.7;color:${T1};` },
       handleKeyDown: (_view, event) => {
+        // Slash menu navigation
+        if (slashMenuRef.current.open) {
+          const filteredLen = SLASH_COMMANDS.filter(c => c.name.toLowerCase().startsWith(slashMenuRef.current.query.toLowerCase())).length || 1;
+          if (event.key === "Escape") {
+            setSlashMenu(prev => ({ ...prev, open: false }));
+            return true;
+          }
+          if (event.key === "ArrowDown") {
+            setSlashMenu(prev => ({ ...prev, selected: (prev.selected + 1) % filteredLen }));
+            return true;
+          }
+          if (event.key === "ArrowUp") {
+            setSlashMenu(prev => ({ ...prev, selected: (prev.selected - 1 + filteredLen) % filteredLen }));
+            return true;
+          }
+          if (event.key === "Enter") {
+            const q = slashMenuRef.current.query.toLowerCase();
+            const filtered = SLASH_COMMANDS.filter(c => c.name.toLowerCase().startsWith(q));
+            const pick = (filtered[slashMenuRef.current.selected] || filtered[0]);
+            if (pick) { applySlashCommand(pick); return true; }
+          }
+        }
         if (event.key === " " && editor) {
           const { $head } = editor.state.selection;
           if ($head.parent.textContent.endsWith("/ask")) {
@@ -1450,6 +1551,25 @@ function WorkspaceContent() {
       saveTimer.current = setTimeout(() => doSave(ed), 2000);
       const text = ed.getText();
       setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
+      // Slash menu detection (Feature 2)
+      try {
+        const { $head } = ed.state.selection;
+        const lineText = $head.parent.textContent;
+        const atEnd = $head.parentOffset === lineText.length;
+        if (atEnd && lineText.startsWith("/") && !lineText.includes(" ")) {
+          const coords = ed.view.coordsAtPos($head.pos);
+          const query = lineText.slice(1);
+          setSlashMenu(prev => ({
+            open: true,
+            x: coords.left,
+            y: coords.bottom + 4,
+            query,
+            selected: prev.open ? prev.selected : 0,
+          }));
+        } else if (slashMenuRef.current.open) {
+          setSlashMenu(prev => ({ ...prev, open: false }));
+        }
+      } catch {}
     },
   });
 
@@ -1541,8 +1661,13 @@ function WorkspaceContent() {
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 36px 100px" }}>
             {/* Title */}
-            <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => saveTitle(title)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }} placeholder="Untitled project"
-              style={{ width: "100%", fontSize: 28, fontWeight: 800, fontFamily: FUI, color: title ? T1 : T4, border: "none", outline: "none", background: "transparent", padding: 0, letterSpacing: "-0.4px" }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <input ref={titleInputRef} value={title} onChange={e => setTitle(e.target.value)} onBlur={() => saveTitle(title)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }} placeholder="Untitled project"
+                style={{ flex: 1, minWidth: 0, fontSize: 28, fontWeight: 800, fontFamily: FUI, color: title ? T1 : T4, border: "none", outline: "none", background: "transparent", padding: 0, letterSpacing: "-0.4px" }} />
+              {draftExists && (
+                <span onClick={() => router.push(`/platform/projects/${encodeURIComponent(activeProject)}/draft`)} style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 5, padding: "3px 10px", cursor: "pointer", whiteSpace: "nowrap" }}>Draft in progress {"\u2192"}</span>
+              )}
+            </div>
 
             {/* Header row: project type pill tabs + meta */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
@@ -1595,11 +1720,99 @@ function WorkspaceContent() {
               </>
             )}
 
-            {/* Notes section label */}
-            <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 12 }}>Notes</div>
+            {/* Notes section label (Feature 1: word count) */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em" }}>Notes &amp; evidence</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontFamily: M, fontSize: 10, color: "#9AA0A6" }}>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
+                {wordCount >= 300 && <span style={{ fontFamily: M, fontSize: 10, color: "#1D9E75" }}>Ready to draft</span>}
+              </div>
+            </div>
 
             {/* Tiptap notes editor */}
             <EditorContent editor={editor} />
+
+            {/* Keyboard shortcuts hint bar (Feature 3) */}
+            <div style={{ marginTop: 16, padding: "8px 0", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", borderTop: "1px solid #F3F4F6" }}>
+              {[
+                { k: "\u2318K", label: "Search" },
+                { k: "\u2318U", label: "Upload" },
+                { k: "\u2318/", label: "Ask Tideline" },
+                { k: "\u2318D", label: "Draft" },
+                { k: "/", label: "Commands" },
+              ].map(item => (
+                <span key={item.label} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <kbd style={{ fontFamily: M, fontSize: 9, background: "#F8F9FA", border: "1px solid #E5E7EB", borderRadius: 3, padding: "1px 6px" }}>{item.k}</kbd>
+                  <span style={{ fontFamily: F, fontSize: 11, color: "#9AA0A6" }}>{item.label}</span>
+                </span>
+              ))}
+            </div>
+
+            {/* Intelligence timeline (Feature 4) */}
+            {/* TODO: wire to real source history table when one exists. Using placeholder dates + current source count. */}
+            <div style={{ margin: "16px 0", border: "1px solid #F3F4F6", borderRadius: 10 }}>
+              <div onClick={() => setTimelineOpen(o => !o)} style={{ padding: "10px 14px", background: "#F8F9FA", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", borderRadius: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#1D9E75" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="5"/><path d="M6.5 3.5v3l2 1.5" strokeLinecap="round"/></svg>
+                  <span style={{ fontFamily: FUI, fontSize: 12, fontWeight: 500, color: "#202124" }}>Project intelligence timeline</span>
+                  <span style={{ fontFamily: M, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{placeholderSourceCount} sources \u00b7 23 days</span>
+                </div>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#9AA0A6" strokeWidth="1.5" style={{ transform: timelineOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}><path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              {timelineOpen && (
+                <div style={{ borderTop: "1px solid #F3F4F6", padding: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontFamily: F, fontSize: 11 }}>
+                    <span style={{ color: "#5F6368" }}>Source growth</span>
+                    <span style={{ color: "#1D9E75", fontWeight: 500 }}>Started with 1. Now {placeholderSourceCount}. Tideline added {Math.max(0, placeholderSourceCount - 1)}.</span>
+                  </div>
+                  <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden", marginBottom: 6 }}>
+                    <div style={{ height: "100%", width: "100%", background: "linear-gradient(90deg, rgba(29,158,117,0.25), #1D9E75)", borderRadius: 3 }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontFamily: M, fontSize: 9.5, color: "#9AA0A6", marginBottom: 16 }}>
+                    <span>15 Mar</span><span>22 Mar</span><span>29 Mar</span><span>7 Apr</span>
+                  </div>
+                  {[
+                    { when: "Today", desc: "3 new entries filed while you were away", sources: "3 sources added", active: true },
+                    { when: "2 days ago", desc: "Network contribution from a verified member joined this project", sources: "1 source added" },
+                    { when: "5 days ago", desc: "Tideline agent added a regulatory filing from ISA", sources: "1 source added" },
+                    { when: "23 days ago", desc: "Project created with an initial reference document", sources: "1 source added" },
+                  ].map((e, i) => (
+                    <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0" }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.active ? "#1D9E75" : "#E5E7EB", flexShrink: 0, marginTop: 4 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#5F6368" }}>{e.when}</div>
+                        <div style={{ fontFamily: F, fontSize: 12, color: "#202124", lineHeight: 1.5, marginTop: 2 }}>{e.desc}</div>
+                        <div style={{ fontFamily: M, fontSize: 10, color: "#9AA0A6", marginTop: 3 }}>{e.sources}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Slash command menu (Feature 2) */}
+            {slashMenu.open && (() => {
+              const q = slashMenu.query.toLowerCase();
+              const filtered = SLASH_COMMANDS.filter(c => c.name.toLowerCase().startsWith(q));
+              if (filtered.length === 0) return null;
+              return (
+                <div style={{ position: "fixed", left: slashMenu.x, top: slashMenu.y, zIndex: 1000, width: 240, background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.12)" }}>
+                  <div style={{ padding: "6px 10px", fontFamily: M, fontSize: 10, color: "#9AA0A6", textTransform: "uppercase", borderBottom: "1px solid #F3F4F6" }}>Commands</div>
+                  {filtered.map((cmd, i) => {
+                    const sel = i === slashMenu.selected;
+                    return (
+                      <div key={cmd.name} onMouseDown={e => { e.preventDefault(); applySlashCommand(cmd); }} onMouseEnter={() => setSlashMenu(prev => ({ ...prev, selected: i }))} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: sel ? "rgba(29,158,117,0.07)" : "transparent", cursor: "pointer" }}>
+                        <div style={{ width: 28, height: 28, background: "#F8F9FA", border: "1px solid #F3F4F6", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUI, fontSize: 13, color: "#5F6368" }}>{cmd.icon}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: FUI, fontSize: 12.5, fontWeight: 500, color: "#202124" }}>{cmd.name}</div>
+                          <div style={{ fontFamily: FUI, fontSize: 11, color: "#9AA0A6" }}>{cmd.desc}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {/* Selection-only format toolbar */}
             {editor && !editor.state.selection.empty && (

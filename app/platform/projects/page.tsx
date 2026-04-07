@@ -45,6 +45,17 @@ function ProjectCard({ project, onClick, onDelete }: { project: any; onClick: ()
   const [hover, setHover] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [draftInfo, setDraftInfo] = useState<{ updated_at: string | null } | null>(null);
+  useEffect(() => {
+    const pid = project.id || project.project_id;
+    if (!pid) return;
+    let cancelled = false;
+    fetch(`/api/projects/${encodeURIComponent(pid)}/draft`)
+      .then(r => r.ok ? r.json() : { draft: null })
+      .then(d => { if (!cancelled && d?.draft) setDraftInfo({ updated_at: d.draft.updated_at || null }); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [project.id, project.project_id]);
   const typeLabel = TYPE_LABELS[project.project_type] || "Project";
   const typeBadge = TYPE_BADGES[project.project_type] || TYPE_BADGES.situation_report;
   const overnightCount = project.overnight_count || 0;
@@ -106,6 +117,9 @@ function ProjectCard({ project, onClick, onDelete }: { project: any; onClick: ()
         <div style={{ fontFamily: F, fontSize: 12, color: T3, lineHeight: 1.55, fontWeight: 400, display: "-webkit-box", WebkitLineClamp: 2 as any, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
           {project.topic || project.summary || "Open this project to add notes and sources."}
         </div>
+        {draftInfo && (
+          <div style={{ fontFamily: M, fontSize: 10, color: TEAL, marginTop: 6 }}>Draft \u00b7 last edited {fmtRelative(draftInfo.updated_at || undefined)}</div>
+        )}
       </div>
       <div style={{ padding: "12px 18px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
