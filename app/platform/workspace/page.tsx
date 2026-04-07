@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -1216,7 +1216,8 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
   );
 }
 
-function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes }: { onClose: () => void; sourceCount: number; insertIntoNotes: (text: string) => void }) {
+function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, projectName, notesText }: { onClose: () => void; sourceCount: number; insertIntoNotes: (text: string) => void; projectId?: string | null; projectName?: string; notesText?: string }) {
+  const router = useRouter();
   const [format, setFormat] = useState("Situation report");
   const [tone, setTone] = useState("Journalistic");
   const [draft, setDraft] = useState("");
@@ -1240,12 +1241,33 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes }: { onClose
     color: selected ? TEAL : T3,
   });
 
-  const compile = () => {
+  const compile = async () => {
+    if (!projectId) {
+      setLoading(true);
+      setTimeout(() => {
+        setDraft(`This is a ${tone.toLowerCase()} ${format.toLowerCase()} compiled from your notes and ${sourceCount} attached sources. Edit freely from here.`);
+        setLoading(false);
+      }, 1500);
+      return;
+    }
     setLoading(true);
-    setTimeout(() => {
-      setDraft(`This is a ${tone.toLowerCase()} ${format.toLowerCase()} compiled from your notes and ${sourceCount} attached sources. Edit freely from here.`);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/draft/compile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notes: notesText || "",
+          sources: [],
+          format,
+          tone,
+          projectName: projectName || "",
+        }),
+      });
+      if (!res.ok) throw new Error("compile failed");
+      router.push(`/platform/projects/${projectId}/draft`);
+    } catch {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -1607,7 +1629,7 @@ function WorkspaceContent() {
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
       {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} />}
-      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={0} insertIntoNotes={insertIntoNotes} />}
+      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={0} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} />}
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />
