@@ -297,62 +297,6 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
   );
 }
 
-// -- Left sidebar -----------------------------------------------------------------
-function WorkspaceSidebar({ projects, activeProject, onSelect, onNewProject }: {
-  projects: { name: string; count: number }[];
-  activeProject: string;
-  onSelect: (name: string) => void;
-  onNewProject: () => void;
-}) {
-  return (
-    <aside style={{
-      width: 220, background: NAVY, borderRight: "1px solid rgba(255,255,255,0.08)",
-      minHeight: "100vh", flexShrink: 0, display: "flex", flexDirection: "column", padding: "20px 0",
-    }}>
-      <div style={{ padding: "0 16px 14px", fontFamily: M, fontSize: 9, fontWeight: 500, color: "#6B7280", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-        Projects
-      </div>
-      {projects.map(p => (
-        <button key={p.name} onClick={() => onSelect(p.name)} style={{
-          display: "flex", alignItems: "center", gap: 8, width: "100%",
-          padding: "8px 16px", background: p.name === activeProject ? "rgba(29,158,117,0.12)" : "none", border: "none",
-          borderLeft: p.name === activeProject ? `3px solid ${TEAL}` : "3px solid transparent",
-          cursor: "pointer", textAlign: "left",
-        }}>
-          <span style={{
-            fontFamily: F, fontSize: 12.5, flex: 1,
-            color: p.name === activeProject ? TEAL : "#C9CDD4",
-            fontWeight: p.name === activeProject ? 500 : 400,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>{p.name}</span>
-          {p.count > 0 && (
-            <span style={{ fontFamily: F, fontSize: 10, color: T4, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "1px 7px" }}>{p.count}</span>
-          )}
-        </button>
-      ))}
-      <button onClick={onNewProject} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "calc(100% - 32px)", margin: "8px 16px 0", padding: "8px 0", fontFamily: F, fontSize: 12.5, fontWeight: 500, color: "#C9CDD4", background: "none", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: R, cursor: "pointer" }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = TEAL; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
-      >
-        + New project
-      </button>
-
-      <div style={{ padding: "20px 16px 10px", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 16 }}>
-        <div style={{ fontFamily: M, fontSize: 9, fontWeight: 500, color: "#6B7280", letterSpacing: "0.14em", textTransform: "uppercase" }}>Trackers</div>
-      </div>
-      {[
-        { label: "BBNJ Treaty", href: "/tracker/bbnj" },
-        { label: "ISA Mining", href: "/tracker/isa" },
-        { label: "IUU Fishing", href: "/tracker/iuu" },
-        { label: "30x30", href: "/tracker/30x30" },
-        { label: "Blue Finance", href: "/tracker/blue-finance" },
-      ].map(t => (
-        <a key={t.label} href={t.href} style={{ display: "block", padding: "6px 16px", fontFamily: F, fontSize: 12.5, color: "#C9CDD4", textDecoration: "none" }}>{t.label}</a>
-      ))}
-    </aside>
-  );
-}
-
 // -- Entry type -------------------------------------------------------------------
 interface AutoEntry {
   id: string;
@@ -1191,8 +1135,6 @@ function WorkspaceContent() {
         .ws-toolbar { display: none; }
         .ProseMirror:focus-within ~ .ws-toolbar-anchor .ws-toolbar { display: flex; }
       `}</style>
-
-      <WorkspaceSidebar projects={projects} activeProject={activeProject} onSelect={(name) => { window.location.href = `/platform/workspace?project=${encodeURIComponent(name)}`; }} onNewProject={() => setShowCreatePanel(true)} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: WHITE }}>
         {/* Toolbar */}

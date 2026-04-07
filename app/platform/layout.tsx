@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { TidelineLogo } from "@/components/ui/TidelineLogo";
 
@@ -157,7 +157,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
     { ic: <IcFeed />, label: "Feed", href: "/platform/feed" },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library" },
-    { ic: <IcWork />, label: "Workspace", href: "/platform/workspace", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
+    { ic: <IcWork />, label: "Projects", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
     { ic: <IcDir />, label: "Directory", href: "/platform/directory" },
   ];
@@ -171,6 +171,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
 
   const active = (h: string) => {
     if (h === "/platform/feed") return path === "/platform" || path === "/platform/feed";
+    if (h === "/platform/projects") return path?.startsWith("/platform/projects") || path?.startsWith("/platform/workspace") || false;
     return path?.startsWith(h) || false;
   };
 
@@ -643,6 +644,75 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── Workspace Breadcrumb ─────────────────────────────────────────────────
+function WorkspaceBreadcrumb({ projectData }: { projectData: ProjectData[] }) {
+  const path = usePathname();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const projectsMatch = path?.match(/^\/platform\/projects\/(.+)$/);
+  const isWorkspace = path === "/platform/workspace" || !!projectsMatch;
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  if (!isWorkspace) return null;
+
+  let projectName = "Untitled";
+  if (projectsMatch) {
+    try { projectName = decodeURIComponent(projectsMatch[1]); } catch {}
+  } else if (typeof window !== "undefined") {
+    const sp = new URLSearchParams(window.location.search);
+    projectName = sp.get("project") || projectName;
+  }
+
+  const FSANS = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
+  const MONO = "var(--font-mono), 'DM Mono', monospace";
+
+  return (
+    <div ref={ref} style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, position: "relative" }}>
+      <a href="/platform/projects" style={{ fontFamily: FSANS, fontSize: 12.5, color: "rgba(255,255,255,0.45)", textDecoration: "none" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}>Projects</a>
+      <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>{"\u203a"}</span>
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 8px", fontFamily: FSANS, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)", background: "none", border: "none", borderRadius: 5, cursor: "pointer" }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}>
+        {projectName}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"><path d="M2 4l3 3 3-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 60, minWidth: 220, background: "#FFFFFF", border: "1px solid #DADCE0", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.15)", padding: "8px 0", zIndex: 200 }}>
+          <div style={{ padding: "6px 14px", fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9AA0A6" }}>Switch project</div>
+          {(projectData || []).map(p => {
+            const isCurrent = p.name === projectName;
+            return (
+              <a key={p.name} href={`/platform/projects/${encodeURIComponent(p.name)}`} onClick={() => setOpen(false)} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                padding: "8px 14px", textDecoration: "none",
+                background: isCurrent ? "rgba(29,158,117,0.06)" : "transparent",
+                borderLeft: isCurrent ? "3px solid #1D9E75" : "3px solid transparent",
+                fontFamily: FSANS, fontSize: 12.5,
+                fontWeight: isCurrent ? 500 : 400, color: "#202124",
+              }}>
+                <span>{p.name}</span>
+                {isCurrent && <span style={{ fontFamily: MONO, fontSize: 9, color: "#1D9E75" }}>current</span>}
+              </a>
+            );
+          })}
+          <div style={{ borderTop: "1px solid #F3F4F6", marginTop: 6, paddingTop: 6 }}>
+            <a href="/platform/projects" onClick={() => setOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", textDecoration: "none", fontFamily: FSANS, fontSize: 12, color: "#5F6368" }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M1 3a1 1 0 011-1h3l1 1h4a1 1 0 011 1v5a1 1 0 01-1 1H2a1 1 0 01-1-1V3z"/></svg>
+              All projects
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Mobile Tab Bar ───────────────────────────────────────────────────────
 function MobileTabBar() {
   const path = usePathname();
@@ -749,6 +819,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         <a href="/" style={{ display: "flex", alignItems: "center", padding: "0 24px 0 16px", minWidth: 220 }}>
           <TidelineLogo size="md" theme="light" />
         </a>
+        <WorkspaceBreadcrumb projectData={projectData} />
         {/* Search */}
         <div className="top-bar-search" onClick={() => setSearchOpen(true)} style={{ flex: 1, maxWidth: 560, height: 42, background: BG, border: "1px solid transparent", borderRadius: 24, display: "flex", alignItems: "center", padding: "0 14px 0 16px", gap: 10, cursor: "text", transition: "all .2s" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke={T4} strokeWidth="1.5"/><path d="M11 11l3.5 3.5" stroke={T4} strokeWidth="1.5" strokeLinecap="round"/></svg>
