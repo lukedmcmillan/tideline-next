@@ -118,13 +118,14 @@ export const authOptions = {
         !!user ||
         trigger === 'update' ||
         token.subscription_status === undefined ||
-        token.trial_ends_at === undefined
+        token.trial_ends_at === undefined ||
+        token.role === undefined
 
       if (shouldRefresh && token.email) {
         try {
           const { data: u } = await supabase
             .from('users')
-            .select('subscription_status, trial_ends_at, tier, onboarding_completed')
+            .select('subscription_status, trial_ends_at, tier, onboarding_completed, role')
             .eq('email', token.email)
             .single()
           if (u) {
@@ -132,6 +133,7 @@ export const authOptions = {
             token.trial_ends_at = u.trial_ends_at ?? null
             token.tier = u.tier ?? 'free'
             token.onboarding_completed = u.onboarding_completed ?? false
+            token.role = u.role ?? null
           }
         } catch (err) {
           console.error('[auth] jwt callback DB fetch error:', err)
@@ -148,6 +150,7 @@ export const authOptions = {
         session.user.trial_ends_at = token.trial_ends_at
         session.user.tier = token.tier
         session.user.onboarding_completed = token.onboarding_completed
+        session.user.role = token.role
       }
       return session
     },

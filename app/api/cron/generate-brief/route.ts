@@ -133,12 +133,13 @@ export async function GET(request: Request) {
     const h24 = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const todayDate = now.toISOString().split("T")[0];
 
-    // Fetch summarised stories from last 24h, ranked by significance then recency
+    // Fetch summarised live stories from last 24h, ranked by significance then recency
     const { data: stories, error } = await supabase
       .from("stories")
       .select(
         "id, title, link, source_name, topic, source_type, published_at, short_summary, significance_score"
       )
+      .eq("status", "live")
       .not("short_summary", "is", null)
       .gte("published_at", h24)
       .order("significance_score", { ascending: false })

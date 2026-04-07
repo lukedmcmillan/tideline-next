@@ -118,6 +118,59 @@ async function fetchArticleText(url: string): Promise<string | null> {
   } catch { return null }
 }
 
+async function scoreConfidence(summary: {
+  short_summary: string;
+  full_summary: string;
+  title: string;
+  source_name: string;
+}): Promise<{ score: number; flags: string[] }> {
+  try {
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      system: [{
+        type: 'text',
+        text: `You are a fact-check reviewer for an ocean governance intelligence platform. Score this summary for accuracy risk 0 to 10.
+10 = fully verifiable, specific, dated, grounded in the source.
+0 = vague, unverifiable, speculative, or potentially misleading.
+
+Consider:
+- Are factual claims specific and checkable?
+- Are numbers, dates, entities named explicitly?
+- Does the summary avoid hedging, speculation, and advocacy?
+- Is the tone professional intelligence, not opinion?
+
+Return JSON only, no markdown, no explanation:
+{"score": 0-10 integer, "flags": ["short lower-case flag", ...]}
+
+Common flags: "vague", "unverifiable", "speculative", "advocacy_tone", "missing_date", "missing_source", "hedging", "generic_claim", "no_specifics"`,
+        cache_control: { type: 'ephemeral' },
+      }],
+      messages: [{
+        role: 'user',
+        content: `Title: "${summary.title}"
+Source: ${summary.source_name}
+
+Short summary: ${summary.short_summary}
+
+Full summary: ${summary.full_summary}`,
+      }],
+    })
+
+    const text = message.content[0].type === 'text' ? message.content[0].text : ''
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
+    const rawScore = typeof parsed.score === 'number' ? parsed.score : 0
+    const score = Math.max(0, Math.min(10, Math.round(rawScore)))
+    const flags = Array.isArray(parsed.flags)
+      ? parsed.flags.filter((f: unknown): f is string => typeof f === 'string').slice(0, 10)
+      : []
+    return { score, flags }
+  } catch (err) {
+    console.error('[summarise-pending] confidence score error:', err)
+    return { score: 0, flags: ['scoring_error'] }
+  }
+}
+
 async function summariseStory(story: {
   id: string;
   title: string;
@@ -227,14 +280,50 @@ export async function GET(request: Request) {
   }
 
   let summarised = 0
+  let liveCount = 0
+  let pendingReviewCount = 0
+  let sourceUnavailableCount = 0
   const errors: string[] = []
 
   for (const story of pending) {
     try {
+      // Source chain enforcement: no link, no publication
+      if (!story.link) {
+        await supabase
+          .from('stories')
+          .update({
+            status: 'source_unavailable',
+            confidence_score: 0,
+            confidence_flags: ['missing_source'],
+          })
+          .eq('id', story.id)
+        sourceUnavailableCount++
+        continue
+      }
+
       const { short_summary, full_summary } = await summariseStory(story)
+
+      // Score the summary for accuracy risk
+      const { score, flags } = await scoreConfidence({
+        short_summary,
+        full_summary,
+        title: story.title,
+        source_name: story.source_name,
+      })
+
+      const status = score >= 7 ? 'live' : 'pending_review'
+      if (status === 'live') liveCount++
+      else pendingReviewCount++
+
       await supabase
         .from('stories')
-        .update({ short_summary, full_summary })
+        .update({
+          short_summary,
+          full_summary,
+          confidence_score: score,
+          confidence_flags: flags,
+          status,
+        })
         .eq('id', story.id)
       summarised++
     } catch (err) {
@@ -246,6 +335,9 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     summarised,
+    live: liveCount,
+    pending_review: pendingReviewCount,
+    source_unavailable: sourceUnavailableCount,
     pending: pending.length,
     errors: errors.length > 0 ? errors : undefined,
   })

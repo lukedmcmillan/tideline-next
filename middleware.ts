@@ -21,6 +21,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl)
   }
 
+  // Admin routes: require role = 'admin', bypass paywall
+  if (pathname.startsWith('/admin')) {
+    const role = token.role as string | null | undefined
+    if (role !== 'admin') {
+      return NextResponse.redirect(new URL('/platform/feed', request.url))
+    }
+    return NextResponse.next()
+  }
+
   // Paywall enforcement for /platform/* only (tracker stays auth-only)
   if (pathname.startsWith('/platform') && !PAYWALL_EXEMPT.some(p => pathname.startsWith(p))) {
     const status = token.subscription_status as string | undefined
@@ -43,5 +52,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/platform/:path*', '/tracker/:path*'],
+  matcher: ['/platform/:path*', '/tracker/:path*', '/admin/:path*'],
 }

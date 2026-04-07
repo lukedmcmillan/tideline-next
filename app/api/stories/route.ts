@@ -27,6 +27,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from('stories')
     .select('id, title, link, source_name, topic, source_type, published_at, short_summary, full_summary, is_pro, alert_type, significance_score, cross_tracker_flags')
+    .eq('status', 'live')
     .not('short_summary', 'is', null)
     .order('published_at', { ascending: false })
     .range(page * limit, (page + 1) * limit - 1)
