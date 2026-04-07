@@ -57,18 +57,24 @@ function ProjectCard({ project, onClick, onDelete }: { project: any; onClick: ()
       borderRadius: 12, cursor: "pointer", transition: "all 0.15s",
       boxShadow: hover ? "0 4px 16px rgba(29,158,117,0.1)" : "none",
       transform: hover ? "translateY(-1px)" : "none",
-      overflow: "hidden",
+      overflow: "visible",
       position: "relative",
     }}>
-      <div style={{ position: "absolute", top: 10, right: 10, opacity: hover || menuOpen ? 1 : 0, transition: "opacity 0.15s" }} onClick={e => e.stopPropagation()}>
+      <div style={{ position: "absolute", top: 10, right: 10, opacity: hover || menuOpen ? 1 : 0, transition: "opacity 0.15s", zIndex: 20 }} onClick={e => e.stopPropagation()}>
         <button onClick={() => setMenuOpen(o => !o)} style={{ width: 26, height: 26, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer", color: T3, fontSize: 14, lineHeight: 1, padding: 0 }}>{"\u22EF"}</button>
         {menuOpen && (
-          <div style={{ position: "absolute", top: 30, right: 0, minWidth: 160, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: "4px 0", zIndex: 10 }}>
+          <div style={{ position: "absolute", top: 30, right: 0, minWidth: 160, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: "4px 0", zIndex: 100 }}>
             {["Rename", "Share", "Export"].map(a => (
-              <div key={a} onClick={() => setMenuOpen(false)} style={{ padding: "8px 14px", fontFamily: F, fontSize: 12, color: T1, cursor: "pointer" }}>{a}</div>
+              <div key={a} onClick={() => setMenuOpen(false)}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#F9FAFB"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                style={{ padding: "8px 14px", fontFamily: F, fontSize: 12, color: T1, cursor: "pointer", transition: "background 0.1s" }}>{a}</div>
             ))}
             <div style={{ height: 1, background: BD, margin: "4px 0" }} />
-            <div onClick={() => { setMenuOpen(false); setConfirmDelete(true); }} style={{ padding: "8px 14px", fontFamily: F, fontSize: 12, color: "#EA4335", cursor: "pointer" }}>Delete project</div>
+            <div onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#FEF2F2"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              style={{ padding: "8px 14px", fontFamily: F, fontSize: 12, color: "#EA4335", cursor: "pointer", transition: "background 0.1s" }}>Delete project</div>
           </div>
         )}
       </div>

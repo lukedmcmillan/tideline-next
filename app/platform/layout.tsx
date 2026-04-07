@@ -363,9 +363,11 @@ function RightPanel() {
   const [copied, setCopied] = useState(false);
   const isCalendar = path === "/platform/calendar";
   const isWorkspace = path === "/platform/workspace";
+  const isProjects = path?.startsWith("/platform/projects") || false;
 
   if (isCalendar) return <CalendarRightPanel />;
   if (isWorkspace) return null;
+  if (isProjects) return null;
 
   const copyInsight = () => {
     navigator.clipboard.writeText("ISA deferral and BBNJ ratification are directly linked. Three sponsoring states conditioning their ISA vote on implementation terms.").then(() => {
