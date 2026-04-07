@@ -1719,8 +1719,8 @@ function WorkspaceContent() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em" }}>Notes &amp; evidence</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontFamily: M, fontSize: 10, color: "#9AA0A6" }}>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
-                {wordCount >= 300 && <span style={{ fontFamily: M, fontSize: 10, color: "#1D9E75" }}>Ready to draft</span>}
+                <span style={{ fontFamily: FUI, fontSize: 10, color: "#9AA0A6" }}>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
+                {wordCount >= 300 && <span style={{ fontFamily: FUI, fontSize: 10, color: "#1D9E75" }}>Ready to draft</span>}
               </div>
             </div>
 
@@ -1737,7 +1737,7 @@ function WorkspaceContent() {
                 { k: "/", label: "Commands" },
               ].map(item => (
                 <span key={item.label} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <kbd style={{ fontFamily: M, fontSize: 9, background: "#F8F9FA", border: "1px solid #E5E7EB", borderRadius: 3, padding: "1px 6px" }}>{item.k}</kbd>
+                  <kbd style={{ fontFamily: FUI, fontSize: 9, background: "#F8F9FA", border: "1px solid #E5E7EB", borderRadius: 3, padding: "1px 6px" }}>{item.k}</kbd>
                   <span style={{ fontFamily: FUI, fontSize: 11, color: "#9AA0A6" }}>{item.label}</span>
                 </span>
               ))}
@@ -1750,7 +1750,7 @@ function WorkspaceContent() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#1D9E75" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="5"/><path d="M6.5 3.5v3l2 1.5" strokeLinecap="round"/></svg>
                   <span style={{ fontFamily: FUI, fontSize: 12, fontWeight: 500, color: "#202124" }}>Project intelligence timeline</span>
-                  <span style={{ fontFamily: M, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{placeholderSourceCount} sources · 23 days</span>
+                  <span style={{ fontFamily: FUI, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{placeholderSourceCount} sources · 23 days</span>
                 </div>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#9AA0A6" strokeWidth="1.5" style={{ transform: timelineOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}><path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
@@ -1763,7 +1763,7 @@ function WorkspaceContent() {
                   <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden", marginBottom: 6 }}>
                     <div style={{ height: "100%", width: "100%", background: "linear-gradient(90deg, rgba(29,158,117,0.25), #1D9E75)", borderRadius: 3 }} />
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontFamily: M, fontSize: 9.5, color: "#9AA0A6", marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontFamily: FUI, fontSize: 9.5, color: "#9AA0A6", marginBottom: 16 }}>
                     <span>15 Mar</span><span>22 Mar</span><span>29 Mar</span><span>7 Apr</span>
                   </div>
                   {[
@@ -1777,7 +1777,7 @@ function WorkspaceContent() {
                       <div style={{ flex: 1 }}>
                         <div style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#5F6368" }}>{e.when}</div>
                         <div style={{ fontFamily: F, fontSize: 12, color: "#202124", lineHeight: 1.5, marginTop: 2 }}>{e.desc}</div>
-                        <div style={{ fontFamily: M, fontSize: 10, color: "#9AA0A6", marginTop: 3 }}>{e.sources}</div>
+                        <div style={{ fontFamily: FUI, fontSize: 10, color: "#9AA0A6", marginTop: 3 }}>{e.sources}</div>
                       </div>
                     </div>
                   ))}
@@ -1792,7 +1792,7 @@ function WorkspaceContent() {
               if (filtered.length === 0) return null;
               return (
                 <div style={{ position: "fixed", left: slashMenu.x, top: slashMenu.y, zIndex: 1000, width: 240, background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.12)" }}>
-                  <div style={{ padding: "6px 10px", fontFamily: M, fontSize: 10, color: "#9AA0A6", textTransform: "uppercase", borderBottom: "1px solid #F3F4F6" }}>Commands</div>
+                  <div style={{ padding: "6px 10px", fontFamily: FUI, fontSize: 10, color: "#9AA0A6", textTransform: "uppercase", borderBottom: "1px solid #F3F4F6" }}>Commands</div>
                   {filtered.map((cmd, i) => {
                     const sel = i === slashMenu.selected;
                     return (
