@@ -1738,7 +1738,7 @@ function WorkspaceContent() {
               ].map(item => (
                 <span key={item.label} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                   <kbd style={{ fontFamily: M, fontSize: 9, background: "#F8F9FA", border: "1px solid #E5E7EB", borderRadius: 3, padding: "1px 6px" }}>{item.k}</kbd>
-                  <span style={{ fontFamily: F, fontSize: 11, color: "#9AA0A6" }}>{item.label}</span>
+                  <span style={{ fontFamily: FUI, fontSize: 11, color: "#9AA0A6" }}>{item.label}</span>
                 </span>
               ))}
             </div>
@@ -1750,7 +1750,7 @@ function WorkspaceContent() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#1D9E75" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="5"/><path d="M6.5 3.5v3l2 1.5" strokeLinecap="round"/></svg>
                   <span style={{ fontFamily: FUI, fontSize: 12, fontWeight: 500, color: "#202124" }}>Project intelligence timeline</span>
-                  <span style={{ fontFamily: M, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{placeholderSourceCount} sources \u00b7 23 days</span>
+                  <span style={{ fontFamily: M, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{placeholderSourceCount} sources · 23 days</span>
                 </div>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#9AA0A6" strokeWidth="1.5" style={{ transform: timelineOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}><path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>

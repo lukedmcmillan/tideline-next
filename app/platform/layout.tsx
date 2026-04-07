@@ -102,7 +102,7 @@ function TrialBanner() {
           letterSpacing: "0.04em",
         }}
       >
-        {days} {days === 1 ? "day" : "days"} left {"\u00B7"} become a founding member
+        {days} {days === 1 ? "day" : "days"} left · Become a Founding Member
       </span>
     </a>
   );
