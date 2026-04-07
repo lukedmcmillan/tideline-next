@@ -38,7 +38,9 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(grep -A2 '\"\"paths\"\"' tsconfig.json)",
       "Bash(claude mcp:*)",
-      "WebFetch(domain:www.imo.org)"
+      "WebFetch(domain:www.imo.org)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(cd:*)"
     ]
   }
 }
