@@ -32,6 +32,106 @@ interface FeedStory {
   short_summary: string | null;
 }
 
+interface Contractor {
+  id: string;
+  company_name: string;
+  sponsoring_state: string;
+  contract_type: string;
+  contract_area: string;
+  contract_date: string;
+  status: string;
+  source_url: string | null;
+  notes: string | null;
+}
+
+const CONTRACT_TYPE_LABELS: Record<string, string> = {
+  polymetallic_nodules: "Nodules",
+  polymetallic_sulphides: "Sulphides",
+  cobalt_rich_crusts: "Crusts",
+};
+
+function ContractorTable({ contractors }: { contractors: Contractor[] }) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? contractors.filter(c =>
+        c.company_name.toLowerCase().includes(q) ||
+        c.sponsoring_state.toLowerCase().includes(q),
+      )
+    : contractors;
+
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: TEAL, marginBottom: 8 }}>
+        Exploration contractors
+      </div>
+      <div style={{ fontFamily: M, fontSize: 11, color: T4, marginBottom: 14 }}>
+        {contractors.length} active exploration contracts (isa.org.jm, April 2026)
+      </div>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search contractors or sponsoring states..."
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          height: 36,
+          padding: "0 12px",
+          fontFamily: F,
+          fontSize: 13,
+          color: T1,
+          background: WHITE,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 6,
+          outline: "none",
+          marginBottom: 14,
+        }}
+      />
+      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F, fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: OFF_WHITE, borderBottom: `1px solid ${BORDER}` }}>
+              <th style={{ textAlign: "left", padding: "10px 14px", fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T4 }}>Contractor</th>
+              <th style={{ textAlign: "left", padding: "10px 14px", fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T4 }}>Sponsoring state</th>
+              <th style={{ textAlign: "left", padding: "10px 14px", fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T4 }}>Type</th>
+              <th style={{ textAlign: "left", padding: "10px 14px", fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T4 }}>Area</th>
+              <th style={{ textAlign: "left", padding: "10px 14px", fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em", color: T4 }}>Since</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ padding: 20, fontFamily: F, fontSize: 13, color: T4, textAlign: "center" }}>
+                  No contractors match that search.
+                </td>
+              </tr>
+            ) : filtered.map((c, i) => (
+              <tr key={c.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                <td style={{ padding: "12px 14px", color: T1, lineHeight: 1.4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span>{c.company_name}</span>
+                    {c.notes && (
+                      <span title={c.notes} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 14, height: 14, borderRadius: "50%", background: "rgba(29,158,117,0.12)", color: TEAL, fontFamily: M, fontSize: 9, fontWeight: 600, cursor: "help", flexShrink: 0 }}>i</span>
+                    )}
+                  </div>
+                </td>
+                <td style={{ padding: "12px 14px", color: T3 }}>{c.sponsoring_state}</td>
+                <td style={{ padding: "12px 14px" }}>
+                  <span style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em", padding: "2px 8px", borderRadius: 4, background: "rgba(29,158,117,0.08)", color: TEAL, border: "1px solid rgba(29,158,117,0.25)" }}>
+                    {CONTRACT_TYPE_LABELS[c.contract_type] || c.contract_type}
+                  </span>
+                </td>
+                <td style={{ padding: "12px 14px", color: T3 }}>{c.contract_area}</td>
+                <td style={{ padding: "12px 14px", fontFamily: M, fontSize: 11, color: T3 }}>{new Date(c.contract_date).getFullYear()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // Hardcoded metrics with source attribution.
 // Source: isa.org.jm (verified April 2026). Live scraping is planned for the next pass.
 const METRICS = [
@@ -276,15 +376,18 @@ export default function ISATracker() {
   const [loading, setLoading] = useState(true);
   const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
   const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
+  const [contractors, setContractors] = useState<Contractor[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/tracker-events?slug=isa&limit=20").then((r) => r.ok ? r.json() : { events: [] }),
       fetch("/api/stories?limit=5&tracker=isa").then((r) => r.ok ? r.json() : { stories: [] }),
+      fetch("/api/isa-contractors").then((r) => r.ok ? r.json() : { contractors: [] }),
     ])
-      .then(([events, stories]) => {
+      .then(([events, stories, contractorsRes]) => {
         setTrackerEvents(events.events || []);
         setFeedStories(stories.stories || []);
+        setContractors(contractorsRes.contractors || []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -332,6 +435,7 @@ export default function ISATracker() {
         ) : (
           <>
             <EventTimeline events={trackerEvents} />
+            <ContractorTable contractors={contractors} />
             <RecentStories stories={feedStories} />
           </>
         )}
