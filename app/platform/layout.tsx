@@ -707,7 +707,7 @@ function MobileTabBar() {
       position: "fixed", bottom: 0, left: 0, right: 0,
       height: 56, paddingBottom: "env(safe-area-inset-bottom, 0px)",
       background: WHITE, borderTop: `1px solid ${BLT}`,
-      display: "flex", alignItems: "center", justifyContent: "space-around",
+      alignItems: "center", justifyContent: "space-around",
       zIndex: 90,
     }}>
       {tabs.map(t => {

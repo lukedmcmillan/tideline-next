@@ -1052,7 +1052,14 @@ function RightSidebar() {
 // -- Floating dock + slide-up panels ----------------------------------------------
 function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAsk: () => void; onDraft: () => void }) {
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 336, display: "flex", alignItems: "center", gap: 8, zIndex: 50 }}>
+    <>
+    <style>{`
+      .floating-dock { position: fixed; bottom: 24px; right: 336px; display: flex; align-items: center; gap: 8px; z-index: 60; }
+      @media (max-width: 1023px) {
+        .floating-dock { bottom: 72px !important; right: 16px !important; z-index: 100 !important; }
+      }
+    `}</style>
+    <div className="floating-dock">
       <button onClick={onUpload} style={{
         display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px",
         fontFamily: F, fontSize: 12, fontWeight: 500, color: T3,
@@ -1081,6 +1088,7 @@ function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAs
         Draft from notes
       </button>
     </div>
+    </>
   );
 }
 
