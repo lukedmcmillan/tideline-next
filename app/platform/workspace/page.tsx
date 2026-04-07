@@ -148,6 +148,61 @@ function CalendarAddLink() {
 }
 
 // -- Structured fields component --------------------------------------------------
+function TagInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [draft, setDraft] = useState("");
+  const [focused, setFocused] = useState(false);
+  const tags = value ? value.split(",").map(t => t.trim()).filter(Boolean) : [];
+
+  const setTags = (next: string[]) => onChange(next.join(", "));
+
+  const addTag = () => {
+    const t = draft.trim();
+    if (!t) return;
+    if (tags.includes(t)) { setDraft(""); return; }
+    setTags([...tags, t]);
+    setDraft("");
+  };
+
+  const removeTag = (i: number) => {
+    setTags(tags.filter((_, idx) => idx !== i));
+  };
+
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") { e.preventDefault(); addTag(); }
+    else if (e.key === "Backspace" && draft === "" && tags.length > 0) {
+      e.preventDefault();
+      setTags(tags.slice(0, -1));
+    }
+  };
+
+  const showHint = focused || tags.length === 0;
+
+  return (
+    <div style={{ flex: 1 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+        {tags.map((t, i) => (
+          <span key={`${t}-${i}`} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 8px", fontFamily: F, fontSize: 11, color: T2, background: "#F9FAFB", border: `1px solid ${BD}`, borderRadius: 20 }}>
+            {t}
+            <button onClick={() => removeTag(i)} style={{ background: "none", border: "none", color: T4, fontSize: 11, cursor: "pointer", padding: 0, lineHeight: 1 }}>x</button>
+          </span>
+        ))}
+        <input
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={onKey}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={tags.length === 0 ? "Add a tag..." : ""}
+          style={{ flex: 1, minWidth: 80, border: "none", background: "transparent", outline: "none", fontFamily: F, fontSize: 13, color: T1, padding: 0 }}
+        />
+      </div>
+      {showHint && (
+        <div style={{ fontFamily: F, fontSize: 11, color: T4, marginTop: 4 }}>Type a tag and press Enter to add</div>
+      )}
+    </div>
+  );
+}
+
 function StructuredFields({ schema, fields, onChange }: {
   schema: FieldDef[];
   fields: Record<string, string>;
@@ -162,12 +217,14 @@ function StructuredFields({ schema, fields, onChange }: {
       {schema.map((f, i) => {
         const value = fields[f.key] || "";
         return (
-        <div key={f.key} style={{ borderTop: i === 0 ? `1px solid ${BD}` : "none", borderBottom: `1px solid ${BD}`, padding: "10px 0", display: "flex", alignItems: "center", gap: 12 }}>
-          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: T3, width: 130, flexShrink: 0, letterSpacing: "0.02em" }}>
-            {f.label}{f.required && <span style={{ color: "#EA4335" }}> *</span>}
+        <div key={f.key} style={{ borderTop: i === 0 ? `1px solid ${BD}` : "none", borderBottom: `1px solid ${BD}`, padding: "10px 0", display: "flex", alignItems: f.key === "tags" ? "flex-start" : "center", gap: 12 }}>
+          <label style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, width: 120, flexShrink: 0, paddingTop: f.key === "tags" ? 4 : 0 }}>
+            {f.label}{f.required && <span style={{ color: "#EA4335", marginLeft: 2 }}>*</span>}
           </label>
-          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
-            {f.type === "textarea" ? (
+          <div style={{ flex: 1, display: "flex", alignItems: f.key === "tags" ? "flex-start" : "center", gap: 10 }}>
+            {f.key === "tags" ? (
+              <TagInput value={value} onChange={v => onChange(f.key, v)} />
+            ) : f.type === "textarea" ? (
               <textarea
                 value={value}
                 onChange={e => onChange(f.key, e.target.value)}
@@ -995,13 +1052,13 @@ function RightSidebar() {
 // -- Floating dock + slide-up panels ----------------------------------------------
 function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAsk: () => void; onDraft: () => void }) {
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 360, display: "flex", gap: 8, zIndex: 50 }}>
+    <div style={{ position: "fixed", bottom: 24, right: 336, display: "flex", alignItems: "center", gap: 8, zIndex: 50 }}>
       <button onClick={onUpload} style={{
         display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px",
         fontFamily: F, fontSize: 12, fontWeight: 500, color: T3,
         background: WHITE, border: `1px solid ${BD}`, borderRadius: 20, cursor: "pointer",
         boxShadow: "0 2px 8px rgba(0,0,0,0.1)", transition: "all 0.15s",
-      }}>
+      }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 14px rgba(0,0,0,0.12)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"; (e.currentTarget as HTMLElement).style.transform = "none"; }}>
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6.5 9V2M6.5 2L4 4.5M6.5 2L9 4.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 8v2a1 1 0 01-1 1H3a1 1 0 01-1-1V8" strokeLinecap="round"/></svg>
         Upload
       </button>
@@ -1010,7 +1067,7 @@ function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAs
         fontFamily: F, fontSize: 12, fontWeight: 500, color: T1,
         background: WHITE, border: `1px solid ${BD}`, borderRadius: 20, cursor: "pointer",
         boxShadow: "0 2px 8px rgba(0,0,0,0.1)", transition: "all 0.15s",
-      }}>
+      }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 14px rgba(0,0,0,0.12)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"; (e.currentTarget as HTMLElement).style.transform = "none"; }}>
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="5"/><path d="M5 5a1.5 1.5 0 113 0c0 1-1.5 1-1.5 2M6.5 9.5v0.5"/></svg>
         Ask Tideline
       </button>
@@ -1019,7 +1076,7 @@ function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAs
         fontFamily: F, fontSize: 12, fontWeight: 500, color: WHITE,
         background: TEAL, border: `1px solid ${TEAL}`, borderRadius: 20, cursor: "pointer",
         boxShadow: "0 2px 8px rgba(29,158,117,0.2)", transition: "all 0.15s",
-      }}>
+      }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#17906A"; (e.currentTarget as HTMLElement).style.borderColor = "#17906A"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 14px rgba(29,158,117,0.3)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = TEAL; (e.currentTarget as HTMLElement).style.borderColor = TEAL; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(29,158,117,0.2)"; (e.currentTarget as HTMLElement).style.transform = "none"; }}>
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M9 2l2 2-7 7H2v-2l7-7z" strokeLinejoin="round"/></svg>
         Draft from notes
       </button>
