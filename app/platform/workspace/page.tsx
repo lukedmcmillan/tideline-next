@@ -857,11 +857,13 @@ function NewSinceLastVisitBanner() {
 }
 
 // -- Right sidebar tabs -----------------------------------------------------------
+const ATTACHED_SOURCES = [
+  { id: "1", type: "PDF", name: "ISA Council Report Mar 2026.pdf", summary: "Council deferred deep-sea mining vote to July session, citing insufficient environmental data.", time: "2h ago", tier: "Official", contributor: null as string | null },
+  { id: "2", type: "URL", name: "Reuters: Pacific bloc deposit", summary: "Tideline will summarise this document shortly.", time: "5h ago", tier: "Wire", contributor: "EM" as string | null },
+];
+
 function SourcesTabContent() {
-  const attached = [
-    { id: "1", type: "PDF", name: "ISA Council Report Mar 2026.pdf", summary: "Council deferred deep-sea mining vote to July session, citing insufficient environmental data.", time: "2h ago", tier: "Official", contributor: null as string | null },
-    { id: "2", type: "URL", name: "Reuters: Pacific bloc deposit", summary: "Tideline will summarise this document shortly.", time: "5h ago", tier: "Wire", contributor: "EM" as string | null },
-  ];
+  const attached = ATTACHED_SOURCES;
   const tierColors: Record<string, { bg: string; color: string; border: string }> = {
     Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
     Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
@@ -1377,8 +1379,9 @@ function WorkspaceContent() {
     { name: "Divider", desc: "Horizontal rule", icon: "\u2015", insert: "\n---\n" },
   ];
 
-  // Placeholder source count for the intelligence timeline. TODO: wire to real source history table when available.
-  const placeholderSourceCount = 5;
+  // Intelligence timeline uses the same attached-sources data as the right sidebar.
+  // TODO: wire to real source history table when available; dates below are still placeholders.
+  const placeholderSourceCount = ATTACHED_SOURCES.length;
 
   // Fetch draft indicator status (Feature 5)
   useEffect(() => {
@@ -1400,16 +1403,8 @@ function WorkspaceContent() {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
       if (!mod) return;
-      const target = e.target as HTMLElement | null;
-      const tag = target?.tagName;
-      const inField = tag === "INPUT" || tag === "SELECT";
       const k = e.key.toLowerCase();
-      if (k === "k") {
-        if (inField) return;
-        e.preventDefault();
-        // TODO: wire to a dedicated search bar when one exists in the workspace
-        titleInputRef.current?.focus();
-      } else if (k === "u") {
+      if (k === "u") {
         e.preventDefault();
         setUploadOpen(true);
       } else if (e.key === "/") {
