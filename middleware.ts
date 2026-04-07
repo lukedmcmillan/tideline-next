@@ -1,20 +1,47 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export function middleware(request: NextRequest) {
-  const sessionToken =
-    request.cookies.get('__Secure-next-auth.session-token')?.value ||
-    request.cookies.get('next-auth.session-token')?.value
+// Paths that require auth but should NOT enforce the paywall
+// (users can hit /upgrade even with an expired subscription)
+const PAYWALL_EXEMPT = ['/platform/upgrade']
 
-  if (!sessionToken) {
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  })
+
+  // Not signed in: bounce to /sign-in
+  if (!token) {
     const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    signInUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(signInUrl)
+  }
+
+  // Paywall enforcement for /platform/* only (tracker stays auth-only)
+  if (pathname.startsWith('/platform') && !PAYWALL_EXEMPT.some(p => pathname.startsWith(p))) {
+    const status = token.subscription_status as string | undefined
+    const trialEndsAt = token.trial_ends_at as string | null | undefined
+
+    const trialValid =
+      status === 'trial' &&
+      trialEndsAt &&
+      new Date(trialEndsAt).getTime() > Date.now()
+
+    const hasAccess = status === 'active' || trialValid
+
+    if (!hasAccess) {
+      const upgradeUrl = new URL('/upgrade', request.url)
+      return NextResponse.redirect(upgradeUrl)
+    }
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/platform/:path*', '/tracker/:path*']
+  matcher: ['/platform/:path*', '/tracker/:path*'],
 }

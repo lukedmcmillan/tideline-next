@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     line_items: [{ price: priceId, quantity: tier === "team" ? 10 : 1 }],
     ...(hadTrial ? {} : { subscription_data: { trial_period_days: 7 } }),
     success_url: `${process.env.NEXTAUTH_URL}/platform/feed?upgraded=true`,
-    cancel_url: `${process.env.NEXTAUTH_URL}/pricing`,
+    cancel_url: `${process.env.NEXTAUTH_URL}/upgrade`,
     metadata: { tier: TIER_MAP[tier], email },
   });
 

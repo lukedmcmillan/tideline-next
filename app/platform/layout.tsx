@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { SessionProvider } from "next-auth/react";
 import { TidelineLogo } from "@/components/ui/TidelineLogo";
 
 // ── Design tokens ─────────────────────────────────────────────────────────
@@ -33,13 +34,9 @@ const IcDir = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" 
 function TrialBanner() {
   const [status, setStatus] = useState<string | null>(null);
   const [days, setDays] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const wasDismissed = typeof window !== "undefined" && sessionStorage.getItem("tideline_trial_banner_dismissed") === "1";
-    if (wasDismissed) setDismissed(true);
-
     fetch("/api/subscription-status")
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -54,7 +51,7 @@ function TrialBanner() {
 
   if (!loaded) return null;
 
-  // Expired trial overlay
+  // Expired trial overlay (middleware should redirect first, kept as fallback)
   if (status === "canceled" || status === "expired") {
     return (
       <div style={{
@@ -69,7 +66,7 @@ function TrialBanner() {
         <div style={{ fontFamily: F, fontSize: 15, fontWeight: 400, color: T3, marginBottom: 32 }}>
           Choose a plan to continue using Tideline.
         </div>
-        <a href="/pricing" style={{
+        <a href="/upgrade" style={{
           display: "inline-block", background: TEAL, color: "#fff",
           fontFamily: F, fontSize: 14, fontWeight: 500,
           padding: "12px 32px", borderRadius: 4, textDecoration: "none",
@@ -83,41 +80,31 @@ function TrialBanner() {
   // Active or no subscription: hide banner
   if (status !== "trialing" || days === null) return null;
 
-  // Dismissed for this session
-  if (dismissed) return null;
-
-  const urgent = days <= 3;
-
-  const handleDismiss = () => {
-    setDismissed(true);
-    if (typeof window !== "undefined") sessionStorage.setItem("tideline_trial_banner_dismissed", "1");
-  };
-
   return (
-    <div className="trial-banner-wrap" style={{
-      position: "sticky", top: 0, zIndex: 40, width: "100%",
-      background: urgent ? "rgba(249,171,0,0.08)" : "rgba(29,158,117,0.08)",
-      borderLeft: `3px solid ${urgent ? AMBER : TEAL}`,
-      padding: "12px 20px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-    }}>
-      <span className="trial-text" style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: T1 }}>
-        {days} {days === 1 ? "day" : "days"} left {"\u00B7"} {"\u00A3"}39/month founding member
+    <a
+      href="/upgrade"
+      className="trial-banner-wrap"
+      style={{
+        display: "flex", position: "sticky", top: 0, zIndex: 40, width: "100%",
+        background: TEAL,
+        padding: "10px 20px",
+        alignItems: "center", justifyContent: "center",
+        textDecoration: "none",
+      }}
+    >
+      <span
+        className="trial-text"
+        style={{
+          fontFamily: M,
+          fontSize: 11,
+          fontWeight: 500,
+          color: "#FFFFFF",
+          letterSpacing: "0.04em",
+        }}
+      >
+        {days} {days === 1 ? "day" : "days"} left {"\u00B7"} become a founding member
       </span>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
-        <a className="trial-link" href="/pricing" style={{
-          fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL, textDecoration: "none",
-        }}>
-          Upgrade
-        </a>
-        <button className="trial-dismiss" onClick={handleDismiss} style={{
-          background: "none", border: "none", cursor: "pointer",
-          fontSize: 16, color: T3, padding: 0, lineHeight: 1,
-        }}>
-          {"\u2715"}
-        </button>
-      </div>
-    </div>
+    </a>
   );
 }
 
@@ -729,6 +716,14 @@ function MobileTabBar() {
 
 // ── Layout ────────────────────────────────────────────────────────────────
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <PlatformLayoutInner>{children}</PlatformLayoutInner>
+    </SessionProvider>
+  );
+}
+
+function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
   const [sbOpen, setSbOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
@@ -775,13 +770,12 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         @media(max-width:1023px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
         .mobile-tab-bar{display:none}
         @media(max-width:1023px){
-          .trial-banner-wrap{position:fixed!important;top:auto!important;bottom:56px!important;left:0!important;right:0!important;z-index:100!important;background:#fff!important;border-top:1px solid #E8EAED!important;border-left:none!important;padding:12px 20px!important}
-          .trial-banner-wrap .trial-text{font-size:13px!important;color:#5F6368!important}
-          .trial-banner-wrap .trial-link{font-size:13px!important;color:#1D9E75!important}
-          .trial-banner-wrap .trial-dismiss{display:none!important}
+          .trial-banner-wrap{position:fixed!important;top:auto!important;bottom:56px!important;left:0!important;right:0!important;z-index:100!important;background:#1D9E75!important;padding:10px 20px!important}
+          .trial-banner-wrap .trial-text{font-size:11px!important;color:#FFFFFF!important}
           .mobile-tab-bar{display:flex!important}
           .top-bar-search{display:none!important}
           .top-bar-right-tier{display:none!important}
+          .top-bar-manage-sub{display:none!important}
         }
       `}</style>
 
@@ -803,8 +797,9 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
           <span style={{ fontSize: 11, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "1px 6px", color: T4, fontFamily: M }}>{"\u2318"}K</span>
         </div>
         {/* Right */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px 0 24px", marginLeft: "auto" }}>
-          <span className="top-bar-right-tier" style={{ fontFamily: M, fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE, marginRight: 4 }}>Individual</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 16px 0 24px", marginLeft: "auto" }}>
+          <span className="top-bar-right-tier" style={{ fontFamily: M, fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE }}>Individual</span>
+          <a href="/api/portal" className="top-bar-manage-sub" style={{ fontFamily: M, fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none", letterSpacing: "0.04em" }}>Manage subscription</a>
           <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${NAVY},${TEAL})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>LM</div>
         </div>
       </div>

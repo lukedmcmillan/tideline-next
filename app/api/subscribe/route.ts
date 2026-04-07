@@ -1,3 +1,7 @@
+// ORPHAN, scheduled for removal.
+// Legacy Stripe Elements flow. Superseded by /api/stripe/checkout which uses
+// Stripe Checkout + the new /upgrade page. Kept until after the first paying
+// customer to avoid distraction. Do not wire new callers to this endpoint.
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";

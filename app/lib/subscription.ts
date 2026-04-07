@@ -7,6 +7,11 @@ const supabase = createClient(
 
 export type SubStatus = "active" | "trialing" | "past_due" | "canceled" | "none";
 
+// ORPHAN, scheduled for removal.
+// Triple-read fallback (users -> subscriptions -> trial_signups) is legacy.
+// Middleware now reads subscription state directly from the JWT (see middleware.ts
+// and the auth.ts jwt callback). API routes that still call this should migrate to
+// reading the NextAuth session via getEmailFromSession + getToken.
 export async function getSubscriptionStatus(email: string): Promise<{
   status: SubStatus;
   trialEnd: string | null;

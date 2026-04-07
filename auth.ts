@@ -93,6 +93,8 @@ export const authOptions = {
           const { error: insertErr } = await supabase.from('users').insert({
             email: user.email,
             subscription_status: 'trial',
+            tier: 'free',
+            onboarding_completed: false,
             trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
             topics: [],
             timezone: 'Europe/London',
@@ -106,17 +108,46 @@ export const authOptions = {
 
       return true
     },
-    async jwt({ token, user }: { token: any; user?: any }) {
+    async jwt({ token, user, trigger }: { token: any; user?: any; trigger?: string }) {
       if (user) {
         token.email = user.email
         token.name = user.name
       }
+
+      const shouldRefresh =
+        !!user ||
+        trigger === 'update' ||
+        token.subscription_status === undefined ||
+        token.trial_ends_at === undefined
+
+      if (shouldRefresh && token.email) {
+        try {
+          const { data: u } = await supabase
+            .from('users')
+            .select('subscription_status, trial_ends_at, tier, onboarding_completed')
+            .eq('email', token.email)
+            .single()
+          if (u) {
+            token.subscription_status = u.subscription_status ?? 'trial'
+            token.trial_ends_at = u.trial_ends_at ?? null
+            token.tier = u.tier ?? 'free'
+            token.onboarding_completed = u.onboarding_completed ?? false
+          }
+        } catch (err) {
+          console.error('[auth] jwt callback DB fetch error:', err)
+        }
+      }
+
       return token
     },
     async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
         session.user.email = token.email
         session.user.name = token.name
+        session.user.subscription_status = token.subscription_status
+        session.user.trial_ends_at = token.trial_ends_at
+        session.user.tier = token.tier
+        session.user.onboarding_completed = token.onboarding_completed
       }
       return session
     },

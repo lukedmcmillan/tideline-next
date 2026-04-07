@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         const tier = session.metadata?.tier;
         const updateData: Record<string, unknown> = { subscription_status: "active" };
         if (subscriptionId) updateData.stripe_subscription_id = subscriptionId;
-        if (tier) updateData.subscription_tier = tier;
+        if (tier) updateData.tier = tier;
         await supabase.from("users").update(updateData).eq("email", email);
 
         // Also sync the subscriptions table if there's a subscription
@@ -134,6 +134,7 @@ export async function POST(req: NextRequest) {
       if (email) {
         await upsertSubscription(email, subscription, "canceled");
         await syncUserStatus(email, "cancelled");
+        await supabase.from("users").update({ tier: "free" }).eq("email", email);
       }
       break;
     }
@@ -149,8 +150,41 @@ export async function POST(req: NextRequest) {
         const subscription = await stripe.subscriptions.retrieve(subId);
         const email = await getCustomerEmail(subscription.customer as string);
         if (email) {
+          // Mark past_due in subscriptions table but do NOT cancel user access yet.
+          // Stripe retries 3 to 4 times before actually cancelling; customer.subscription.deleted
+          // will fire if all retries fail.
           await upsertSubscription(email, subscription, "past_due");
-          await syncUserStatus(email, "cancelled");
+
+          // Send payment failed email via Resend
+          try {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                from: "Tideline <noreply@thetideline.co>",
+                to: email,
+                subject: "Payment failed, update your card",
+                html: `
+                  <div style="max-width:520px;margin:40px auto;font-family:'DM Sans',Arial,sans-serif;">
+                    <div style="background:#0A1628;padding:20px 32px;">
+                      <span style="font-size:14px;font-weight:500;color:#ffffff;letter-spacing:0.18em;text-transform:uppercase;font-family:'DM Mono',monospace;">TIDELINE</span>
+                    </div>
+                    <div style="padding:40px 32px;background:#ffffff;border:1px solid #E4E4E4;">
+                      <h1 style="font-size:22px;color:#202124;margin:0 0 16px;font-family:'DM Sans',Arial,sans-serif;font-weight:700;">Payment failed</h1>
+                      <p style="font-size:15px;color:#5F6368;margin:0 0 20px;line-height:1.6;">We were unable to charge your card for your Tideline subscription. Please update your payment details to keep your access active.</p>
+                      <a href="${process.env.NEXTAUTH_URL}/api/portal" style="display:inline-block;padding:13px 28px;background:#1D9E75;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:7px;">Update payment</a>
+                      <p style="font-size:12px;color:#9AA0A6;margin:24px 0 0;">If you need help, reply to this email or contact luke@thetideline.co</p>
+                    </div>
+                  </div>
+                `,
+              }),
+            });
+          } catch (err) {
+            console.error("[stripe-webhook] Resend email error:", err);
+          }
         }
       }
       break;
