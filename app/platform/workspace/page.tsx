@@ -20,6 +20,8 @@ const T3    = "#5F6368";
 const T4    = "#9AA0A6";
 const BD    = "#DADCE0";
 const BLT   = "#E8EAED";
+const TEAL_LIGHT = "rgba(29,158,117,0.08)";
+const RED   = "#EF4444";
 const R     = 6;
 const FUI   = "var(--font-ui), 'Plus Jakarta Sans', -apple-system, sans-serif";
 const F     = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
@@ -139,41 +141,41 @@ function StructuredFields({ schema, fields, onChange }: {
   fields: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }) {
+  const rowInput: React.CSSProperties = {
+    width: "100%", border: "none", background: "transparent", outline: "none",
+    fontFamily: F, fontSize: 13, color: T1, padding: 0,
+  };
   return (
     <div>
-      {schema.map(f => (
-        <div key={f.key} style={{ marginBottom: 24 }}>
-          <label style={fieldLabel}>{f.label}</label>
-          {f.type === "textarea" ? (
-            <textarea
-              value={fields[f.key] || ""}
-              onChange={e => onChange(f.key, e.target.value)}
-              rows={f.rows || 3}
-              style={{ ...fieldInput, height: "auto", minHeight: 60, resize: "vertical", lineHeight: 1.6 }}
-              onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
-              onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = "#E0E0E0"; }}
-            />
-          ) : f.type === "select" ? (
-            <select
-              value={fields[f.key] || ""}
-              onChange={e => onChange(f.key, e.target.value)}
-              style={{ ...fieldInput, cursor: "pointer", appearance: "none" }}
-              onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
-              onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = "#E0E0E0"; }}
-            >
-              <option value="">Select...</option>
-              {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-          ) : (
-            <input
-              type={f.type === "date" ? "date" : "text"}
-              value={fields[f.key] || ""}
-              onChange={e => onChange(f.key, e.target.value)}
-              style={fieldInput}
-              onFocus={e => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
-              onBlur={e => { (e.target as HTMLElement).style.borderBottomColor = "#E0E0E0"; }}
-            />
-          )}
+      {schema.map((f, i) => (
+        <div key={f.key} style={{ borderTop: i === 0 ? `1px solid ${BD}` : "none", borderBottom: `1px solid ${BD}`, padding: "10px 0", display: "flex", alignItems: "center", gap: 12 }}>
+          <label style={{ fontFamily: M, fontSize: 11, fontWeight: 500, color: T3, width: 130, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>{f.label}</label>
+          <div style={{ flex: 1 }}>
+            {f.type === "textarea" ? (
+              <textarea
+                value={fields[f.key] || ""}
+                onChange={e => onChange(f.key, e.target.value)}
+                rows={f.rows || 2}
+                style={{ ...rowInput, resize: "vertical", lineHeight: 1.6 }}
+              />
+            ) : f.type === "select" ? (
+              <select
+                value={fields[f.key] || ""}
+                onChange={e => onChange(f.key, e.target.value)}
+                style={{ ...rowInput, cursor: "pointer", appearance: "none" }}
+              >
+                <option value="">Select...</option>
+                {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : (
+              <input
+                type={f.type === "date" ? "date" : "text"}
+                value={fields[f.key] || ""}
+                onChange={e => onChange(f.key, e.target.value)}
+                style={rowInput}
+              />
+            )}
+          </div>
         </div>
       ))}
     </div>
@@ -560,32 +562,39 @@ function IntelligencePanel({ editor, topics, projectId }: {
 }
 
 // -- Upload modal -----------------------------------------------------------------
-function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+function UploadModal({ open, onClose, onUploaded }: { open: boolean; onClose: () => void; onUploaded: (dest: "private" | "network") => void }) {
   const [dest, setDest] = useState<"private" | "network">("private");
   if (!open) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: 480, background: WHITE, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ padding: "24px 24px 0" }}>
-          <div style={{ fontFamily: FUI, fontSize: 20, fontWeight: 800, color: T1, marginBottom: 16 }}>Upload a file</div>
+      <div onClick={e => e.stopPropagation()} style={{ width: 460, background: WHITE, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ padding: "20px 20px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontFamily: FUI, fontSize: 18, fontWeight: 800, color: T1 }}>Upload a file</div>
+          <button onClick={onClose} style={{ width: 28, height: 28, background: "none", border: "none", color: T3, fontSize: 18, cursor: "pointer", padding: 0, lineHeight: 1 }}>x</button>
+        </div>
+        <div style={{ padding: "16px 20px 0" }}>
           {/* Drop zone */}
-          <div style={{ border: `2px dashed ${BD}`, borderRadius: 8, padding: "32px 24px", textAlign: "center", marginBottom: 20 }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T4} strokeWidth="1.5" style={{ margin: "0 auto 8px", display: "block" }}><path d="M12 16V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" strokeLinecap="round"/></svg>
-            <div style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: T1, marginBottom: 4 }}>Drop your file here</div>
-            <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>PDF, Word, or any document up to 50MB</div>
+          <div style={{ border: `1.5px dashed ${BD}`, borderRadius: 10, padding: 28, textAlign: "center", background: "#F9FAFB" }}>
+            <div style={{ width: 44, height: 44, background: WHITE, border: `1px solid ${BD}`, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={T3} strokeWidth="1.5"><path d="M10 14V4M10 4l-4 4M10 4l4 4" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 13v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" strokeLinecap="round"/></svg>
+            </div>
+            <div style={{ fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T1, marginBottom: 4 }}>Drop your file here</div>
+            <div style={{ fontFamily: F, fontSize: 11.5, color: T3 }}>PDF, Word, or any document up to 50MB</div>
+            <button style={{ height: 32, padding: "0 14px", marginTop: 12, fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Browse files</button>
           </div>
-          {/* Destinations */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-            <label onClick={() => setDest("private")} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 12, border: `1px solid ${dest === "private" ? TEAL : BD}`, borderRadius: 8, cursor: "pointer", background: dest === "private" ? "rgba(29,158,117,0.08)" : WHITE }}>
-              <input type="radio" checked={dest === "private"} onChange={() => setDest("private")} style={{ marginTop: 2 }} />
+        </div>
+        <div style={{ padding: "18px 20px 0" }}>
+          <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T1, marginBottom: 10 }}>Where should this be saved?</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+            <label onClick={() => setDest("private")} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 12, border: dest === "private" ? `1.5px solid ${TEAL}` : `1px solid ${BD}`, borderRadius: 8, cursor: "pointer", background: dest === "private" ? "rgba(29,158,117,0.05)" : WHITE }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={dest === "private" ? TEAL : T3} strokeWidth="1.4" style={{ marginTop: 2, flexShrink: 0 }}><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
               <div>
                 <div style={{ fontFamily: FUI, fontSize: 13, fontWeight: 600, color: T1 }}>Private cabinet</div>
                 <div style={{ fontFamily: F, fontSize: 12, color: T3 }}>Only you can see this file.</div>
-                {dest === "private" && <div style={{ fontFamily: F, fontSize: 11, color: TEAL, marginTop: 4 }}>Files are end-to-end encrypted and stored securely.</div>}
               </div>
             </label>
-            <label onClick={() => setDest("network")} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 12, border: `1px solid ${dest === "network" ? TEAL : BD}`, borderRadius: 8, cursor: "pointer", background: dest === "network" ? "rgba(29,158,117,0.08)" : WHITE }}>
-              <input type="radio" checked={dest === "network"} onChange={() => setDest("network")} style={{ marginTop: 2 }} />
+            <label onClick={() => setDest("network")} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: 12, border: dest === "network" ? `1.5px solid ${TEAL}` : `1px solid ${BD}`, borderRadius: 8, cursor: "pointer", background: dest === "network" ? "rgba(29,158,117,0.05)" : WHITE }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={dest === "network" ? TEAL : T3} strokeWidth="1.4" style={{ marginTop: 2, flexShrink: 0 }}><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg>
               <div>
                 <div style={{ fontFamily: FUI, fontSize: 13, fontWeight: 600, color: T1 }}>Add to Tideline Network</div>
                 <div style={{ fontFamily: F, fontSize: 12, color: T3 }}>Shared with the ocean journalism community. Your name stays on it as contributor.</div>
@@ -593,11 +602,11 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
             </label>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
-          <span style={{ fontFamily: F, fontSize: 12, color: T4 }}>File will also be attached to this workspace</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: `1px solid ${BD}` }}>
+          <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>File will also be attached to this workspace</span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={onClose} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Cancel</button>
-            <button style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Upload</button>
+            <button onClick={() => { onUploaded(dest); onClose(); }} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Upload</button>
           </div>
         </div>
       </div>
@@ -633,11 +642,65 @@ function ExportModal({ open, onClose, docId, isLocal }: { open: boolean; onClose
   );
 }
 
-// -- Writing assistant ------------------------------------------------------------
-function WritingAssistant({ sourceCount }: { sourceCount: number }) {
+// -- Ask Tideline panel (collapsible) ---------------------------------------------
+function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) => void }) {
   const [open, setOpen] = useState(false);
-  const [format, setFormat] = useState<string | null>(null);
-  const [tone, setTone] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const ask = async () => {
+    if (!query.trim() || loading) return;
+    setLoading(true);
+    try {
+      const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
+      const d = await r.json();
+      if (d.answer) setAnswer(d.answer);
+    } catch {}
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ marginBottom: 16, border: `1px solid ${BD}`, borderRadius: 8, padding: 14 }}>
+      <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+        <div style={{ width: 26, height: 26, borderRadius: 6, background: "rgba(29,158,117,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={TEAL} strokeWidth="1.4"><path d="M2 3h10v7H5l-3 2V3z" strokeLinejoin="round"/></svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: FUI, fontSize: 12.5, fontWeight: 500, color: T1 }}>Ask Tideline</div>
+          <div style={{ fontFamily: F, fontSize: 11, color: T3 }}>Ask a question, then paste the answer straight into your notes</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={T4} strokeWidth="1.5" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path d="M3 5l4 4 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </div>
+      {open && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: answer ? 14 : 0 }}>
+            <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") ask(); }} placeholder="Type your question..." style={{ flex: 1, height: 36, padding: "0 12px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", background: WHITE }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
+            <button onClick={ask} disabled={!query.trim() || loading} style={{ height: 36, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: query.trim() && !loading ? TEAL : "#BDC1C6", border: "none", borderRadius: 6, cursor: query.trim() && !loading ? "pointer" : "default" }}>{loading ? "..." : "Ask"}</button>
+          </div>
+          {answer && (
+            <>
+              <div style={{ borderLeft: `3px solid ${TEAL}`, paddingLeft: 16, fontFamily: F, fontWeight: 400, lineHeight: 1.75, color: T3, fontSize: 13, marginBottom: 12 }}>{answer}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}`)} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
+                  Paste into notes
+                </button>
+                <span style={{ fontFamily: M, fontSize: 10, color: T4, cursor: "pointer" }}>View previous questions</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -- Writing assistant ------------------------------------------------------------
+function WritingAssistant({ sourceCount, onCopyToNotes }: { sourceCount: number; onCopyToNotes: (text: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [format, setFormat] = useState("Situation report");
+  const [tone, setTone] = useState("Journalistic");
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState("");
 
@@ -645,74 +708,264 @@ function WritingAssistant({ sourceCount }: { sourceCount: number }) {
   const tones = ["Journalistic", "Analytical", "Formal", "Plain English"];
 
   const pillStyle = (selected: boolean): React.CSSProperties => ({
-    display: "inline-block", padding: "5px 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500,
+    display: "inline-block", padding: "5px 12px", fontFamily: FUI, fontSize: 12,
+    fontWeight: selected ? 500 : 400,
     border: `1px solid ${selected ? TEAL : BD}`, borderRadius: 20, cursor: "pointer",
-    background: selected ? "rgba(29,158,117,0.08)" : WHITE, color: selected ? TEAL : T2,
+    background: selected ? "rgba(29,158,117,0.08)" : WHITE,
+    color: selected ? TEAL : "#6B7280",
   });
 
   const stepNum = (n: number) => (
     <span style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(29,158,117,0.1)", color: TEAL, fontFamily: M, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{n}</span>
   );
 
+  const generate = () => {
+    setGenerating(true);
+    setTimeout(() => {
+      setDraft(`This is a ${tone.toLowerCase()} ${format.toLowerCase()} drafted from your notes and ${sourceCount} attached sources. Edit freely from here.`);
+      setGenerating(false);
+    }, 1500);
+  };
+
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", cursor: "pointer" }}>
-        <div style={{ width: 26, height: 26, borderRadius: 6, background: "rgba(139,92,246,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#8B5CF6" strokeWidth="1.3"><path d="M7 2v10M2 7l3-3M9 4l3 3M5 10l-3-3M12 7l-3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    <div style={{ marginBottom: 16, border: `1px solid ${BD}`, borderRadius: 8, padding: 14 }}>
+      <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+        <div style={{ width: 26, height: 26, borderRadius: 6, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#8B5CF6" strokeWidth="1.4"><path d="M9 2l3 3-7 7H2v-3l7-7z" strokeLinejoin="round"/></svg>
         </div>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: FUI, fontSize: 12.5, fontWeight: 500, color: T1 }}>Writing assistant</div>
           <div style={{ fontFamily: F, fontSize: 11, color: T3 }}>Turn your notes and sources into a coherent report</div>
         </div>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={T4} strokeWidth="1.5" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path d="M3 5l4 4 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </div>
       {open && (
-        <div style={{ padding: "0 0 0 36px" }}>
-          {/* Step 1 */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
+        <div style={{ marginTop: 12 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
             {stepNum(1)}
-            <div>
-              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 8 }}>What do you want to write?</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 7 }}>What do you want to write?</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {formats.map(f => <span key={f} onClick={() => setFormat(f)} style={pillStyle(format === f)}>{f}</span>)}
               </div>
             </div>
           </div>
-          {/* Step 2 */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: `1px solid ${BD}` }}>
             {stepNum(2)}
-            <div>
-              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 8 }}>Tone</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 7 }}>Tone</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {tones.map(t => <span key={t} onClick={() => setTone(t)} style={pillStyle(tone === t)}>{t}</span>)}
               </div>
             </div>
           </div>
-          {/* Step 3 */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0" }}>
             {stepNum(3)}
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: FUI, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 4 }}>Using your notes + {sourceCount} attached sources</div>
-              <div style={{ fontFamily: F, fontSize: 11, color: T3, marginBottom: 10 }}>Tideline will draft coherently from your evidence. You edit from there.</div>
-              <button onClick={() => { setGenerating(true); setTimeout(() => { setDraft("Draft content will appear here once the backend endpoint is connected."); setGenerating(false); }, 1500); }} disabled={!format || !tone || generating} style={{ width: "100%", height: 36, fontFamily: FUI, fontSize: 13, fontWeight: 500, color: format && tone && !generating ? WHITE : "#BDC1C6", background: format && tone && !generating ? TEAL : "#F1F3F4", border: "none", borderRadius: 6, cursor: format && tone ? "pointer" : "not-allowed" }}>
+              <div style={{ fontFamily: F, fontSize: 11, color: T3, marginBottom: 10 }}>Tideline will draft from your evidence, you edit from there.</div>
+              <button onClick={generate} disabled={generating} style={{ width: "100%", height: 38, fontFamily: FUI, fontSize: 13, fontWeight: 600, color: WHITE, background: TEAL, border: "none", borderRadius: 7, cursor: generating ? "default" : "pointer" }}>
                 {generating ? "Writing..." : "Generate draft"}
               </button>
+              {generating && <div style={{ fontFamily: F, fontSize: 11, color: T3, marginTop: 8 }}>Drafting from {sourceCount} sources and your notes...</div>}
             </div>
           </div>
-          {/* Draft output */}
           {draft && (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: T4 }}>Your draft. Edit freely</span>
+                <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Your draft, edit freely</span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={generate} style={{ height: 28, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Regenerate</button>
+                  <button onClick={() => onCopyToNotes(draft)} style={{ height: 28, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: WHITE, background: "#202124", border: "none", borderRadius: 6, cursor: "pointer" }}>Copy to notes</button>
+                </div>
               </div>
-              <div contentEditable suppressContentEditableWarning style={{ border: `1px solid ${BD}`, borderRadius: 7, padding: 14, fontFamily: F, fontSize: 13.5, lineHeight: 1.75, color: T1, outline: "none", minHeight: 100 }}>
-                {draft}
-              </div>
+              <div contentEditable suppressContentEditableWarning style={{ border: `1px solid ${BD}`, borderRadius: 7, padding: 14, fontFamily: F, fontSize: 13.5, lineHeight: 1.75, color: T1, outline: "none", minHeight: 120 }}>{draft}</div>
             </div>
           )}
-          {generating && <div style={{ fontFamily: F, fontSize: 12, color: T3, marginTop: 8 }}>Drafting from {sourceCount} sources and your notes...</div>}
         </div>
       )}
+    </div>
+  );
+}
+
+// -- Overnight banner -------------------------------------------------------------
+function OvernightBanner() {
+  const [open, setOpen] = useState(false);
+  const count = 3;
+  const updates = [
+    { text: "ISA Council vote deferred to July session", tier: "Official", time: "06:42" },
+    { text: "BBNJ ratification crossed 87 threshold", tier: "Wire", time: "05:18" },
+    { text: "New deep-sea mining moratorium proposal published", tier: "Original", time: "03:30" },
+  ];
+  return (
+    <div style={{ background: "linear-gradient(135deg, rgba(29,158,117,0.06), rgba(29,158,117,0.03))", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, marginBottom: 16 }}>
+      <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, cursor: "pointer" }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(29,158,117,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={TEAL} strokeWidth="1.4"><path d="M11 9.5A5 5 0 016.5 5a5 5 0 01.5-2.2A5.5 5.5 0 1013.2 9a5 5 0 01-2.2.5z" strokeLinejoin="round"/></svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: TEAL, marginBottom: 2 }}>Overnight agents, just now</div>
+          <div style={{ fontFamily: FUI, fontSize: 14, fontWeight: 600, color: T1 }}>Your workspace updated while you slept.</div>
+          <div style={{ fontFamily: F, fontSize: 11, color: T3, marginTop: 2 }}>{count} new intelligence entries filed, review and accept</div>
+        </div>
+        <span style={{ fontFamily: M, fontSize: 11, background: "rgba(29,158,117,0.12)", color: TEAL, border: "1px solid rgba(29,158,117,0.25)", borderRadius: 12, padding: "3px 10px", flexShrink: 0 }}>{count} updates {open ? "\u25B4" : "\u25BE"}</span>
+      </div>
+      {open && (
+        <div style={{ borderTop: "1px solid rgba(29,158,117,0.15)", padding: 12 }}>
+          {updates.map((u, i) => {
+            const tierC = u.tier === "Wire" ? { c: "#1D4ED8", b: "#DBEAFE", bd: "#93C5FD" } : u.tier === "Official" ? { c: "#7C3AED", b: "#F5F3FF", bd: "#EDE9FE" } : { c: "#15803D", b: "#DCFCE7", bd: "#86EFAC" };
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontFamily: F, fontSize: 11.5, color: T1 }}>{u.text}</span>
+                <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 500, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, color: tierC.c, background: tierC.b, border: `1px solid ${tierC.bd}` }}>{u.tier}</span>
+                <span style={{ fontFamily: M, fontSize: 10, color: "#6B7280" }}>{u.time}</span>
+              </div>
+            );
+          })}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button style={{ height: 26, padding: "0 12px", fontFamily: FUI, fontSize: 11, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Accept all {count} into project</button>
+            <button style={{ height: 26, padding: "0 12px", fontFamily: FUI, fontSize: 11, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Review individually</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -- Right sidebar tabs -----------------------------------------------------------
+function SourcesTabContent() {
+  const attached = [
+    { id: "1", type: "PDF", name: "ISA Council Report Mar 2026.pdf", summary: "Council deferred deep-sea mining vote to July session, citing insufficient environmental data.", time: "2h ago", tier: "Official", contributor: null as string | null },
+    { id: "2", type: "URL", name: "Reuters: Pacific bloc deposit", summary: "Tideline will summarise this document overnight.", time: "5h ago", tier: "Wire", contributor: "EM" as string | null },
+  ];
+  const tierColors: Record<string, { bg: string; color: string; border: string }> = {
+    Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
+    Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
+    Official: { bg: "#F5F3FF", color: "#7C3AED", border: "#EDE9FE" },
+    Community: { bg: "#FEF9C3", color: "#A16207", border: "#FDE047" },
+  };
+  const typeColors: Record<string, { bg: string; color: string }> = {
+    PDF: { bg: "#FEF2F2", color: "#EF4444" },
+    URL: { bg: "#DBEAFE", color: "#1D4ED8" },
+    Doc: { bg: "#F0FDF4", color: "#22C55E" },
+  };
+  return (
+    <div>
+      <div style={{ background: "rgba(29,158,117,0.04)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
+        <span style={{ fontFamily: M, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{attached.length}</span>
+      </div>
+      <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+        {attached.map(s => {
+          const tier = tierColors[s.tier];
+          const tc = typeColors[s.type];
+          return (
+            <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderRadius: 7, background: WHITE, position: "relative" }}>
+              <span style={{ width: 20, height: 20, borderRadius: 3, background: tc.bg, color: tc.color, fontFamily: M, fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.type}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                <div style={{ fontFamily: F, fontSize: 10.5, color: T3, lineHeight: 1.45, marginTop: 2 }}>{s.summary}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginTop: 6 }}>
+                  <span style={{ fontFamily: M, fontSize: 9.5, color: T4 }}>{s.time}</span>
+                  <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 500, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{s.tier}</span>
+                  {s.contributor && (
+                    <>
+                      <span style={{ width: 16, height: 16, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: M, fontSize: 7, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{s.contributor}</span>
+                      <span style={{ fontFamily: F, fontSize: 10, color: T3 }}>Eva M</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <button style={{ position: "absolute", top: 4, right: 6, background: "none", border: "none", color: T4, fontSize: 12, cursor: "pointer", opacity: 0.4, padding: 0, lineHeight: 1 }}>x</button>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ background: "rgba(29,158,117,0.04)", borderTop: "1px solid rgba(29,158,117,0.15)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Matching your tags</span>
+      </div>
+      <div style={{ padding: 12, fontFamily: F, fontSize: 11, color: T4, textAlign: "center" }}>
+        Articles matching your project tags will appear here.
+      </div>
+    </div>
+  );
+}
+
+function IntelTabContent() {
+  return (
+    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ border: `1px solid ${BD}`, borderRadius: 7, background: "#F9FAFB", padding: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontFamily: M, fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280" }}>Today&apos;s intel</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />
+            <span style={{ fontFamily: M, fontSize: 9.5, color: TEAL }}>Live</span>
+          </span>
+        </div>
+        <div style={{ fontFamily: F, fontSize: 11, color: T1, marginBottom: 8 }}>Monitoring this project for new intelligence.</div>
+        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, cursor: "pointer" }}>Generate draft</span>
+      </div>
+    </div>
+  );
+}
+
+function PeopleTabContent() {
+  return (
+    <div style={{ padding: 12 }}>
+      <input placeholder="Search people..." style={{ width: "100%", padding: "5px 9px", fontFamily: F, fontSize: 12, color: T1, background: "#F9FAFB", border: `1px solid ${BD}`, borderRadius: 4, outline: "none", marginBottom: 12 }} />
+      <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", borderBottom: `1px solid ${BD}`, paddingBottom: 6, marginBottom: 8 }}>Subjects</div>
+      <div style={{ fontFamily: F, fontSize: 11, color: T4, textAlign: "center", padding: "20px 0" }}>Add people to track in this project.</div>
+    </div>
+  );
+}
+
+function HistoryTabContent() {
+  return (
+    <div style={{ padding: 12 }}>
+      <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", marginBottom: 12 }}>Activity</div>
+      <div style={{ position: "relative", paddingLeft: 16 }}>
+        <div style={{ position: "absolute", left: 3, top: 0, bottom: 0, width: 1, background: BD }} />
+        <div style={{ fontFamily: F, fontSize: 11, color: T4 }}>No history yet.</div>
+      </div>
+    </div>
+  );
+}
+
+function RightSidebar() {
+  const [tab, setTab] = useState<"sources" | "intel" | "people" | "history">("sources");
+  const tabs = [
+    { id: "sources" as const, label: "Sources", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="9" height="9" rx="1"/><path d="M4 5h5M4 7h5M4 9h3"/></svg> },
+    { id: "intel" as const, label: "Intel", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M6.5 4v3l2 1"/></svg> },
+    { id: "people" as const, label: "People", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="5" r="2.5"/><path d="M2 11c0-2 2-3.5 4.5-3.5S11 9 11 11"/></svg> },
+    { id: "history" as const, label: "History", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M6.5 3.5v3l2 2"/></svg> },
+  ];
+  return (
+    <div style={{ width: 320, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${BD}`, flexShrink: 0 }}>
+        {tabs.map(t => {
+          const active = tab === t.id;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              flex: 1, padding: "10px 0 8px",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+              background: WHITE, border: "none", cursor: "pointer",
+              borderBottom: active ? `2px solid ${TEAL}` : "2px solid transparent",
+              color: active ? TEAL : "#6B7280",
+              opacity: active ? 1 : 0.85,
+            }}>
+              <span style={{ opacity: active ? 1 : 0.6 }}>{t.icon}</span>
+              <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {tab === "sources" && <SourcesTabContent />}
+        {tab === "intel" && <IntelTabContent />}
+        {tab === "people" && <PeopleTabContent />}
+        {tab === "history" && <HistoryTabContent />}
+      </div>
     </div>
   );
 }
@@ -739,6 +992,31 @@ function WorkspaceContent() {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [uploadOpen, setUploadOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 2800);
+    return () => clearTimeout(id);
+  }, [toast]);
+
+  const insertIntoNotes = (text: string) => {
+    editor?.chain().focus("end").insertContent(`\n\n${text}`).run();
+  };
+
+  const handleUploaded = (dest: "private" | "network") => {
+    setToast(dest === "private"
+      ? "Added to your private library, encrypted and secure"
+      : "Uploaded to the Tideline Network, thank you for growing our knowledge base");
+  };
+
+  const PROJECT_TYPE_TABS = [
+    { id: "situation_report", label: "Situation" },
+    { id: "investigation", label: "Investigation" },
+    { id: "regulatory_watch", label: "Reg Watch" },
+    { id: "briefing_note", label: "Briefing" },
+    { id: "deal_monitor", label: "Deal" },
+  ];
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLocal = docId === "local";
@@ -939,7 +1217,41 @@ function WorkspaceContent() {
         {/* Content area */}
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 36px 100px" }}>
-            {/* Ask overlay */}
+            {/* Title */}
+            <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => saveTitle(title)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }} placeholder="Untitled project"
+              style={{ width: "100%", fontSize: 28, fontWeight: 800, fontFamily: FUI, color: title ? T1 : T4, border: "none", outline: "none", background: "transparent", padding: 0, letterSpacing: "-0.4px" }} />
+
+            {/* Header row: project type pill tabs + meta */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 4, background: "#F3F4F6", padding: 3, borderRadius: 8 }}>
+                {PROJECT_TYPE_TABS.map(t => {
+                  const active = projectType === t.id;
+                  return (
+                    <span key={t.id} onClick={() => setProjectType(t.id)} style={{
+                      padding: "6px 14px", fontFamily: FUI, fontSize: 12, borderRadius: 6, cursor: "pointer",
+                      background: active ? WHITE : "transparent",
+                      color: active ? T1 : "#6B7280",
+                      fontWeight: active ? 500 : 400,
+                      boxShadow: active ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                    }}>{t.label}</span>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />
+                  <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>Updated 2h ago</span>
+                </span>
+                <div style={{ display: "flex" }}>
+                  {["LM", "EM", "JS"].map((init, i) => (
+                    <span key={init} style={{ width: 24, height: 24, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: M, fontSize: 9, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", border: `2px solid ${WHITE}`, marginLeft: i === 0 ? 0 : -6 }}>{init}</span>
+                  ))}
+                </div>
+                <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>Tracking 5 sources</span>
+              </div>
+            </div>
+
+            {/* Ask overlay (legacy slash command) */}
             {showAsk && (
               <div style={{ marginBottom: 20, padding: "14px 16px", background: WHITE, border: `1px solid ${BD}`, borderRadius: R }}>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -950,21 +1262,24 @@ function WorkspaceContent() {
               </div>
             )}
 
-            {/* Writing assistant */}
-            <WritingAssistant sourceCount={0} />
-
-            {/* Title */}
-            <input value={title} onChange={e => setTitle(e.target.value)} onBlur={() => saveTitle(title)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }} placeholder="Untitled project"
-              style={{ width: "100%", fontSize: 28, fontWeight: 800, fontFamily: FUI, color: title ? T1 : T4, border: "none", outline: "none", background: "transparent", padding: 0, letterSpacing: "-0.4px" }} />
-            <div style={{ height: 1, background: BD, margin: "14px 0 28px" }} />
+            <OvernightBanner />
 
             {/* Structured fields */}
             {projectType && FIELD_SCHEMAS[projectType] && (
               <>
                 <StructuredFields schema={FIELD_SCHEMAS[projectType]} fields={fields} onChange={handleFieldChange} />
-                <div style={{ height: 1, background: BD, margin: "24px 0" }} />
+                <div style={{ height: 16 }} />
               </>
             )}
+
+            {/* Upload button (dashed) */}
+            <button onClick={() => setUploadOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px", border: "1.5px dashed #DADCE0", borderRadius: 8, color: "#6B7280", fontSize: 12, fontFamily: FUI, background: WHITE, cursor: "pointer", marginBottom: 16 }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M7 10V2M7 2L4 5M7 2l3 3" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 9v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9" strokeLinecap="round"/></svg>
+              Upload a file or PDF
+            </button>
+
+            <AskTidelinePanel onPasteToNotes={insertIntoNotes} />
+            <WritingAssistant sourceCount={0} onCopyToNotes={insertIntoNotes} />
 
             {/* Notes section label */}
             <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 12 }}>Notes</div>
@@ -996,10 +1311,16 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <IntelligencePanel editor={editor} topics={detectedTopics} projectId={projectId} />
+      <RightSidebar />
 
-      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />
+
+      {toast && (
+        <div style={{ position: "fixed", left: "50%", bottom: 32, transform: "translateX(-50%)", background: "#111827", color: WHITE, borderRadius: 7, fontFamily: F, fontSize: 12.5, fontWeight: 500, padding: "10px 18px", zIndex: 9999, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
