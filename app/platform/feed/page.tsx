@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 const BG     = "#F8F9FA";
@@ -222,7 +222,7 @@ function MobileStoryCard({ s, isRead, isSaved, onTap, onSave }: {
   );
 }
 
-export default function FeedPage() {
+function UpgradeHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { update } = useSession();
@@ -234,8 +234,14 @@ export default function FeedPage() {
       update();
       router.replace("/platform/feed", { scroll: false });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  return null;
+}
+
+export default function FeedPage() {
+  const router = useRouter();
 
   const [read, setRead] = useState<Set<string>>(() => loadReadSet());
   const [saved, setSaved] = useState<Set<string>>(() => loadSavedSet());
@@ -297,6 +303,9 @@ export default function FeedPage() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <UpgradeHandler />
+      </Suspense>
       <style>{`
         .feed-mobile { display: none; }
         @media (max-width: 768px) {
