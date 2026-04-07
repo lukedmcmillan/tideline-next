@@ -905,12 +905,6 @@ function SourcesTabContent() {
           );
         })}
       </div>
-      <div style={{ background: "rgba(29,158,117,0.04)", borderTop: "1px solid rgba(29,158,117,0.15)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Matching your tags</span>
-      </div>
-      <div style={{ padding: 12, fontFamily: F, fontSize: 11, color: T4, textAlign: "center" }}>
-        Articles matching your project tags will appear here.
-      </div>
     </div>
   );
 }
@@ -999,25 +993,104 @@ function PeopleTabContent() {
   );
 }
 
-function HistoryTabContent() {
+function LiveTabContent() {
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const projectTags: string[] = [];
+  type StreamItem = { id: string; tier: "Wire" | "Original" | "Official" | "Community" | "Tracker" | "Calendar"; source: string; time: string; headline: string };
+  const groups: { key: string; label: string; items: StreamItem[] }[] = [];
+
+  const tierColors: Record<string, { bg: string; color: string; border: string }> = {
+    Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
+    Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
+    Official: { bg: "#F5F3FF", color: "#7C3AED", border: "#EDE9FE" },
+    Community: { bg: "#FEF9C3", color: "#A16207", border: "#FDE047" },
+    Tracker: { bg: "#E8EAF6", color: "#3949AB", border: "#C5CAE9" },
+    Calendar: { bg: "#FCE4EC", color: "#C2185B", border: "#F48FB1" },
+  };
+
+  const q = query.toLowerCase();
+  const filteredGroups = groups
+    .map(g => ({ ...g, items: g.items.filter(i => !q || i.headline.toLowerCase().includes(q) || i.source.toLowerCase().includes(q)) }))
+    .filter(g => g.items.length > 0);
+
+  const defaultExpanded = (key: string) => key === "today" || key === "yesterday";
+
   return (
-    <div style={{ padding: 12 }}>
-      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", marginBottom: 12 }}>Activity</div>
-      <div style={{ position: "relative", paddingLeft: 16 }}>
-        <div style={{ position: "absolute", left: 3, top: 0, bottom: 0, width: 1, background: BD }} />
-        <div style={{ fontFamily: F, fontSize: 11, color: T4 }}>No history yet.</div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <style>{`@keyframes tl-live-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.15); } }`}</style>
+      {/* Section 1: Header */}
+      <div style={{ padding: "10px 12px", borderBottom: "1px solid #DADCE0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <span style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#5F6368" }}>Everything matching your tags</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", animation: "tl-live-pulse 1.6s ease-in-out infinite" }} />
+          <span style={{ fontFamily: FUI, fontSize: 10, color: "#1D9E75" }}>Live</span>
+        </span>
+      </div>
+      {/* Section 2: Search */}
+      <div style={{ padding: "8px 12px", borderBottom: "1px solid #DADCE0", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#F9FAFB", border: `1px solid ${BD}`, borderRadius: 4, padding: "4px 8px" }}>
+          <svg width="11" height="11" viewBox="0 0 13 13" fill="none" stroke="#9AA0A6" strokeWidth="1.5"><circle cx="5.5" cy="5.5" r="3.5"/><path d="M8 8l3 3"/></svg>
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter this stream..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FUI, fontSize: 11, color: T1 }} />
+        </div>
+      </div>
+      {/* Section 3: Active tags */}
+      <div style={{ padding: "6px 12px", borderBottom: "1px solid #DADCE0", display: "flex", flexWrap: "wrap", gap: 4, flexShrink: 0 }}>
+        {projectTags.length === 0 ? (
+          <span style={{ fontFamily: FUI, fontSize: 10.5, color: "#9AA0A6" }}>No tags yet</span>
+        ) : projectTags.map(t => (
+          <span key={t} style={{ background: "rgba(29,158,117,0.08)", border: "1px solid #1D9E75", color: "#1D9E75", borderRadius: 20, padding: "2px 10px", fontFamily: FUI, fontSize: 10.5 }}>{t}</span>
+        ))}
+      </div>
+      {/* Section 4: Stream */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {filteredGroups.length === 0 ? (
+          <div style={{ fontFamily: FUI, fontSize: 11.5, color: "#5F6368", padding: 24, textAlign: "center" }}>
+            Tideline will populate this as your tags match new content.
+          </div>
+        ) : filteredGroups.map(g => {
+          const isCollapsed = collapsed[g.key] ?? !defaultExpanded(g.key);
+          return (
+            <div key={g.key}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [g.key]: !isCollapsed }))} style={{ padding: "6px 12px", fontFamily: FUI, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9AA0A6", background: "#F9FAFB", borderTop: "1px solid #DADCE0", borderBottom: "1px solid #DADCE0", cursor: "pointer", display: "flex", justifyContent: "space-between" }}>
+                <span>{g.label}</span>
+                {isCollapsed && <span>Show {g.items.length} items</span>}
+              </div>
+              {!isCollapsed && g.items.map(it => {
+                const tier = tierColors[it.tier];
+                return (
+                  <div key={it.id} style={{ padding: "10px 12px", borderBottom: "1px solid #DADCE0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: FUI, fontSize: 10, color: "#9AA0A6", marginBottom: 4 }}>
+                      <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 600, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{it.tier}</span>
+                      <span>{it.source}</span>
+                      <span>·</span>
+                      <span>{it.time}</span>
+                    </div>
+                    <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: "#202124", lineHeight: 1.4 }}>{it.headline}</div>
+                    {it.tier !== "Calendar" && (
+                      <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                        <button style={{ height: 22, padding: "0 8px", borderRadius: 4, fontFamily: FUI, fontSize: 10.5, background: "rgba(29,158,117,0.08)", color: "#1D9E75", border: "1px solid rgba(29,158,117,0.3)", cursor: "pointer" }}>Save</button>
+                        <button style={{ height: 22, padding: "0 8px", borderRadius: 4, fontFamily: FUI, fontSize: 10.5, background: "#F9FAFB", color: "#5F6368", border: "1px solid #DADCE0", cursor: "pointer" }}>+ Add to project</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function RightSidebar() {
-  const [tab, setTab] = useState<"sources" | "intel" | "people" | "history">("sources");
+  const [tab, setTab] = useState<"sources" | "intel" | "people" | "live">("sources");
   const tabs = [
     { id: "sources" as const, label: "Sources", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="9" height="9" rx="1"/><path d="M4 5h5M4 7h5M4 9h3"/></svg> },
     { id: "intel" as const, label: "Intel", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M6.5 4v3l2 1"/></svg> },
     { id: "people" as const, label: "People", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="5" r="2.5"/><path d="M2 11c0-2 2-3.5 4.5-3.5S11 9 11 11"/></svg> },
-    { id: "history" as const, label: "History", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M6.5 3.5v3l2 2"/></svg> },
+    { id: "live" as const, label: "Live", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.4" opacity="0.4"/><circle cx="6.5" cy="6.5" r="2" fill="currentColor"/></svg> },
   ];
   return (
     <div style={{ width: 320, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -1043,7 +1116,7 @@ function RightSidebar() {
         {tab === "sources" && <SourcesTabContent />}
         {tab === "intel" && <IntelTabContent />}
         {tab === "people" && <PeopleTabContent />}
-        {tab === "history" && <HistoryTabContent />}
+        {tab === "live" && <LiveTabContent />}
       </div>
     </div>
   );
