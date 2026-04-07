@@ -92,35 +92,38 @@ const btnPri = (ov?: React.CSSProperties): React.CSSProperties => ({
 });
 
 // -- Field schemas per project type -----------------------------------------------
-interface FieldDef { key: string; label: string; type: "text" | "textarea" | "date" | "select"; options?: string[]; rows?: number; defaultValue?: string }
+interface FieldDef { key: string; label: string; type: "text" | "textarea" | "date" | "select"; options?: string[]; rows?: number; defaultValue?: string; required?: boolean; placeholder?: string }
 
 const FIELD_SCHEMAS: Record<string, FieldDef[]> = {
   situation_report: [
+    { key: "summary", label: "Summary", type: "textarea", rows: 2, required: true, placeholder: "One sentence describing what this project is tracking." },
     { key: "topic", label: "Topic", type: "text" },
-    { key: "as_of", label: "As of date", type: "date", defaultValue: new Date().toISOString().split("T")[0] },
+    { key: "due_by", label: "Due by", type: "date" },
+    { key: "tags", label: "Tags", type: "text" },
   ],
   regulatory_watch: [
-    { key: "regulation", label: "Regulation or Treaty", type: "text" },
-    { key: "jurisdiction", label: "Jurisdiction", type: "text" },
-    { key: "current_status", label: "Current Status", type: "text" },
-    { key: "next_deadline", label: "Next Deadline", type: "date" },
+    { key: "summary", label: "Summary", type: "textarea", rows: 2, required: true, placeholder: "One sentence describing what this project is tracking." },
+    { key: "topic", label: "Topic", type: "text" },
+    { key: "due_by", label: "Due by", type: "date" },
+    { key: "tags", label: "Tags", type: "text" },
   ],
   investigation: [
-    { key: "subject", label: "Subject", type: "text" },
-    { key: "hypothesis", label: "Hypothesis", type: "textarea", rows: 3 },
-    { key: "confidence", label: "Confidence Level", type: "select", options: ["Low", "Building", "Strong"] },
+    { key: "summary", label: "Summary", type: "textarea", rows: 2, required: true, placeholder: "One sentence describing what this project is tracking." },
+    { key: "topic", label: "Topic", type: "text" },
+    { key: "due_by", label: "Due by", type: "date" },
+    { key: "tags", label: "Tags", type: "text" },
   ],
   briefing_note: [
+    { key: "summary", label: "Summary", type: "textarea", rows: 2, required: true, placeholder: "One sentence describing what this project is tracking." },
     { key: "topic", label: "Topic", type: "text" },
-    { key: "prepared_for", label: "Prepared for", type: "text" },
-    { key: "date", label: "Date", type: "date", defaultValue: new Date().toISOString().split("T")[0] },
-    { key: "time_to_read", label: "Time to read", type: "select", options: ["2 minutes", "5 minutes", "10 minutes"] },
+    { key: "due_by", label: "Due by", type: "date" },
+    { key: "tags", label: "Tags", type: "text" },
   ],
   deal_monitor: [
-    { key: "deal_name", label: "Deal or Instrument name", type: "text" },
-    { key: "parties", label: "Parties involved", type: "text" },
-    { key: "deal_size", label: "Deal size", type: "text" },
-    { key: "stage", label: "Current stage", type: "select", options: ["Rumoured", "Announced", "In Progress", "Closed", "Fallen Through"] },
+    { key: "summary", label: "Summary", type: "textarea", rows: 2, required: true, placeholder: "One sentence describing what this project is tracking." },
+    { key: "topic", label: "Topic", type: "text" },
+    { key: "due_by", label: "Due by", type: "date" },
+    { key: "tags", label: "Tags", type: "text" },
   ],
 };
 
@@ -135,6 +138,15 @@ const fieldLabel: React.CSSProperties = {
   display: "block", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T1, marginBottom: 4,
 };
 
+function CalendarAddLink() {
+  const [added, setAdded] = useState(false);
+  return (
+    <span onClick={() => setAdded(true)} style={{ fontFamily: F, fontSize: 11, color: TEAL, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+      {added ? "\u2713 Added" : "+ Add to calendar"}
+    </span>
+  );
+}
+
 // -- Structured fields component --------------------------------------------------
 function StructuredFields({ schema, fields, onChange }: {
   schema: FieldDef[];
@@ -147,20 +159,25 @@ function StructuredFields({ schema, fields, onChange }: {
   };
   return (
     <div>
-      {schema.map((f, i) => (
+      {schema.map((f, i) => {
+        const value = fields[f.key] || "";
+        return (
         <div key={f.key} style={{ borderTop: i === 0 ? `1px solid ${BD}` : "none", borderBottom: `1px solid ${BD}`, padding: "10px 0", display: "flex", alignItems: "center", gap: 12 }}>
-          <label style={{ fontFamily: M, fontSize: 11, fontWeight: 500, color: T3, width: 130, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>{f.label}</label>
-          <div style={{ flex: 1 }}>
+          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: T3, width: 130, flexShrink: 0, letterSpacing: "0.02em" }}>
+            {f.label}{f.required && <span style={{ color: "#EA4335" }}> *</span>}
+          </label>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
             {f.type === "textarea" ? (
               <textarea
-                value={fields[f.key] || ""}
+                value={value}
                 onChange={e => onChange(f.key, e.target.value)}
                 rows={f.rows || 2}
+                placeholder={f.placeholder}
                 style={{ ...rowInput, resize: "vertical", lineHeight: 1.6 }}
               />
             ) : f.type === "select" ? (
               <select
-                value={fields[f.key] || ""}
+                value={value}
                 onChange={e => onChange(f.key, e.target.value)}
                 style={{ ...rowInput, cursor: "pointer", appearance: "none" }}
               >
@@ -170,14 +187,19 @@ function StructuredFields({ schema, fields, onChange }: {
             ) : (
               <input
                 type={f.type === "date" ? "date" : "text"}
-                value={fields[f.key] || ""}
+                value={value}
                 onChange={e => onChange(f.key, e.target.value)}
+                placeholder={f.placeholder}
                 style={rowInput}
               />
             )}
+            {f.key === "due_by" && value && (
+              <CalendarAddLink />
+            )}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -256,7 +278,7 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
 
         {/* Project name, Material underline input */}
         <div style={{ marginTop: 16 }}>
-          <label style={{ display: "block", fontFamily: M, fontSize: 11, fontWeight: 500, color: T3, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Project name</label>
+          <label style={{ display: "block", fontFamily: F, fontSize: 11, fontWeight: 500, color: T3, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Project name</label>
           <input
             value={name} onChange={e => setName(e.target.value)}
             placeholder="Name your project"
@@ -408,10 +430,10 @@ function IntelligencePanel({ editor, topics, projectId }: {
     <div style={{ width: 300, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh" }}>
       {/* Header */}
       <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontFamily: M, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.12em" }}>Intelligence</span>
+        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.12em" }}>Intelligence</span>
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasEntries ? TEAL : T4 }} />
-          <span style={{ fontFamily: M, fontSize: 10, color: hasEntries ? TEAL : T4 }}>{hasEntries ? "Live" : "Monitoring"}</span>
+          <span style={{ fontFamily: F, fontSize: 10, color: hasEntries ? TEAL : T4 }}>{hasEntries ? "Live" : "Monitoring"}</span>
         </span>
       </div>
 
@@ -431,12 +453,12 @@ function IntelligencePanel({ editor, topics, projectId }: {
         {visible.map(e => (
           <div key={e.id} style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>
+              <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>
                 {e.inserted_at ? fmtDate(e.inserted_at) : ""}
               </span>
               {e.entry_type && (
                 <span style={{
-                  fontFamily: M, fontSize: 10, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
+                  fontFamily: F, fontSize: 10, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
                   ...(CONF_BADGE[e.entry_type.toUpperCase()] || CONF_BADGE.MODERATE),
                 }}>
                   {e.entry_type}
@@ -450,7 +472,7 @@ function IntelligencePanel({ editor, topics, projectId }: {
               {e.content}
             </div>
             {e.story_source && (
-              <div style={{ fontFamily: M, fontSize: 10, color: T4, marginBottom: 8 }}>{e.story_source}</div>
+              <div style={{ fontFamily: F, fontSize: 10, color: T4, marginBottom: 8 }}>{e.story_source}</div>
             )}
             {!e.accepted && (
               <div style={{ display: "flex", gap: 12 }}>
@@ -472,7 +494,7 @@ function IntelligencePanel({ editor, topics, projectId }: {
         {visible.length === 0 && (
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, marginBottom: 4 }}>Monitoring this topic</div>
-            <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>Intelligence files here automatically overnight.</div>
+            <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>Intelligence files here automatically as new sources arrive.</div>
           </div>
         )}
 
@@ -547,7 +569,7 @@ function UploadModal({ open, onClose, onUploaded }: { open: boolean; onClose: ()
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: `1px solid ${BD}` }}>
-          <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>File will also be attached to this workspace</span>
+          <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>File will also be attached to this workspace</span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={onClose} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Cancel</button>
             <button onClick={() => { onUploaded(dest); onClose(); }} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Upload</button>
@@ -580,7 +602,7 @@ function ExportModal({ open, onClose, docId, isLocal }: { open: boolean; onClose
             </button>
           ))}
         </div>
-        <div style={{ fontFamily: M, fontSize: 10, color: T4, textAlign: "center", letterSpacing: "0.05em" }}>Exported documents include full source citations and Tideline branding</div>
+        <div style={{ fontFamily: F, fontSize: 10, color: T4, textAlign: "center", letterSpacing: "0.05em" }}>Exported documents include full source citations and Tideline branding</div>
       </div>
     </div>
   );
@@ -630,7 +652,7 @@ function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) =
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
                   Paste into notes
                 </button>
-                <span style={{ fontFamily: M, fontSize: 10, color: T4, cursor: "pointer" }}>View previous questions</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: T4, cursor: "pointer" }}>View previous questions</span>
               </div>
             </>
           )}
@@ -660,7 +682,7 @@ function WritingAssistant({ sourceCount, onCopyToNotes }: { sourceCount: number;
   });
 
   const stepNum = (n: number) => (
-    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(29,158,117,0.1)", color: TEAL, fontFamily: M, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{n}</span>
+    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(29,158,117,0.1)", color: TEAL, fontFamily: F, fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{n}</span>
   );
 
   const generate = () => {
@@ -717,7 +739,7 @@ function WritingAssistant({ sourceCount, onCopyToNotes }: { sourceCount: number;
           {draft && (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Your draft, edit freely</span>
+                <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Your draft, edit freely</span>
                 <div style={{ display: "flex", gap: 6 }}>
                   <button onClick={generate} style={{ height: 28, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Regenerate</button>
                   <button onClick={() => onCopyToNotes(draft)} style={{ height: 28, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: WHITE, background: "#202124", border: "none", borderRadius: 6, cursor: "pointer" }}>Copy to notes</button>
@@ -732,9 +754,9 @@ function WritingAssistant({ sourceCount, onCopyToNotes }: { sourceCount: number;
   );
 }
 
-// -- Overnight banner -------------------------------------------------------------
-function OvernightBanner() {
-  const [open, setOpen] = useState(false);
+// -- New since last visit banner --------------------------------------------------
+function NewSinceLastVisitBanner() {
+  const [open, setOpen] = useState(true);
   const count = 3;
   const updates = [
     { text: "ISA Council vote deferred to July session", tier: "Official", time: "06:42" },
@@ -745,14 +767,14 @@ function OvernightBanner() {
     <div style={{ background: "linear-gradient(135deg, rgba(29,158,117,0.06), rgba(29,158,117,0.03))", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, marginBottom: 16 }}>
       <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, cursor: "pointer" }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(29,158,117,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={TEAL} strokeWidth="1.4"><path d="M11 9.5A5 5 0 016.5 5a5 5 0 01.5-2.2A5.5 5.5 0 1013.2 9a5 5 0 01-2.2.5z" strokeLinejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={TEAL} strokeWidth="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: TEAL, marginBottom: 2 }}>Overnight agents, just now</div>
-          <div style={{ fontFamily: FUI, fontSize: 14, fontWeight: 600, color: T1 }}>Your workspace updated while you slept.</div>
-          <div style={{ fontFamily: F, fontSize: 11, color: T3, marginTop: 2 }}>{count} new intelligence entries filed, review and accept</div>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: TEAL, marginBottom: 2 }}>New since your last visit</div>
+          <div style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: T1 }}>{count} new intelligence entries since you were last here.</div>
+          <div style={{ fontFamily: F, fontSize: 11, color: T3, marginTop: 2 }}>Tideline's agents have been working, review and accept below</div>
         </div>
-        <span style={{ fontFamily: M, fontSize: 11, background: "rgba(29,158,117,0.12)", color: TEAL, border: "1px solid rgba(29,158,117,0.25)", borderRadius: 12, padding: "3px 10px", flexShrink: 0 }}>{count} updates {open ? "\u25B4" : "\u25BE"}</span>
+        <span style={{ fontFamily: F, fontSize: 11, background: "rgba(29,158,117,0.12)", color: TEAL, border: "1px solid rgba(29,158,117,0.25)", borderRadius: 12, padding: "3px 10px", flexShrink: 0 }}>{count} updates</span>
       </div>
       {open && (
         <div style={{ borderTop: "1px solid rgba(29,158,117,0.15)", padding: 12 }}>
@@ -763,13 +785,13 @@ function OvernightBanner() {
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, flexShrink: 0 }} />
                 <span style={{ flex: 1, fontFamily: F, fontSize: 11.5, color: T1 }}>{u.text}</span>
                 <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 500, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, color: tierC.c, background: tierC.b, border: `1px solid ${tierC.bd}` }}>{u.tier}</span>
-                <span style={{ fontFamily: M, fontSize: 10, color: "#6B7280" }}>{u.time}</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: "#6B7280" }}>{u.time}</span>
               </div>
             );
           })}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button style={{ height: 26, padding: "0 12px", fontFamily: FUI, fontSize: 11, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Accept all {count} into project</button>
-            <button style={{ height: 26, padding: "0 12px", fontFamily: FUI, fontSize: 11, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Review individually</button>
+            <button style={{ height: 26, padding: "0 12px", fontFamily: F, fontSize: 11, fontWeight: 500, color: WHITE, background: TEAL, border: "none", borderRadius: 6, cursor: "pointer" }}>Add all {count} to this project</button>
+            <button style={{ height: 26, padding: "0 12px", fontFamily: F, fontSize: 11, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Review individually</button>
           </div>
         </div>
       )}
@@ -781,7 +803,7 @@ function OvernightBanner() {
 function SourcesTabContent() {
   const attached = [
     { id: "1", type: "PDF", name: "ISA Council Report Mar 2026.pdf", summary: "Council deferred deep-sea mining vote to July session, citing insufficient environmental data.", time: "2h ago", tier: "Official", contributor: null as string | null },
-    { id: "2", type: "URL", name: "Reuters: Pacific bloc deposit", summary: "Tideline will summarise this document overnight.", time: "5h ago", tier: "Wire", contributor: "EM" as string | null },
+    { id: "2", type: "URL", name: "Reuters: Pacific bloc deposit", summary: "Tideline will summarise this document shortly.", time: "5h ago", tier: "Wire", contributor: "EM" as string | null },
   ];
   const tierColors: Record<string, { bg: string; color: string; border: string }> = {
     Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
@@ -797,8 +819,8 @@ function SourcesTabContent() {
   return (
     <div>
       <div style={{ background: "rgba(29,158,117,0.04)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
-        <span style={{ fontFamily: M, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{attached.length}</span>
+        <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
+        <span style={{ fontFamily: F, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{attached.length}</span>
       </div>
       <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
         {attached.map(s => {
@@ -806,16 +828,16 @@ function SourcesTabContent() {
           const tc = typeColors[s.type];
           return (
             <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderRadius: 7, background: WHITE, position: "relative" }}>
-              <span style={{ width: 20, height: 20, borderRadius: 3, background: tc.bg, color: tc.color, fontFamily: M, fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.type}</span>
+              <span style={{ width: 20, height: 20, borderRadius: 3, background: tc.bg, color: tc.color, fontFamily: F, fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.type}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
                 <div style={{ fontFamily: F, fontSize: 10.5, color: T3, lineHeight: 1.45, marginTop: 2 }}>{s.summary}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginTop: 6 }}>
-                  <span style={{ fontFamily: M, fontSize: 9.5, color: T4 }}>{s.time}</span>
+                  <span style={{ fontFamily: F, fontSize: 9.5, color: T4 }}>{s.time}</span>
                   <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 500, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{s.tier}</span>
                   {s.contributor && (
                     <>
-                      <span style={{ width: 16, height: 16, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: M, fontSize: 7, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{s.contributor}</span>
+                      <span style={{ width: 16, height: 16, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: F, fontSize: 7, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{s.contributor}</span>
                       <span style={{ fontFamily: F, fontSize: 10, color: T3 }}>Eva M</span>
                     </>
                   )}
@@ -827,7 +849,7 @@ function SourcesTabContent() {
         })}
       </div>
       <div style={{ background: "rgba(29,158,117,0.04)", borderTop: "1px solid rgba(29,158,117,0.15)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Matching your tags</span>
+        <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Matching your tags</span>
       </div>
       <div style={{ padding: 12, fontFamily: F, fontSize: 11, color: T4, textAlign: "center" }}>
         Articles matching your project tags will appear here.
@@ -837,18 +859,74 @@ function SourcesTabContent() {
 }
 
 function IntelTabContent() {
+  const [verified, setVerified] = useState<Set<string>>(new Set());
+
+  const entries = [
+    { id: "e1", text: "ISA Council deferral aligns with Pacific bloc BBNJ deposit, suggesting vote was conditional on treaty implementation terms.", sources: ["ISA Mar 2026", "Reuters Pacific"], tier: "Original", time: "06:42" },
+    { id: "e2", text: "Three sponsoring states have publicly conditioned support on environmental safeguards. Watch for July session amendments.", sources: ["ISA Mar 2026"], tier: "Official", time: "05:18" },
+  ];
+
+  const toggleVerify = (id: string) => {
+    setVerified(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const tierStyles: Record<string, { bg: string; color: string; border: string }> = {
+    Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
+    Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
+    Official: { bg: "#F5F3FF", color: "#7C3AED", border: "#EDE9FE" },
+    Community: { bg: "#FEF9C3", color: "#A16207", border: "#FDE047" },
+  };
+
   return (
-    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ border: `1px solid ${BD}`, borderRadius: 7, background: "#F9FAFB", padding: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontFamily: M, fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280" }}>Today&apos;s intel</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />
-            <span style={{ fontFamily: M, fontSize: 9.5, color: TEAL }}>Live</span>
-          </span>
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderBottom: `1px solid ${BD}` }}>
+        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: T3 }}>Agent synthesis</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />
+          <span style={{ fontFamily: F, fontSize: 10, color: TEAL }}>Live</span>
+        </span>
+      </div>
+
+      <div style={{ background: "#FFFBEB", borderBottom: "1px solid #FDE68A", padding: "10px 12px", fontFamily: F, fontSize: 11, color: "#92400E", lineHeight: 1.55 }}>
+        Tideline reads your sources and surfaces connections, treat these as leads to verify, not conclusions to cite. Each entry links to the source it draws from.
+      </div>
+
+      {entries.length > 0 ? entries.map(e => {
+        const isVerified = verified.has(e.id);
+        const tier = tierStyles[e.tier] || tierStyles.Original;
+        return (
+          <div key={e.id} style={{ padding: 12, borderBottom: "1px solid #F3F4F6", borderLeft: isVerified ? `3px solid ${TEAL}` : "3px solid transparent" }}>
+            <div style={{ fontFamily: F, fontSize: 11.5, color: T1, lineHeight: 1.6, marginBottom: 8 }}>{e.text}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+              {e.sources.map(s => (
+                <span key={s} style={{ fontFamily: F, fontSize: 10, color: TEAL, background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 4, padding: "1px 7px" }}>{s}</span>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 600, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{e.tier}</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>{e.time}</span>
+              </div>
+              <span onClick={() => toggleVerify(e.id)} style={{ fontFamily: F, fontSize: 10, color: isVerified ? TEAL : T4, opacity: isVerified ? 1 : 0.6, cursor: "pointer", fontWeight: isVerified ? 600 : 400 }}>{isVerified ? "Verified" : "Verify"}</span>
+            </div>
+          </div>
+        );
+      }) : (
+        <div style={{ padding: 24, textAlign: "center", fontFamily: F, fontSize: 11.5, color: T3, lineHeight: 1.6 }}>
+          Tideline's agents will synthesise your sources here once you have 3 or more attached. Check back after your next session.
         </div>
-        <div style={{ fontFamily: F, fontSize: 11, color: T1, marginBottom: 8 }}>Monitoring this project for new intelligence.</div>
-        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, cursor: "pointer" }}>Generate draft</span>
+      )}
+
+      <div style={{ margin: "10px 12px", padding: 12, background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 8 }}>
+        <div style={{ fontFamily: F, fontSize: 11.5, fontWeight: 500, color: T1, marginBottom: 4 }}>Ready to write?</div>
+        <div style={{ fontFamily: F, fontSize: 11, color: T3, marginBottom: 8 }}>
+          {verified.size === 0 ? "Verify the entries above, then draft when ready." : verified.size === entries.length ? "All entries verified. Ready to draft." : `${verified.size} of ${entries.length} verified. Draft when you're satisfied.`}
+        </div>
+        <span style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: TEAL, cursor: "pointer" }}>Draft from notes</span>
       </div>
     </div>
   );
@@ -858,7 +936,7 @@ function PeopleTabContent() {
   return (
     <div style={{ padding: 12 }}>
       <input placeholder="Search people..." style={{ width: "100%", padding: "5px 9px", fontFamily: F, fontSize: 12, color: T1, background: "#F9FAFB", border: `1px solid ${BD}`, borderRadius: 4, outline: "none", marginBottom: 12 }} />
-      <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", borderBottom: `1px solid ${BD}`, paddingBottom: 6, marginBottom: 8 }}>Subjects</div>
+      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", borderBottom: `1px solid ${BD}`, paddingBottom: 6, marginBottom: 8 }}>Subjects</div>
       <div style={{ fontFamily: F, fontSize: 11, color: T4, textAlign: "center", padding: "20px 0" }}>Add people to track in this project.</div>
     </div>
   );
@@ -867,7 +945,7 @@ function PeopleTabContent() {
 function HistoryTabContent() {
   return (
     <div style={{ padding: 12 }}>
-      <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", marginBottom: 12 }}>Activity</div>
+      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", marginBottom: 12 }}>Activity</div>
       <div style={{ position: "relative", paddingLeft: 16 }}>
         <div style={{ position: "absolute", left: 3, top: 0, bottom: 0, width: 1, background: BD }} />
         <div style={{ fontFamily: F, fontSize: 11, color: T4 }}>No history yet.</div>
@@ -899,7 +977,7 @@ function RightSidebar() {
               opacity: active ? 1 : 0.85,
             }}>
               <span style={{ opacity: active ? 1 : 0.6 }}>{t.icon}</span>
-              <span style={{ fontFamily: M, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.label}</span>
+              <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.label}</span>
             </button>
           );
         })}
@@ -910,6 +988,161 @@ function RightSidebar() {
         {tab === "people" && <PeopleTabContent />}
         {tab === "history" && <HistoryTabContent />}
       </div>
+    </div>
+  );
+}
+
+// -- Floating dock + slide-up panels ----------------------------------------------
+function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAsk: () => void; onDraft: () => void }) {
+  return (
+    <div style={{ position: "fixed", bottom: 24, right: 360, display: "flex", gap: 8, zIndex: 50 }}>
+      <button onClick={onUpload} style={{
+        display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px",
+        fontFamily: F, fontSize: 12, fontWeight: 500, color: T3,
+        background: WHITE, border: `1px solid ${BD}`, borderRadius: 20, cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)", transition: "all 0.15s",
+      }}>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6.5 9V2M6.5 2L4 4.5M6.5 2L9 4.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 8v2a1 1 0 01-1 1H3a1 1 0 01-1-1V8" strokeLinecap="round"/></svg>
+        Upload
+      </button>
+      <button onClick={onAsk} style={{
+        display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px",
+        fontFamily: F, fontSize: 12, fontWeight: 500, color: T1,
+        background: WHITE, border: `1px solid ${BD}`, borderRadius: 20, cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)", transition: "all 0.15s",
+      }}>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="5"/><path d="M5 5a1.5 1.5 0 113 0c0 1-1.5 1-1.5 2M6.5 9.5v0.5"/></svg>
+        Ask Tideline
+      </button>
+      <button onClick={onDraft} style={{
+        display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px",
+        fontFamily: F, fontSize: 12, fontWeight: 500, color: WHITE,
+        background: TEAL, border: `1px solid ${TEAL}`, borderRadius: 20, cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(29,158,117,0.2)", transition: "all 0.15s",
+      }}>
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M9 2l2 2-7 7H2v-2l7-7z" strokeLinejoin="round"/></svg>
+        Draft from notes
+      </button>
+    </div>
+  );
+}
+
+function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; insertIntoNotes: (text: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); };
+    const t = setTimeout(() => document.addEventListener("mousedown", onClick), 100);
+    return () => { clearTimeout(t); document.removeEventListener("mousedown", onClick); };
+  }, [onClose]);
+
+  const ask = async () => {
+    if (!query.trim() || loading) return;
+    setLoading(true);
+    try {
+      const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
+      const d = await r.json();
+      if (d.answer) setAnswer(d.answer);
+    } catch {}
+    setLoading(false);
+  };
+
+  return (
+    <div ref={ref} style={{
+      position: "fixed", bottom: 70, right: 360, width: 440, maxHeight: "72vh", overflowY: "auto",
+      background: WHITE, border: `1px solid ${BD}`, borderRadius: 12,
+      boxShadow: "0 8px 32px rgba(0,0,0,0.14)", zIndex: 60, padding: 18,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>Ask Tideline</div>
+        <button onClick={onClose} style={{ width: 24, height: 24, background: "none", border: "none", color: T3, fontSize: 14, cursor: "pointer", lineHeight: 1 }}>x</button>
+      </div>
+      <div style={{ fontFamily: F, fontSize: 11.5, color: T3, marginBottom: 12 }}>Ask a question, paste the answer straight into your notes.</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") ask(); }} placeholder="Type your question..." autoFocus style={{ flex: 1, height: 36, padding: "0 12px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none" }} />
+        <button onClick={ask} disabled={!query.trim() || loading} style={{ height: 36, padding: "0 16px", fontFamily: F, fontSize: 13, fontWeight: 600, color: WHITE, background: query.trim() && !loading ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: query.trim() && !loading ? "pointer" : "default" }}>{loading ? "..." : "Ask"}</button>
+      </div>
+      {answer && (
+        <>
+          <div style={{ marginTop: 14, borderLeft: `3px solid ${TEAL}`, paddingLeft: 14, fontFamily: F, fontSize: 13, color: T3, lineHeight: 1.7 }}>{answer}</div>
+          <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}`); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
+            Paste into notes
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes }: { onClose: () => void; sourceCount: number; insertIntoNotes: (text: string) => void }) {
+  const [format, setFormat] = useState("Situation report");
+  const [tone, setTone] = useState("Journalistic");
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); };
+    const t = setTimeout(() => document.addEventListener("mousedown", onClick), 100);
+    return () => { clearTimeout(t); document.removeEventListener("mousedown", onClick); };
+  }, [onClose]);
+
+  const formats = ["Situation report", "Executive briefing", "Investigation memo", "Newsletter", "Timeline"];
+  const tones = ["Journalistic", "Analytical", "Formal", "Plain English"];
+
+  const pillStyle = (selected: boolean): React.CSSProperties => ({
+    display: "inline-block", padding: "4px 11px", fontFamily: F, fontSize: 11.5,
+    fontWeight: selected ? 600 : 500,
+    border: `1px solid ${selected ? TEAL : BD}`, borderRadius: 20, cursor: "pointer",
+    background: selected ? "rgba(29,158,117,0.08)" : WHITE,
+    color: selected ? TEAL : T3,
+  });
+
+  const compile = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setDraft(`This is a ${tone.toLowerCase()} ${format.toLowerCase()} compiled from your notes and ${sourceCount} attached sources. Edit freely from here.`);
+      setLoading(false);
+    }, 1500);
+  };
+
+  return (
+    <div ref={ref} style={{
+      position: "fixed", bottom: 70, right: 360, width: 440, maxHeight: "72vh", overflowY: "auto",
+      background: WHITE, border: `1px solid ${BD}`, borderRadius: 12,
+      boxShadow: "0 8px 32px rgba(0,0,0,0.14)", zIndex: 60, padding: 18,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>Draft from notes</div>
+        <button onClick={onClose} style={{ width: 24, height: 24, background: "none", border: "none", color: T3, fontSize: 14, cursor: "pointer", lineHeight: 1 }}>x</button>
+      </div>
+      <div style={{ fontFamily: F, fontSize: 11.5, color: T3, marginBottom: 14 }}>Tideline compiles your notes and {sourceCount} attached sources into a structured draft, you write the final version.</div>
+      <div style={{ fontFamily: F, fontSize: 10.5, fontWeight: 500, color: T3, marginBottom: 7 }}>Format</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+        {formats.map(f => <span key={f} onClick={() => setFormat(f)} style={pillStyle(format === f)}>{f}</span>)}
+      </div>
+      <div style={{ fontFamily: F, fontSize: 10.5, fontWeight: 500, color: T3, marginBottom: 7 }}>Tone</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+        {tones.map(t => <span key={t} onClick={() => setTone(t)} style={pillStyle(tone === t)}>{t}</span>)}
+      </div>
+      <button onClick={compile} disabled={loading} style={{ width: "100%", height: 38, fontFamily: F, fontSize: 13, fontWeight: 600, color: WHITE, background: TEAL, border: "none", borderRadius: 7, cursor: loading ? "default" : "pointer" }}>{loading ? "Compiling..." : "Compile my notes"}</button>
+      {loading && <div style={{ fontFamily: F, fontSize: 11, color: T3, marginTop: 8 }}>Compiling your notes and sources...</div>}
+      {draft && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: 500, color: T4 }}>Your draft, edit freely</span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={compile} style={{ height: 26, padding: "0 10px", fontFamily: F, fontSize: 11, fontWeight: 500, color: T2, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Regenerate</button>
+              <button onClick={() => { insertIntoNotes(draft); onClose(); }} style={{ height: 26, padding: "0 10px", fontFamily: F, fontSize: 11, fontWeight: 500, color: WHITE, background: "#202124", border: "none", borderRadius: 6, cursor: "pointer" }}>Copy to notes</button>
+            </div>
+          </div>
+          <div contentEditable suppressContentEditableWarning style={{ border: `1px solid ${BD}`, borderRadius: 7, padding: 14, fontFamily: F, fontSize: 13, lineHeight: 1.75, color: T1, outline: "none", minHeight: 100 }}>{draft}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -936,6 +1169,7 @@ function WorkspaceContent() {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [uploadOpen, setUploadOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1138,20 +1372,7 @@ function WorkspaceContent() {
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: WHITE }}>
         {/* Toolbar */}
-        <div style={{ height: 44, display: "flex", alignItems: "center", padding: "0 36px", gap: 8, borderBottom: `1px solid ${BD}`, flexShrink: 0, background: WHITE }}>
-          <button onClick={() => { setAskInitialQuery(""); setShowAsk(!showAsk); }} style={{ ...btnSec({ color: showAsk ? TEAL : T2, borderColor: showAsk ? TEAL : BD }), gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M2 3h10v7H5l-3 2V3z" strokeLinejoin="round"/></svg>
-            Ask Tideline
-          </button>
-          <button style={{ ...btnSec(), gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M7 2v10M2 7l3-3M9 4l3 3M5 10l-3-3M12 7l-3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Writing assistant
-          </button>
-          <div style={{ width: 1, height: 20, background: BD }} />
-          <button onClick={() => setUploadOpen(true)} style={{ ...btnSec(), gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M7 10V2M7 2L4 5M7 2l3 3" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 9v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9" strokeLinecap="round"/></svg>
-            Upload file
-          </button>
+        <div style={{ height: 44, display: "flex", alignItems: "center", padding: "0 36px", borderBottom: `1px solid ${BD}`, flexShrink: 0, background: WHITE }}>
           <div style={{ flex: 1 }} />
           <button onClick={() => setExportOpen(true)} style={{ height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 14px", fontSize: 13, fontWeight: 500, fontFamily: FUI, border: "none", borderRadius: 6, cursor: "pointer", background: "#202124", color: WHITE }}>Export report</button>
         </div>
@@ -1182,14 +1403,14 @@ function WorkspaceContent() {
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />
-                  <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>Updated 2h ago</span>
+                  <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>Updated 2h ago</span>
                 </span>
                 <div style={{ display: "flex" }}>
                   {["LM", "EM", "JS"].map((init, i) => (
-                    <span key={init} style={{ width: 24, height: 24, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: M, fontSize: 9, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", border: `2px solid ${WHITE}`, marginLeft: i === 0 ? 0 : -6 }}>{init}</span>
+                    <span key={init} style={{ width: 24, height: 24, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: F, fontSize: 9, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", border: `2px solid ${WHITE}`, marginLeft: i === 0 ? 0 : -6 }}>{init}</span>
                   ))}
                 </div>
-                <span style={{ fontFamily: M, fontSize: 10, color: T4 }}>Tracking 5 sources</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>Tracking 5 sources</span>
               </div>
             </div>
 
@@ -1198,13 +1419,13 @@ function WorkspaceContent() {
               <div style={{ marginBottom: 20, padding: "14px 16px", background: WHITE, border: `1px solid ${BD}`, borderRadius: R }}>
                 <div style={{ display: "flex", gap: 6 }}>
                   <input autoFocus value={askInitialQuery || undefined} onChange={e => setAskInitialQuery(e.target.value)} onKeyDown={e => { if (e.key === "Escape") setShowAsk(false); }} placeholder={getPlaceholder(detectedTopics)}
-                    style={{ flex: 1, height: 32, padding: "0 10px", fontSize: 13, fontFamily: M, color: T1, background: BG, border: `1px solid ${BD}`, borderRadius: R, outline: "none" }} />
+                    style={{ flex: 1, height: 32, padding: "0 10px", fontSize: 13, fontFamily: F, color: T1, background: BG, border: `1px solid ${BD}`, borderRadius: R, outline: "none" }} />
                   <button onClick={() => setShowAsk(false)} style={btnSec({ height: 32 })}>Close</button>
                 </div>
               </div>
             )}
 
-            <OvernightBanner />
+            <NewSinceLastVisitBanner />
 
             {/* Structured fields */}
             {projectType && FIELD_SCHEMAS[projectType] && (
@@ -1214,17 +1435,8 @@ function WorkspaceContent() {
               </>
             )}
 
-            {/* Upload button (dashed) */}
-            <button onClick={() => setUploadOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 36, padding: "0 16px", border: "1.5px dashed #DADCE0", borderRadius: 8, color: "#6B7280", fontSize: 12, fontFamily: FUI, background: WHITE, cursor: "pointer", marginBottom: 16 }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M7 10V2M7 2L4 5M7 2l3 3" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 9v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9" strokeLinecap="round"/></svg>
-              Upload a file or PDF
-            </button>
-
-            <AskTidelinePanel onPasteToNotes={insertIntoNotes} />
-            <WritingAssistant sourceCount={0} onCopyToNotes={insertIntoNotes} />
-
             {/* Notes section label */}
-            <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 12 }}>Notes</div>
+            <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 12 }}>Notes</div>
 
             {/* Tiptap notes editor */}
             <EditorContent editor={editor} />
@@ -1247,13 +1459,17 @@ function WorkspaceContent() {
 
         {/* Status bar */}
         <div style={{ height: 32, display: "flex", alignItems: "center", padding: "0 20px", borderTop: `1px solid ${BD}`, background: BG, flexShrink: 0 }}>
-          <span style={{ fontFamily: M, fontSize: 11, color: T4 }}>
+          <span style={{ fontFamily: F, fontSize: 11, color: T4 }}>
             {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Draft"}{" \u00B7 "}{wordCount} {wordCount === 1 ? "word" : "words"}{" \u00B7 "}{activeProject}
           </span>
         </div>
       </div>
 
       <RightSidebar />
+
+      <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
+      {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} />}
+      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={0} insertIntoNotes={insertIntoNotes} />}
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />

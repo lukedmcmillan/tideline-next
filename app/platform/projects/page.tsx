@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 const TEAL = "#1D9E75";
 const T1 = "#202124";
+const T2 = "#3C4043";
 const T3 = "#5F6368";
 const T4 = "#9AA0A6";
 const BD = "#DADCE0";
@@ -40,8 +41,10 @@ function fmtRelative(iso?: string): string {
   return `${days}d ago`;
 }
 
-function ProjectCard({ project, onClick }: { project: any; onClick: () => void }) {
+function ProjectCard({ project, onClick, onDelete }: { project: any; onClick: () => void; onDelete: (name: string) => void }) {
   const [hover, setHover] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const typeLabel = TYPE_LABELS[project.project_type] || "Project";
   const typeBadge = TYPE_BADGES[project.project_type] || TYPE_BADGES.situation_report;
   const overnightCount = project.overnight_count || 0;
@@ -55,7 +58,32 @@ function ProjectCard({ project, onClick }: { project: any; onClick: () => void }
       boxShadow: hover ? "0 4px 16px rgba(29,158,117,0.1)" : "none",
       transform: hover ? "translateY(-1px)" : "none",
       overflow: "hidden",
+      position: "relative",
     }}>
+      <div style={{ position: "absolute", top: 10, right: 10, opacity: hover || menuOpen ? 1 : 0, transition: "opacity 0.15s" }} onClick={e => e.stopPropagation()}>
+        <button onClick={() => setMenuOpen(o => !o)} style={{ width: 26, height: 26, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer", color: T3, fontSize: 14, lineHeight: 1, padding: 0 }}>{"\u22EF"}</button>
+        {menuOpen && (
+          <div style={{ position: "absolute", top: 30, right: 0, minWidth: 160, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: "4px 0", zIndex: 10 }}>
+            {["Rename", "Share", "Export"].map(a => (
+              <div key={a} onClick={() => setMenuOpen(false)} style={{ padding: "8px 14px", fontFamily: F, fontSize: 12, color: T1, cursor: "pointer" }}>{a}</div>
+            ))}
+            <div style={{ height: 1, background: BD, margin: "4px 0" }} />
+            <div onClick={() => { setMenuOpen(false); setConfirmDelete(true); }} style={{ padding: "8px 14px", fontFamily: F, fontSize: 12, color: "#EA4335", cursor: "pointer" }}>Delete project</div>
+          </div>
+        )}
+      </div>
+      {confirmDelete && (
+        <div onClick={e => { e.stopPropagation(); setConfirmDelete(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 380, background: "#FFFFFF", borderRadius: 12, padding: 22 }}>
+            <div style={{ fontFamily: FUI, fontSize: 16, fontWeight: 700, color: T1, marginBottom: 8 }}>Delete this project?</div>
+            <div style={{ fontFamily: F, fontSize: 12.5, color: T3, marginBottom: 18 }}>This will permanently remove "{project.name}" and all its notes. This cannot be undone.</div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button onClick={() => setConfirmDelete(false)} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: T2, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 6, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => { setConfirmDelete(false); onDelete(project.name); }} style={{ height: 32, padding: "0 14px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: "#FFFFFF", background: "#EA4335", border: "none", borderRadius: 6, cursor: "pointer" }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ padding: "16px 18px 12px", borderBottom: "1px solid #F3F4F6" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -65,7 +93,7 @@ function ProjectCard({ project, onClick }: { project: any; onClick: () => void }
           {overnightCount > 0 && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 20, fontFamily: M, fontSize: 9, color: TEAL, flexShrink: 0 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, animation: "pulse 2s ease-in-out infinite" }} />
-              {overnightCount} new overnight
+              {overnightCount} new since last visit
             </span>
           )}
         </div>
@@ -125,8 +153,10 @@ function NewProjectCard({ onClick }: { onClick: () => void }) {
 
 function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (name: string, type: string) => void }) {
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [type, setType] = useState("situation_report");
   if (!open) return null;
+  const canCreate = name.trim().length > 0 && description.trim().length > 0;
   const types = [
     { id: "situation_report", label: "Situation", desc: "What is happening with a topic right now" },
     { id: "investigation", label: "Investigation", desc: "Build a case file on a developing story" },
@@ -144,6 +174,9 @@ function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: 
         <div style={{ padding: "16px 24px 20px" }}>
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginBottom: 8 }}>Project name</div>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Name your project" style={{ width: "100%", padding: "10px 14px", fontFamily: FUI, fontSize: 14, fontWeight: 600, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box" }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
+          <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 4 }}>What is this project about? <span style={{ color: "#EA4335" }}>*</span></div>
+          <div style={{ fontFamily: F, fontSize: 11, color: T4, marginBottom: 8 }}>One sentence, this becomes the card summary and helps Tideline match the right intelligence.</div>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project tracking?" rows={2} style={{ width: "100%", padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5 }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 8 }}>Project type</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {types.map(t => {
@@ -159,7 +192,7 @@ function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: 
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
           <button onClick={onClose} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T3, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, cursor: "pointer" }}>Cancel</button>
-          <button onClick={() => { if (name.trim()) onCreate(name.trim(), type); }} disabled={!name.trim()} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: name.trim() ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: name.trim() ? "pointer" : "not-allowed" }}>{"Create project \u203a"}</button>
+          <button onClick={() => { if (canCreate) onCreate(name.trim(), type); }} disabled={!canCreate} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: canCreate ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: canCreate ? "pointer" : "not-allowed" }}>{"Create project \u203a"}</button>
         </div>
       </div>
     </div>
@@ -208,7 +241,7 @@ export default function ProjectsIndexPage() {
           <div>
             <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: TEAL, marginBottom: 8 }}>Projects</div>
             <h1 style={{ fontFamily: FUI, fontSize: 28, fontWeight: 800, color: T1, letterSpacing: "-0.5px", margin: 0 }}>Your projects</h1>
-            <p style={{ fontFamily: F, fontSize: 13, color: T3, fontWeight: 400, lineHeight: 1.5, maxWidth: 480, margin: "8px 0 0" }}>Each project is a live intelligence workspace. Tideline's agents file new evidence overnight, open any project to find the work already done.</p>
+            <p style={{ fontFamily: F, fontSize: 13, color: T3, fontWeight: 400, lineHeight: 1.5, maxWidth: 480, margin: "8px 0 0" }}>Each project is a live intelligence workspace. Tideline's agents file new evidence when you are away, open any project to find the work already done.</p>
           </div>
           <button onClick={() => setShowNewModal(true)} style={{
             display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 20px",
@@ -226,7 +259,7 @@ export default function ProjectsIndexPage() {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={TEAL} strokeWidth="1.4"><path d="M11 9.5A5 5 0 016.5 5a5 5 0 01.5-2.2A5.5 5.5 0 1013.2 9a5 5 0 01-2.2.5z" strokeLinejoin="round"/></svg>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: TEAL }}>Overnight agents, just now</div>
+              <div style={{ fontFamily: M, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: TEAL }}>New since your last visit</div>
               <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1 }}>{totalOvernight} new intelligence entries filed across {overnightProjects.length} projects</div>
               <div style={{ fontFamily: F, fontSize: 11.5, color: T3 }}>{overnightProjects.map(p => `${p.name} (${p.overnight_count})`).join(" \u00b7 ")}</div>
             </div>
@@ -257,7 +290,7 @@ export default function ProjectsIndexPage() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
-          {filteredProjects.map(p => <ProjectCard key={p.name} project={p} onClick={() => router.push(`/platform/projects/${encodeURIComponent(p.name)}`)} />)}
+          {filteredProjects.map(p => <ProjectCard key={p.name} project={p} onClick={() => router.push(`/platform/projects/${encodeURIComponent(p.name)}`)} onDelete={(name) => setProjects(prev => prev.filter(x => x.name !== name))} />)}
           <NewProjectCard onClick={() => setShowNewModal(true)} />
         </div>
       </div>

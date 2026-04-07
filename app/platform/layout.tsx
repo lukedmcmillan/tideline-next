@@ -222,32 +222,6 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
         </div>
       ))}
 
-      {/* Workspace */}
-      <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
-      <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", padding: "20px 20px 8px" }}>Workspace</div>
-      {(projectData || []).length > 0 ? (projectData || []).map(p => (
-        <a key={p.name} href={`/platform/workspace?project=${encodeURIComponent(p.name)}`} style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: TEAL, flexShrink: 0, marginRight: 12 }} />
-          {p.name}
-          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{p.count} {p.count === 1 ? "item" : "items"}</span>
-        </a>
-      )) : (recentStories || []).length > 0 && (
-        <>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: ".07em", textTransform: "uppercase", color: "rgba(255,255,255,.25)", padding: "4px 28px 4px" }}>Recent</div>
-          {(recentStories || []).slice(0, 3).map(s => (
-            <a key={s.id} href={`/platform/story/${s.id}`} style={{ display: "block", height: 36, lineHeight: "36px", padding: "0 28px", fontSize: 12, fontFamily: F, color: "rgba(255,255,255,.45)", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {(s.title || "").slice(0, 45)}{(s.title || "").length > 45 ? "..." : ""}
-            </a>
-          ))}
-        </>
-      )}
-      <a href="/platform/workspace" style={{ display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px", fontSize: 13, color: "rgba(255,255,255,.3)", textDecoration: "none" }}>
-        <span style={{ width: 9, height: 9, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,.3)", flexShrink: 0, marginRight: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M3.5 1v5M1 3.5h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
-        </span>
-        New project
-      </a>
-
       {/* Footer: streak + queries */}
       <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,.08)", padding: 16 }}>
         <div style={{ background: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14, marginBottom: 10 }}>
