@@ -40,7 +40,12 @@
       "Bash(claude mcp:*)",
       "WebFetch(domain:www.imo.org)",
       "Bash(echo \"EXIT=$?\")",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "Bash(mv \"app/api/projects/[id]/draft\" \"app/api/projects/[name]/draft\")",
+      "Bash(rmdir \"app/api/projects/[id]\")",
+      "Bash(vercel logs:*)",
+      "Bash(vercel env:*)"
     ]
   }
 }

@@ -118,8 +118,7 @@ export const authOptions = {
         !!user ||
         trigger === 'update' ||
         token.subscription_status === undefined ||
-        token.trial_ends_at === undefined ||
-        token.role === undefined
+        token.subscription_status === null
 
       if (shouldRefresh && token.email) {
         try {
@@ -134,6 +133,13 @@ export const authOptions = {
             token.tier = u.tier ?? 'free'
             token.onboarding_completed = u.onboarding_completed ?? false
             token.role = u.role ?? null
+          } else {
+            // User not in public.users yet. Set safe defaults so middleware never sees undefined.
+            token.subscription_status = token.subscription_status ?? 'trial'
+            token.trial_ends_at = token.trial_ends_at ?? null
+            token.tier = token.tier ?? 'free'
+            token.onboarding_completed = token.onboarding_completed ?? false
+            token.role = token.role ?? null
           }
         } catch (err) {
           console.error('[auth] jwt callback DB fetch error:', err)

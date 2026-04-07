@@ -4,7 +4,7 @@ import { getToken } from 'next-auth/jwt'
 
 // Paths that require auth but should NOT enforce the paywall
 // (users can hit /upgrade even with an expired subscription)
-const PAYWALL_EXEMPT = ['/platform/upgrade', '/platform/projects']
+const PAYWALL_EXEMPT = ['/platform/projects']
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname

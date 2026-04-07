@@ -21,8 +21,8 @@ Strict rules:
 7. Do not invent a headline if the notes do not provide one. Use the project name as a working title only.
 8. End the draft cleanly. No closing summary or call to action unless the notes contain one.`;
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  const { name: id } = await params;
   const { notes, sources, format, tone, projectName } = await req.json();
 
   const sourceBlock = Array.isArray(sources) && sources.length > 0
