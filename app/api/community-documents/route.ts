@@ -180,10 +180,17 @@ export async function POST(req: NextRequest) {
     .eq("email", email)
     .maybeSingle();
 
+  if (!userRow?.id) {
+    return NextResponse.json(
+      { error: "User not found. Cannot attribute submission." },
+      { status: 400 }
+    );
+  }
+
   const { data, error } = await supabase
     .from("project_documents")
     .insert({
-      user_email: email,
+      user_id: userRow.id,
       project_name: null,
       title,
       summary,
