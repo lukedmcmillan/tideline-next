@@ -110,10 +110,10 @@ function TrialBanner() {
 
 // ── Tracker tooltips ──────────────────────────────────────────────────────
 const TIPS: Record<string, { st: string; c: string; d: string }> = {
-  "BBNJ Treaty": { st: "Active, in force", c: TEAL, d: "87 ratifications. Pacific bloc deposit confirmed 06:42." },
-  "ISA Mining": { st: "Developing, watch", c: AMBER, d: "Council vote deferred to July. 3 states signalled opposition." },
-  "IUU Enforcement": { st: "Enforcement action", c: RED, d: "Vessel detained under falsified flag. Port state action 03:30." },
-  "30x30 Protection": { st: "Active", c: TEAL, d: "Chile MPA. Global ocean coverage 24.3% toward 30% target." },
+  "High Seas Treaty": { st: "Active, in force", c: TEAL, d: "87 ratifications. Pacific bloc deposit confirmed 06:42." },
+  "Deep-Sea Mining": { st: "Developing, watch", c: AMBER, d: "Council vote deferred to July. 3 states signalled opposition." },
+  "Illegal Fishing": { st: "Enforcement action", c: RED, d: "Vessel detained under falsified flag. Port state action 03:30." },
+  "Marine Protected Areas": { st: "Active", c: TEAL, d: "Chile MPA. Global ocean coverage 24.3% toward 30% target." },
   "Blue Finance": { st: "Developing", c: AMBER, d: "IFC framework published. 7 new blue bonds in pipeline." },
 };
 

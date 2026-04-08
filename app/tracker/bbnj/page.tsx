@@ -617,6 +617,8 @@ export default function BBNJTracker() {
   const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
   const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
 
+  useEffect(() => { document.title = "High Seas Treaty | Tideline"; }, []);
+
   useEffect(() => {
     fetch("/api/treaty-status")
       .then((r) => r.json())
@@ -658,8 +660,8 @@ export default function BBNJTracker() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>BBNJ Tracker</a>
-            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Governance Calendar</a>
+            <a href="/tracker/bbnj" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>High Seas Treaty</a>
+            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
           </div>
         </div>
       </div>
@@ -669,10 +671,10 @@ export default function BBNJTracker() {
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 14, fontFamily: SANS }}>Live Intelligence Tracker</div>
           <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>
-            BBNJ High Seas Treaty
+            High Seas Treaty
           </h1>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: SANS, maxWidth: 600, lineHeight: 1.7 }}>
-            Agreement under UNCLOS on the Conservation and Sustainable Use of Marine Biological Diversity of Areas beyond National Jurisdiction. Adopted 19 June 2023. Entered into force 17 January 2026.
+            Tracking BBNJ Agreement ratification, implementation, and the first Conference of Parties.
           </p>
         </div>
       </div>

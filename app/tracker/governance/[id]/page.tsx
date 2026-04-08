@@ -80,8 +80,8 @@ export default function EventDetail() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>BBNJ Tracker</a>
-            <a href="/tracker/governance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Governance Calendar</a>
+            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
+            <a href="/tracker/governance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Ocean Governance</a>
           </div>
         </div>
       </div>

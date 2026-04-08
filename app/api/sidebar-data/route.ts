@@ -8,11 +8,11 @@ const supabase = createClient(
 );
 
 const TRACKERS: { name: string; topics: string[] }[] = [
-  { name: "BBNJ Treaty", topics: ["governance"] },
-  { name: "ISA Mining", topics: ["dsm"] },
-  { name: "IUU Enforcement", topics: ["iuu"] },
-  { name: "30x30 Protection", topics: ["mpa"] },
-  { name: "Blue Finance", topics: ["bluefinance"] },
+  { name: "High Seas Treaty", topics: ["governance"] },
+  { name: "Deep-Sea Mining", topics: ["dsm"] },
+  { name: "Illegal Fishing", topics: ["iuu"] },
+  { name: "Marine Protected Areas", topics: ["mpa"] },
+  { name: "Ocean Finance", topics: ["bluefinance"] },
 ];
 
 export async function GET(req: NextRequest) {

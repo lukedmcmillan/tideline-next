@@ -389,6 +389,8 @@ export default function ISATracker() {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [pendingApplications, setPendingApplications] = useState<number | null>(null);
 
+  useEffect(() => { document.title = "Deep-Sea Mining | Tideline"; }, []);
+
   useEffect(() => {
     Promise.all([
       fetch("/api/tracker-events?slug=isa&limit=20").then((r) => r.ok ? r.json() : { events: [] }),
@@ -421,10 +423,10 @@ export default function ISATracker() {
             Live intelligence tracker
           </div>
           <h1 style={{ fontFamily: F, fontSize: 24, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.2, margin: "0 0 12px" }}>
-            International Seabed Authority
+            Deep-Sea Mining
           </h1>
           <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.6)", maxWidth: 640, lineHeight: 1.7, margin: "0 0 18px" }}>
-            Licensing of deep-sea exploration contracts, mining code negotiations, and environmental safeguards under UNCLOS Part XI.
+            Monitored via the International Seabed Authority (ISA), covering licensing, mining code negotiations, and environmental safeguards under UNCLOS Part XI.
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 14px", background: "rgba(29,158,117,0.15)", border: `1px solid ${TEAL}`, borderRadius: 6 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />

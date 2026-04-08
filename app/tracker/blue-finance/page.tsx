@@ -164,6 +164,8 @@ export default function BlueFinanceTracker() {
   const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
   const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
 
+  useEffect(() => { document.title = "Ocean Finance | Tideline"; }, []);
+
   useEffect(() => {
     fetch("/api/blue-finance-status")
       .then((r) => r.json())
@@ -201,12 +203,12 @@ export default function BlueFinanceTracker() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>BBNJ Tracker</a>
+            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
             <a href="/tracker/isa" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Deep-Sea Mining</a>
-            <a href="/tracker/iuu" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>IUU Fishing</a>
-            <a href="/tracker/30x30" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>30x30</a>
-            <a href="/tracker/blue-finance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Blue Finance</a>
-            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Governance Calendar</a>
+            <a href="/tracker/iuu" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Illegal Fishing</a>
+            <a href="/tracker/30x30" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Marine Protected Areas</a>
+            <a href="/tracker/blue-finance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Ocean Finance</a>
+            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
           </div>
         </div>
       </div>
@@ -216,10 +218,10 @@ export default function BlueFinanceTracker() {
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 14, fontFamily: SANS }}>Live Intelligence Tracker</div>
           <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>
-            Blue Finance
+            Ocean Finance
           </h1>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: SANS, maxWidth: 600, lineHeight: 1.7 }}>
-            Blue bonds, debt-for-nature swaps, and ocean investment frameworks — deal flow and regulatory development
+            Blue bonds, sustainable ocean investment, and biodiversity finance flows.
           </p>
         </div>
       </div>

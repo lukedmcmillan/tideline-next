@@ -175,6 +175,8 @@ export default function GovernanceCalendar() {
   const [filterBody, setFilterBody] = useState("");
   const [filterTopic, setFilterTopic] = useState("");
 
+  useEffect(() => { document.title = "Ocean Governance | Tideline"; }, []);
+
   useEffect(() => {
     const params = new URLSearchParams();
     if (filterBody) params.set("body", filterBody);
@@ -237,8 +239,8 @@ export default function GovernanceCalendar() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>BBNJ Tracker</a>
-            <a href="/tracker/governance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Governance Calendar</a>
+            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
+            <a href="/tracker/governance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Ocean Governance</a>
           </div>
         </div>
       </div>
@@ -249,10 +251,10 @@ export default function GovernanceCalendar() {
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 14, fontFamily: SANS }}>Live Intelligence Tracker</div>
             <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>
-              Ocean Governance Calendar
+              Ocean Governance
             </h1>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: SANS, maxWidth: 500, lineHeight: 1.7 }}>
-              Every meeting. Every deadline. Every expected decision. From IMO to ISA to CCAMLR — the single calendar for ocean governance professionals.
+              Intergovernmental decisions, treaty developments, and multilateral ocean policy.
             </p>
           </div>
           <ICalButton selectedBodies={filterBody ? [filterBody] : []} selectedTopic={filterTopic} />
