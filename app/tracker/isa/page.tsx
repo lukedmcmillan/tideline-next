@@ -116,14 +116,15 @@ function daysUntil(iso: string | null): number | null {
   return Math.ceil((then - Date.now()) / 86400000);
 }
 
-function eyebrowStyle(color: string = T4): React.CSSProperties {
+function eyebrowStyle(color: string = TEAL): React.CSSProperties {
   return {
     fontFamily: F,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 600,
-    letterSpacing: "0.12em",
+    letterSpacing: "0.1em",
     textTransform: "uppercase",
     color,
+    marginBottom: 12,
   };
 }
 
@@ -160,14 +161,14 @@ function VerifiedTag({ url, label, verifiedAt }: { url: string | null; label: st
 function StagePips({ current, total = 5 }: { current: number | null; total?: number }) {
   if (current === null) return null;
   return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+    <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
       {Array.from({ length: total }).map((_, i) => {
         const active = i < current;
         return (
           <div
             key={i}
             style={{
-              flex: 1,
+              width: 32,
               height: 4,
               borderRadius: 2,
               background: active ? TEAL : "rgba(255,255,255,0.15)",
@@ -285,9 +286,9 @@ function StatusBlock({
     <div
       style={{
         background: NAVY_DARK,
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.1)",
         borderRadius: 8,
-        padding: "28px 32px",
+        padding: "24px 28px",
         marginTop: 32,
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
@@ -313,7 +314,7 @@ function StatusBlock({
       </div>
 
       {/* Col 2: Trajectory */}
-      <div style={{ borderLeft: "1px solid rgba(255,255,255,0.08)", paddingLeft: 32 }}>
+      <div style={{ borderLeft: "1px solid rgba(255,255,255,0.1)", paddingLeft: 32 }}>
         <div style={{ ...eyebrowStyle("rgba(255,255,255,0.5)"), marginBottom: 14 }}>Trajectory</div>
         <TrajectoryWord direction={status.trajectory.direction} />
         {status.trajectory.reason && (
@@ -325,12 +326,12 @@ function StatusBlock({
       </div>
 
       {/* Col 3: Countdown + next event + alert */}
-      <div style={{ borderLeft: "1px solid rgba(255,255,255,0.08)", paddingLeft: 32, display: "flex", flexDirection: "column" }}>
+      <div style={{ borderLeft: "1px solid rgba(255,255,255,0.1)", paddingLeft: 32, display: "flex", flexDirection: "column" }}>
         <div style={{ ...eyebrowStyle("rgba(255,255,255,0.5)"), marginBottom: 14 }}>Next event</div>
         {status.next_event ? (
           <>
             {countdown !== null && countdown >= 0 && (
-              <div style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 }}>
+              <div style={{ fontFamily: F, fontSize: 36, fontWeight: 700, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 }}>
                 {countdown === 0 ? "today" : `${countdown} day${countdown === 1 ? "" : "s"}`}
               </div>
             )}
@@ -378,14 +379,14 @@ function MetricCards({ pendingApplications, eventsThisYear }: { pendingApplicati
     { label: "Tracked events this year", value: String(eventsThisYear), source: "Tideline tracker" },
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }} className="metric-grid">
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }} className="metric-grid">
       {metrics.map((m) => (
-        <div key={m.label} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "20px 22px" }}>
-          <div style={{ ...eyebrowStyle(T4), marginBottom: 10 }}>{m.label}</div>
-          <div style={{ fontFamily: F, fontSize: 30, fontWeight: 600, color: T1, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 8 }}>
+        <div key={m.label} style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: "16px 18px" }}>
+          <div style={{ fontFamily: F, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: T3, marginBottom: 10 }}>{m.label}</div>
+          <div style={{ fontFamily: F, fontSize: 26, fontWeight: 600, color: TEAL, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 8 }}>
             {m.value}
           </div>
-          <div style={{ fontFamily: F, fontSize: 11, color: T4, lineHeight: 1.5 }}>{m.source}</div>
+          <div style={{ fontFamily: F, fontSize: 10, color: T4, lineHeight: 1.5 }}>{m.source}</div>
         </div>
       ))}
     </div>
@@ -404,12 +405,12 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 
 function EventsPanel({ events }: { events: TrackerEvent[] }) {
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6 }}>
-      <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER_SOFT}` }}>
-        <div style={eyebrowStyle()}>Recent events</div>
+    <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8 }}>
+      <div style={{ padding: 20, borderBottom: `1px solid ${BORDER_SOFT}` }}>
+        <div style={{ ...eyebrowStyle(), marginBottom: 0 }}>Recent events</div>
       </div>
       {events.length === 0 ? (
-        <div style={{ padding: 24, fontFamily: F, fontSize: 13, color: T4 }}>
+        <div style={{ padding: 20, fontFamily: F, fontSize: 13, color: T4 }}>
           No events recorded yet. The scraper runs daily.
         </div>
       ) : (
@@ -421,9 +422,10 @@ function EventsPanel({ events }: { events: TrackerEvent[] }) {
               style={{
                 display: "flex",
                 gap: 16,
-                padding: "16px 20px",
+                padding: "14px 20px",
                 borderBottom: i < events.length - 1 ? `1px solid ${BORDER_SOFT}` : "none",
                 borderLeft: isHigh ? `3px solid ${TEAL}` : "3px solid transparent",
+                borderRadius: 0,
               }}
             >
               <div style={{ flexShrink: 0, width: 80 }}>
@@ -436,15 +438,15 @@ function EventsPanel({ events }: { events: TrackerEvent[] }) {
                   <span
                     style={{
                       fontFamily: F,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: 500,
-                      letterSpacing: "0.06em",
+                      letterSpacing: "0.04em",
                       textTransform: "uppercase",
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      background: "transparent",
-                      color: isHigh ? TEAL : T3,
-                      border: `1px solid ${isHigh ? "rgba(29,158,117,0.4)" : BORDER}`,
+                      padding: "3px 10px",
+                      borderRadius: 6,
+                      background: isHigh ? "rgba(29,158,117,0.1)" : "transparent",
+                      color: isHigh ? "#0F6E56" : T3,
+                      border: `0.5px solid ${isHigh ? "rgba(29,158,117,0.35)" : BORDER}`,
                     }}
                   >
                     {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
@@ -453,14 +455,14 @@ function EventsPanel({ events }: { events: TrackerEvent[] }) {
                     <span style={{ fontFamily: F, fontSize: 11, color: T4 }}>{e.source_name}</span>
                   )}
                 </div>
-                <div style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 6 }}>
+                <div style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: T1, lineHeight: 1.4, marginBottom: 6 }}>
                   {e.title}
                 </div>
                 {e.summary && (
                   <div
                     style={{
                       fontFamily: F,
-                      fontSize: 12.5,
+                      fontSize: 13,
                       color: T3,
                       lineHeight: 1.6,
                       display: "-webkit-box",
@@ -495,9 +497,9 @@ function EventsPanel({ events }: { events: TrackerEvent[] }) {
 // ── Press panel (right col top) ──────────────────────────────────────────
 function PressPanel({ stories }: { stories: FeedStory[] }) {
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6 }}>
-      <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER_SOFT}` }}>
-        <div style={eyebrowStyle()}>Press coverage</div>
+    <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8 }}>
+      <div style={{ padding: 20, borderBottom: `1px solid ${BORDER_SOFT}` }}>
+        <div style={{ ...eyebrowStyle(), marginBottom: 0 }}>Press coverage</div>
       </div>
       {stories.length === 0 ? (
         <div style={{ padding: 20, fontFamily: F, fontSize: 13, color: T4 }}>No recent press.</div>
@@ -508,10 +510,13 @@ function PressPanel({ stories }: { stories: FeedStory[] }) {
             href={`/platform/story/${s.id}`}
             style={{
               display: "block",
-              padding: "14px 20px",
+              padding: "12px 14px",
               borderBottom: i < Math.min(stories.length, 5) - 1 ? `1px solid ${BORDER_SOFT}` : "none",
               textDecoration: "none",
+              transition: "background 0.12s",
             }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F8F9FA"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
             <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>
               {s.title}
@@ -553,8 +558,8 @@ function ActivityChart({ events }: { events: TrackerEvent[] }) {
   const width = buckets.length * (barWidth + gap);
 
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6, marginTop: 16, padding: "18px 20px" }}>
-      <div style={{ ...eyebrowStyle(), marginBottom: 14 }}>Activity, last 6 months</div>
+    <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, marginTop: 16, padding: 20 }}>
+      <div style={eyebrowStyle()}>Activity, last 6 months</div>
       <svg width={width} height={chartHeight + 22} style={{ display: "block", maxWidth: "100%" }}>
         {buckets.map(([label, value], i) => {
           const h = (value / max) * chartHeight;
@@ -593,10 +598,10 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
     : contractors;
 
   return (
-    <div style={{ marginTop: 40 }}>
+    <div style={{ marginTop: 24, marginBottom: 24 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ ...eyebrowStyle(TEAL), marginBottom: 6 }}>Exploration contractors</div>
+          <div style={{ ...eyebrowStyle(), marginBottom: 6 }}>Exploration contractors</div>
           <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>
             {contractors.length} active exploration contracts, isa.org.jm, April 2026
           </div>
@@ -619,14 +624,14 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
           }}
         />
       </div>
-      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6, overflowX: "auto" }}>
+      <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F, fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
               {["Contractor", "Sponsoring state", "Type", "Area", "Since"].map((h) => (
                 <th
                   key={h}
-                  style={{ textAlign: "left", padding: "12px 14px", ...eyebrowStyle(T4), fontWeight: 600 }}
+                  style={{ textAlign: "left", padding: "10px 8px", fontFamily: F, fontSize: 11, fontWeight: 600, color: T1, textTransform: "uppercase", letterSpacing: "0.06em" }}
                 >
                   {h}
                 </th>
@@ -643,7 +648,7 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
             ) : (
               filtered.map((c, i) => (
                 <tr key={c.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER_SOFT}` : "none" }}>
-                  <td style={{ padding: "12px 14px", color: T1, lineHeight: 1.4 }}>
+                  <td style={{ padding: "10px 8px", color: T1, lineHeight: 1.4 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span>{c.company_name}</span>
                       {c.notes && (
