@@ -159,7 +159,7 @@
   letter-spacing: 0.1em; text-transform: uppercase;
   padding: 2px 7px; border-radius: 2px; flex-shrink: 0;
 }
-.wt-policy  { background: #e8f0fe; color: #1a73e8; }
+.wt-policy  { background: #e8f0fe; color: #1D9E75; }
 .wt-finance { background: #fef7e0; color: #e37400; }
 .wt-legal   { background: #e6f4ea; color: #188038; }
 .wt-energy  { background: #fce8e6; color: #d93025; }
@@ -300,7 +300,7 @@
   padding: 2px 6px; border-radius: 2px;
 }
 .c-isa   {background:#e6f5f0;color:#1D9E75;}
-.c-bbnj  {background:#e8f0fe;color:#1a73e8;}
+.c-bbnj  {background:#e8f0fe;color:#1D9E75;}
 .c-imo   {background:#fef7e0;color:#e37400;}
 .c-ospar {background:#f3e8fd;color:#7627bb;}
 .c-dsm   {background:#fce8e6;color:#d93025;}
@@ -852,3 +852,13 @@
 
 /* ── MOBILE FOUNDER QUOTE GAP ── */
 .mobile-founder-quote { margin-bottom: 0; }
+
+/* ── MOBILE REWRITE (April 2026) ── */
+.mobile-only { display: none; }
+@media (max-width: 768px) {
+  .mobile-only { display: block; }
+  .desktop-hide-mobile { display: none !important; }
+  .hero-h1-new { font-size: 32px !important; }
+  .hero-deck-new { font-size: 15px !important; }
+  .founder-compact-mobile { padding: 48px 18px !important; }
+}

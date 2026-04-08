@@ -61,10 +61,10 @@ export default function LandingPage() {
   const role = roles[activeRole];
 
   return (
-    <div style={{ fontFamily: "'Google Sans', sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans','DM Sans',sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
       {/* Promo bar */}
-      <div className="topbar">
-        <p>Founding member pricing: {"\u00A3"}39/month, locked for life. Price increases when we leave beta. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Claim a spot {"\u2192"}</a></p>
+      <div className="topbar" style={{background:"#0A1628",color:"#fff",padding:"10px 16px",textAlign:"center",fontFamily:"'DM Mono',monospace",fontSize:"10px",textTransform:"uppercase",letterSpacing:"0.12em"}}>
+        <p style={{margin:0}}>47 FOUNDING MEMBER SPOTS REMAINING. {"\u00A3"}39/MONTH, LOCKED FOR LIFE. <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }} style={{color:"#1D9E75",textDecoration:"none",marginLeft:"8px"}}>CLAIM YOURS {"\u2192"}</a></p>
       </div>
 
       {/* Nav */}
@@ -77,11 +77,24 @@ export default function LandingPage() {
       <section>
         <div className="hero">
           <div className="hero-left">
-            <h1 className="hero-h1 fi d1">
-              The platform built<br/>for the <span>ocean sector.</span>
+            <h1 className="hero-h1-new fi d1" style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"48px",lineHeight:1.08,letterSpacing:"-0.025em",margin:0}}>
+              <span style={{color:"#0A1628"}}>The ocean sector finally</span><br/>
+              <span style={{color:"#1D9E75"}}>has a room of its own.</span>
             </h1>
 
-            <div className="wheel-wrap fi d2">
+            <div className="mobile-only" style={{marginTop:"24px"}}>
+              <div style={{background:"#FAFAFA",borderLeft:"3px solid #0A1628",borderRadius:"0 8px 8px 0",padding:"14px 16px",marginBottom:"16px"}}>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"6px"}}>MARINE POLICY PROFESSIONAL</div>
+                <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,fontStyle:"italic",fontSize:"14px",color:"#0A1628",lineHeight:1.5}}>
+                  {"\u201C"}The ISA vote was last Tuesday.<br/>I found out in the meeting.{"\u201D"}
+                </div>
+              </div>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
+                Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
+              </p>
+            </div>
+
+            <div className="wheel-wrap fi d2 desktop-hide-mobile">
               <div className="wheel-track">
                 <div className="wheel-item">
                   <span className="w-tag wt-policy">NGO</span>
@@ -122,19 +135,19 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <p className="hero-body fi d3">
-              Everyone working in the ocean sector is spread across too many platforms, too many sources, and still missing things. Tideline is one destination where the live feed, the research library, the workspace, and the calendar all live together. Log on. Do the work.
+            <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
+              The brief. The trackers. The research. The workspace. The calendar. The library. The community. One platform, built for the professionals who cannot afford to work any other way.
             </p>
 
             <div className="hero-actions fi d3">
-              <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Join early access</button>
-              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See how it works</button>
+              <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
+              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See the platform in action</button>
             </div>
 
-            <div className="hero-meta fi d4">
-              <span>14-day free trial</span>
-              <span>Cancel any time</span>
-              <span>Full platform access</span>
+            <div className="hero-meta fi d4" style={{display:"flex",gap:"16px",flexWrap:"wrap",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#9AA0A6"}}>
+              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>No card required</span>
+              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Cancel any time</span>
+              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
             </div>
           </div>
 
@@ -257,6 +270,31 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Mobile social proof strip */}
+      <div className="mobile-only" style={{background:"#FAFAFA",borderBottom:"1px solid #DADCE0",padding:"20px"}}>
+        <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#9AA0A6",textAlign:"center",marginBottom:"14px",letterSpacing:"0.12em"}}>TRUSTED BY OCEAN PROFESSIONALS</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"12px",textAlign:"center"}}>
+          {[{n:"100+",l:"SOURCES MONITORED"},{n:"14",l:"COUNTRIES"},{n:"24/7",l:"LIVE TRACKING"}].map((s)=>(
+            <div key={s.l}>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",letterSpacing:"-0.03em"}}>{s.n}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#9AA0A6",marginTop:"2px"}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:"#fff",border:"1px solid #DADCE0",borderRadius:"10px",padding:"14px",marginTop:"14px"}}>
+          <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,fontStyle:"italic",fontSize:"13px",color:"#333",lineHeight:1.6}}>
+            {"\u201C"}I found a regulatory development my client needed in under a minute. That would have been three hours of searching before Tideline.{"\u201D"}
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:"10px",marginTop:"10px"}}>
+            <div style={{width:"28px",height:"28px",borderRadius:"50%",background:"#0A1628",display:"grid",placeItems:"center",flexShrink:0,color:"#1D9E75",fontFamily:"'DM Mono',monospace",fontSize:"10px"}}>SR</div>
+            <div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"12px",color:"#0A1628"}}>S. Reyes</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"11px",color:"#9AA0A6"}}>Maritime Lawyer, London</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="desktop-only">
       {/* Why now */}
@@ -675,41 +713,95 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="who-chips-mobile">
-          {["Policy & NGO","Finance","Legal","Science","Shipping","Corporate"].map(s=>(
-            <span key={s} style={{fontSize:"12px",fontWeight:500,color:"var(--secondary)",background:"#fff",border:"1px solid var(--border)",borderRadius:"20px",padding:"6px 14px",whiteSpace:"nowrap",flexShrink:0}}>{s}</span>
+      </div>
+
+      {/* Mobile product screens + pain section */}
+      <div className="mobile-only">
+        {/* Live Feed screen */}
+        <section style={{padding:"40px 20px",background:"#fff"}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"8px"}}>THE PLATFORM {"\u00B7"} LIVE FEED</div>
+          <h2 style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",margin:"0 0 8px",lineHeight:1.2}}>Know what moved the moment it moves.</h2>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#5F6368",lineHeight:1.6,margin:"0 0 20px"}}>100+ sources monitored continuously. Every story tagged, tiered, and one click from the original.</p>
+          <div style={{background:"#0F1117",borderRadius:"12px",overflow:"hidden",border:"1px solid #2A2A3A"}}>
+            <div style={{background:"#1A1A2A",padding:"8px 12px",display:"flex",alignItems:"center",gap:"6px",borderBottom:"1px solid #2A2A3A"}}>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:"#FF5F57"}}/>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:"#FEBC2E"}}/>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:"#28C840"}}/>
+              <div style={{background:"#0F1117",borderRadius:"4px",padding:"3px 10px",fontFamily:"'DM Mono',monospace",fontSize:"9px",color:"#5F6368",marginLeft:"8px"}}>thetideline.co/platform/feed</div>
+            </div>
+            <div style={{padding:"10px"}}>
+              {[
+                {src:"IMO \u00B7 TIER 1",time:"14 min ago",head:"ISA Council adopts revised draft exploitation regulations, Area B9",tag:"Deep-sea mining",tier:1},
+                {src:"OSPAR \u00B7 TIER 1",time:"2 hrs ago",head:"New MPA boundary proposal submitted ahead of June ministerial",tag:"Marine Protected Areas",tier:1},
+                {src:"LLOYD\u2019S LIST \u00B7 TIER 2",time:"4 hrs ago",head:"CII compliance gap widens for bulker fleet as EU ETS costs rise",tag:"Shipping emissions",tier:2},
+              ].map((it,i)=>(
+                <div key={i} style={{background:"#1A1A2A",borderRadius:"8px",padding:"10px 12px",marginBottom:"6px",borderLeft:`2px solid ${it.tier===1?"#1D9E75":"#9AA0A6"}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:"8px",textTransform:"uppercase",color:"#1D9E75"}}>{it.src}</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:"8px",color:"#5F6368"}}>{it.time}</span>
+                  </div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:500,fontSize:"11px",color:"#E8EAED",lineHeight:1.4,marginBottom:"6px"}}>{it.head}</div>
+                  <span style={{display:"inline-block",fontFamily:"'DM Mono',monospace",fontSize:"8px",background:"rgba(29,158,117,0.15)",color:"#1D9E75",padding:"2px 6px",borderRadius:"3px"}}>{it.tag}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",color:"#9AA0A6",textAlign:"center",marginTop:"12px"}}>Live feed {"\u00B7"} Every source tiered {"\u00B7"} One click to original</div>
+        </section>
+
+        {/* Research Library screen */}
+        <section style={{padding:"20px 20px 40px",background:"#fff"}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"8px"}}>THE PLATFORM {"\u00B7"} RESEARCH LIBRARY</div>
+          <h2 style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",margin:"0 0 8px",lineHeight:1.2}}>Ask a real question. Get a cited answer.</h2>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#5F6368",lineHeight:1.6,margin:"0 0 20px"}}>Plain language questions. Answers from primary governing body documents. Every claim traceable.</p>
+          <div style={{background:"#0F1117",borderRadius:"12px",overflow:"hidden",border:"1px solid #2A2A3A"}}>
+            <div style={{background:"#1A1A2A",padding:"8px 12px",display:"flex",alignItems:"center",gap:"6px",borderBottom:"1px solid #2A2A3A"}}>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:"#FF5F57"}}/>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:"#FEBC2E"}}/>
+              <div style={{width:"7px",height:"7px",borderRadius:"50%",background:"#28C840"}}/>
+              <div style={{background:"#0F1117",borderRadius:"4px",padding:"3px 10px",fontFamily:"'DM Mono',monospace",fontSize:"9px",color:"#5F6368",marginLeft:"8px"}}>thetideline.co/platform/research</div>
+            </div>
+            <div style={{padding:"12px"}}>
+              <div style={{background:"#1A1A2A",borderRadius:"8px",padding:"10px 12px",marginBottom:"8px",display:"flex",gap:"10px",alignItems:"flex-start"}}>
+                <div style={{width:"18px",height:"18px",borderRadius:"50%",background:"rgba(29,158,117,0.2)",color:"#1D9E75",fontFamily:"'DM Mono',monospace",fontSize:"9px",display:"grid",placeItems:"center",flexShrink:0}}>?</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:"#E8EAED",lineHeight:1.4}}>What are the current BBNJ treaty obligations for environmental impact assessments in the high seas?</div>
+              </div>
+              <div style={{background:"#12201A",border:"1px solid rgba(29,158,117,0.25)",borderRadius:"8px",padding:"10px 12px"}}>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:"8px",textTransform:"uppercase",color:"#1D9E75",marginBottom:"6px"}}>TIDELINE ANSWER {"\u00B7"} 3 SOURCES CITED</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:"#9AA0A6",lineHeight:1.55,marginBottom:"8px"}}>Under Article 38 of the BBNJ Agreement, parties must conduct EIAs for planned activities reasonably considered to have more than a minor or transitory effect. The threshold is assessed against cumulative impacts. The Secretariat has yet to publish implementing guidance.</div>
+                <div style={{display:"flex",gap:"4px",flexWrap:"wrap"}}>
+                  {["BBNJ Agreement Art.38","DOALOS/2024/Guide","UNGA Res.77/312"].map(p=>(
+                    <span key={p} style={{fontFamily:"'DM Mono',monospace",fontSize:"8px",background:"rgba(255,255,255,0.06)",color:"#9AA0A6",border:"1px solid rgba(255,255,255,0.08)",padding:"2px 7px",borderRadius:"3px"}}>{p}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",color:"#9AA0A6",textAlign:"center",marginTop:"12px"}}>Research library {"\u00B7"} Primary sources only {"\u00B7"} Full citation trail</div>
+        </section>
+
+        {/* Pain / Who it's for */}
+        <section style={{padding:"32px 20px",background:"#fff",borderTop:"1px solid #F0F0F0"}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"8px"}}>WHO IT{"\u2019"}S FOR</div>
+          <h2 style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",lineHeight:1.2,margin:"0 0 16px"}}>Built for professionals who cannot afford to miss it.</h2>
+          {[
+            {r:"MARITIME LAWYERS",s:"Find a regulatory change in 40 seconds. Not three hours.",x:"Every regulatory development traceable to source. Bill for advice, not research."},
+            {r:"ESG ANALYSTS",s:"Never miss a material development before your TNFD disclosure.",x:"Compliance blindness is a liability. Tideline closes the gap before it becomes one."},
+            {r:"POLICY PROFESSIONALS",s:"Walk into every meeting already knowing what moved.",x:"Track every consultation, vote, and position shift. Automatically."},
+            {r:"CONSERVATION NGOs",s:"The consultation closes in 6 days. Tideline caught it on day one.",x:"Never miss an open window. Every deadline tracked, every development filed."},
+            {r:"SHIPPING AND FINANCE",s:"Know before it hits the compliance obligation.",x:"Regulatory horizon tracking for CII, EU ETS, IMO 2030 and everything coming next."},
+          ].map((it,i)=>(
+            <div key={i} style={{borderBottom:"1px solid #F0F0F0",padding:"16px 0"}}>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"6px"}}>{it.r}</div>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,fontSize:"15px",color:"#0A1628",lineHeight:1.4,marginBottom:"4px"}}>{it.s}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"13px",color:"#5F6368",lineHeight:1.5}}>{it.x}</div>
+            </div>
           ))}
-        </div>
-
-        <div className="mobile-founder-quote" style={{padding:"24px",textAlign:"center"}}>
-          <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"20px",fontWeight:400,color:"var(--ink)",marginBottom:"20px"}}>
-            Built by someone who needed it. Which is why it works.
-          </div>
-          <blockquote style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"15px",fontWeight:400,color:"var(--secondary)",lineHeight:1.55,fontStyle:"normal",borderLeft:"3px solid #1D9E75",paddingLeft:"16px",textAlign:"left",margin:"0 auto",maxWidth:"400px"}}>
-            {"\u201C"}I built Tideline because it didn&apos;t exist. Every day working in the ocean sector meant too many tabs, too many sources, work scattered across platforms that didn&apos;t talk to each other. I needed one place to read, research, draft, track, and produce. This is that place.{"\u201D"}
-          </blockquote>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"12px",marginTop:"16px"}}>
-            <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--ink)",display:"grid",placeItems:"center",flexShrink:0}}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 11 Q5.5 7 9 11 Q12.5 15 16 11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/><path d="M2 7.5 Q5.5 3.5 9 7.5 Q12.5 11.5 16 7.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round"/></svg>
-            </div>
-            <div style={{textAlign:"left"}}>
-              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)"}}>Luke McMillan</div>
-              <div style={{fontSize:"13px",color:"var(--tertiary)"}}>Founder, Tideline</div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{padding:"16px",background:"var(--ink)",margin:"0 24px",borderRadius:"var(--radius-lg)",marginTop:"0"}}>
-          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)",marginBottom:"12px"}}>Founding Member {"\u00B7"} Live now</div>
-          <div style={{fontSize:"28px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>{"\u00A3"}39<span style={{fontSize:"16px",color:"rgba(255,255,255,0.5)"}}>/month</span></div>
-          <div style={{fontSize:"14px",color:"rgba(255,255,255,0.6)",marginBottom:"8px"}}>Locked for life. Price increases when we leave beta.</div>
-          <div style={{fontSize:"13px",color:"rgba(255,255,255,0.5)",marginBottom:"20px"}}>Founding members get the price, the access, and the ear of the person building it.</div>
-          <button className="btn-hero" onClick={() => setShowEarlyAccess(true)} style={{width:"100%"}}>Join early access</button>
-        </div>
+        </section>
       </div>
 
       {/* Founder quote */}
-      <div style={{borderTop:"1px solid var(--border)",padding:"64px 24px",background:"#fff"}}>
+      <div className="founder-compact-mobile" style={{borderTop:"1px solid var(--border)",padding:"64px 24px",background:"#fff"}}>
         <div style={{maxWidth:"720px",margin:"0 auto",textAlign:"center"}}>
           <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"28px"}}>From the founder</div>
           <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"clamp(22px,2.8vw,30px)",fontWeight:400,color:"var(--ink)",marginBottom:"32px"}}>
@@ -739,7 +831,11 @@ export default function LandingPage() {
       <section className="section" id="pricing">
         <span className="section-label">Pricing</span>
         <h2 className="section-title">Join as a founding member. Your price is locked for life.</h2>
-        <p className="section-sub">The platform is live and growing week by week. Founding members join now at {"\u00A3"}39/month, locked for life. The price increases when we leave beta. It never increases for you.</p>
+        <p className="section-sub">The platform is live and growing week by week. Founding members join now at {"\u00A3"}39/month, locked for life. The price increases when Tideline leaves beta. It never increases for you.</p>
+
+        <div className="mobile-only" style={{background:"#FFF8E6",border:"1px solid #F5D87A",borderRadius:"8px",padding:"10px 14px",marginBottom:"16px",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#7A5500"}}>
+          47 founding member spots remaining. Price locks at {"\u00A3"}39/month for life. Increases when Tideline leaves beta.
+        </div>
 
         {/* Founding member prominence */}
         <div style={{background:"var(--ink)",borderRadius:"var(--radius-lg)",padding:"20px 24px",marginBottom:"32px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"16px"}}>
@@ -796,7 +892,7 @@ export default function LandingPage() {
               <span className="p-tier">Team</span>
               <div className="p-price">{"\u00A3"}699<sub>/mo</sub></div>
               <div className="p-per">10 seats. Intelligence that outlasts anyone.</div>
-              <div className="p-desc">For organisations where ocean intelligence needs to be shared and built into institutional memory.</div>
+              <div className="p-desc">10 seats. Built for organisations where ocean intelligence needs to be shared. Fewer seats needed? Get in touch and we will find the right fit.</div>
             </div>
             <div className="p-body">
               <ul className="p-feats">
@@ -843,6 +939,14 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Mobile final CTA */}
+      <div className="mobile-only" style={{background:"#0A1628",padding:"40px 20px",textAlign:"center"}}>
+        <h2 style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"24px",color:"#fff",lineHeight:1.2,letterSpacing:"-0.02em",margin:"0 0 12px"}}>The ocean sector finally has a room of its own.</h2>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"14px",color:"#9AA0A6",lineHeight:1.6,margin:"0 0 24px"}}>7-day free trial. Full platform access. No card required. Come in.</p>
+        <button onClick={() => setShowEarlyAccess(true)} style={{width:"100%",background:"#1D9E75",color:"#fff",border:"none",borderRadius:"8px",padding:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"14px",cursor:"pointer"}}>Start your free trial</button>
+        <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",color:"#5F6368",marginTop:"10px",textTransform:"uppercase",letterSpacing:"0.1em"}}>{"\u00A3"}39 FOUNDING PRICE {"\u00B7"} 47 SPOTS REMAINING {"\u00B7"} LOCKED FOR LIFE</div>
+      </div>
 
       {/* Footer */}
       <footer className="landing-footer">

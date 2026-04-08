@@ -132,13 +132,14 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
   );
 }
 
-// Hardcoded metrics with source attribution.
-// Source: isa.org.jm (verified April 2026). Live scraping is planned for the next pass.
-const METRICS = [
-  { label: "Active contractors", value: "31", source: "isa.org.jm, April 2026" },
-  { label: "Pending applications", value: "0", source: "isa.org.jm, April 2026" },
-  { label: "Council sessions in 2026", value: "1", source: "isa.org.jm, April 2026" },
-];
+// Metric cards. "Pending applications" is live from /api/isa-status; others stay hardcoded.
+const STATIC_ACTIVE = { label: "Active contractors", value: "31", source: "isa.org.jm, April 2026" };
+const STATIC_COUNCIL = { label: "Council sessions in 2026", value: "1", source: "isa.org.jm, April 2026" };
+
+function todaySource(): string {
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return `isa.org.jm, updated ${today}`;
+}
 
 const STATUS_LINE = "Mining code negotiations ongoing";
 const STATUS_SOURCE = "ISA Council 29th Session, March 2026";
@@ -166,10 +167,19 @@ function fmtDate(iso: string): string {
   });
 }
 
-function MetricCards() {
+function MetricCards({ pendingApplications }: { pendingApplications: number | null }) {
+  const metrics = [
+    STATIC_ACTIVE,
+    {
+      label: "Pending applications",
+      value: pendingApplications === null ? "..." : String(pendingApplications),
+      source: todaySource(),
+    },
+    STATIC_COUNCIL,
+  ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }} className="metric-grid">
-      {METRICS.map((m) => (
+      {metrics.map((m) => (
         <div key={m.label} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderTop: `3px solid ${TEAL}`, padding: "20px 22px" }}>
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: T4, marginBottom: 10 }}>
             {m.label}
@@ -377,17 +387,20 @@ export default function ISATracker() {
   const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
   const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [pendingApplications, setPendingApplications] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/tracker-events?slug=isa&limit=20").then((r) => r.ok ? r.json() : { events: [] }),
       fetch("/api/stories?limit=5&tracker=isa").then((r) => r.ok ? r.json() : { stories: [] }),
       fetch("/api/isa-contractors").then((r) => r.ok ? r.json() : { contractors: [] }),
+      fetch("/api/isa-status").then((r) => r.ok ? r.json() : { pending_applications: 0 }),
     ])
-      .then(([events, stories, contractorsRes]) => {
+      .then(([events, stories, contractorsRes, status]) => {
         setTrackerEvents(events.events || []);
         setFeedStories(stories.stories || []);
         setContractors(contractorsRes.contractors || []);
+        setPendingApplications(typeof status.pending_applications === "number" ? status.pending_applications : 0);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -426,7 +439,7 @@ export default function ISATracker() {
           <SetAlertButton />
         </div>
 
-        <MetricCards />
+        <MetricCards pendingApplications={pendingApplications} />
 
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 20px", fontFamily: F, fontSize: 13, color: T4 }}>

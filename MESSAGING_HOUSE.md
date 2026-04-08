@@ -18,14 +18,14 @@
 
 ## WORDMARK
 Tideline
-Instrument Serif, mixed case. Never TIDELINE. Never tideline. Always "Tideline".
+Plus Jakarta Sans 800, mixed case. Never TIDELINE. Never tideline. Always "Tideline".
 
 ## DESCRIPTOR (under wordmark everywhere)
 Ocean Intelligence
 DM Mono, uppercase, letter-spaced. Two words only.
 
 ## ONE-SENTENCE DESCRIPTION
-Tideline tracks everything that moves in ocean governance, regulation, finance and policy — so professionals in shipping, ESG, maritime law and ocean investment never miss what matters.
+Tideline tracks everything that moves in ocean governance, regulation, finance and policy, so professionals in shipping, ESG, maritime law and ocean investment never miss what matters.
 
 ## POSITIONING STATEMENT (investor/enterprise use only)
 Tideline is the ocean intelligence platform for professionals who act on what happens in the ocean space. Not a newsletter. Not a news aggregator. A structured, searchable, constantly updated intelligence infrastructure built by the journalist who covers this sector for The Guardian.
@@ -33,14 +33,13 @@ Tideline is the ocean intelligence platform for professionals who act on what ha
 ---
 
 ## HERO HEADLINE (locked, no variation)
-The brief.
-The trackers.
-The edge.
+The ocean sector finally has a room of its own.
 
-Three nouns. Three full stops. Each line sits on its own.
+## THE ROOM CONCEPT
+Tideline is not a tool. It is a professional home. One platform where an ocean professional can spend their entire working day without leaving. The brief. The trackers. The research. The workspace. The calendar. The library. The community. All in one room. This has never existed for this sector before.
 
 ## HERO SUBHEADING
-The ocean space moves fast. Tideline tracks everything that matters across governance, regulation, finance and policy — so you are never the professional who missed it.
+The ocean space moves fast. Tideline tracks everything that matters across governance, regulation, finance and policy, so you are never the professional who missed it.
 
 Note: "never the professional who missed it" is loss-framing. Keep it. Do not replace with gain-framing.
 
@@ -53,7 +52,7 @@ Ask Tideline anything.
 The period is deliberate. It is a statement of confidence.
 
 ## INTELLIGENCE AGENT DESCRIPTION
-Tideline's Intelligence Agent answers questions from our proprietary database of ocean governance, finance and regulatory events. Not the internet. Our data. Every answer is cited back to its source.
+Tideline's Intelligence Agent answers questions from a proprietary database of ocean governance, finance and regulatory events. Not the internet. Tideline data. Every answer is cited back to its source.
 
 ## PRICING SECTION HEADLINE
 Choose your depth.
@@ -79,23 +78,23 @@ Format: "Tideline · [Weekday] [Full date]". Dot separator. No teaser text.
 
 ESG Analyst (Shipping / Asset Management)
 Pain: Never caught out on an ocean disclosure again.
-Line: Tideline maps ocean governance developments directly to TNFD and CSRD disclosure requirements — so your filings reflect what actually happened.
+Line: Tideline maps ocean governance developments directly to TNFD and CSRD disclosure requirements, so your filings reflect what actually happened.
 
 Policy Officer (NGO / Intergovernmental)
 Pain: Always the most informed person in the room.
-Line: Every governance development, treaty update and regulatory shift tracked in one place — so you walk into every meeting knowing more than anyone else at the table.
+Line: Every governance development, treaty update and regulatory shift tracked in one place, so you walk into every meeting knowing more than anyone else at the table.
 
 Maritime Lawyer / Compliance Consultant
 Pain: Research that took hours. Now takes seconds.
-Line: Ask the Intelligence Agent any ocean governance question and get a cited, verified answer from our structured database. At £300 an hour, it pays for itself in the first query.
+Line: Ask the Intelligence Agent any ocean governance question and get a cited, verified answer from a structured database. At £300 an hour, it pays for itself in the first query.
 
 VC / Ocean Investor
 Pain: See where capital is moving before anyone else does.
-Line: The Blue Finance Monitor tracks every blue bond, debt swap and development finance commitment across the ocean economy — months before it becomes conventional wisdom.
+Line: The Blue Finance Monitor tracks every blue bond, debt swap and development finance commitment across the ocean economy, months before it becomes conventional wisdom.
 
 Shipping Company / Ocean Industry
 Pain: Know every regulatory development that affects your fleet.
-Line: From IMO decisions to port state control updates to IUU enforcement actions — Tideline tracks the regulatory environment your operations depend on.
+Line: From IMO decisions to port state control updates to IUU enforcement actions, Tideline tracks the regulatory environment your operations depend on.
 
 Ocean Journalist / Researcher
 Pain: Find the story hiding in the governance data.
@@ -103,12 +102,24 @@ Line: Cross-reference ISA contractor decisions with blue finance flows. Find the
 
 ---
 
+## SEGMENT PAIN LINES (short form, for mobile and hero use)
+
+Maritime lawyers: Find a regulatory change in 40 seconds. Not three hours.
+ESG analysts: Never miss a material development before your TNFD disclosure.
+Policy professionals: Walk into every meeting already knowing what moved.
+Conservation NGOs: The consultation closes in 6 days. Tideline caught it on day one.
+Shipping and finance: Know before it hits the compliance obligation.
+
+---
+
 ## UI COPY
 
 Primary CTA: Start free trial
 Secondary CTA: View trackers
-Pricing note: £79/month after your 14-day free trial. No card required to start.
-Trial status bar: Trial — [X] days remaining. Continue with Individual at £79/month.
+Pricing note: £99/month after your 7-day free trial. No card required to start.
+Founding member: £39/month, locked for life. 47 spots remaining.
+Team: £699/month, 10 seats.
+Trial status bar: Trial — [X] days remaining. Continue with Individual at £99/month.
 Day 5 modal headline: You have read the brief every morning this week.
 Day 5 modal subtext: Lock in your access before your trial ends.
 Referral modal: You have been reading Tideline every morning. Know someone else in the ocean space who should?
@@ -119,29 +130,44 @@ Agent search placeholders (cycle every 4 seconds):
 3. What blue bond issuances were announced this year?
 4. How has deep-sea mining regulation changed in the last six months?
 
-Agent accuracy note: Our verification system removed [n] unverifiable claim from this answer. What remains is supported by source documents.
+Agent accuracy note: The verification system removed [n] unverifiable claim from this answer. What remains is supported by source documents.
+
+---
+
+## PRICING TIERS
+
+Founding Member — £39/month, locked for life
+Full platform access. Price never increases. 47 founding member spots remaining. Price increases when Tideline leaves beta.
+
+Individual — £99/month
+Full platform access. 7-day free trial. No card required to start.
+
+Team — £699/month
+10 seats. Built for organisations where ocean intelligence needs to be shared. Fewer seats needed? Get in touch and we will find the right fit.
 
 ---
 
 ## DESIGN SYSTEM
 
 Direction: H4 Half-Light
-Hero/nav/dark sections: #0B1D35 (navy)
+Hero/nav/dark sections: #0A1628 (navy)
 Platform/content/cards: #FAFAF7 (off-white)
 Single accent: #1D9E75 (teal) — CTAs, live indicators, confirmed data only
-Body text: #111827 (ink)
+Body text: #202124 (ink)
 
 Typography:
-Headlines/wordmark: Instrument Serif
+Headlines/wordmark: Plus Jakarta Sans 800
 UI/body copy: DM Sans
 Data/labels/timestamps: DM Mono
+
+Georgia is not used anywhere. No serif faces on marketing or platform.
 
 Rules:
 - No maps as primary content
 - No stock photography
 - No emoji in platform UI
 - Mobile first on every component
-- Teal pulsing dot means live only — not decorative
+- Teal pulsing dot means live only, not decorative
 
 ---
 
