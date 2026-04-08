@@ -1,6 +1,6 @@
 import PDFDocument from "pdfkit";
 
-const TEAL = "#0d9488";
+const TEAL = "#1D9E75";
 const NAVY = "#0a1628";
 const GREY = "#64748b";
 const LIGHT_GREY = "#f1f5f9";

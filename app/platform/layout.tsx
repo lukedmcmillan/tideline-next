@@ -19,7 +19,7 @@ const T3     = "#5F6368";
 const T4     = "#9AA0A6";
 const BORDER = "#DADCE0";
 const BLT    = "#E8EAED";
-const F      = "var(--font-ui), 'Plus Jakarta Sans', -apple-system, sans-serif";
+const F      = "'DM Sans', -apple-system, sans-serif";
 const M      = "var(--font-mono), 'DM Mono', monospace";
 
 // ── Icons (inline SVG) ────────────────────────────────────────────────────
@@ -95,14 +95,14 @@ function TrialBanner() {
       <span
         className="trial-text"
         style={{
-          fontFamily: M,
+          fontFamily: "'DM Sans', -apple-system, sans-serif",
           fontSize: 11,
           fontWeight: 500,
           color: "#FFFFFF",
           letterSpacing: "0.04em",
         }}
       >
-        {days} {days === 1 ? "day" : "days"} left · Become a Founding Member
+        {days} {days === 1 ? "day" : "days"} left · Claim your founding spot
       </span>
     </a>
   );
@@ -798,8 +798,8 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
         </div>
         {/* Right */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 16px 0 24px", marginLeft: "auto" }}>
-          <span className="top-bar-right-tier" style={{ fontFamily: M, fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE }}>Individual</span>
-          <a href="/api/portal" className="top-bar-manage-sub" style={{ fontFamily: M, fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none", letterSpacing: "0.04em" }}>Manage subscription</a>
+          <span className="top-bar-right-tier" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE }}>Individual</span>
+          <a href="/api/portal" className="top-bar-manage-sub" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none", letterSpacing: "0.04em" }}>Manage subscription</a>
           <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${NAVY},${TEAL})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>LM</div>
         </div>
       </div>

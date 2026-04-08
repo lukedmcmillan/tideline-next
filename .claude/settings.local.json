@@ -46,7 +46,8 @@
       "Bash(rmdir \"app/api/projects/[id]\")",
       "Bash(vercel logs:*)",
       "Bash(vercel env:*)",
-      "Bash(ls \"setLoading\\(false\\)\\)\")"
+      "Bash(ls \"setLoading\\(false\\)\\)\")",
+      "Bash(git check-ignore:*)"
     ]
   }
 }
