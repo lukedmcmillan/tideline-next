@@ -199,8 +199,7 @@
   font-size: 13px; color: var(--tertiary);
   display: flex; gap: 16px; flex-wrap: wrap;
 }
-.hero-meta span { display: flex; align-items: center; gap: 4px; }
-.hero-meta span::before { content: '\2713'; color: var(--green); font-size: 12px; }
+.hero-meta > span { display: flex; align-items: center; gap: 4px; }
 
 /* ── BRIEF CARD ── */
 .brief-card {
@@ -857,7 +856,6 @@
 .mobile-only { display: none; }
 @media (max-width: 768px) {
   .mobile-only { display: block; }
-  .desktop-hide-mobile { display: none !important; }
   .hero-h1-new { font-size: 32px !important; }
   .hero-deck-new { font-size: 15px !important; }
   .founder-compact-mobile { padding: 48px 18px !important; }

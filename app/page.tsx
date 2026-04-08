@@ -82,19 +82,8 @@ export default function LandingPage() {
               <span style={{color:"#1D9E75"}}>has a room of its own.</span>
             </h1>
 
-            <div className="mobile-only" style={{marginTop:"24px"}}>
-              <div style={{background:"#FAFAFA",borderLeft:"3px solid #0A1628",borderRadius:"0 8px 8px 0",padding:"14px 16px",marginBottom:"16px"}}>
-                <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"6px"}}>MARINE POLICY PROFESSIONAL</div>
-                <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,fontStyle:"italic",fontSize:"14px",color:"#0A1628",lineHeight:1.5}}>
-                  {"\u201C"}The ISA vote was last Tuesday.<br/>I found out in the meeting.{"\u201D"}
-                </div>
-              </div>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
-                Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
-              </p>
-            </div>
+            <div className="wheel-wrap fi d2">
 
-            <div className="wheel-wrap fi d2 desktop-hide-mobile">
               <div className="wheel-track">
                 <div className="wheel-item">
                   <span className="w-tag wt-policy">NGO</span>
@@ -133,6 +122,18 @@ export default function LandingPage() {
                   <span className="w-text"><strong>{"\u201C"}Consultation closes in 6 days.</strong> I haven&apos;t started.{"\u201D"}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="mobile-only" style={{marginTop:"24px"}}>
+              <div style={{background:"#FAFAFA",borderLeft:"3px solid #0A1628",borderRadius:"0 8px 8px 0",padding:"14px 16px",marginBottom:"16px"}}>
+                <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"6px"}}>MARINE POLICY PROFESSIONAL</div>
+                <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,fontStyle:"italic",fontSize:"14px",color:"#0A1628",lineHeight:1.5}}>
+                  {"\u201C"}The ISA vote was last Tuesday.<br/>I found out in the meeting.{"\u201D"}
+                </div>
+              </div>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
+                Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
+              </p>
             </div>
 
             <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
@@ -694,22 +695,27 @@ export default function LandingPage() {
       </div>{/* end desktop-only */}
 
       <div className="mobile-summary">
-        <div style={{padding:"24px",background:"#fff"}}>
+        <div style={{padding:"32px 24px",background:"#fff"}}>
           <div style={{maxWidth:"600px",margin:"0 auto"}}>
-            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"16px"}}>What it does</div>
-            <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"#1D9E75",marginBottom:"10px"}}>A DAY IN TIDELINE</div>
+            <h2 style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",lineHeight:1.2,margin:"0 0 20px"}}>One room. Your entire working day.</h2>
+            <div>
               {[
-                {t:"Live feed",d:"100+ sources monitored continuously. Know what moved the moment it moves. One click to the original source."},
-                {t:"Research library",d:"Ask real questions in plain language. Get cited answers from primary governing body documents. Follow the source chain yourself."},
-                {t:"Workspace",d:"Save sources, annotate, draft. Generate a structured report in one click. Export to Word. Your name on it."},
-                {t:"Crosscurrent",d:"Reads across all 100+ sources simultaneously. Surfaces connections no single source would make. Only on Tideline."},
-              ].map((c,i)=>(
-                <div key={i} style={{background:"#fff",border:"1px solid #E8EAED",borderRadius:"8px",padding:"16px",width:"100%"}}>
-                  <div style={{fontSize:"14px",fontWeight:600,color:"var(--ink)",marginBottom:"4px"}}>{c.t}</div>
-                  <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.5}}>{c.d}</div>
+                {time:"8am",bold:"The brief is already there.",rest:" Everything that moved overnight, filed and ready."},
+                {time:"9am",bold:"You ask the research library about BBNJ obligations.",rest:" Three primary sources cited in seconds."},
+                {time:"11am",bold:"You open your workspace.",rest:" New intelligence filed overnight by Tideline\u2019s agents."},
+                {time:"2pm",bold:"The tracker flags a movement at the ISA.",rest:" You are the first in your organisation to know."},
+                {time:"4pm",bold:"A lawyer in Singapore comments on the story.",rest:" She has seen something you missed. You reach out."},
+              ].map((r,i)=>(
+                <div key={i} style={{display:"flex",gap:"12px",padding:"12px 0",borderBottom:"1px solid #F0F0F0"}}>
+                  <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",color:"#1D9E75",width:"48px",flexShrink:0}}>{r.time}</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#202124",lineHeight:1.5}}>
+                    <strong style={{color:"#0A1628",fontWeight:600}}>{r.bold}</strong><span style={{color:"#5F6368"}}>{r.rest}</span>
+                  </div>
                 </div>
               ))}
             </div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontStyle:"italic",color:"#5F6368",textAlign:"center",paddingTop:"16px"}}>That is one day. That is the product.</div>
           </div>
         </div>
 
