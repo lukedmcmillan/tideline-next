@@ -16,13 +16,16 @@ const VALID_RELATIONSHIPS = new Set([
 
 async function requireCorporate(req: NextRequest) {
   const email = await getEmailFromSession(req);
+  console.log("[lp-portfolios] session email:", email);
   if (!email) return { error: "Unauthorized", status: 401 as const };
 
-  const { data: user } = await supabase
+  const { data: user, error: userError } = await supabase
     .from("users")
     .select("tier")
     .eq("email", email)
     .single();
+
+  console.log("[lp-portfolios] db lookup:", { email, tier: user?.tier, userError: userError?.message });
 
   if (!user || user.tier !== "corporate") {
     return { error: "Corporate tier required", status: 403 as const };
