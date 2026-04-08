@@ -300,6 +300,39 @@ Rules:
   }
 }
 
+async function refreshTrackerStatus(slug: string): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  const now = new Date().toISOString();
+  const { data: existing, error: selectError } = await supabase
+    .from("tracker_status")
+    .select("id")
+    .eq("tracker_slug", slug)
+    .maybeSingle();
+
+  if (selectError) {
+    return { ok: false, error: selectError.message };
+  }
+  if (!existing) {
+    return { ok: false, error: "no tracker_status row" };
+  }
+
+  const { error: updateError } = await supabase
+    .from("tracker_status")
+    .update({
+      trajectory_verified_at: now,
+      updated_at: now,
+      updated_by: "cron:scrape-isa",
+    })
+    .eq("tracker_slug", slug);
+
+  if (updateError) {
+    return { ok: false, error: updateError.message };
+  }
+  return { ok: true };
+}
+
 const ISA_APPLICATION_PAGES = [
   "https://isa.org.jm/pending-applications",
   "https://isa.org.jm/plans-of-work",
@@ -561,6 +594,9 @@ export async function GET(request: Request) {
   // ISA applications scraper
   const applications = await processIsaApplications();
 
+  // Refresh tracker_status trajectory verification timestamp
+  const trackerStatus = await refreshTrackerStatus("isa");
+
   return NextResponse.json({
     seeds: {
       ran: seedRan,
@@ -587,5 +623,6 @@ export async function GET(request: Request) {
       inserted: applications.inserted,
       errors: applications.errors.length > 0 ? applications.errors : undefined,
     },
+    tracker_status: trackerStatus,
   });
 }

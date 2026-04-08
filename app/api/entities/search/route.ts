@@ -21,6 +21,8 @@ export async function GET(req: NextRequest) {
     .order("mention_count", { ascending: false })
     .limit(20);
 
+  console.log("[entities/search]", { q, count: data?.length || 0, error: error?.message });
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ entities: data || [] });
 }

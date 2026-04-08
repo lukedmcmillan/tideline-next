@@ -65,6 +65,7 @@ export default function LpBriefingPage() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Entity[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [pendingRel, setPendingRel] = useState<Relationship>("portfolio_company");
   const [briefing, setBriefing] = useState<BriefingSummary | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -97,13 +98,29 @@ export default function LpBriefingPage() {
   }, [loadPortfolio]);
 
   useEffect(() => {
-    if (search.trim().length < 2) { setSearchResults([]); return; }
+    if (search.trim().length < 2) {
+      setSearchResults([]);
+      setSearchError(null);
+      return;
+    }
     setSearching(true);
+    setSearchError(null);
     const t = setTimeout(async () => {
-      const res = await fetch(`/api/entities/search?q=${encodeURIComponent(search)}`);
-      const data = await res.json();
-      setSearchResults(data.entities || []);
-      setSearching(false);
+      try {
+        const res = await fetch(`/api/entities/search?q=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setSearchError(data.error || `Search failed (${res.status})`);
+          setSearchResults([]);
+        } else {
+          setSearchResults(data.entities || []);
+        }
+      } catch (err) {
+        setSearchError(err instanceof Error ? err.message : "Search failed");
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
     }, 250);
     return () => clearTimeout(t);
   }, [search]);
@@ -182,10 +199,10 @@ export default function LpBriefingPage() {
               Tideline Corporate
             </div>
             <h1 style={{ fontSize: 28, fontWeight: 600, color: WHITE, margin: "0 0 12px", letterSpacing: "-0.3px" }}>
-              LP Intelligence Briefing
+              Portfolio Intelligence Briefing
             </h1>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.6, maxWidth: 560 }}>
-              Configure fund portfolios, track entities across ocean regulation, news and research, and generate branded LP briefings on demand.
+              Track your portfolio companies and key entities across Tideline&apos;s ocean intelligence sources. Generate a branded quarterly briefing for your investors.
             </p>
           </div>
         </div>
@@ -217,10 +234,10 @@ export default function LpBriefingPage() {
             Tideline Corporate
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 600, color: WHITE, margin: "0 0 10px", letterSpacing: "-0.3px" }}>
-            LP Intelligence Briefing
+            Portfolio Intelligence Briefing
           </h1>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, maxWidth: 560, margin: 0 }}>
-            Configure the entities you want to track for each fund. Tideline monitors news, regulation and research for mentions and compiles them into a branded PDF briefing.
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, maxWidth: 600, margin: 0 }}>
+            Track your portfolio companies and key entities across Tideline&apos;s ocean intelligence sources. Generate a branded quarterly briefing for your investors.
           </p>
         </div>
       </div>
@@ -228,14 +245,17 @@ export default function LpBriefingPage() {
       <div style={{ maxWidth: 960, margin: "32px auto", padding: "0 24px 80px" }}>
         {/* Fund name */}
         <section style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: 20, marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: TEAL, marginBottom: 10 }}>
-            Fund
+          <div style={{ fontSize: 13, fontWeight: 600, color: T1, marginBottom: 4 }}>
+            Your organisation or fund name
+          </div>
+          <div style={{ fontSize: 12, color: T3, marginBottom: 12, lineHeight: 1.5 }}>
+            This is how your briefing will be addressed, e.g. Ocean 14 Capital, WWF Ocean Programme.
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input
               value={fundInput}
               onChange={(e) => setFundInput(e.target.value)}
-              placeholder="e.g. Ocean Ventures Fund II"
+              placeholder="e.g. Ocean 14 Capital"
               style={{
                 flex: 1, padding: "10px 12px", fontSize: 13, fontFamily: F, color: T1,
                 border: `0.5px solid ${BORDER}`, borderRadius: 6, outline: "none", background: WHITE,
@@ -258,8 +278,11 @@ export default function LpBriefingPage() {
         {/* Entity search + add */}
         {fundName && (
           <section style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: 20, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: TEAL, marginBottom: 10 }}>
-              Add entity
+            <div style={{ fontSize: 13, fontWeight: 600, color: T1, marginBottom: 4 }}>
+              Who do you want to track?
+            </div>
+            <div style={{ fontSize: 12, color: T3, marginBottom: 12, lineHeight: 1.5 }}>
+              Search for organisations, companies, treaty bodies or individuals already in Tideline&apos;s database.
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
               <input
@@ -284,7 +307,22 @@ export default function LpBriefingPage() {
                 ))}
               </select>
             </div>
-            {searching && <div style={{ fontSize: 11, color: T4 }}>Searching...</div>}
+            {searching && <div style={{ fontSize: 11, color: T4, padding: "6px 2px" }}>Searching...</div>}
+            {searchError && (
+              <div style={{
+                fontSize: 12, color: "#A32D2D",
+                background: "rgba(226,75,74,.08)",
+                border: "0.5px solid rgba(226,75,74,.2)",
+                borderRadius: 6, padding: "8px 12px", marginBottom: 8,
+              }}>
+                {searchError}
+              </div>
+            )}
+            {!searching && !searchError && search.trim().length >= 2 && searchResults.length === 0 && (
+              <div style={{ fontSize: 12, color: T3, padding: "10px 12px", border: `0.5px dashed ${BORDER}`, borderRadius: 6 }}>
+                No entities match &ldquo;{search}&rdquo;. Try a different search term.
+              </div>
+            )}
             {searchResults.length > 0 && (
               <div style={{ border: `0.5px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" }}>
                 {searchResults.map((ent) => (
@@ -325,14 +363,14 @@ export default function LpBriefingPage() {
         {fundName && (
           <section style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, marginBottom: 16, overflow: "hidden" }}>
             <div style={{ padding: "14px 20px", borderBottom: `0.5px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: TEAL }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T1 }}>
                 Tracked entities
               </div>
               <div style={{ fontSize: 11, color: T4 }}>{portfolio.length} active</div>
             </div>
             {portfolio.length === 0 ? (
-              <div style={{ padding: 24, fontSize: 13, color: T4, textAlign: "center" }}>
-                No entities tracked yet. Search above to add one.
+              <div style={{ padding: "28px 24px", fontSize: 13, color: T3, textAlign: "center", lineHeight: 1.6 }}>
+                Add the organisations and companies you want to monitor. Tideline will track every mention across news, regulation and research.
               </div>
             ) : (
               portfolio.map((p) => (
