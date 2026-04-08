@@ -61,6 +61,7 @@ export default function DraftEditorPage() {
   const [sources, setSources] = useState<{ name: string; type: string }[]>([]);
   const [wordCount, setWordCount] = useState(0);
   const [exportOpen, setExportOpen] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -125,6 +126,36 @@ export default function DraftEditorPage() {
     }
   };
 
+  const regenerate = async () => {
+    if (regenerating) return;
+    setRegenerating(true);
+    try {
+      const notes = bodyRef.current?.innerText || "";
+      const res = await fetch(`/api/projects/${projectId}/draft/compile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notes,
+          sources: [],
+          format,
+          tone,
+          projectName: projectName || title,
+        }),
+      });
+      if (!res.ok) throw new Error("compile failed");
+      const json = await res.json();
+      const newContent: string = json?.draft?.content || "";
+      if (bodyRef.current) {
+        bodyRef.current.innerHTML = htmlFromMarkdown(newContent);
+        updateDerived();
+      }
+    } catch {
+      // swallow
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   const onBodyInput = () => {
     updateDerived();
     setSaveState("saving");
@@ -157,7 +188,7 @@ export default function DraftEditorPage() {
             )}
           </span>
           <button onClick={() => router.push(`/platform/projects/${projectId}`)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", padding: "6px 12px", fontFamily: F, fontSize: 12, borderRadius: 4, cursor: "pointer" }}>Back to notes</button>
-          <button onClick={() => router.push(`/platform/projects/${projectId}`)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", padding: "6px 12px", fontFamily: F, fontSize: 12, borderRadius: 4, cursor: "pointer" }}>Regenerate</button>
+          <button onClick={regenerate} disabled={regenerating} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", padding: "6px 12px", fontFamily: F, fontSize: 12, borderRadius: 4, cursor: regenerating ? "default" : "pointer", opacity: regenerating ? 0.6 : 1 }}>{regenerating ? "Regenerating..." : "Regenerate"}</button>
           <button onClick={() => setExportOpen(true)} style={{ background: TEAL, border: "none", color: "#fff", padding: "6px 14px", fontFamily: F, fontSize: 12, fontWeight: 600, borderRadius: 4, cursor: "pointer" }}>Export</button>
           <div style={{ width: 28, height: 28, borderRadius: "50%", background: TEAL, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F, fontSize: 12, fontWeight: 600 }}>L</div>
         </div>

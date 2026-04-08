@@ -1218,7 +1218,7 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
   );
 }
 
-function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, projectName, notesText }: { onClose: () => void; sourceCount: number; insertIntoNotes: (text: string) => void; projectId?: string | null; projectName?: string; notesText?: string }) {
+function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, projectName, notesText, sources, onToast }: { onClose: () => void; sourceCount: number; insertIntoNotes: (text: string) => void; projectId?: string | null; projectName?: string; notesText?: string; sources: { name: string; summary?: string }[]; onToast: (msg: string) => void }) {
   const router = useRouter();
   const [format, setFormat] = useState("Situation report");
   const [tone, setTone] = useState("Journalistic");
@@ -1245,11 +1245,7 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, 
 
   const compile = async () => {
     if (!projectId) {
-      setLoading(true);
-      setTimeout(() => {
-        setDraft(`This is a ${tone.toLowerCase()} ${format.toLowerCase()} compiled from your notes and ${sourceCount} attached sources. Edit freely from here.`);
-        setLoading(false);
-      }, 1500);
+      onToast("Save this project first before drafting.");
       return;
     }
     setLoading(true);
@@ -1259,7 +1255,7 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notes: notesText || "",
-          sources: [],
+          sources: sources.map(s => ({ name: s.name, summary: s.summary })),
           format,
           tone,
           projectName: projectName || "",
@@ -1837,7 +1833,7 @@ function WorkspaceContent() {
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
       {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} />}
-      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={0} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} />}
+      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={ATTACHED_SOURCES.length} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} sources={ATTACHED_SOURCES} onToast={setToast} />}
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />
