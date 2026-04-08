@@ -675,27 +675,27 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
                       )}
                     </div>
                   </td>
-                  <td style={{ padding: "12px 14px", color: T2 }}>{c.sponsoring_state}</td>
-                  <td style={{ padding: "12px 14px" }}>
+                  <td style={{ padding: "10px 8px", color: T2 }}>{c.sponsoring_state}</td>
+                  <td style={{ padding: "10px 8px" }}>
                     <span
                       style={{
                         fontFamily: F,
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: 500,
                         textTransform: "uppercase",
                         letterSpacing: "0.04em",
-                        padding: "2px 8px",
-                        borderRadius: 4,
-                        background: "transparent",
-                        color: TEAL,
-                        border: `1px solid rgba(29,158,117,0.4)`,
+                        padding: "3px 10px",
+                        borderRadius: 6,
+                        background: "rgba(29,158,117,0.1)",
+                        color: "#0F6E56",
+                        border: `0.5px solid rgba(29,158,117,0.35)`,
                       }}
                     >
                       {CONTRACT_TYPE_LABELS[c.contract_type] || c.contract_type}
                     </span>
                   </td>
-                  <td style={{ padding: "12px 14px", color: T2 }}>{c.contract_area}</td>
-                  <td style={{ padding: "12px 14px", fontFamily: F, fontSize: 12, color: T3 }}>
+                  <td style={{ padding: "10px 8px", color: T2 }}>{c.contract_area}</td>
+                  <td style={{ padding: "10px 8px", fontFamily: F, fontSize: 12, color: T3 }}>
                     {new Date(c.contract_date).getFullYear()}
                   </td>
                 </tr>
@@ -711,10 +711,10 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
 // ── Related stories ──────────────────────────────────────────────────────
 function RelatedStories({ stories }: { stories: FeedStory[] }) {
   return (
-    <div style={{ marginTop: 40 }}>
-      <div style={{ ...eyebrowStyle(), marginBottom: 14 }}>Related stories from Tideline</div>
+    <div style={{ marginTop: 24, marginBottom: 24 }}>
+      <div style={eyebrowStyle()}>Related stories from Tideline</div>
       {stories.length === 0 ? (
-        <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6, padding: 20, fontFamily: F, fontSize: 13, color: T4 }}>
+        <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: 20, fontFamily: F, fontSize: 13, color: T4 }}>
           No stories matched to this tracker yet.
         </div>
       ) : (
@@ -725,9 +725,9 @@ function RelatedStories({ stories }: { stories: FeedStory[] }) {
               href={`/platform/story/${s.id}`}
               style={{
                 background: WHITE,
-                border: `1px solid ${BORDER}`,
-                borderRadius: 6,
-                padding: "14px 18px",
+                border: `0.5px solid ${BORDER}`,
+                borderRadius: 8,
+                padding: 20,
                 textDecoration: "none",
               }}
             >
@@ -803,11 +803,11 @@ function CommunityDocumentsPanel({ docs }: { docs: CommunityDoc[] }) {
   };
 
   return (
-    <div style={{ marginTop: 40 }}>
-      <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 6 }}>
+    <div style={{ marginTop: 24, marginBottom: 24 }}>
+      <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8 }}>
         <div
           style={{
-            padding: "18px 20px",
+            padding: 20,
             borderBottom: `1px solid ${BORDER_SOFT}`,
             display: "flex",
             alignItems: "center",
@@ -817,7 +817,7 @@ function CommunityDocumentsPanel({ docs }: { docs: CommunityDoc[] }) {
           }}
         >
           <div>
-            <div style={{ ...eyebrowStyle(TEAL), marginBottom: 4 }}>Community contributions</div>
+            <div style={{ ...eyebrowStyle(), marginBottom: 4 }}>Community contributions</div>
             <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>
               Documents submitted by Tideline users, pending review before publication.
             </div>
@@ -829,15 +829,14 @@ function CommunityDocumentsPanel({ docs }: { docs: CommunityDoc[] }) {
               setError(null);
             }}
             style={{
-              height: 34,
-              padding: "0 16px",
+              padding: "8px 16px",
               fontFamily: F,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 500,
-              color: formOpen ? T2 : TEAL,
-              background: formOpen ? WHITE : "rgba(29,158,117,0.08)",
-              border: `1px solid ${formOpen ? BORDER : "rgba(29,158,117,0.4)"}`,
-              borderRadius: 6,
+              color: WHITE,
+              background: TEAL,
+              border: `0.5px solid ${TEAL}`,
+              borderRadius: 7,
               cursor: "pointer",
             }}
           >
@@ -1054,7 +1053,7 @@ export default function ISATracker() {
       <div style={{ background: NAVY, padding: "48px 24px 48px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ ...eyebrowStyle(TEAL), marginBottom: 14 }}>Live intelligence tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 32, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 14px" }}>
+          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 700, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 14px" }}>
             Deep-Sea Mining
           </h1>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.65)", maxWidth: 720, lineHeight: 1.7, margin: 0 }}>
@@ -1075,7 +1074,7 @@ export default function ISATracker() {
         ) : (
           <>
             <div
-              style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20 }}
+              style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20, marginBottom: 24 }}
               className="two-col"
             >
               <EventsPanel events={trackerEvents} />
