@@ -48,7 +48,8 @@
       "Bash(vercel env:*)",
       "Bash(ls \"setLoading\\(false\\)\\)\")",
       "Bash(git check-ignore:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(git ls-tree:*)"
     ]
   }
 }

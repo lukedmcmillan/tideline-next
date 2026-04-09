@@ -54,7 +54,6 @@ const roles: Record<string, { q: string; body: string; feats: { icon: string; ti
 };
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<"brief" | "workspace">("brief");
   const [activeRole, setActiveRole] = useState("policy");
   const [showEarlyAccess, setShowEarlyAccess] = useState(false);
 
@@ -77,7 +76,7 @@ export default function LandingPage() {
       <section>
         <div className="hero">
           <div className="hero-left">
-            <h1 className="hero-h1-new fi d1" style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"48px",lineHeight:1.08,letterSpacing:"-0.025em",margin:0}}>
+            <h1 className="hero-h1-new fi d1" style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"48px",lineHeight:1.08,letterSpacing:"-0.025em",margin:0,marginBottom:"28px"}}>
               <span style={{color:"#0A1628"}}>The ocean sector finally</span><br/>
               <span style={{color:"#1D9E75"}}>has a room of its own.</span>
             </h1>
@@ -125,19 +124,16 @@ export default function LandingPage() {
             </div>
 
             <div className="mobile-only" style={{marginTop:"24px"}}>
-              <div style={{background:"#FAFAFA",borderLeft:"3px solid #0A1628",borderRadius:"0 8px 8px 0",padding:"14px 16px",marginBottom:"16px"}}>
-                <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"6px"}}>MARINE POLICY PROFESSIONAL</div>
-                <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,fontStyle:"italic",fontSize:"14px",color:"#0A1628",lineHeight:1.5}}>
-                  {"\u201C"}The ISA vote was last Tuesday.<br/>I found out in the meeting.{"\u201D"}
-                </div>
-              </div>
               <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
                 Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
+              </p>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:"16px 0 0"}}>
+                Tideline is the workspace where your actual work happens. Where you research, write, track, and produce {"\u2014"} with every piece of intelligence you need already inside it, updated in real time, filtered to your sector and your topics. The brief is one feature. The platform is the product.
               </p>
             </div>
 
             <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
-              The brief. The trackers. The research. The workspace. The calendar. The library. The community. One platform, built for the professionals who cannot afford to work any other way.
+              Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it, Tideline is where you stay ahead.
             </p>
 
             <div className="hero-actions fi d3">
@@ -151,132 +147,26 @@ export default function LandingPage() {
               <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
             </div>
           </div>
-
-          {/* Brief card */}
-          <div className="brief-card fi d3" id="platform">
-            <div className="card-header">
-              <div className="card-header-left">
-                <div className="card-header-logo">
-                  <svg viewBox="0 0 14 14" fill="none">
-                    <path d="M1 8.5 Q3.5 5.5 7 8.5 Q10.5 11.5 13 8.5" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-                    <path d="M1 5.5 Q3.5 2.5 7 5.5 Q10.5 8.5 13 5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.3" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <span className="card-header-name">Tideline</span>
-                <span style={{color:"rgba(255,255,255,0.2)",fontSize:"12px"}}>{"\u00B7"}</span>
-                <span className="card-header-section">Live Feed</span>
-              </div>
-              <div className="card-header-right">
-                <div className="live-sm" style={{background:"var(--green)"}}></div>
-                <span className="card-header-time">06:47 BST {"\u00B7"} 1 Apr</span>
-              </div>
-            </div>
-
-            <div className="tab-row">
-              <div
-                className={`tab${activeTab === "brief" ? " active" : ""}`}
-                onClick={() => setActiveTab("brief")}
-              >Live Feed</div>
-              <div
-                className={`tab${activeTab === "workspace" ? " active" : ""}`}
-                onClick={() => setActiveTab("workspace")}
-              >Workspace</div>
-            </div>
-
-            {/* Brief */}
-            <div id="tab-brief" style={{ display: activeTab === "brief" ? "block" : "none" }}>
-              <div className="brief-date-row">
-                <span className="brief-date-label">Wednesday, 1 April 2026</span>
-                <span className="brief-live"><div className="live-sm"></div>Live</span>
-              </div>
-
-              <div className="story">
-                <div className="story-row1">
-                  <span className="chip c-isa">Deep-sea</span>
-                  <span className="story-time">05:12</span>
-                </div>
-                <div className="story-title">International Seabed Authority defers exploitation regulations third postponement since 2023</div>
-                <div className="story-interp"><strong>What this means:</strong> Extends the legal vacuum deep-sea mining investors have been pricing in. Contractor timelines will need revising.</div>
-              </div>
-
-              <div className="story">
-                <div className="story-row1">
-                  <span className="chip c-bbnj">High Seas</span>
-                  <span className="story-time">04:30</span>
-                </div>
-                <div className="story-title">High Seas Treaty PrepCom 2 advances protected area framework six articles agreed ahead of schedule</div>
-                <div className="story-interp"><strong>What this means:</strong> Faster than most delegations expected. NGOs with pending area-based proposals should review against the new criteria now.</div>
-              </div>
-
-              <div className="story">
-                <div className="story-row1">
-                  <span className="chip c-imo">IMO</span>
-                  <span className="story-time">03:55</span>
-                </div>
-                <div className="story-title">IMO MEPC 82 adopts 2030 GHG intensity targets stricter than the proposed CII amendment</div>
-                <div className="story-interp"><strong>What this means:</strong> Fleet planning for 2027{"\u2013"}2030 faces material compliance cost revision. Legal exposure for existing charters is now live.</div>
-              </div>
-
-              <div className="story">
-                <div className="story-row1">
-                  <span className="chip c-ospar">OSPAR</span>
-                  <span className="story-time">02:18</span>
-                </div>
-                <div className="story-title">OSPAR MPA network consultation closes 15 April 8 working days remaining</div>
-                <div className="story-interp"><strong>What this means:</strong> Draft criteria would affect 34 offshore energy licence areas in UK and Norwegian waters.</div>
-              </div>
-
-              <div className="brief-foot">
-                <span className="brief-foot-stat"><strong>100+</strong> sources {"\u00B7"} <strong>14</strong> stories today</span>
-                <span className="brief-foot-link">Open full brief {"\u2192"}</span>
-              </div>
-            </div>
-
-            {/* Workspace */}
-            <div id="tab-workspace" className={`ws-panel${activeTab === "workspace" ? " show" : ""}`}>
-              <div className="ws-layout">
-                <div className="ws-editor">
-                  <div className="ws-title">OSPAR Consultation Response NE Atlantic MPA Network</div>
-                  <div className="ws-body">The proposed network designates 34 areas across UK and Norwegian waters. Current draft criteria would affect existing offshore energy licences in...</div>
-                  <div className="ws-ask">
-                    <span className="ws-cmd">Search</span>
-                    <span className="ws-q">What does OSPAR Annex V say about energy infrastructure exemptions?</span>
-                  </div>
-                  <div className="ws-answer">
-                    Annex V, Article 4(2) provides that existing licensed activities may continue subject to a compatibility review within 18 months of designation. States retain discretion over enforcement timing within that window.
-                    <cite className="ws-cite">Source: OSPAR Convention Annex V (1992, amended 2021) {"\u00B7"} Tier 1 verified</cite>
-                  </div>
-                </div>
-                <div className="ws-sidebar">
-                  <div className="ws-sidebar-label">Saved sources</div>
-                  <div className="ws-source">
-                    <div className="ws-src-tag">OSPAR</div>
-                    <div className="ws-src-title">NE Atlantic MPA draft consultation criteria</div>
-                  </div>
-                  <div className="ws-source">
-                    <div className="ws-src-tag">IMO</div>
-                    <div className="ws-src-title">MEPC 82 GHG intensity decision text</div>
-                  </div>
-                  <div className="ws-source">
-                    <div className="ws-src-tag">High Seas</div>
-                    <div className="ws-src-title">Protected area framework draft text</div>
-                  </div>
-                </div>
-              </div>
-              <div className="ws-generate">
-                <span className="ws-gen-label">3 sources {"\u00B7"} 4 notes {"\u00B7"} deadline in 8 days</span>
-                <button className="ws-gen-btn">Generate Report {"\u2192"}</button>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
+
+      {/* Emotional beat */}
+      <div style={{background:"#0A1628",padding:"80px 24px",textAlign:"center"}}>
+        <div style={{maxWidth:"640px",margin:"0 auto"}}>
+          <p style={{fontWeight:300,fontSize:"20px",color:"#fff",lineHeight:1.7,marginBottom:"24px",marginTop:0}}>
+            You know that feeling when someone in the meeting knows something you don{"\u2019"}t. When a client asks about something that happened last week and you weren{"\u2019"}t across it. When you realise you{"\u2019"}ve been behind and nobody told you.
+          </p>
+          <p style={{fontWeight:700,fontSize:"20px",color:"#fff",margin:0}}>
+            That feeling is what Tideline removes. Not occasionally. Every single day.
+          </p>
+        </div>
+      </div>
 
       {/* Mobile social proof strip */}
       <div className="mobile-only" style={{background:"#FAFAFA",borderBottom:"1px solid #DADCE0",padding:"20px"}}>
         <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#9AA0A6",textAlign:"center",marginBottom:"14px",letterSpacing:"0.12em"}}>TRUSTED BY OCEAN PROFESSIONALS</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"12px",textAlign:"center"}}>
-          {[{n:"100+",l:"SOURCES MONITORED"},{n:"14",l:"COUNTRIES"},{n:"24/7",l:"LIVE TRACKING"}].map((s)=>(
+          {[{n:"100+",l:"SOURCES MONITORED"},{n:"45 sec",l:"TO A CITED BRIEF"},{n:"24/7",l:"LIVE TRACKING"}].map((s)=>(
             <div key={s.l}>
               <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",letterSpacing:"-0.03em"}}>{s.n}</div>
               <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#9AA0A6",marginTop:"2px"}}>{s.l}</div>
@@ -574,7 +464,7 @@ export default function LandingPage() {
               <div className="thread-col-domain thread-domain-label">Finance {"\u00B7"} ESG</div>
             </div>
 
-            <div className="thread-row">
+            <div className="thread-row" style={{borderBottom:"none"}}>
               <div className="thread-signal">5 days ago</div>
               <div className="thread-content">
                 <div className="thread-title">Shipping ESG disclosures vs what vessel tracking data actually shows</div>
@@ -583,40 +473,10 @@ export default function LandingPage() {
               </div>
               <div className="thread-col-domain thread-domain-label">Shipping {"\u00B7"} ESG</div>
             </div>
-
-            <div className="thread-row">
-              <div className="thread-signal">1 week ago</div>
-              <div className="thread-content">
-                <div className="thread-title">Illegally caught fish entering certified supply chains through weak port inspection</div>
-                <div className="thread-body">Whether the Port State Measures Agreement is being meaningfully enforced in major transhipment ports, or whether illegally caught fish is reaching certified supply chains.</div>
-                <div className="thread-domain-mobile">Fisheries {"\u00B7"} Trade</div>
-              </div>
-              <div className="thread-col-domain thread-domain-label">Fisheries {"\u00B7"} Trade</div>
-            </div>
-
-            <div className="thread-row">
-              <div className="thread-signal">1 week ago</div>
-              <div className="thread-content">
-                <div className="thread-title">30x30 marine targets: genuine protection or paper parks</div>
-                <div className="thread-body">Whether states are designating marine protected areas with genuine ecological coverage, or hitting the number by designating areas of low commercial value that constrain nothing.</div>
-                <div className="thread-domain-mobile">Governance {"\u00B7"} Science</div>
-              </div>
-              <div className="thread-col-domain thread-domain-label">Governance {"\u00B7"} Science</div>
-            </div>
-
-            <div className="thread-row" style={{borderBottom:"none"}}>
-              <div className="thread-signal">9 days ago</div>
-              <div className="thread-content">
-                <div className="thread-title">Nature risk reporting: whether ocean is being systematically excluded from TNFD disclosures</div>
-                <div className="thread-body">Whether financial institutions aligning to TNFD are including material ocean dependencies, or whether ocean risk is treated as outside the scope of nature finance.</div>
-                <div className="thread-domain-mobile">Finance {"\u00B7"} ESG</div>
-              </div>
-              <div className="thread-col-domain thread-domain-label">Finance {"\u00B7"} ESG</div>
-            </div>
           </div>
 
           <div style={{marginTop:"16px",fontSize:"13px",color:"var(--tertiary)",fontFamily:"'Google Sans Mono',monospace"}}>
-            30 active threads tracked. Crosscurrent alerts subscribers when threads intersect across sources.
+            30 threads tracked live. Crosscurrent flags when they intersect.
           </div>
         </div>
       </section>
@@ -652,19 +512,19 @@ export default function LandingPage() {
               <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"20px"}}>With Tideline</div>
               <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--ink)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> One brief. 100+ sources. What happened and what it matters.
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> Workspace, trackers, library, feed and calendar in one place. No switching.
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--ink)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> /ask finds the primary source answer in seconds.
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> /ask finds the primary source answer in seconds. Cited. Traceable.
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--ink)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> Reports generated from your notes. Hours, not days.
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> Reports generated from your notes in one click. Hours, not days.
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--ink)",lineHeight:1.5}}>
                   <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> Every deadline in your calendar. Nothing slips.
                 </div>
                 <div style={{display:"flex",alignItems:"flex-start",gap:"12px",fontSize:"15px",color:"var(--ink)",lineHeight:1.5}}>
-                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> One platform instead of six.
+                  <span style={{color:"var(--blue)",flexShrink:0,fontWeight:700,marginTop:"1px"}}>{"\u2713"}</span> One brief. 100+ sources. What happened and what it means.
                 </div>
               </div>
             </div>
@@ -703,8 +563,8 @@ export default function LandingPage() {
               {[
                 {time:"8am",bold:"The brief is already there.",rest:" Everything that moved overnight, filed and ready."},
                 {time:"9am",bold:"You ask the research library about BBNJ obligations.",rest:" Three primary sources cited in seconds."},
-                {time:"11am",bold:"You open your workspace.",rest:" New intelligence filed overnight by Tideline\u2019s agents."},
-                {time:"2pm",bold:"The tracker flags a movement at the ISA.",rest:" You are the first in your organisation to know."},
+                {time:"11am",bold:"You open your workspace.",rest:" New intelligence from overnight is already filed and waiting."},
+                {time:"12pm",bold:"You check the tracker.",rest:" Something moved at the ISA this morning. You are the first in your organisation to know."},
                 {time:"4pm",bold:"A lawyer in Singapore comments on the story.",rest:" She has seen something you missed. You reach out."},
               ].map((r,i)=>(
                 <div key={i} style={{display:"flex",gap:"12px",padding:"12px 0",borderBottom:"1px solid #F0F0F0"}}>
@@ -715,7 +575,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontStyle:"italic",color:"#5F6368",textAlign:"center",paddingTop:"16px"}}>That is one day. That is the product.</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontStyle:"italic",color:"#5F6368",textAlign:"center",paddingTop:"16px"}}>Most professionals in this sector have six tabs open right now. Tideline is one.</div>
           </div>
         </div>
 
@@ -856,6 +716,24 @@ export default function LandingPage() {
         <div className="pricing-grid">
           <div className="p-card">
             <div className="p-head">
+              <span className="p-tier">Free</span>
+              <div className="p-price">{"\u00A3"}0<sub>/mo</sub></div>
+              <div className="p-per">Explore the platform.</div>
+            </div>
+            <div className="p-body">
+              <ul className="p-feats">
+                <li>Daily morning brief</li>
+                <li>Live feed (10 stories/day)</li>
+                <li>3 trackers</li>
+                <li>No workspace</li>
+                <li>No library</li>
+              </ul>
+              <button className="p-btn p-btn-outlined" onClick={() => setShowEarlyAccess(true)}>Start free</button>
+            </div>
+          </div>
+
+          <div className="p-card">
+            <div className="p-head">
               <span className="p-tier">Founding Member</span>
               <div className="p-price">{"\u00A3"}39<sub>/mo</sub></div>
               <div className="p-per">Locked for life. Never increases.</div>
@@ -915,7 +793,8 @@ export default function LandingPage() {
 
         <p className="p-note">
           NGO or academic? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>50% off apply here</a> &nbsp;{"\u00B7"}&nbsp;
-          Need more than 10 seats? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Enterprise pricing</a>
+          Need more than 10 seats? <a href="#" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>Enterprise pricing</a> &nbsp;{"\u00B7"}&nbsp;
+          NGO or grant-funded? Email hello@thetideline.co for flexible annual pricing.
         </p>
       </section>
 

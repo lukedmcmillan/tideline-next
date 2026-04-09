@@ -101,8 +101,7 @@
 .hero {
   max-width: 1200px; margin: 0 auto;
   padding: 80px 24px 72px;
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 80px; align-items: center;
+  display: block;
   min-height: calc(100vh - 106px);
 }
 
@@ -580,7 +579,7 @@
 
 /* ── PRICING ── */
 .pricing-grid {
-  display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
   margin-top: 48px;
 }
 .p-card {
