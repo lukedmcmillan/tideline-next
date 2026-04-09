@@ -109,7 +109,7 @@
 .hero-left {}
 .hero-right {
   display: flex; align-items: center; justify-content: center;
-  background: #F8F9FA; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB;
+  background: rgba(29,158,117,0.06); border-radius: 12px; padding: 32px; border: 1px solid rgba(29,158,117,0.15);
 }
 
 .hero-eyebrow {
@@ -422,6 +422,9 @@
 /* ── SECTION SHARED ── */
 .section {
   max-width: 1200px; margin: 0 auto; padding: 80px 24px;
+}
+.section-teal {
+  background: rgba(29,158,117,0.06);
 }
 .section-label {
   font-family: 'Google Sans Mono', monospace;

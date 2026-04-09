@@ -267,7 +267,7 @@ export default function LandingPage() {
       </section>
 
       {/* Platform features */}
-      <section className="section" id="platform-features">
+      <section className="section section-teal" id="platform-features">
         <span className="section-label">The platform</span>
         <h2 className="section-title">Everything you need. One place. All day.</h2>
         <p className="section-sub">The workspace is where the work happens. The research library finds the answer. The live feed keeps you across everything. The calendar keeps you on time. And Crosscurrent, only on Tideline, surfaces connections across 100+ sources before anyone else sees them.</p>
@@ -388,7 +388,7 @@ export default function LandingPage() {
       </div>
 
       {/* Live threads */}
-      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"#fff"}}>
+      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"rgba(29,158,117,0.06)"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <span className="section-label">What Tideline is watching</span>
           <h2 className="section-title" style={{marginBottom:"12px"}}>Some stories take months to resolve.</h2>
@@ -624,7 +624,7 @@ export default function LandingPage() {
       </div>
 
       {/* Library */}
-      <section className="section" id="library" style={{borderTop:"1px solid var(--border)",scrollMarginTop:"80px"}}>
+      <section className="section section-teal" id="library" style={{borderTop:"1px solid var(--border)",scrollMarginTop:"80px"}}>
         <span className="section-label">The library</span>
         <h2 className="section-title">The Tideline Library</h2>
         <p className="section-sub">Citable sources. Fast.</p>
@@ -634,11 +634,11 @@ export default function LandingPage() {
         <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"48px"}}>
           The library grows every time a Tideline subscriber contributes a document. Every NGO policy brief, every regulatory filing, every scientific paper added by the community makes every other subscriber{"\u2019"}s research faster and more complete. This is the world{"\u2019"}s biggest ocean library. It is being built right now, by the people who use it.
         </p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px",marginBottom:"24px"}} className="replaces-grid">
-          {[{n:"2,400+",l:"Documents"},{n:"Growing",l:"Every day"},{n:"Primary",l:"Sources only"}].map((s)=>(
-            <div key={s.l} style={{border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"24px",textAlign:"center"}}>
-              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"28px",color:"var(--ink)",letterSpacing:"-0.03em",marginBottom:"4px"}}>{s.n}</div>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",textTransform:"uppercase",color:"var(--tertiary)",letterSpacing:"0.1em"}}>{s.l}</div>
+        <div style={{display:"flex",gap:"0",maxWidth:"600px",marginBottom:"24px",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",overflow:"hidden"}}>
+          {[{n:"2,400+",l:"DOCUMENTS"},{n:"Growing",l:"EVERY DAY"},{n:"Primary",l:"SOURCES ONLY"}].map((s,i)=>(
+            <div key={s.l} style={{flex:1,padding:"20px 24px",borderRight:i<2?"1px solid var(--border)":"none"}}>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"var(--ink)",letterSpacing:"-0.03em",lineHeight:1}}>{s.n}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"var(--tertiary)",letterSpacing:"0.1em",marginTop:"4px"}}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -648,23 +648,23 @@ export default function LandingPage() {
       </section>
 
       {/* Founder */}
-      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"#fff"}}>
+      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"#0A1628"}}>
         <div style={{maxWidth:"620px",margin:"0 auto"}}>
-          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"28px"}}>From the founder</div>
-          <p style={{fontSize:"22px",fontWeight:600,color:"var(--ink)",lineHeight:1.4,marginBottom:"20px",marginTop:0}}>
+          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"#1D9E75",marginBottom:"28px"}}>From the founder</div>
+          <p style={{fontSize:"22px",fontWeight:600,color:"rgba(255,255,255,0.8)",lineHeight:1.4,marginBottom:"20px",marginTop:0}}>
             I built Tideline because I needed it.
           </p>
-          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"20px",marginTop:0}}>
+          <p style={{fontSize:"16px",color:"rgba(255,255,255,0.8)",lineHeight:1.75,marginBottom:"20px",marginTop:0}}>
             Sometimes you just need support to be the best version of yourself at work. You do not have time to scour every source. You need to be up to date. You need to be the person in the room who knows what is happening.
           </p>
-          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"32px",marginTop:0}}>
+          <p style={{fontSize:"16px",color:"rgba(255,255,255,0.8)",lineHeight:1.75,marginBottom:"32px",marginTop:0}}>
             Tideline is exactly what I was missing from my daily life. So I built it.
           </p>
           <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
-            <div style={{width:"40px",height:"40px",borderRadius:"50%",background:"var(--ink)",display:"grid",placeItems:"center",flexShrink:0,color:"#fff",fontFamily:"'Google Sans Mono',monospace",fontSize:"12px",letterSpacing:"0.05em"}}>LM</div>
+            <div style={{width:"40px",height:"40px",borderRadius:"50%",background:"rgba(255,255,255,0.1)",display:"grid",placeItems:"center",flexShrink:0,color:"#fff",fontFamily:"'Google Sans Mono',monospace",fontSize:"12px",letterSpacing:"0.05em"}}>LM</div>
             <div>
-              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)"}}>Luke McMillan</div>
-              <div style={{fontSize:"13px",color:"var(--tertiary)"}}>Founder, Tideline</div>
+              <div style={{fontSize:"14px",fontWeight:500,color:"#fff"}}>Luke McMillan</div>
+              <div style={{fontSize:"13px",color:"rgba(255,255,255,0.5)"}}>Founder, Tideline</div>
             </div>
           </div>
         </div>
@@ -776,7 +776,7 @@ export default function LandingPage() {
       </section>
 
       {/* Source methodology */}
-      <section className="section" id="methodology">
+      <section className="section section-teal" id="methodology">
         <span className="section-label">Source methodology</span>
         <h2 className="section-title">Every source is labelled. Every answer is cited.</h2>
         <p className="section-sub">Tideline classifies every source into three tiers. The tier is visible on every story, every research answer, and every Crosscurrent alert. You always know where it came from.</p>
