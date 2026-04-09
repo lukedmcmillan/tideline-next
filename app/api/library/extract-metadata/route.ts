@@ -76,6 +76,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
+  console.log("extract-metadata called, file type:", file.type, "file size:", file.size);
+
   const buffer = Buffer.from(await file.arrayBuffer());
   let text = "";
 
@@ -86,10 +88,11 @@ export async function POST(req: NextRequest) {
     try {
       const parsed = await pdfParse(buffer);
       text = parsed.text.slice(0, TEXT_LIMIT);
-    } catch {
+    } catch (err) {
+      console.error("pdf-parse error:", err);
       return NextResponse.json({
         error: "scanned",
-        message: "This appears to be a scanned document. Please fill in the metadata manually.",
+        message: "Could not extract text from this document. Please fill in the metadata manually.",
       });
     }
   } else if (
@@ -100,7 +103,8 @@ export async function POST(req: NextRequest) {
     try {
       const result = await mammoth.extractRawText({ buffer });
       text = result.value.slice(0, TEXT_LIMIT);
-    } catch {
+    } catch (err) {
+      console.error("mammoth error:", err);
       return NextResponse.json({
         error: "scanned",
         message: "Could not extract text from this document. Please fill in the metadata manually.",
