@@ -672,12 +672,12 @@
 
 /* ── THREADS TABLE ── */
 .thread-header {
-  display: grid; grid-template-columns: 110px 1fr 160px;
+  display: grid; grid-template-columns: 1fr 160px;
   background: var(--surface); padding: 10px 20px;
   border-bottom: 1px solid var(--border);
 }
 .thread-row {
-  display: grid; grid-template-columns: 110px 1fr 160px;
+  display: grid; grid-template-columns: 1fr 160px;
   padding: 18px 20px; border-bottom: 1px solid var(--border);
   align-items: start; cursor: pointer; transition: background 0.1s;
 }

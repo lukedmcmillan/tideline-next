@@ -127,6 +127,18 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Desktop stats bar */}
+      <div className="desktop-only" style={{background:"#fff",padding:"32px 48px",borderBottom:"1px solid #DADCE0"}}>
+        <div style={{display:"flex",justifyContent:"center",gap:"0",maxWidth:"540px",margin:"0 auto",border:"1px solid #E5E7EB",borderRadius:"10px",overflow:"hidden"}}>
+          {[{n:"100+",l:"SOURCES MONITORED"},{n:"45 sec",l:"TO A CITED BRIEF"},{n:"24/7",l:"LIVE TRACKING"}].map((s,i)=>(
+            <div key={s.l} style={{flex:1,padding:"20px 24px",textAlign:"center",borderRight:i<2?"1px solid #E5E7EB":"none"}}>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",letterSpacing:"-0.03em",lineHeight:1}}>{s.n}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#9AA0A6",letterSpacing:"0.12em",marginTop:"4px"}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Desktop testimonial */}
       <div className="desktop-only" style={{background:"#FAFAFA",borderBottom:"1px solid #DADCE0",padding:"32px 24px",textAlign:"center"}}>
         <div style={{maxWidth:"540px",margin:"0 auto"}}>
@@ -518,7 +530,6 @@ export default function LandingPage() {
       </div>
 
       {/* Library */}
-      <div className="section-teal-wrap">
       <section className="section" id="library" style={{borderTop:"1px solid var(--border)",scrollMarginTop:"80px"}}>
         <span className="section-label">The library</span>
         <h2 className="section-title">The Tideline Library</h2>
@@ -544,7 +555,6 @@ export default function LandingPage() {
           From {"\u00A3"}99/month. Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }} style={{color:"#1D9E75",fontWeight:600}}>start free</a>.
         </p>
       </section>
-      </div>
 
       {/* What it replaces */}
       <div style={{borderTop:"1px solid var(--border)",borderBottom:"1px solid var(--border)",background:"var(--surface)",padding:"48px 24px"}}>
