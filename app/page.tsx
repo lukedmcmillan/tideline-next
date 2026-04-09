@@ -394,13 +394,11 @@ export default function LandingPage() {
 
           <div style={{border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",overflow:"hidden"}}>
             <div className="thread-header">
-              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--tertiary)"}}>Last signal</div>
               <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--tertiary)"}}>Thread</div>
               <div className="thread-col-domain" style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.1em",textTransform:"uppercase",color:"var(--tertiary)"}}>Domain</div>
             </div>
 
             <div className="thread-row">
-              <div className="thread-signal">2 days ago</div>
               <div className="thread-content">
                 <div className="thread-title">Seabed mining code: contractor pipeline vs moratorium coalition</div>
                 <div className="thread-body">Whether the International Seabed Authority finalises a mining code before the next Council session, or whether the Pacific states coalition stalls it again. Three sponsored contractors in the queue.</div>
@@ -410,7 +408,6 @@ export default function LandingPage() {
             </div>
 
             <div className="thread-row">
-              <div className="thread-signal">4 days ago</div>
               <div className="thread-content">
                 <div className="thread-title">Blue bond credibility: which issuers are declining independent audits</div>
                 <div className="thread-body">Whether blue bonds issued by sovereigns and corporations are financing activities that can be independently verified as ocean-positive, or whether certification frameworks are insufficiently rigorous.</div>
@@ -420,7 +417,6 @@ export default function LandingPage() {
             </div>
 
             <div className="thread-row" style={{borderBottom:"none"}}>
-              <div className="thread-signal">5 days ago</div>
               <div className="thread-content">
                 <div className="thread-title">Shipping ESG disclosures vs what vessel tracking data actually shows</div>
                 <div className="thread-body">Whether the emissions disclosures of major shipping companies match what independent vessel tracking shows on route planning, speed, and actual fuel burn.</div>
@@ -618,6 +614,9 @@ export default function LandingPage() {
         <p style={{fontSize:"13px",color:"var(--tertiary)",margin:0}}>
           Have a document to contribute? <a href="/platform/library" style={{color:"var(--blue)",textDecoration:"none"}}>Upload it to the library</a> and help build the resource the sector has always needed.
         </p>
+        <p style={{fontSize:"14px",color:"#6B7280",marginTop:"16px"}}>
+          From {"\u00A3"}99/month. Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }} style={{color:"#1D9E75",fontWeight:600}}>start free</a>.
+        </p>
       </section>
       </div>
 
@@ -666,6 +665,9 @@ export default function LandingPage() {
           <button className="p-btn p-btn-filled" style={{whiteSpace:"nowrap",padding:"10px 24px",background:"var(--blue)",borderRadius:"var(--radius-md)"}} onClick={() => setShowEarlyAccess(true)}>Claim a founding spot {"\u2192"}</button>
         </div>
 
+        <p style={{textAlign:"center",fontSize:"15px",color:"#6B7280",marginBottom:"24px"}}>
+          Not ready to commit? <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }} style={{color:"#1D9E75",fontWeight:600}}>Start free</a>. No card required. Full access to the brief and three trackers.
+        </p>
         <div className="pricing-grid">
           <div className="p-card">
             <div className="p-head">
