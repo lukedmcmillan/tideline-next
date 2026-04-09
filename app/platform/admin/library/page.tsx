@@ -136,7 +136,7 @@ export default function AdminLibraryPage() {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
         const pageText = content.items
-          .map((item: { str?: string }) => item.str || "")
+          .map((item) => ("str" in item ? item.str : ""))
           .join(" ");
         text += pageText + "\n";
         if (text.length > 6000) break;
