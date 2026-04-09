@@ -72,6 +72,16 @@ export async function POST(req: NextRequest) {
   }
 
   // Insert document record
+  console.log("Inserting document:", JSON.stringify({
+    title,
+    source_organisation: sourceOrganisation,
+    document_type: documentType,
+    published_date: publishedDate || null,
+    file_url: filePath,
+    file_size_bytes: file.size,
+    status: "approved",
+    approved_by: user.id,
+  }));
   const { data: doc, error: insertError } = await supabase
     .from("documents")
     .insert({
@@ -94,7 +104,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (insertError) {
-    console.error("Document insert error:", insertError.message);
+    console.error("Document insert error:", JSON.stringify(insertError));
     return NextResponse.json({ error: "Failed to save document" }, { status: 500 });
   }
 
