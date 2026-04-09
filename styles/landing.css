@@ -100,14 +100,17 @@
 /* ── HERO ── */
 .hero {
   max-width: 1200px; margin: 0 auto;
-  padding: 80px 24px 72px;
+  padding: 40px 24px 72px;
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 64px; align-items: center;
   min-height: calc(100vh - 106px);
 }
 
 .hero-left {}
-.hero-right { display: flex; align-items: center; justify-content: center; }
+.hero-right {
+  display: flex; align-items: center; justify-content: center;
+  background: #F8F9FA; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB;
+}
 
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 6px;
@@ -130,7 +133,7 @@
 
 /* Situation wheel */
 .wheel-wrap {
-  height: 64px; overflow: hidden;
+  height: 320px; overflow: hidden;
   margin-bottom: 32px;
   border-left: 2px solid var(--border);
   padding-left: 16px;
