@@ -121,7 +121,9 @@ export default function AdminLibraryPage() {
     setScanWarning("");
     setConfidence(null);
     const fd = new FormData();
-    fd.append("file", f);
+    const slice = f.slice(0, 500 * 1024);
+    const slicedFile = new File([slice], f.name, { type: f.type });
+    fd.append("file", slicedFile);
     try {
       const res = await fetch("/api/library/extract-metadata", { method: "POST", body: fd });
       const data = await res.json();
