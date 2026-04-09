@@ -76,52 +76,53 @@ export default function LandingPage() {
       <section>
         <div className="hero">
           <div className="hero-left">
+            <div style={{display:"inline-flex",alignItems:"center",gap:"8px",border:"1px solid rgba(29,158,117,0.3)",background:"rgba(29,158,117,0.06)",borderRadius:"20px",padding:"5px 14px",marginBottom:"24px"}}>
+              <span className="live-dot" />
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,color:"#1D9E75"}}>Ocean intelligence {"\u00B7"} Live</span>
+            </div>
             <h1 className="hero-h1-new fi d1" style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"48px",lineHeight:1.08,letterSpacing:"-0.025em",margin:0,marginBottom:"28px"}}>
               <span style={{color:"#0A1628"}}>Every day is you on a good day.</span>
             </h1>
-            <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
+            <p className="hero-body" style={{fontStyle:"italic",color:"#5F6368",marginBottom:"16px"}}>
               The ocean sector finally has a room of its own.
             </p>
-
-            <div className="mobile-only" style={{marginTop:"24px"}}>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
-                Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
-              </p>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:"16px 0 0"}}>
-                Tideline is the workspace where your actual work happens. Where you research, write, track, and produce {"\u2014"} with every piece of intelligence you need already inside it, updated in real time, filtered to your sector and your topics. The brief is one feature. The platform is the product.
-              </p>
-            </div>
-
-            <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
-              Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it, Tideline is where you stay ahead.
+            <p className="hero-sub" style={{fontFamily:"'DM Sans',sans-serif",fontSize:"16px",color:"#5F6368",lineHeight:1.7,maxWidth:"460px",marginBottom:"32px"}}>
+              Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it {"\u2014"} Tideline is where you stay ahead. Workspace. Library. Live feed. Community. One place. All day.
             </p>
-
             <div className="hero-actions fi d3">
               <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
-              <a href="/demo" className="btn-outline">See the platform in action</a>
+              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>Try it free. No card required.</button>
             </div>
-
             <div className="hero-meta fi d4" style={{display:"flex",gap:"16px",flexWrap:"wrap",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#9AA0A6"}}>
               <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>No card required</span>
               <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Cancel any time</span>
               <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
             </div>
             <p style={{fontSize:"13px",color:"#6B7280",marginTop:"8px"}}>
-              Or <a href="#pricing" style={{color:"#1D9E75",fontWeight:600}}>start free</a>. No card required.
+              Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }} style={{color:"#1D9E75",fontWeight:600}}>start free</a>. No card required.
             </p>
           </div>
           <div className="hero-right">
-            <div style={{background:"#fff",border:"1px solid #E5E7EB",borderLeft:"4px solid #1D9E75",borderRadius:"8px",padding:"32px"}}>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"11px",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.12em",color:"#1D9E75",marginBottom:"16px"}}>Before Tideline</div>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"18px",fontWeight:500,color:"#0A1628",lineHeight:1.6,fontStyle:"italic",margin:"0 0 16px"}}>
+            <div style={{background:"#fff",border:"1px solid #E5E7EB",borderLeft:"4px solid #1D9E75",borderRadius:"12px",padding:"28px",boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
+              <div style={{fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",color:"#1D9E75",marginBottom:"16px"}}>BEFORE TIDELINE</div>
+              <p style={{fontStyle:"italic",fontSize:"18px",fontWeight:600,color:"#0A1628",lineHeight:1.5,margin:"0 0 16px"}}>
                 {"\u201C"}Something moved last week. I found out in the meeting.{"\u201D"}
               </p>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"16px",fontWeight:700,color:"#1D9E75",margin:"0 0 8px"}}>
+              <p style={{fontSize:"16px",fontWeight:700,color:"#1D9E75",margin:"0 0 8px"}}>
                 This does not happen on Tideline.
               </p>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:400,color:"#6B7280",margin:0}}>
+              <p style={{fontSize:"14px",color:"#6B7280",margin:"0 0 20px"}}>
                 Every day is you on a good day.
               </p>
+              <hr style={{border:"none",borderTop:"1px solid #E5E7EB",marginBottom:"20px"}} />
+              <div style={{display:"flex",gap:"8px"}}>
+                {[{t:"Freedom",s:"Less searching"},{t:"Confidence",s:"Always prepared"},{t:"Calm",s:"Nothing missed"}].map(p => (
+                  <div key={p.t} style={{flex:1,background:"#F8F9FA",border:"1px solid #E5E7EB",borderRadius:"8px",padding:"10px",textAlign:"center"}}>
+                    <div style={{fontSize:"11px",fontWeight:700,color:"#1D9E75"}}>{p.t}</div>
+                    <div style={{fontSize:"10px",color:"#9AA0A6",marginTop:"2px"}}>{p.s}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -178,6 +179,70 @@ export default function LandingPage() {
               <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"12px",color:"#0A1628"}}>S. Reyes</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"11px",color:"#9AA0A6"}}>Maritime Lawyer, London</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Six pillars */}
+      <div style={{background:"#0A1628",padding:"80px 40px"}}>
+        <div style={{maxWidth:"1200px",margin:"0 auto"}}>
+          <p style={{color:"#1D9E75",fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"12px",marginTop:0}}>WHAT TIDELINE GIVES YOU BACK</p>
+          <h2 style={{color:"#fff",fontSize:"clamp(26px,3.5vw,38px)",fontWeight:800,letterSpacing:"-0.025em",lineHeight:1.15,marginBottom:"12px",marginTop:0}}>This is not about being informed. It is about what that gives you.</h2>
+          <p style={{color:"rgba(255,255,255,0.5)",fontSize:"16px",maxWidth:"600px",lineHeight:1.65,marginBottom:"48px",marginTop:0}}>Tideline is the workspace, library, live feed, and community for ocean professionals. One place. All day.</p>
+          <div className="pillars-grid">
+            {[
+              {label:"FREEDOM",head:"Less time searching. More time doing.",body:"Stop chasing information across 40 tabs. Everything you need is already inside Tideline, updated in real time, filtered to your work."},
+              {label:"CONFIDENCE",head:"Walk into every meeting prepared.",body:"Know what moved before your first call. Walk in as the person who already knows \u2014 not the one catching up."},
+              {label:"PERFORMANCE",head:"Produce better work, faster.",body:"The consultation response that takes three days takes three hours. The briefing that needed a morning arrives before your second coffee."},
+              {label:"AUTHORITY",head:"Work that stands up to scrutiny.",body:"Every answer cited. Every source traceable. Primary documents, not summaries. The kind of sourcing that holds up in a board presentation or a legal brief."},
+              {label:"POTENTIAL",head:"The best version of you. Every day.",body:"Tideline does not replace your judgement. It removes the overhead that was stopping you from applying it."},
+              {label:"CALM",head:"Nothing slips. Nothing surprises you.",body:"Every deadline tracked. Every development filed. That low-level anxiety that something important moved and you missed it \u2014 gone."},
+            ].map(c => (
+              <div key={c.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",padding:"28px"}}>
+                <p style={{color:"#1D9E75",fontSize:"11px",textTransform:"uppercase",fontWeight:700,marginBottom:"8px",marginTop:0}}>{c.label}</p>
+                <p style={{color:"#fff",fontSize:"18px",fontWeight:700,marginBottom:"6px",marginTop:0}}>{c.head}</p>
+                <p style={{color:"rgba(255,255,255,0.45)",fontSize:"13px",lineHeight:1.6,marginTop:0,marginBottom:0}}>{c.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Comparison table */}
+      <div style={{background:"#fff",padding:"80px 40px",borderTop:"1px solid #E5E7EB"}}>
+        <div style={{maxWidth:"900px",margin:"0 auto"}}>
+          <p style={{color:"#1D9E75",fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"12px",marginTop:0}}>WHY TIDELINE</p>
+          <h2 style={{color:"#0A1628",fontSize:"clamp(24px,3.5vw,36px)",fontWeight:800,letterSpacing:"-0.025em",marginBottom:"12px",marginTop:0}}>What used to take days now takes minutes.</h2>
+          <p style={{color:"#5F6368",fontSize:"16px",maxWidth:"560px",lineHeight:1.65,marginBottom:"40px",marginTop:0}}>Every task in the table below exists in your current working week. This is how long it takes without Tideline, and how long it takes with it.</p>
+          <div className="compare-scroll">
+            <table className="compare-table">
+              <thead>
+                <tr>
+                  <th className="ct-th ct-th-task">The task</th>
+                  <th className="ct-th ct-th-mid">Manually</th>
+                  <th className="ct-th ct-th-mid">Search and generic tools</th>
+                  <th className="ct-th ct-th-tl">With Tideline <span style={{background:"#1D9E75",color:"#fff",fontSize:"9px",fontWeight:700,padding:"2px 6px",borderRadius:"3px",marginLeft:"6px",verticalAlign:"middle"}}>PURPOSE-BUILT</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Finding out what moved in your sector overnight","30\u201360 min \u2014 Scanning newsletters, LinkedIn, email","Incomplete \u2014 Generic results, not sector-specific","2 minutes \u2014 Live feed, filtered to your topics"],
+                  ["Finding a citable primary source document","45+ min \u2014 Searching ISA, IMO, UN sites manually","Unreliable \u2014 Often summaries, not primary sources","Seconds \u2014 2,400+ primary sources, searchable instantly"],
+                  ["Producing a cited brief or report","Half a day \u2014 Research, draft, cite, format, export","Hours, uncited \u2014 No primary source trail","Under an hour \u2014 Notes to Word report in one click"],
+                  ["Tracking a long-running story like DSM or 30x30","No system \u2014 Saved tabs, email threads, memory","Not possible \u2014 No persistent tracking across sources","Automatic \u2014 Live trackers follow every development"],
+                  ["Spotting connections across stories and sectors","Rarely happens \u2014 Too much to read, too many sources","Not possible \u2014 No cross-source pattern engine","Automatic \u2014 Crosscurrent surfaces connections before anyone reports them"],
+                  ["Tracking consultation deadlines and treaty meetings","Missed constantly \u2014 Scattered across websites and emails","Not possible \u2014 No sector-specific calendar tool","Zero effort \u2014 Every deadline in one calendar, syncs Google and iOS"],
+                  ["Building a citable document library for your team","Years of effort \u2014 Shared drives, no structure, no search","Not possible \u2014 Generic tools, no ocean curation","Already built \u2014 2,400+ documents. Add your own. Grows with every subscriber."],
+                ].map((row, i) => (
+                  <tr key={i}>
+                    <td className="ct-task">{row[0]}</td>
+                    <td className="ct-mid">{row[1]}</td>
+                    <td className="ct-mid">{row[2]}</td>
+                    <td className="ct-tl">{row[3]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
