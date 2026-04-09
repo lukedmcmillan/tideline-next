@@ -9,7 +9,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 const MODEL = "claude-haiku-4-5-20251001";
 const TEXT_LIMIT = 6000;
-const SCANNED_THRESHOLD = 200;
+const SCANNED_THRESHOLD = 100;
 
 const EXTRACTION_SYSTEM = `You are a precise document metadata extractor specialising in ocean governance, maritime law, environmental policy, and international treaties. You extract metadata from legal and policy documents with high accuracy.
 

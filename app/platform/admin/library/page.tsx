@@ -121,7 +121,7 @@ export default function AdminLibraryPage() {
     setScanWarning("");
     setConfidence(null);
     const fd = new FormData();
-    const slice = f.slice(0, 500 * 1024);
+    const slice = f.slice(0, 2048 * 1024);
     const slicedFile = new File([slice], f.name, { type: f.type });
     fd.append("file", slicedFile);
     try {
