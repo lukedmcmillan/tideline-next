@@ -127,18 +127,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Desktop stats bar */}
-      <div className="desktop-only" style={{background:"#fff",padding:"32px 48px",borderBottom:"1px solid #DADCE0"}}>
-        <div style={{display:"flex",justifyContent:"center",gap:"0",maxWidth:"540px",margin:"0 auto",border:"1px solid #E5E7EB",borderRadius:"10px",overflow:"hidden"}}>
-          {[{n:"100+",l:"SOURCES MONITORED"},{n:"45 sec",l:"TO A CITED BRIEF"},{n:"24/7",l:"LIVE TRACKING"}].map((s,i)=>(
-            <div key={s.l} style={{flex:1,padding:"20px 24px",textAlign:"center",borderRight:i<2?"1px solid #E5E7EB":"none"}}>
-              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",letterSpacing:"-0.03em",lineHeight:1}}>{s.n}</div>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#9AA0A6",letterSpacing:"0.12em",marginTop:"4px"}}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Desktop testimonial */}
       <div className="desktop-only" style={{background:"#FAFAFA",borderBottom:"1px solid #DADCE0",padding:"32px 24px",textAlign:"center"}}>
         <div style={{maxWidth:"540px",margin:"0 auto"}}>
@@ -193,84 +181,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
-      {/* Why now */}
-      <section className="why">
-        <div className="why-inner">
-          <span className="section-label">Why now</span>
-          <h2 className="section-title" style={{color:"#fff"}}>The ocean is where the next decade gets decided.</h2>
-          <p className="section-sub">The ocean now sits at the centre of the energy transition, the climate crisis, the biggest shift in international law in a generation, and a wave of capital looking for somewhere to go. The professionals navigating that shift are currently doing it without the tools the moment requires.</p>
-
-          <div className="why-chips">
-            {["Energy","Climate & Carbon","Capital & Finance","Food & Fisheries","Law & Governance","Geopolitics"].map(c=>(
-              <span key={c} className="why-chip">{c}</span>
-            ))}
-          </div>
-
-          <div className="why-grid">
-            <div className="why-card">
-              <span className="wc-sector">Energy</span>
-              <div className="wc-title">Offshore wind, tidal, and deep-sea minerals</div>
-              <div className="wc-body">More clean energy investment is flowing into the ocean than any other single domain. The licensing, the legal disputes, the environmental reviews, and the geopolitical arguments about who owns what are all happening at once.</div>
-              <div className="wc-tags">
-                <span className="wc-tag">Offshore wind</span>
-                <span className="wc-tag">Deep-sea mining</span>
-                <span className="wc-tag">Tidal</span>
-              </div>
-            </div>
-            <div className="why-card">
-              <span className="wc-sector">Climate &amp; Carbon</span>
-              <div className="wc-title">Blue carbon and the ocean&apos;s role in net zero</div>
-              <div className="wc-body">The ocean absorbs 90% of excess heat. Blue carbon, marine CDR, and ocean-based ecosystem protection are now central to every serious net-zero strategy.</div>
-              <div className="wc-tags">
-                <span className="wc-tag">Blue carbon</span>
-                <span className="wc-tag">30x30</span>
-                <span className="wc-tag">Marine CDR</span>
-              </div>
-            </div>
-            <div className="why-card">
-              <span className="wc-sector">Capital &amp; Finance</span>
-              <div className="wc-title">Blue economy investment at scale</div>
-              <div className="wc-body">Sovereign wealth funds, development finance, and ESG frameworks are converging on the ocean. The assets are material. The intelligence infrastructure wasn&apos;t. Until now.</div>
-              <div className="wc-tags">
-                <span className="wc-tag">Blue bonds</span>
-                <span className="wc-tag">Ocean risk</span>
-                <span className="wc-tag">Nature finance</span>
-              </div>
-            </div>
-            <div className="why-card">
-              <span className="wc-sector">Food &amp; Fisheries</span>
-              <div className="wc-title">Who controls the global protein supply</div>
-              <div className="wc-body">Fisheries supply protein for 3 billion people. Subsidy reform, IUU enforcement, and aquaculture regulation are reshaping who controls that supply chain.</div>
-              <div className="wc-tags">
-                <span className="wc-tag">IUU fishing</span>
-                <span className="wc-tag">Subsidy reform</span>
-                <span className="wc-tag">Aquaculture</span>
-              </div>
-            </div>
-            <div className="why-card">
-              <span className="wc-sector">Law &amp; Governance</span>
-              <div className="wc-title">A legal architecture being built in real time</div>
-              <div className="wc-body">New international frameworks are creating enforceable rights and obligations over ocean space for the first time. For lawyers, consultants, and policy teams, this is the most consequential shift in international law in a generation.</div>
-              <div className="wc-tags">
-                <span className="wc-tag">Treaty law</span>
-                <span className="wc-tag">Marine governance</span>
-                <span className="wc-tag">Shipping regulation</span>
-              </div>
-            </div>
-            <div className="why-card">
-              <span className="wc-sector">Geopolitics</span>
-              <div className="wc-title">The ocean as contested territory</div>
-              <div className="wc-body">Arctic access, undersea cable security, deep-sea resource rights, contested maritime boundaries. The ocean is no longer background. It&apos;s the stage.</div>
-              <div className="wc-tags">
-                <span className="wc-tag">Arctic</span>
-                <span className="wc-tag">Cable security</span>
-                <span className="wc-tag">Boundaries</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Platform features */}
       <div className="section-teal-wrap">
@@ -376,24 +286,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Proof */}
-      <div className="proof">
-        <div className="proof-inner">
-          <span className="proof-label">Read by professionals at</span>
-          <div className="proof-sep"></div>
-          <div className="proof-pills">
-            <span className="proof-pill">Ocean conservation NGOs</span>
-            <span className="proof-pill">Blue economy funds</span>
-            <span className="proof-pill">Maritime law firms</span>
-            <span className="proof-pill">Government advisory bodies</span>
-            <span className="proof-pill">Offshore energy operators</span>
-            <span className="proof-pill">ESG research teams</span>
-            <span className="proof-pill">Shipping companies</span>
-            <span className="proof-pill">Marine research institutes</span>
-          </div>
-        </div>
-      </div>
 
       {/* Live threads */}
       <div className="section-teal-wrap">
@@ -759,35 +651,6 @@ export default function LandingPage() {
           NGO or grant-funded? Email hello@thetideline.co for flexible annual pricing.
         </p>
       </section>
-
-      {/* Source methodology */}
-      <div className="section-teal-wrap">
-      <section className="section" id="methodology">
-        <span className="section-label">Source methodology</span>
-        <h2 className="section-title">Every source is labelled. Every answer is cited.</h2>
-        <p className="section-sub">Tideline classifies every source into three tiers. The tier is visible on every story, every research answer, and every Crosscurrent alert. You always know where it came from.</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="tier-grid">
-          <div style={{background:"#fff",border:"2px solid var(--blue)",borderRadius:"var(--radius-lg)",padding:"24px"}}>
-            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"12px"}}>Tier 1 {"\u00B7"} Primary</div>
-            <div style={{fontSize:"15px",fontWeight:600,color:"var(--ink)",marginBottom:"8px"}}>Governing body documents</div>
-            <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.6}}>Official regulatory publications, treaty text, governing body records, decision documents. Direct from the institution.</div>
-            <div style={{fontSize:"12px",color:"var(--tertiary)",marginTop:"12px"}}>Examples: IMO, OSPAR, IWC, FAO, UNEP</div>
-          </div>
-          <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"24px"}}>
-            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"12px"}}>Tier 2 {"\u00B7"} Specialist press</div>
-            <div style={{fontSize:"15px",fontWeight:600,color:"var(--ink)",marginBottom:"8px"}}>Industry and legal reporting</div>
-            <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.6}}>Specialist maritime, legal, and financial publications with editorial standards and domain expertise.</div>
-            <div style={{fontSize:"12px",color:"var(--tertiary)",marginTop:"12px"}}>Examples: Lloyd&apos;s List, Bloomberg Law, Reuters, TradeWinds</div>
-          </div>
-          <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"24px"}}>
-            <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"12px"}}>Tier 3 {"\u00B7"} Context</div>
-            <div style={{fontSize:"15px",fontWeight:600,color:"var(--ink)",marginBottom:"8px"}}>Supporting publications</div>
-            <div style={{fontSize:"13px",color:"var(--secondary)",lineHeight:1.6}}>NGO publications, conference proceedings, academic preprints, and general press. Useful for context, not cited as primary evidence.</div>
-            <div style={{fontSize:"12px",color:"var(--tertiary)",marginTop:"12px"}}>Examples: NGO reports, academic preprints, conference proceedings</div>
-          </div>
-        </div>
-      </section>
-      </div>
 
       {/* Mobile final CTA */}
       <div className="mobile-only" style={{background:"#0A1628",padding:"40px 20px",textAlign:"center"}}>
