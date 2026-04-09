@@ -179,6 +179,7 @@ export default function AdminLibraryPage() {
     try {
       const res = await fetch("/api/admin/documents/upload", { method: "POST", body: fd });
       if (res.ok) {
+        window.open('/platform/library', '_blank');
         setToast("Document added to library");
         setTitle(""); setSourceOrg(""); setDocType("report"); setPubDate("");
         setTopicTags([]); setRegionTags([]); setFile(null);
