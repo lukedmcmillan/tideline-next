@@ -102,7 +102,7 @@
   max-width: 1200px; margin: 0 auto;
   padding: 80px 24px 72px;
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 80px; align-items: center;
+  gap: 64px; align-items: center;
   min-height: calc(100vh - 106px);
 }
 
@@ -716,7 +716,7 @@
     gap: 36px;
     min-height: unset;
   }
-  .hero-right { order: 2; }
+  .hero-right { display: none; }
 
   .hero-h1 { font-size: 52px; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 28px; }
   .wheel-wrap { height: 64px; }
