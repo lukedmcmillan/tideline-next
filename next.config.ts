@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   // PDFKit reads Helvetica.afm at runtime via `fs.readFileSync(__dirname + '/data/...')`.
   // When webpack bundles it, __dirname no longer points at the real package and
   // the AFM files are missing, giving ENOENT on Vercel. Marking pdfkit as an
