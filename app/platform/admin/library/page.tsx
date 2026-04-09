@@ -120,13 +120,47 @@ export default function AdminLibraryPage() {
     setExtracting(true);
     setScanWarning("");
     setConfidence(null);
-    const fd = new FormData();
-    const slice = f.slice(0, 2048 * 1024);
-    const slicedFile = new File([slice], f.name, { type: f.type });
-    fd.append("file", slicedFile);
+
     try {
-      const res = await fetch("/api/library/extract-metadata", { method: "POST", body: fd });
+      // Client-side text extraction
+      const arrayBuffer = await f.arrayBuffer();
+      const pdfjsLib = await import("pdfjs-dist");
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let text = "";
+      const maxPages = Math.min(5, pdf.numPages);
+
+      for (let i = 1; i <= maxPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items
+          .map((item: { str?: string }) => item.str || "")
+          .join(" ");
+        text += pageText + "\n";
+        if (text.length > 6000) break;
+      }
+
+      text = text.slice(0, 6000).trim();
+
+      if (text.length < 100) {
+        setScanWarning(
+          "This appears to be a scanned document. Please fill in the metadata manually."
+        );
+        setExtracting(false);
+        return;
+      }
+
+      // Send text only to API (not the file)
+      const res = await fetch("/api/library/extract-metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
       const data = await res.json();
+
       if (data.error === "scanned") {
         setScanWarning(data.message);
       } else if (data.title) {
@@ -138,9 +172,13 @@ export default function AdminLibraryPage() {
         setRegionTags(data.region_tags || []);
         setConfidence(data.confidence);
       }
-    } catch {
-      // silent - user can fill manually
+    } catch (err) {
+      console.error("Extraction error:", err);
+      setScanWarning(
+        "Could not extract text. Please fill in the metadata manually."
+      );
     }
+
     setExtracting(false);
   }, []);
 

@@ -722,7 +722,7 @@
     gap: 36px;
     min-height: unset;
   }
-  .hero-right { display: none; }
+  .hero-right { display: block; margin-top: 32px; }
 
   .hero-h1 { font-size: 52px; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 28px; }
   .wheel-wrap { height: 64px; }

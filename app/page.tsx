@@ -77,9 +77,11 @@ export default function LandingPage() {
         <div className="hero">
           <div className="hero-left">
             <h1 className="hero-h1-new fi d1" style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"48px",lineHeight:1.08,letterSpacing:"-0.025em",margin:0,marginBottom:"28px"}}>
-              <span style={{color:"#0A1628"}}>The ocean sector finally</span><br/>
-              <span style={{color:"#1D9E75"}}>has a room of its own.</span>
+              <span style={{color:"#0A1628"}}>Every day is you on a good day.</span>
             </h1>
+            <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
+              The ocean sector finally has a room of its own.
+            </p>
 
             <div className="mobile-only" style={{marginTop:"24px"}}>
               <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
@@ -104,6 +106,9 @@ export default function LandingPage() {
               <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Cancel any time</span>
               <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
             </div>
+            <p style={{fontSize:"13px",color:"#6B7280",marginTop:"8px"}}>
+              Or <a href="#pricing" style={{color:"#1D9E75",fontWeight:600}}>start free</a>. No card required.
+            </p>
           </div>
           <div className="hero-right">
             <div style={{background:"#fff",border:"1px solid #E5E7EB",borderLeft:"4px solid #1D9E75",borderRadius:"8px",padding:"32px"}}>
@@ -121,6 +126,24 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Desktop testimonial */}
+      <div className="desktop-only" style={{background:"#FAFAFA",borderBottom:"1px solid #DADCE0",padding:"32px 24px",textAlign:"center"}}>
+        <div style={{maxWidth:"540px",margin:"0 auto"}}>
+          <div style={{background:"#fff",border:"1px solid #DADCE0",borderRadius:"10px",padding:"14px"}}>
+            <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,fontStyle:"italic",fontSize:"13px",color:"#333",lineHeight:1.6}}>
+              {"\u201C"}I found a regulatory development my client needed in under a minute. That would have been three hours of searching before Tideline.{"\u201D"}
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",marginTop:"10px"}}>
+              <div style={{width:"28px",height:"28px",borderRadius:"50%",background:"#0A1628",display:"grid",placeItems:"center",flexShrink:0,color:"#1D9E75",fontFamily:"'DM Mono',monospace",fontSize:"10px"}}>SR</div>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"12px",color:"#0A1628"}}>S. Reyes</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"11px",color:"#9AA0A6"}}>Maritime Lawyer, London</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Emotional beat */}
       <div style={{background:"#0A1628",padding:"80px 24px",textAlign:"center"}}>
@@ -486,33 +509,6 @@ export default function LandingPage() {
       </div>
 
       </div>{/* end desktop-only */}
-
-      <div className="mobile-summary">
-        <div style={{padding:"32px 24px",background:"#fff"}}>
-          <div style={{maxWidth:"600px",margin:"0 auto"}}>
-            <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"#1D9E75",marginBottom:"10px"}}>A DAY IN TIDELINE</div>
-            <h2 style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"22px",color:"#0A1628",lineHeight:1.2,margin:"0 0 20px"}}>One room. Your entire working day.</h2>
-            <div>
-              {[
-                {time:"8am",bold:"The brief is already there.",rest:" Everything that moved overnight, filed and ready."},
-                {time:"9am",bold:"You ask the research library about BBNJ obligations.",rest:" Three primary sources cited in seconds."},
-                {time:"11am",bold:"You open your workspace.",rest:" New intelligence from overnight is already filed and waiting."},
-                {time:"12pm",bold:"You check the tracker.",rest:" Something moved at the ISA this morning. You are the first in your organisation to know."},
-                {time:"4pm",bold:"A lawyer in Singapore comments on the story.",rest:" She has seen something you missed. You reach out."},
-              ].map((r,i)=>(
-                <div key={i} style={{display:"flex",gap:"12px",padding:"12px 0",borderBottom:"1px solid #F0F0F0"}}>
-                  <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",color:"#1D9E75",width:"48px",flexShrink:0}}>{r.time}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#202124",lineHeight:1.5}}>
-                    <strong style={{color:"#0A1628",fontWeight:600}}>{r.bold}</strong><span style={{color:"#5F6368"}}>{r.rest}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontStyle:"italic",color:"#5F6368",textAlign:"center",paddingTop:"16px"}}>Most professionals in this sector have six tabs open right now. Tideline is one.</div>
-          </div>
-        </div>
-
-      </div>
 
       {/* Mobile product screens + pain section */}
       <div className="mobile-only">

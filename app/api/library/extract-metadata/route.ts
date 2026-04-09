@@ -72,57 +72,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
+  const { text } = await req.json();
 
-  if (!file) {
-    return NextResponse.json({ error: "No file provided" }, { status: 400 });
-  }
-
-  console.log("extract-metadata called, file type:", file.type, "file size:", file.size);
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  let text = "";
-
-  if (file.type === "text/plain") {
-    text = buffer.toString("utf-8").slice(0, TEXT_LIMIT);
-  } else if (file.type === "application/pdf") {
-    const { extractText } = await import("unpdf");
-    try {
-      const uint8Array = new Uint8Array(buffer);
-      const { text: pdfText } = await extractText(uint8Array, { mergePages: true });
-      text = pdfText.slice(0, TEXT_LIMIT);
-    } catch (err) {
-      console.error("unpdf error:", err);
-      return NextResponse.json({
-        error: "scanned",
-        message: "Could not extract text from this document. Please fill in the metadata manually.",
-      });
-    }
-  } else if (
-    file.type === "application/msword" ||
-    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ) {
-    const mammoth = (await import("mammoth")).default;
-    try {
-      const result = await mammoth.extractRawText({ buffer });
-      text = result.value.slice(0, TEXT_LIMIT);
-    } catch (err) {
-      console.error("mammoth error:", err);
-      return NextResponse.json({
-        error: "scanned",
-        message: "Could not extract text from this document. Please fill in the metadata manually.",
-      });
-    }
-  } else {
-    return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
-  }
-
-  // Scanned PDF fallback
-  if (text.trim().length < SCANNED_THRESHOLD) {
+  if (!text || text.trim().length < SCANNED_THRESHOLD) {
     return NextResponse.json({
       error: "scanned",
-      message: "This appears to be a scanned document. Please fill in the metadata manually.",
+      message: "Could not extract enough text from this document. Please fill in the metadata manually.",
     });
   }
 
