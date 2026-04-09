@@ -73,36 +73,39 @@ export default function LandingPage() {
       />
 
       {/* Hero */}
-      <section>
-        <div className="hero">
-          <div className="hero-left">
-            <div className="hero-tag"><div className="hero-tag-dot" />{" "}Ocean intelligence {"\u00B7"} Live</div>
-            <h1 className="hero-h1-new fi d1">Every day is you on a good day.</h1>
-            <p className="hero-body" style={{fontStyle:"italic"}}>The ocean sector finally has a room of its own.</p>
-            <p className="hero-sub">Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it {"\u2014"} Tideline is where you stay ahead. Workspace. Library. Live feed. Community. One place. All day.</p>
-            <div className="hero-actions fi d3">
-              <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
-              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>Try it free. No card required.</button>
-            </div>
-            <div className="hero-meta fi d4">
-              <span>{"\u2713"} No card required</span>
-              <span>{"\u2713"} Cancel any time</span>
-              <span>{"\u2713"} Full access from day one</span>
-            </div>
-            <p className="hero-free">Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>start free</a>. No card required.</p>
+      <section className="hero">
+        <div className="hero-left">
+          <div className="hero-tag">
+            <div className="hero-tag-dot" />
+            Ocean intelligence {"\u00B7"} Live
           </div>
-          <div className="hero-right">
-            <div className="painkiller-card">
-              <div className="pk-label">BEFORE TIDELINE</div>
-              <p className="pk-quote">{"\u201C"}Something moved last week. I found out in the meeting.{"\u201D"}</p>
-              <p className="pk-resolve">This does not happen on Tideline.</p>
-              <p className="pk-tagline">Every day is you on a good day.</p>
-              <hr className="pk-divider" />
-              <div className="pk-pills">
-                <div className="pk-pill"><div className="pk-pill-name">Freedom</div><div className="pk-pill-desc">Less searching</div></div>
-                <div className="pk-pill"><div className="pk-pill-name">Confidence</div><div className="pk-pill-desc">Always prepared</div></div>
-                <div className="pk-pill"><div className="pk-pill-name">Calm</div><div className="pk-pill-desc">Nothing missed</div></div>
-              </div>
+          <h1>Every day is you on a good day.</h1>
+          <p className="hero-deck">The ocean sector finally has a room of its own.</p>
+          <p className="hero-sub">Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it {"\u2014"} Tideline is where you stay ahead. Workspace. Library. Live feed. Community. One place. All day.</p>
+          <div className="hero-ctas">
+            <button className="btn-primary" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
+            <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See the platform in action</button>
+          </div>
+          <div className="hero-meta">
+            <span>No card required</span>
+            <span>Cancel any time</span>
+            <span>Full access from day one</span>
+          </div>
+          <p className="hero-free">Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>start free</a>. No card required.</p>
+        </div>
+        <div className="hero-right">
+          <div className="hero-card">
+            <div className="hero-card-label">Before Tideline</div>
+            <div className="hero-card-quote">
+              <p>{"\u201C"}Something moved last week. I found out in the meeting.{"\u201D"}</p>
+            </div>
+            <p className="hero-card-resolve">This does not happen on Tideline.</p>
+            <p className="hero-card-tagline">Every day is you on a good day. The workspace, library, live feed and community you need {"\u2014"} all in one place, updated in real time, filtered to your sector.</p>
+            <div className="hero-card-divider" />
+            <div className="hero-card-pillars">
+              <div className="hero-card-pillar"><div className="hero-card-pillar-name">Freedom</div><div className="hero-card-pillar-desc">Less searching</div></div>
+              <div className="hero-card-pillar"><div className="hero-card-pillar-name">Confidence</div><div className="hero-card-pillar-desc">Always prepared</div></div>
+              <div className="hero-card-pillar"><div className="hero-card-pillar-name">Calm</div><div className="hero-card-pillar-desc">Nothing missed</div></div>
             </div>
           </div>
         </div>
@@ -166,47 +169,60 @@ export default function LandingPage() {
       {/* Six pillars */}
       <section className="pillars-section">
         <div className="pillars-inner">
-          <p className="pillars-label">WHAT TIDELINE GIVES YOU BACK</p>
-          <h2 className="pillars-heading">This is not about being informed. It is about what that gives you.</h2>
-          <p className="pillars-sub">Tideline is the workspace, library, live feed, and community for ocean professionals. One place. All day.</p>
+          <div className="pillars-label">What Tideline gives you back</div>
+          <h2 className="pillars-heading">This is not about being informed.<br />It is about what that gives you.</h2>
+          <p className="pillars-sub">Tideline is the workspace, library, live feed, and community for ocean professionals. One place. All day. Here is what it gives back.</p>
           <div className="pillars-grid">
-            <div className="pillar-card"><div className="pillar-name">Freedom</div><div className="pillar-tagline">Less time searching. More time doing.</div><div className="pillar-desc">Stop chasing information across 40 tabs. Everything you need is already inside Tideline, updated in real time, filtered to your work.</div></div>
-            <div className="pillar-card"><div className="pillar-name">Confidence</div><div className="pillar-tagline">Walk into every meeting prepared.</div><div className="pillar-desc">Know what moved before your first call. Walk in as the person who already knows {"\u2014"} not the one catching up.</div></div>
-            <div className="pillar-card"><div className="pillar-name">Performance</div><div className="pillar-tagline">Produce better work, faster.</div><div className="pillar-desc">The consultation response that takes three days takes three hours. The briefing that needed a morning arrives before your second coffee.</div></div>
-            <div className="pillar-card"><div className="pillar-name">Authority</div><div className="pillar-tagline">Work that stands up to scrutiny.</div><div className="pillar-desc">Every answer cited. Every source traceable. Primary documents, not summaries. The kind of sourcing that holds up in a board presentation or a legal brief.</div></div>
-            <div className="pillar-card"><div className="pillar-name">Potential</div><div className="pillar-tagline">The best version of you. Every day.</div><div className="pillar-desc">Tideline does not replace your judgement. It removes the overhead that was stopping you from applying it.</div></div>
-            <div className="pillar-card"><div className="pillar-name">Calm</div><div className="pillar-tagline">Nothing slips. Nothing surprises you.</div><div className="pillar-desc">Every deadline tracked. Every development filed. That low-level anxiety that something important moved and you missed it {"\u2014"} gone.</div></div>
+            <div className="pillar-card"><div className="pillar-icon">{"\uD83D\uDD4A\uFE0F"}</div><div className="pillar-name">Freedom</div><div className="pillar-tagline">Less time searching. More time doing.</div><div className="pillar-desc">Stop chasing information across 40 tabs. Everything you need is already inside Tideline, updated in real time, filtered to your work.</div></div>
+            <div className="pillar-card"><div className="pillar-icon">{"\uD83C\uDFAF"}</div><div className="pillar-name">Confidence</div><div className="pillar-tagline">Walk into every meeting prepared.</div><div className="pillar-desc">Know what moved before your first call. Walk in as the person who already knows {"\u2014"} not the one catching up.</div></div>
+            <div className="pillar-card"><div className="pillar-icon">{"\u26A1"}</div><div className="pillar-name">Performance</div><div className="pillar-tagline">Produce better work, faster.</div><div className="pillar-desc">The consultation response that takes three days takes three hours. The briefing that needed a morning arrives before your second coffee.</div></div>
+            <div className="pillar-card"><div className="pillar-icon">{"\uD83D\uDCCB"}</div><div className="pillar-name">Authority</div><div className="pillar-tagline">Work that stands up to scrutiny.</div><div className="pillar-desc">Every answer cited. Every source traceable. Primary documents, not summaries. The kind of sourcing that holds up in a board presentation or a legal brief.</div></div>
+            <div className="pillar-card"><div className="pillar-icon">{"\uD83D\uDE80"}</div><div className="pillar-name">Potential</div><div className="pillar-tagline">The best version of you. Every day.</div><div className="pillar-desc">Tideline does not replace your judgement. It removes the overhead that was stopping you from applying it. That is what you are paying for.</div></div>
+            <div className="pillar-card"><div className="pillar-icon">{"\uD83C\uDF0A"}</div><div className="pillar-name">Calm</div><div className="pillar-tagline">Nothing slips. Nothing surprises you.</div><div className="pillar-desc">Every deadline tracked. Every development filed. That low-level anxiety that something important moved and you missed it {"\u2014"} gone.</div></div>
           </div>
+        </div>
+      </section>
+
+      {/* Possibility section */}
+      <section className="possibility-section">
+        <div className="possibility-inner">
+          <div className="possibility-label">What your work looks like on Tideline</div>
+          <h2 className="possibility-heading">Imagine starting every day already knowing what moved.</h2>
+          <div className="possibility-grid">
+            <div className="possibility-card"><p>You open your workspace at 8am. Everything that moved overnight is already filed, summarised, and filtered to your sector. You did not have to look for it.</p></div>
+            <div className="possibility-card"><p>A client asks about the latest ISA position before a call. You send them a cited brief in four minutes. It has your name on it. Not a link to a Google search.</p></div>
+            <div className="possibility-card"><p>A blue bond issuance crosses your desk. Crosscurrent has already flagged that two of the issuing states have declining CII compliance ratings. You saw the connection before anyone reported it.</p></div>
+            <div className="possibility-card"><p>The consultation window closes in eight days. You knew about it three weeks ago. Your response is already drafted.</p></div>
+          </div>
+          <p className="possibility-close">This is what your work looks like when the intelligence infrastructure finally catches up with the importance of the sector.</p>
         </div>
       </section>
 
       {/* Comparison table */}
       <section className="comparison-section">
         <div className="comparison-inner">
-          <p className="comparison-label">WHY TIDELINE</p>
+          <div className="comparison-label">Why Tideline</div>
           <h2 className="comparison-heading">What used to take days now takes minutes.</h2>
           <p className="comparison-sub">Every task in the table below exists in your current working week. This is how long it takes without Tideline, and how long it takes with it.</p>
-          <div className="comparison-table-wrap">
-            <table className="comparison-table">
-              <thead>
-                <tr>
-                  <th className="col-task">The task</th>
-                  <th className="col-other">Manually</th>
-                  <th className="col-other">Search and generic tools</th>
-                  <th className="col-featured">With Tideline <span className="featured-badge">PURPOSE-BUILT</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td className="row-label">Finding out what moved in your sector overnight</td><td className="col-manual">30{"\u2013"}60 min<br /><span className="col-sub">Scanning newsletters, LinkedIn, email</span></td><td className="col-manual">Incomplete<br /><span className="col-sub">Generic results, not sector-specific</span></td><td className="col-tideline">2 minutes<br /><span className="col-sub">Live feed, filtered to your topics</span></td></tr>
-                <tr><td className="row-label">Finding a citable primary source document</td><td className="col-manual">45+ min<br /><span className="col-sub">Searching ISA, IMO, UN sites manually</span></td><td className="col-manual">Unreliable<br /><span className="col-sub">Often summaries, not primary sources</span></td><td className="col-tideline">Seconds<br /><span className="col-sub">2,400+ primary sources, searchable instantly</span></td></tr>
-                <tr><td className="row-label">Producing a cited brief or report</td><td className="col-manual">Half a day<br /><span className="col-sub">Research, draft, cite, format, export</span></td><td className="col-manual">Hours, uncited<br /><span className="col-sub">No primary source trail</span></td><td className="col-tideline">Under an hour<br /><span className="col-sub">Notes to Word report in one click</span></td></tr>
-                <tr><td className="row-label">Tracking a long-running story like DSM or 30x30</td><td className="col-manual">No system<br /><span className="col-sub">Saved tabs, email threads, memory</span></td><td className="col-manual">Not possible<br /><span className="col-sub">No persistent tracking across sources</span></td><td className="col-tideline">Automatic<br /><span className="col-sub">Live trackers follow every development</span></td></tr>
-                <tr><td className="row-label">Spotting connections across stories and sectors</td><td className="col-manual">Rarely happens<br /><span className="col-sub">Too much to read, too many sources</span></td><td className="col-manual">Not possible<br /><span className="col-sub">No cross-source pattern engine</span></td><td className="col-tideline">Automatic<br /><span className="col-sub">Crosscurrent surfaces connections before anyone reports them</span></td></tr>
-                <tr><td className="row-label">Tracking consultation deadlines and treaty meetings</td><td className="col-manual">Missed constantly<br /><span className="col-sub">Scattered across websites and emails</span></td><td className="col-manual">Not possible<br /><span className="col-sub">No sector-specific calendar tool exists</span></td><td className="col-tideline">Zero effort<br /><span className="col-sub">Every deadline in one calendar, syncs Google and iOS</span></td></tr>
-                <tr><td className="row-label">Building a citable document library for your team</td><td className="col-manual">Years of effort<br /><span className="col-sub">Shared drives, no structure, no search</span></td><td className="col-manual">Not possible<br /><span className="col-sub">Generic tools, no ocean curation</span></td><td className="col-tideline">Already built<br /><span className="col-sub">2,400+ documents. Add your own. Grows with every subscriber.</span></td></tr>
-              </tbody>
-            </table>
-          </div>
+          <table className="comparison-table">
+            <thead>
+              <tr>
+                <th style={{width:"36%"}}>The task</th>
+                <th style={{textAlign:"center",width:"22%"}}>Manually</th>
+                <th style={{textAlign:"center",width:"22%"}}>Search and generic tools</th>
+                <th className="featured">With Tideline <span className="featured-badge">Purpose-built</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td className="row-label">Finding out what moved in your sector overnight</td><td className="other"><span className="cross">30{"\u2013"}60 min</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Scanning newsletters, LinkedIn, email</span></td><td className="other"><span className="partial">Incomplete</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Generic results, not sector-specific</span></td><td className="featured-col"><span className="check">2 minutes</span><br /><span style={{fontSize:"11px"}}>Live feed, filtered to your topics</span></td></tr>
+              <tr><td className="row-label">Finding a citable primary source document</td><td className="other"><span className="cross">45+ min</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Searching ISA, IMO, UN sites manually</span></td><td className="other"><span className="partial">Unreliable</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Often summaries, not primary sources</span></td><td className="featured-col"><span className="check">Seconds</span><br /><span style={{fontSize:"11px"}}>2,400+ primary sources, searchable instantly</span></td></tr>
+              <tr><td className="row-label">Producing a cited brief or report</td><td className="other"><span className="cross">Half a day</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Research, draft, cite, format, export</span></td><td className="other"><span className="partial">Hours, uncited</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>No primary source trail</span></td><td className="featured-col"><span className="check">Under an hour</span><br /><span style={{fontSize:"11px"}}>Notes to Word report in one click. Your name on it.</span></td></tr>
+              <tr><td className="row-label">Tracking a long-running story like DSM or 30x30</td><td className="other"><span className="cross">No system</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Saved tabs, email threads, memory</span></td><td className="other"><span className="cross">Not possible</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>No persistent tracking across sources</span></td><td className="featured-col"><span className="check">Automatic</span><br /><span style={{fontSize:"11px"}}>Live trackers follow every development. Nothing missed.</span></td></tr>
+              <tr><td className="row-label">Spotting connections across stories and sectors</td><td className="other"><span className="cross">Rarely happens</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Too much to read. Too many sources.</span></td><td className="other"><span className="cross">Not possible</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>No cross-source pattern engine</span></td><td className="featured-col"><span className="check">Automatic</span><br /><span style={{fontSize:"11px"}}>Crosscurrent surfaces connections before anyone reports them</span></td></tr>
+              <tr><td className="row-label">Tracking consultation deadlines and treaty meetings</td><td className="other"><span className="cross">Missed constantly</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Scattered across websites and emails</span></td><td className="other"><span className="cross">Not possible</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>No sector-specific calendar tool exists</span></td><td className="featured-col"><span className="check">Zero effort</span><br /><span style={{fontSize:"11px"}}>Every deadline in one calendar. Syncs with Google and iOS.</span></td></tr>
+              <tr><td className="row-label">Building a citable document library for your team</td><td className="other"><span className="cross">Years of effort</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Shared drives, no structure, no search</span></td><td className="other"><span className="cross">Not possible</span><br /><span style={{fontSize:"11px",color:"#D1D5DB"}}>Generic tools, no ocean-specific curation</span></td><td className="featured-col"><span className="check">Already built</span><br /><span style={{fontSize:"11px"}}>2,400+ documents. Add your own. Grows with every subscriber.</span></td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
