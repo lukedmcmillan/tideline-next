@@ -266,49 +266,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Crosscurrent */}
-      <section style={{background:"#e8f5f0",padding:"80px 24px",borderTop:"1px solid var(--border)"}}>
-        <div style={{maxWidth:"1200px",margin:"0 auto"}}>
-          <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"12px"}}>
-            <span style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--blue)",animation:"pulse 2.2s ease-in-out infinite"}}/>
-            <span style={{fontFamily:"var(--font-mono), 'DM Mono', monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)"}}>Only on Tideline</span>
-          </div>
-          <h2 className="section-title" style={{marginBottom:"12px"}}>Crosscurrent</h2>
-          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,maxWidth:"620px",marginBottom:"48px"}}>Tideline reads across 100+ sources simultaneously and surfaces connections that no individual source would make. A regulatory ruling connected to a financial disclosure connected to an enforcement pattern, flagged before anyone reports on it.</p>
-
-          <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr auto 1fr",gap:"16px",alignItems:"center",marginBottom:"40px"}} className="cc-chain">
-            <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"20px"}}>
-              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"8px"}}>Source A {"\u00B7"} Tier 1</div>
-              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>IMO MEPC 82 adopts 2030 GHG intensity targets</div>
-              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>Regulatory decision {"\u00B7"} IMO</div>
-            </div>
-            <div style={{fontSize:"20px",color:"var(--blue)",fontWeight:700}}>+</div>
-            <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"20px"}}>
-              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--tertiary)",marginBottom:"8px"}}>Source B {"\u00B7"} Tier 2</div>
-              <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>4 blue bond issuances cite IMO compliance in prospectus</div>
-              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>Financial disclosure {"\u00B7"} Bloomberg</div>
-            </div>
-            <div style={{fontSize:"20px",color:"var(--blue)",fontWeight:700}}>=</div>
-            <div style={{background:"var(--ink)",borderRadius:"var(--radius-lg)",padding:"20px"}}>
-              <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"9px",letterSpacing:"0.12em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"8px"}}>Crosscurrent connection</div>
-              <div style={{fontSize:"14px",fontWeight:500,color:"#fff",marginBottom:"4px"}}>These bonds are now materially exposed to stricter targets</div>
-              <div style={{fontSize:"12px",color:"rgba(255,255,255,0.5)"}}>Flagged 48 hours before press reported it</div>
-            </div>
-          </div>
-
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}} className="cc-alerts">
-            <div style={{background:"#fff",borderLeft:"3px solid var(--blue)",borderRadius:"0 var(--radius-md) var(--radius-md) 0",padding:"16px 20px"}}>
-              <div style={{fontSize:"13px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>ISA moratorium coalition conditioning votes on BBNJ implementation terms</div>
-              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>3 sponsoring states linked across 2 trackers</div>
-            </div>
-            <div style={{background:"#fff",borderLeft:"3px solid var(--blue)",borderRadius:"0 var(--radius-md) var(--radius-md) 0",padding:"16px 20px"}}>
-              <div style={{fontSize:"13px",fontWeight:500,color:"var(--ink)",marginBottom:"4px"}}>Shipping ESG disclosures diverging from vessel tracking data on 12 routes</div>
-              <div style={{fontSize:"12px",color:"var(--tertiary)"}}>Enforcement risk flagged across 3 source types</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Platform features */}
       <section className="section" id="platform-features">
         <span className="section-label">The platform</span>

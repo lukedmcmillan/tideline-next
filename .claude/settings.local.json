@@ -50,7 +50,8 @@
       "Bash(git check-ignore:*)",
       "Bash(npx supabase:*)",
       "Bash(git ls-tree:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }
