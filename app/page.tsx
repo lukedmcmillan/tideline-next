@@ -666,32 +666,48 @@ export default function LandingPage() {
         </section>
       </div>
 
-      {/* Founder quote */}
-      <div className="founder-compact-mobile" style={{borderTop:"1px solid var(--border)",padding:"64px 24px",background:"#fff"}}>
-        <div style={{maxWidth:"720px",margin:"0 auto",textAlign:"center"}}>
-          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"28px"}}>From the founder</div>
-          <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"clamp(22px,2.8vw,30px)",fontWeight:400,color:"var(--ink)",marginBottom:"32px"}}>
-            Built by someone who needed it. Which is why it works.
+      {/* Library */}
+      <section style={{padding:"80px 24px",background:"#fff",borderTop:"1px solid var(--border)"}}>
+        <div style={{maxWidth:"1200px",margin:"0 auto"}}>
+          <span className="section-label">The library</span>
+          <h2 className="section-title">The Tideline Library</h2>
+          <p className="section-sub">Citable sources. Fast. The world{"\u2019"}s biggest ocean library, being built right now.</p>
+          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,maxWidth:"620px",marginBottom:"48px"}}>
+            Difficult to find citable sources quickly is the most common problem professionals in this sector describe. Tideline solves it. Treaty text. ISA publications. IMO circulars. Peer-reviewed science. FAO reports. Search across all of it in plain language. Cite directly. Not summaries of summaries {"\u2014"} the actual documents, the moment you need them.
+          </p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}}>
+            {[{n:"2,400+",l:"Documents"},{n:"Growing",l:"Every day"},{n:"Primary",l:"Sources only"}].map((s)=>(
+              <div key={s.l} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"28px",textAlign:"center"}}>
+                <div style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"34px",fontWeight:400,color:"var(--ink)",lineHeight:1,letterSpacing:"-0.02em",marginBottom:"4px"}}>{s.n}</div>
+                <div style={{fontSize:"13px",color:"var(--secondary)"}}>{s.l}</div>
+              </div>
+            ))}
           </div>
-          <blockquote style={{fontFamily:"'Google Sans Display','Google Sans',sans-serif",fontSize:"16px",fontWeight:400,color:"var(--secondary)",lineHeight:1.55,letterSpacing:"-0.01em",fontStyle:"normal",textAlign:"left",borderLeft:"3px solid #1D9E75",paddingLeft:"20px"}}>
-            {"\u201C"}I built Tideline because it didn&apos;t exist. Every day working in the ocean sector meant too many tabs, too many sources, work scattered across platforms that didn&apos;t talk to each other. I needed one place to read, research, draft, track, and produce.
-            <br/><br/>
-            This is that place.{"\u201D"}
-          </blockquote>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"12px"}}>
-            <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--ink)",display:"grid",placeItems:"center",flexShrink:0}}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M2 11 Q5.5 7 9 11 Q12.5 15 16 11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-                <path d="M2 7.5 Q5.5 3.5 9 7.5 Q12.5 11.5 16 7.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div style={{textAlign:"left"}}>
+        </div>
+      </section>
+
+      {/* Founder */}
+      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"#fff"}}>
+        <div style={{maxWidth:"620px",margin:"0 auto"}}>
+          <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"var(--blue)",marginBottom:"28px"}}>From the founder</div>
+          <p style={{fontSize:"22px",fontWeight:600,color:"var(--ink)",lineHeight:1.4,marginBottom:"20px",marginTop:0}}>
+            I built Tideline because I needed it.
+          </p>
+          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"20px",marginTop:0}}>
+            Sometimes you just need support to be the best version of yourself at work. You do not have time to scour every source. You need to be up to date. You need to be the person in the room who knows what is happening.
+          </p>
+          <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"32px",marginTop:0}}>
+            Tideline is exactly what I was missing from my daily life. So I built it.
+          </p>
+          <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+            <div style={{width:"40px",height:"40px",borderRadius:"50%",background:"var(--ink)",display:"grid",placeItems:"center",flexShrink:0,color:"#fff",fontFamily:"'Google Sans Mono',monospace",fontSize:"12px",letterSpacing:"0.05em"}}>LM</div>
+            <div>
               <div style={{fontSize:"14px",fontWeight:500,color:"var(--ink)"}}>Luke McMillan</div>
               <div style={{fontSize:"13px",color:"var(--tertiary)"}}>Founder, Tideline</div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Pricing */}
       <section className="section" id="pricing">
