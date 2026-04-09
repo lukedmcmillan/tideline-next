@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 const WHITE  = "#FFFFFF";
 const NAVY   = "#0A1628";
 const TEAL   = "#1D9E75";
+const AMBER  = "#F9AB00";
 const RED_T  = "#D93025";
 const T1     = "#202124";
 const T2     = "#3C4043";
@@ -27,6 +28,12 @@ const DOC_TYPES = [
   { value: "court_filing", label: "Court Filing" },
   { value: "other", label: "Other" },
 ];
+
+const CONFIDENCE_DISPLAY: Record<string, { color: string; label: string }> = {
+  high:   { color: TEAL,  label: "Metadata verified" },
+  medium: { color: AMBER, label: "Please review metadata" },
+  low:    { color: RED_T, label: "Metadata needs review - please check all fields" },
+};
 
 interface PendingDoc {
   id: string;
@@ -62,6 +69,11 @@ export default function AdminLibraryPage() {
   const [toast, setToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Extraction state
+  const [extracting, setExtracting] = useState(false);
+  const [confidence, setConfidence] = useState<"high" | "medium" | "low" | null>(null);
+  const [scanWarning, setScanWarning] = useState("");
 
   // Review state
   const [pending, setPending] = useState<PendingDoc[]>([]);
@@ -103,6 +115,33 @@ export default function AdminLibraryPage() {
     setReviewLoading(false);
   }
 
+  // Auto-extract metadata when file is set
+  const extractMetadata = useCallback(async (f: File) => {
+    setExtracting(true);
+    setScanWarning("");
+    setConfidence(null);
+    const fd = new FormData();
+    fd.append("file", f);
+    try {
+      const res = await fetch("/api/library/extract-metadata", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.error === "scanned") {
+        setScanWarning(data.message);
+      } else if (data.title) {
+        setTitle(data.title || "");
+        setSourceOrg(data.source_organisation || "");
+        setDocType(data.document_type || "report");
+        setPubDate(data.published_date || "");
+        setTopicTags(data.topic_tags || []);
+        setRegionTags(data.region_tags || []);
+        setConfidence(data.confidence);
+      }
+    } catch {
+      // silent - user can fill manually
+    }
+    setExtracting(false);
+  }, []);
+
   function handleTopicKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if ((e.key === "," || e.key === "Enter") && topicInput.trim()) {
       e.preventDefault();
@@ -143,6 +182,7 @@ export default function AdminLibraryPage() {
         setToast("Document added to library");
         setTitle(""); setSourceOrg(""); setDocType("report"); setPubDate("");
         setTopicTags([]); setRegionTags([]); setFile(null);
+        setConfidence(null); setScanWarning("");
         if (fileRef.current) fileRef.current.value = "";
         setTimeout(() => setToast(""), 3000);
       }
@@ -165,7 +205,16 @@ export default function AdminLibraryPage() {
     e.preventDefault();
     setDragOver(false);
     const f = e.dataTransfer.files[0];
-    if (f) setFile(f);
+    if (f) {
+      setFile(f);
+      extractMetadata(f);
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] || null;
+    setFile(f);
+    if (f) extractMetadata(f);
   }
 
   if (isAdmin === null) {
@@ -186,8 +235,20 @@ export default function AdminLibraryPage() {
     borderRadius: 6, outline: "none", background: WHITE,
   };
 
+  const extractingFieldStyle: React.CSSProperties = extracting
+    ? { opacity: 0.5, animation: "pulse-field 1.5s ease-in-out infinite" }
+    : {};
+
   return (
     <>
+      {/* Pulse animation for extracting state */}
+      <style>{`
+        @keyframes pulse-field {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.8; }
+        }
+      `}</style>
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -234,83 +295,7 @@ export default function AdminLibraryPage() {
         {/* Upload tab */}
         {tab === "upload" && (
           <div style={{ maxWidth: 560 }}>
-            {/* Title */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Title</label>
-              <input type="text" value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} />
-            </div>
-
-            {/* Source organisation */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Source organisation</label>
-              <input type="text" value={sourceOrg} onChange={e => setSourceOrg(e.target.value)} style={inputStyle} />
-            </div>
-
-            {/* Document type */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Document type</label>
-              <select value={docType} onChange={e => setDocType(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
-                {DOC_TYPES.map(dt => (
-                  <option key={dt.value} value={dt.value}>{dt.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Published date */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Published date</label>
-              <input type="date" value={pubDate} onChange={e => setPubDate(e.target.value)} style={inputStyle} />
-            </div>
-
-            {/* Topic tags */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Topic tags</label>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: topicTags.length ? 8 : 0 }}>
-                {topicTags.map(tag => (
-                  <span key={tag} style={{
-                    fontFamily: M, fontSize: 11, color: T2,
-                    background: BLT, padding: "3px 10px", borderRadius: 3,
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                  }}>
-                    {tag}
-                    <span onClick={() => setTopicTags(topicTags.filter(t => t !== tag))} style={{ cursor: "pointer", color: T4, fontSize: 14, lineHeight: 1 }}>&times;</span>
-                  </span>
-                ))}
-              </div>
-              <input
-                type="text" value={topicInput}
-                onChange={e => setTopicInput(e.target.value)}
-                onKeyDown={handleTopicKeyDown}
-                placeholder="Type and press Enter or comma"
-                style={inputStyle}
-              />
-            </div>
-
-            {/* Region tags */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Region tags</label>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: regionTags.length ? 8 : 0 }}>
-                {regionTags.map(tag => (
-                  <span key={tag} style={{
-                    fontFamily: M, fontSize: 11, color: T2,
-                    background: BLT, padding: "3px 10px", borderRadius: 3,
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                  }}>
-                    {tag}
-                    <span onClick={() => setRegionTags(regionTags.filter(t => t !== tag))} style={{ cursor: "pointer", color: T4, fontSize: 14, lineHeight: 1 }}>&times;</span>
-                  </span>
-                ))}
-              </div>
-              <input
-                type="text" value={regionInput}
-                onChange={e => setRegionInput(e.target.value)}
-                onKeyDown={handleRegionKeyDown}
-                placeholder="Type and press Enter or comma"
-                style={inputStyle}
-              />
-            </div>
-
-            {/* File upload */}
+            {/* File upload — first, triggers extraction */}
             <div style={{ marginBottom: 28 }}>
               <label style={labelStyle}>File</label>
               <div
@@ -329,13 +314,16 @@ export default function AdminLibraryPage() {
                 <input
                   ref={fileRef} type="file"
                   accept=".pdf,.doc,.docx,.txt"
-                  onChange={e => setFile(e.target.files?.[0] || null)}
+                  onChange={handleFileSelect}
                   style={{ display: "none" }}
                 />
                 {file ? (
                   <div>
                     <div style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: T1 }}>{file.name}</div>
-                    <div style={{ fontFamily: M, fontSize: 12, color: T4, marginTop: 4 }}>{(file.size / 1048576).toFixed(1)} MB</div>
+                    <div style={{ fontFamily: M, fontSize: 12, color: T4, marginTop: 4 }}>
+                      {(file.size / 1048576).toFixed(1)} MB
+                      {extracting && <span style={{ color: TEAL, marginLeft: 8 }}>Extracting metadata...</span>}
+                    </div>
                   </div>
                 ) : (
                   <div>
@@ -346,17 +334,129 @@ export default function AdminLibraryPage() {
               </div>
             </div>
 
+            {/* Scanned document warning */}
+            {scanWarning && (
+              <div style={{
+                fontFamily: F, fontSize: 13, color: "#7A5900",
+                background: "#FEF7E0", border: `1px solid ${AMBER}`,
+                borderRadius: 6, padding: "10px 14px", marginBottom: 20,
+              }}>
+                {scanWarning}
+              </div>
+            )}
+
+            {/* Confidence indicator */}
+            {confidence && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: CONFIDENCE_DISPLAY[confidence].color,
+                  display: "inline-block",
+                }} />
+                <span style={{ fontFamily: F, fontSize: 12, color: T3 }}>
+                  {CONFIDENCE_DISPLAY[confidence].label}
+                </span>
+              </div>
+            )}
+
+            {/* Title */}
+            <div style={{ marginBottom: 20, ...extractingFieldStyle }}>
+              <label style={labelStyle}>Title</label>
+              <input
+                type="text" value={title} onChange={e => setTitle(e.target.value)}
+                placeholder={extracting ? "Extracting..." : ""}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Source organisation */}
+            <div style={{ marginBottom: 20, ...extractingFieldStyle }}>
+              <label style={labelStyle}>Source organisation</label>
+              <input
+                type="text" value={sourceOrg} onChange={e => setSourceOrg(e.target.value)}
+                placeholder={extracting ? "Extracting..." : ""}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Document type */}
+            <div style={{ marginBottom: 20, ...extractingFieldStyle }}>
+              <label style={labelStyle}>Document type</label>
+              <select value={docType} onChange={e => setDocType(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                {DOC_TYPES.map(dt => (
+                  <option key={dt.value} value={dt.value}>{dt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Published date */}
+            <div style={{ marginBottom: 20, ...extractingFieldStyle }}>
+              <label style={labelStyle}>Published date</label>
+              <input
+                type="date" value={pubDate} onChange={e => setPubDate(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Topic tags */}
+            <div style={{ marginBottom: 20, ...extractingFieldStyle }}>
+              <label style={labelStyle}>Topic tags</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: topicTags.length ? 8 : 0 }}>
+                {topicTags.map(tag => (
+                  <span key={tag} style={{
+                    fontFamily: M, fontSize: 11, color: T2,
+                    background: BLT, padding: "3px 10px", borderRadius: 3,
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                  }}>
+                    {tag}
+                    <span onClick={() => setTopicTags(topicTags.filter(t => t !== tag))} style={{ cursor: "pointer", color: T4, fontSize: 14, lineHeight: 1 }}>&times;</span>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text" value={topicInput}
+                onChange={e => setTopicInput(e.target.value)}
+                onKeyDown={handleTopicKeyDown}
+                placeholder={extracting ? "Extracting..." : "Type and press Enter or comma"}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Region tags */}
+            <div style={{ marginBottom: 20, ...extractingFieldStyle }}>
+              <label style={labelStyle}>Region tags</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: regionTags.length ? 8 : 0 }}>
+                {regionTags.map(tag => (
+                  <span key={tag} style={{
+                    fontFamily: M, fontSize: 11, color: T2,
+                    background: BLT, padding: "3px 10px", borderRadius: 3,
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                  }}>
+                    {tag}
+                    <span onClick={() => setRegionTags(regionTags.filter(t => t !== tag))} style={{ cursor: "pointer", color: T4, fontSize: 14, lineHeight: 1 }}>&times;</span>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text" value={regionInput}
+                onChange={e => setRegionInput(e.target.value)}
+                onKeyDown={handleRegionKeyDown}
+                placeholder={extracting ? "Extracting..." : "Type and press Enter or comma"}
+                style={inputStyle}
+              />
+            </div>
+
             {/* Submit */}
             <button
               onClick={handleUpload}
-              disabled={uploading || !file || !title.trim()}
+              disabled={uploading || extracting || !file || !title.trim()}
               style={{
                 fontFamily: F, fontSize: 14, fontWeight: 500,
                 color: WHITE,
-                background: (!file || !title.trim()) ? T4 : TEAL,
+                background: (!file || !title.trim() || extracting) ? T4 : TEAL,
                 padding: "12px 28px", borderRadius: 4,
                 border: "none",
-                cursor: (!file || !title.trim()) ? "default" : "pointer",
+                cursor: (!file || !title.trim() || extracting) ? "default" : "pointer",
               }}
             >
               {uploading ? "Uploading..." : "Add to library"}

@@ -82,11 +82,10 @@ export async function POST(req: NextRequest) {
   if (file.type === "text/plain") {
     text = buffer.toString("utf-8").slice(0, TEXT_LIMIT);
   } else if (file.type === "application/pdf") {
-    const { PDFParse } = await import("pdf-parse");
+    const pdfParse = (await import("pdf-parse")).default;
     try {
-      const pdf = new PDFParse(new Uint8Array(buffer));
-      await pdf.load();
-      text = (await pdf.getText()).slice(0, TEXT_LIMIT);
+      const parsed = await pdfParse(buffer);
+      text = parsed.text.slice(0, TEXT_LIMIT);
     } catch {
       return NextResponse.json({
         error: "scanned",
