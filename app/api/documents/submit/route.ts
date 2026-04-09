@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       title,
       source_organisation: sourceOrganisation,
       document_type: documentType,
-      published_date: publishedDate || null,
+      published_date: (publishedDate && publishedDate.trim() !== "") ? publishedDate : null,
       file_url: filePath,
       file_size_bytes: file.size,
       is_public: true,
