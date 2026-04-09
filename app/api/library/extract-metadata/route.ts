@@ -84,12 +84,13 @@ export async function POST(req: NextRequest) {
   if (file.type === "text/plain") {
     text = buffer.toString("utf-8").slice(0, TEXT_LIMIT);
   } else if (file.type === "application/pdf") {
-    const pdfParse = (await import("pdf-parse")).default;
+    const { extractText } = await import("unpdf");
     try {
-      const parsed = await pdfParse(buffer);
-      text = parsed.text.slice(0, TEXT_LIMIT);
+      const uint8Array = new Uint8Array(buffer);
+      const { text: pdfText } = await extractText(uint8Array, { mergePages: true });
+      text = pdfText.slice(0, TEXT_LIMIT);
     } catch (err) {
-      console.error("pdf-parse error:", err);
+      console.error("unpdf error:", err);
       return NextResponse.json({
         error: "scanned",
         message: "Could not extract text from this document. Please fill in the metadata manually.",
