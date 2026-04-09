@@ -76,52 +76,32 @@ export default function LandingPage() {
       <section>
         <div className="hero">
           <div className="hero-left">
-            <div style={{display:"inline-flex",alignItems:"center",gap:"8px",border:"1px solid rgba(29,158,117,0.3)",background:"rgba(29,158,117,0.06)",borderRadius:"20px",padding:"5px 14px",marginBottom:"24px"}}>
-              <span className="live-dot" />
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,color:"#1D9E75"}}>Ocean intelligence {"\u00B7"} Live</span>
-            </div>
-            <h1 className="hero-h1-new fi d1" style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"48px",lineHeight:1.08,letterSpacing:"-0.025em",margin:0,marginBottom:"28px"}}>
-              <span style={{color:"#0A1628"}}>Every day is you on a good day.</span>
-            </h1>
-            <p className="hero-body" style={{fontStyle:"italic",color:"#5F6368",marginBottom:"16px"}}>
-              The ocean sector finally has a room of its own.
-            </p>
-            <p className="hero-sub" style={{fontFamily:"'DM Sans',sans-serif",fontSize:"16px",color:"#5F6368",lineHeight:1.7,maxWidth:"460px",marginBottom:"32px"}}>
-              Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it {"\u2014"} Tideline is where you stay ahead. Workspace. Library. Live feed. Community. One place. All day.
-            </p>
+            <div className="hero-tag"><div className="hero-tag-dot" />{" "}Ocean intelligence {"\u00B7"} Live</div>
+            <h1 className="hero-h1-new fi d1">Every day is you on a good day.</h1>
+            <p className="hero-body" style={{fontStyle:"italic"}}>The ocean sector finally has a room of its own.</p>
+            <p className="hero-sub">Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it {"\u2014"} Tideline is where you stay ahead. Workspace. Library. Live feed. Community. One place. All day.</p>
             <div className="hero-actions fi d3">
               <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
               <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>Try it free. No card required.</button>
             </div>
-            <div className="hero-meta fi d4" style={{display:"flex",gap:"16px",flexWrap:"wrap",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#9AA0A6"}}>
-              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>No card required</span>
-              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Cancel any time</span>
-              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
+            <div className="hero-meta fi d4">
+              <span>{"\u2713"} No card required</span>
+              <span>{"\u2713"} Cancel any time</span>
+              <span>{"\u2713"} Full access from day one</span>
             </div>
-            <p style={{fontSize:"13px",color:"#6B7280",marginTop:"8px"}}>
-              Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }} style={{color:"#1D9E75",fontWeight:600}}>start free</a>. No card required.
-            </p>
+            <p className="hero-free">Or <a href="#pricing" onClick={(e) => { e.preventDefault(); setShowEarlyAccess(true); }}>start free</a>. No card required.</p>
           </div>
           <div className="hero-right">
-            <div style={{background:"#fff",border:"1px solid #E5E7EB",borderLeft:"4px solid #1D9E75",borderRadius:"12px",padding:"28px",boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
-              <div style={{fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",color:"#1D9E75",marginBottom:"16px"}}>BEFORE TIDELINE</div>
-              <p style={{fontStyle:"italic",fontSize:"18px",fontWeight:600,color:"#0A1628",lineHeight:1.5,margin:"0 0 16px"}}>
-                {"\u201C"}Something moved last week. I found out in the meeting.{"\u201D"}
-              </p>
-              <p style={{fontSize:"16px",fontWeight:700,color:"#1D9E75",margin:"0 0 8px"}}>
-                This does not happen on Tideline.
-              </p>
-              <p style={{fontSize:"14px",color:"#6B7280",margin:"0 0 20px"}}>
-                Every day is you on a good day.
-              </p>
-              <hr style={{border:"none",borderTop:"1px solid #E5E7EB",marginBottom:"20px"}} />
-              <div style={{display:"flex",gap:"8px"}}>
-                {[{t:"Freedom",s:"Less searching"},{t:"Confidence",s:"Always prepared"},{t:"Calm",s:"Nothing missed"}].map(p => (
-                  <div key={p.t} style={{flex:1,background:"#F8F9FA",border:"1px solid #E5E7EB",borderRadius:"8px",padding:"10px",textAlign:"center"}}>
-                    <div style={{fontSize:"11px",fontWeight:700,color:"#1D9E75"}}>{p.t}</div>
-                    <div style={{fontSize:"10px",color:"#9AA0A6",marginTop:"2px"}}>{p.s}</div>
-                  </div>
-                ))}
+            <div className="painkiller-card">
+              <div className="pk-label">BEFORE TIDELINE</div>
+              <p className="pk-quote">{"\u201C"}Something moved last week. I found out in the meeting.{"\u201D"}</p>
+              <p className="pk-resolve">This does not happen on Tideline.</p>
+              <p className="pk-tagline">Every day is you on a good day.</p>
+              <hr className="pk-divider" />
+              <div className="pk-pills">
+                <div className="pk-pill"><div className="pk-pill-name">Freedom</div><div className="pk-pill-desc">Less searching</div></div>
+                <div className="pk-pill"><div className="pk-pill-name">Confidence</div><div className="pk-pill-desc">Always prepared</div></div>
+                <div className="pk-pill"><div className="pk-pill-name">Calm</div><div className="pk-pill-desc">Nothing missed</div></div>
               </div>
             </div>
           </div>
@@ -184,68 +164,51 @@ export default function LandingPage() {
       </div>
 
       {/* Six pillars */}
-      <div style={{background:"#0A1628",padding:"80px 40px"}}>
-        <div style={{maxWidth:"1200px",margin:"0 auto"}}>
-          <p style={{color:"#1D9E75",fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"12px",marginTop:0}}>WHAT TIDELINE GIVES YOU BACK</p>
-          <h2 style={{color:"#fff",fontSize:"clamp(26px,3.5vw,38px)",fontWeight:800,letterSpacing:"-0.025em",lineHeight:1.15,marginBottom:"12px",marginTop:0}}>This is not about being informed. It is about what that gives you.</h2>
-          <p style={{color:"rgba(255,255,255,0.5)",fontSize:"16px",maxWidth:"600px",lineHeight:1.65,marginBottom:"48px",marginTop:0}}>Tideline is the workspace, library, live feed, and community for ocean professionals. One place. All day.</p>
+      <section className="pillars-section">
+        <div className="pillars-inner">
+          <p className="pillars-label">WHAT TIDELINE GIVES YOU BACK</p>
+          <h2 className="pillars-heading">This is not about being informed. It is about what that gives you.</h2>
+          <p className="pillars-sub">Tideline is the workspace, library, live feed, and community for ocean professionals. One place. All day.</p>
           <div className="pillars-grid">
-            {[
-              {label:"FREEDOM",head:"Less time searching. More time doing.",body:"Stop chasing information across 40 tabs. Everything you need is already inside Tideline, updated in real time, filtered to your work."},
-              {label:"CONFIDENCE",head:"Walk into every meeting prepared.",body:"Know what moved before your first call. Walk in as the person who already knows \u2014 not the one catching up."},
-              {label:"PERFORMANCE",head:"Produce better work, faster.",body:"The consultation response that takes three days takes three hours. The briefing that needed a morning arrives before your second coffee."},
-              {label:"AUTHORITY",head:"Work that stands up to scrutiny.",body:"Every answer cited. Every source traceable. Primary documents, not summaries. The kind of sourcing that holds up in a board presentation or a legal brief."},
-              {label:"POTENTIAL",head:"The best version of you. Every day.",body:"Tideline does not replace your judgement. It removes the overhead that was stopping you from applying it."},
-              {label:"CALM",head:"Nothing slips. Nothing surprises you.",body:"Every deadline tracked. Every development filed. That low-level anxiety that something important moved and you missed it \u2014 gone."},
-            ].map(c => (
-              <div key={c.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",padding:"28px"}}>
-                <p style={{color:"#1D9E75",fontSize:"11px",textTransform:"uppercase",fontWeight:700,marginBottom:"8px",marginTop:0}}>{c.label}</p>
-                <p style={{color:"#fff",fontSize:"18px",fontWeight:700,marginBottom:"6px",marginTop:0}}>{c.head}</p>
-                <p style={{color:"rgba(255,255,255,0.45)",fontSize:"13px",lineHeight:1.6,marginTop:0,marginBottom:0}}>{c.body}</p>
-              </div>
-            ))}
+            <div className="pillar-card"><div className="pillar-name">Freedom</div><div className="pillar-tagline">Less time searching. More time doing.</div><div className="pillar-desc">Stop chasing information across 40 tabs. Everything you need is already inside Tideline, updated in real time, filtered to your work.</div></div>
+            <div className="pillar-card"><div className="pillar-name">Confidence</div><div className="pillar-tagline">Walk into every meeting prepared.</div><div className="pillar-desc">Know what moved before your first call. Walk in as the person who already knows {"\u2014"} not the one catching up.</div></div>
+            <div className="pillar-card"><div className="pillar-name">Performance</div><div className="pillar-tagline">Produce better work, faster.</div><div className="pillar-desc">The consultation response that takes three days takes three hours. The briefing that needed a morning arrives before your second coffee.</div></div>
+            <div className="pillar-card"><div className="pillar-name">Authority</div><div className="pillar-tagline">Work that stands up to scrutiny.</div><div className="pillar-desc">Every answer cited. Every source traceable. Primary documents, not summaries. The kind of sourcing that holds up in a board presentation or a legal brief.</div></div>
+            <div className="pillar-card"><div className="pillar-name">Potential</div><div className="pillar-tagline">The best version of you. Every day.</div><div className="pillar-desc">Tideline does not replace your judgement. It removes the overhead that was stopping you from applying it.</div></div>
+            <div className="pillar-card"><div className="pillar-name">Calm</div><div className="pillar-tagline">Nothing slips. Nothing surprises you.</div><div className="pillar-desc">Every deadline tracked. Every development filed. That low-level anxiety that something important moved and you missed it {"\u2014"} gone.</div></div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Comparison table */}
-      <div style={{background:"#fff",padding:"80px 40px",borderTop:"1px solid #E5E7EB"}}>
-        <div style={{maxWidth:"900px",margin:"0 auto"}}>
-          <p style={{color:"#1D9E75",fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"12px",marginTop:0}}>WHY TIDELINE</p>
-          <h2 style={{color:"#0A1628",fontSize:"clamp(24px,3.5vw,36px)",fontWeight:800,letterSpacing:"-0.025em",marginBottom:"12px",marginTop:0}}>What used to take days now takes minutes.</h2>
-          <p style={{color:"#5F6368",fontSize:"16px",maxWidth:"560px",lineHeight:1.65,marginBottom:"40px",marginTop:0}}>Every task in the table below exists in your current working week. This is how long it takes without Tideline, and how long it takes with it.</p>
-          <div className="compare-scroll">
-            <table className="compare-table">
+      <section className="comparison-section">
+        <div className="comparison-inner">
+          <p className="comparison-label">WHY TIDELINE</p>
+          <h2 className="comparison-heading">What used to take days now takes minutes.</h2>
+          <p className="comparison-sub">Every task in the table below exists in your current working week. This is how long it takes without Tideline, and how long it takes with it.</p>
+          <div className="comparison-table-wrap">
+            <table className="comparison-table">
               <thead>
                 <tr>
-                  <th className="ct-th ct-th-task">The task</th>
-                  <th className="ct-th ct-th-mid">Manually</th>
-                  <th className="ct-th ct-th-mid">Search and generic tools</th>
-                  <th className="ct-th ct-th-tl">With Tideline <span style={{background:"#1D9E75",color:"#fff",fontSize:"9px",fontWeight:700,padding:"2px 6px",borderRadius:"3px",marginLeft:"6px",verticalAlign:"middle"}}>PURPOSE-BUILT</span></th>
+                  <th className="col-task">The task</th>
+                  <th className="col-other">Manually</th>
+                  <th className="col-other">Search and generic tools</th>
+                  <th className="col-featured">With Tideline <span className="featured-badge">PURPOSE-BUILT</span></th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ["Finding out what moved in your sector overnight","30\u201360 min \u2014 Scanning newsletters, LinkedIn, email","Incomplete \u2014 Generic results, not sector-specific","2 minutes \u2014 Live feed, filtered to your topics"],
-                  ["Finding a citable primary source document","45+ min \u2014 Searching ISA, IMO, UN sites manually","Unreliable \u2014 Often summaries, not primary sources","Seconds \u2014 2,400+ primary sources, searchable instantly"],
-                  ["Producing a cited brief or report","Half a day \u2014 Research, draft, cite, format, export","Hours, uncited \u2014 No primary source trail","Under an hour \u2014 Notes to Word report in one click"],
-                  ["Tracking a long-running story like DSM or 30x30","No system \u2014 Saved tabs, email threads, memory","Not possible \u2014 No persistent tracking across sources","Automatic \u2014 Live trackers follow every development"],
-                  ["Spotting connections across stories and sectors","Rarely happens \u2014 Too much to read, too many sources","Not possible \u2014 No cross-source pattern engine","Automatic \u2014 Crosscurrent surfaces connections before anyone reports them"],
-                  ["Tracking consultation deadlines and treaty meetings","Missed constantly \u2014 Scattered across websites and emails","Not possible \u2014 No sector-specific calendar tool","Zero effort \u2014 Every deadline in one calendar, syncs Google and iOS"],
-                  ["Building a citable document library for your team","Years of effort \u2014 Shared drives, no structure, no search","Not possible \u2014 Generic tools, no ocean curation","Already built \u2014 2,400+ documents. Add your own. Grows with every subscriber."],
-                ].map((row, i) => (
-                  <tr key={i}>
-                    <td className="ct-task">{row[0]}</td>
-                    <td className="ct-mid">{row[1]}</td>
-                    <td className="ct-mid">{row[2]}</td>
-                    <td className="ct-tl">{row[3]}</td>
-                  </tr>
-                ))}
+                <tr><td className="row-label">Finding out what moved in your sector overnight</td><td className="col-manual">30{"\u2013"}60 min<br /><span className="col-sub">Scanning newsletters, LinkedIn, email</span></td><td className="col-manual">Incomplete<br /><span className="col-sub">Generic results, not sector-specific</span></td><td className="col-tideline">2 minutes<br /><span className="col-sub">Live feed, filtered to your topics</span></td></tr>
+                <tr><td className="row-label">Finding a citable primary source document</td><td className="col-manual">45+ min<br /><span className="col-sub">Searching ISA, IMO, UN sites manually</span></td><td className="col-manual">Unreliable<br /><span className="col-sub">Often summaries, not primary sources</span></td><td className="col-tideline">Seconds<br /><span className="col-sub">2,400+ primary sources, searchable instantly</span></td></tr>
+                <tr><td className="row-label">Producing a cited brief or report</td><td className="col-manual">Half a day<br /><span className="col-sub">Research, draft, cite, format, export</span></td><td className="col-manual">Hours, uncited<br /><span className="col-sub">No primary source trail</span></td><td className="col-tideline">Under an hour<br /><span className="col-sub">Notes to Word report in one click</span></td></tr>
+                <tr><td className="row-label">Tracking a long-running story like DSM or 30x30</td><td className="col-manual">No system<br /><span className="col-sub">Saved tabs, email threads, memory</span></td><td className="col-manual">Not possible<br /><span className="col-sub">No persistent tracking across sources</span></td><td className="col-tideline">Automatic<br /><span className="col-sub">Live trackers follow every development</span></td></tr>
+                <tr><td className="row-label">Spotting connections across stories and sectors</td><td className="col-manual">Rarely happens<br /><span className="col-sub">Too much to read, too many sources</span></td><td className="col-manual">Not possible<br /><span className="col-sub">No cross-source pattern engine</span></td><td className="col-tideline">Automatic<br /><span className="col-sub">Crosscurrent surfaces connections before anyone reports them</span></td></tr>
+                <tr><td className="row-label">Tracking consultation deadlines and treaty meetings</td><td className="col-manual">Missed constantly<br /><span className="col-sub">Scattered across websites and emails</span></td><td className="col-manual">Not possible<br /><span className="col-sub">No sector-specific calendar tool exists</span></td><td className="col-tideline">Zero effort<br /><span className="col-sub">Every deadline in one calendar, syncs Google and iOS</span></td></tr>
+                <tr><td className="row-label">Building a citable document library for your team</td><td className="col-manual">Years of effort<br /><span className="col-sub">Shared drives, no structure, no search</span></td><td className="col-manual">Not possible<br /><span className="col-sub">Generic tools, no ocean curation</span></td><td className="col-tideline">Already built<br /><span className="col-sub">2,400+ documents. Add your own. Grows with every subscriber.</span></td></tr>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Platform features */}
       <div className="section-teal-wrap">
