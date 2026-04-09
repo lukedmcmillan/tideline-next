@@ -107,12 +107,15 @@ export default function LandingPage() {
           </div>
           <div className="hero-right">
             <div style={{background:"#fff",border:"1px solid #E5E7EB",borderLeft:"4px solid #1D9E75",borderRadius:"8px",padding:"32px"}}>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",textTransform:"uppercase",letterSpacing:"0.12em",color:"#1D9E75",marginBottom:"16px"}}>Sound familiar?</div>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"18px",fontWeight:500,color:"#0A1628",lineHeight:1.6,margin:"0 0 16px"}}>
-                {"\u201C"}The ISA vote was last Tuesday. I found out in today{"\u2019"}s meeting.{"\u201D"}
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"11px",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.12em",color:"#1D9E75",marginBottom:"16px"}}>Before Tideline</div>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"18px",fontWeight:500,color:"#0A1628",lineHeight:1.6,fontStyle:"italic",margin:"0 0 16px"}}>
+                {"\u201C"}Something moved last week. I found out in the meeting.{"\u201D"}
               </p>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#5F6368",lineHeight:1.6,margin:0}}>
-                This does not happen on Tideline. Every development tracked. Every story filed. You know before the meeting starts.
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"16px",fontWeight:700,color:"#1D9E75",margin:"0 0 8px"}}>
+                This does not happen on Tideline.
+              </p>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:400,color:"#6B7280",margin:0}}>
+                Every day is you on a good day.
               </p>
             </div>
           </div>
