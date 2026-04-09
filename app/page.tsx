@@ -106,45 +106,14 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="hero-right">
-            <div className="wheel-wrap fi d2">
-              <div className="wheel-track">
-                <div className="wheel-item">
-                  <span className="w-tag wt-policy">NGO</span>
-                  <span className="w-text"><strong>{"\u201C"}Consultation closes in 6 days.</strong> I haven&apos;t started.{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag wt-finance">Finance</span>
-                  <span className="w-text"><strong>{"\u201C"}What are competitors investing in</strong> before the mining decision lands?{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag wt-legal">Law</span>
-                  <span className="w-text"><strong>{"\u201C"}Client needs the latest position</strong> on high seas protection. Today.{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag wt-energy">Energy</span>
-                  <span className="w-text"><strong>{"\u201C"}The extraction licence just moved.</strong> What does it mean for us?{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag" style={{background:"#f0fdf4",color:"#166534"}}>ESG</span>
-                  <span className="w-text"><strong>{"\u201C"}We need to prove our supply chain is clean.</strong> Where do we stand?{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag" style={{background:"#fdf4ff",color:"#7e22ce"}}>Science</span>
-                  <span className="w-text"><strong>{"\u201C"}When is the next IWC session</strong> and what&apos;s on the agenda?{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag" style={{background:"#fff7ed",color:"#c2410c"}}>Shipping</span>
-                  <span className="w-text"><strong>{"\u201C"}New emissions rules are in force.</strong> Are we compliant?{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag" style={{background:"#eff6ff",color:"#1d4ed8"}}>Research</span>
-                  <span className="w-text"><strong>{"\u201C"}Something moved in the Pacific fisheries case.</strong> I need the document.{"\u201D"}</span>
-                </div>
-                <div className="wheel-item">
-                  <span className="w-tag wt-policy">NGO</span>
-                  <span className="w-text"><strong>{"\u201C"}Consultation closes in 6 days.</strong> I haven&apos;t started.{"\u201D"}</span>
-                </div>
-              </div>
+            <div style={{background:"#fff",border:"1px solid #E5E7EB",borderLeft:"4px solid #1D9E75",borderRadius:"8px",padding:"32px"}}>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",textTransform:"uppercase",letterSpacing:"0.12em",color:"#1D9E75",marginBottom:"16px"}}>Sound familiar?</div>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"18px",fontWeight:500,color:"#0A1628",lineHeight:1.6,margin:"0 0 16px"}}>
+                {"\u201C"}The ISA vote was last Tuesday. I found out in today{"\u2019"}s meeting.{"\u201D"}
+              </p>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#5F6368",lineHeight:1.6,margin:0}}>
+                This does not happen on Tideline. Every development tracked. Every story filed. You know before the meeting starts.
+              </p>
             </div>
           </div>
         </div>
@@ -267,7 +236,8 @@ export default function LandingPage() {
       </section>
 
       {/* Platform features */}
-      <section className="section section-teal" id="platform-features">
+      <div className="section-teal-wrap">
+      <section className="section" id="platform-features">
         <span className="section-label">The platform</span>
         <h2 className="section-title">Everything you need. One place. All day.</h2>
         <p className="section-sub">The workspace is where the work happens. The research library finds the answer. The live feed keeps you across everything. The calendar keeps you on time. And Crosscurrent, only on Tideline, surfaces connections across 100+ sources before anyone else sees them.</p>
@@ -323,6 +293,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* Who */}
       <section className="who" id="who">
@@ -388,7 +359,8 @@ export default function LandingPage() {
       </div>
 
       {/* Live threads */}
-      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"rgba(29,158,117,0.06)"}}>
+      <div className="section-teal-wrap">
+      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <span className="section-label">What Tideline is watching</span>
           <h2 className="section-title" style={{marginBottom:"12px"}}>Some stories take months to resolve.</h2>
@@ -437,6 +409,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* What it replaces */}
       <div style={{borderTop:"1px solid var(--border)",borderBottom:"1px solid var(--border)",background:"var(--surface)",padding:"48px 24px"}}>
@@ -624,7 +597,8 @@ export default function LandingPage() {
       </div>
 
       {/* Library */}
-      <section className="section section-teal" id="library" style={{borderTop:"1px solid var(--border)",scrollMarginTop:"80px"}}>
+      <div className="section-teal-wrap">
+      <section className="section" id="library" style={{borderTop:"1px solid var(--border)",scrollMarginTop:"80px"}}>
         <span className="section-label">The library</span>
         <h2 className="section-title">The Tideline Library</h2>
         <p className="section-sub">Citable sources. Fast.</p>
@@ -646,9 +620,11 @@ export default function LandingPage() {
           Have a document to contribute? <a href="/platform/library" style={{color:"var(--blue)",textDecoration:"none"}}>Upload it to the library</a> and help build the resource the sector has always needed.
         </p>
       </section>
+      </div>
 
       {/* Founder */}
-      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",background:"#0A1628"}}>
+      <div style={{background:"#0A1628",width:"100%"}}>
+      <section style={{borderTop:"1px solid var(--border)",padding:"80px 24px",maxWidth:"1200px",margin:"0 auto"}}>
         <div style={{maxWidth:"620px",margin:"0 auto"}}>
           <div style={{fontFamily:"'Google Sans Mono',monospace",fontSize:"10px",letterSpacing:"0.14em",textTransform:"uppercase",color:"#1D9E75",marginBottom:"28px"}}>From the founder</div>
           <p style={{fontSize:"22px",fontWeight:600,color:"rgba(255,255,255,0.8)",lineHeight:1.4,marginBottom:"20px",marginTop:0}}>
@@ -669,6 +645,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* Pricing */}
       <section className="section" id="pricing">
@@ -776,7 +753,8 @@ export default function LandingPage() {
       </section>
 
       {/* Source methodology */}
-      <section className="section section-teal" id="methodology">
+      <div className="section-teal-wrap">
+      <section className="section" id="methodology">
         <span className="section-label">Source methodology</span>
         <h2 className="section-title">Every source is labelled. Every answer is cited.</h2>
         <p className="section-sub">Tideline classifies every source into three tiers. The tier is visible on every story, every research answer, and every Crosscurrent alert. You always know where it came from.</p>
@@ -801,6 +779,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* Mobile final CTA */}
       <div className="mobile-only" style={{background:"#0A1628",padding:"40px 20px",textAlign:"center"}}>
