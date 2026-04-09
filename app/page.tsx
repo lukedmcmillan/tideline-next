@@ -81,8 +81,32 @@ export default function LandingPage() {
               <span style={{color:"#1D9E75"}}>has a room of its own.</span>
             </h1>
 
-            <div className="wheel-wrap fi d2">
+            <div className="mobile-only" style={{marginTop:"24px"}}>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
+                Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
+              </p>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:"16px 0 0"}}>
+                Tideline is the workspace where your actual work happens. Where you research, write, track, and produce {"\u2014"} with every piece of intelligence you need already inside it, updated in real time, filtered to your sector and your topics. The brief is one feature. The platform is the product.
+              </p>
+            </div>
 
+            <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
+              Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it, Tideline is where you stay ahead.
+            </p>
+
+            <div className="hero-actions fi d3">
+              <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
+              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See the platform in action</button>
+            </div>
+
+            <div className="hero-meta fi d4" style={{display:"flex",gap:"16px",flexWrap:"wrap",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#9AA0A6"}}>
+              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>No card required</span>
+              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Cancel any time</span>
+              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
+            </div>
+          </div>
+          <div className="hero-right">
+            <div className="wheel-wrap fi d2">
               <div className="wheel-track">
                 <div className="wheel-item">
                   <span className="w-tag wt-policy">NGO</span>
@@ -121,30 +145,6 @@ export default function LandingPage() {
                   <span className="w-text"><strong>{"\u201C"}Consultation closes in 6 days.</strong> I haven&apos;t started.{"\u201D"}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="mobile-only" style={{marginTop:"24px"}}>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:0}}>
-                Every professional in the ocean sector is duct-taping together sources that were never designed to talk to each other. <span style={{fontWeight:600}}>Tideline is the one place where the feed, the research, the trackers and the workspace live together.</span> Log on. Do the work.
-              </p>
-              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:"#202124",lineHeight:1.7,margin:"16px 0 0"}}>
-                Tideline is the workspace where your actual work happens. Where you research, write, track, and produce {"\u2014"} with every piece of intelligence you need already inside it, updated in real time, filtered to your sector and your topics. The brief is one feature. The platform is the product.
-              </p>
-            </div>
-
-            <p className="hero-body hero-deck-new fi d3" style={{fontFamily:"'DM Sans',sans-serif",fontWeight:400,fontSize:"16px",color:"#5F6368",lineHeight:1.7}}>
-              Whether you{"\u2019"}re protecting it, investing in it, regulating it, navigating it, or reporting on it, Tideline is where you stay ahead.
-            </p>
-
-            <div className="hero-actions fi d3">
-              <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
-              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See the platform in action</button>
-            </div>
-
-            <div className="hero-meta fi d4" style={{display:"flex",gap:"16px",flexWrap:"wrap",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#9AA0A6"}}>
-              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>No card required</span>
-              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Cancel any time</span>
-              <span><span style={{color:"#1D9E75",marginRight:"4px"}}>{"\u2713"}</span>Full access from day one</span>
             </div>
           </div>
         </div>
