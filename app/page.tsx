@@ -96,7 +96,7 @@ export default function LandingPage() {
 
             <div className="hero-actions fi d3">
               <button className="btn-hero" onClick={() => setShowEarlyAccess(true)}>Start your free 7-day trial</button>
-              <button className="btn-outline" onClick={() => setShowEarlyAccess(true)}>See the platform in action</button>
+              <a href="/demo" className="btn-outline">See the platform in action</a>
             </div>
 
             <div className="hero-meta fi d4" style={{display:"flex",gap:"16px",flexWrap:"wrap",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"#9AA0A6"}}>
