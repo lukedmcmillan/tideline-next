@@ -52,7 +52,8 @@
       "Bash(git ls-tree:*)",
       "Bash(npm ls:*)",
       "Bash(npm uninstall:*)",
-      "Bash(Get-Content app/api/admin/documents/upload/route.ts)"
+      "Bash(Get-Content app/api/admin/documents/upload/route.ts)",
+      "Bash(chmod:*)"
     ]
   }
 }

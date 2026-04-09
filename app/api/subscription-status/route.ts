@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   // Check if user needs onboarding
   const { data: user } = await supabase
     .from("users")
-    .select("topics, sector, is_admin")
+    .select("topics, sector, is_admin, tier")
     .eq("email", email)
     .single();
 
@@ -32,5 +32,5 @@ export async function GET(req: NextRequest) {
     trialDaysRemaining = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
   }
 
-  return NextResponse.json({ ...result, needsOnboarding, sector: user?.sector || null, trialDaysRemaining, isAdmin: user?.is_admin || false });
+  return NextResponse.json({ ...result, needsOnboarding, sector: user?.sector || null, trialDaysRemaining, isAdmin: user?.is_admin || false, tier: user?.tier || "free" });
 }

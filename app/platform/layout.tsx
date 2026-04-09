@@ -29,6 +29,7 @@ const IcBook = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
 const IcWork = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="3" width="16" height="13" rx="2"/><path d="M6 3V1M12 3V1"/></svg>;
 const IcSearch = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M13 13l4 4"/></svg>;
 const IcDir = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="3"/><circle cx="12" cy="12" r="3"/><path d="M8.5 8.5l1 1"/><circle cx="12" cy="6" r="3"/><path d="M8.5 7.5l2-1"/></svg>;
+const IcBrief = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h12a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M5 6h8M5 9h6M5 12h4"/></svg>;
 
 // ── Trial Banner ─────────────────────────────────────────────────────────
 function TrialBanner() {
@@ -129,13 +130,14 @@ function trackerColor(t: TrackerData): string {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, onShortcuts }: {
+function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, onShortcuts, tier }: {
   onNav?: () => void;
   urgentCount?: number;
   trackerData?: TrackerData[];
   projectData?: ProjectData[];
   recentStories?: RecentStory[];
   onShortcuts?: () => void;
+  tier?: string;
 }) {
   const path = usePathname();
   const [hTip, setHTip] = useState<string | null>(null);
@@ -146,6 +148,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
     { ic: <IcBook />, label: "Library", href: "/platform/library" },
     { ic: <IcWork />, label: "Projects", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
+    ...(tier === "corporate" ? [{ ic: <IcBrief />, label: "Briefings", href: "/platform/lp-briefing" }] : []),
     { ic: <IcDir />, label: "Directory", href: "/platform/directory" },
   ];
 
@@ -732,8 +735,13 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
   const [trackerData, setTrackerData] = useState<TrackerData[]>([]);
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
   const [recentStories, setRecentStories] = useState<RecentStory[]>([]);
+  const [tier, setTier] = useState<string>("free");
 
   useEffect(() => {
+    fetch("/api/subscription-status")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.tier) setTier(d.tier); })
+      .catch(() => {});
     fetch("/api/sidebar-data")
       .then(r => r.json())
       .then(d => {
@@ -818,14 +826,14 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
               }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
               </button>
-              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} />
+              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} tier={tier} />
             </div>
           </div>
         )}
 
         {/* Desktop sidebar */}
         <div className="sb-desktop" style={{ flexShrink: 0 }}>
-          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} />
+          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} tier={tier} />
         </div>
 
         {/* Main */}
