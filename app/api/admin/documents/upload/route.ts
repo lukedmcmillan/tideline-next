@@ -50,6 +50,8 @@ function sanitiseDocumentType(raw: string | null): string {
   return DOCUMENT_TYPE_MAP[lower] || "other";
 }
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const email = await getEmailFromSession(req);
   if (!email) {
@@ -67,63 +69,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-  const title = formData.get("title") as string | null;
-  const sourceOrganisation = formData.get("source_organisation") as string | null;
-  const documentType = formData.get("document_type") as string | null;
-  const publishedDate = formData.get("published_date") as string | null;
-  const topicTagsRaw = formData.get("topic_tags") as string | null;
-  const regionTagsRaw = formData.get("region_tags") as string | null;
-
-  if (!file || !title) {
-    return NextResponse.json({ error: "File and title are required" }, { status: 400 });
-  }
-
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: "File type not allowed" }, { status: 400 });
-  }
-
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "File exceeds 50MB limit" }, { status: 400 });
-  }
-
-  const topicTags = topicTagsRaw ? topicTagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
-  const regionTags = regionTagsRaw ? regionTagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
-
-  // Upload to storage
-  const fileExt = file.name.split(".").pop();
-  const filePath = `${crypto.randomUUID()}.${fileExt}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const { error: uploadError } = await supabase.storage
-    .from("tideline-documents")
-    .upload(filePath, buffer, { contentType: file.type });
-
-  if (uploadError) {
-    console.error("Storage upload error:", uploadError.message);
-    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
-  }
-
-  // Insert document record
-  console.log("Inserting document:", JSON.stringify({
+  const body = await req.json();
+  const {
     title,
     source_organisation: sourceOrganisation,
     document_type: documentType,
-    published_date: (publishedDate && publishedDate.trim() !== "") ? publishedDate : null,
-    file_url: filePath,
-    file_size_bytes: file.size,
-    status: "approved",
-  }));
+    published_date: publishedDate,
+    topic_tags: topicTags = [],
+    region_tags: regionTags = [],
+    file_path: filePath,
+    file_size_bytes: fileSizeBytes,
+  } = body;
+
+  if (!title || !filePath) {
+    return NextResponse.json({ error: "Title and file_path are required" }, { status: 400 });
+  }
+
   const { data: doc, error: insertError } = await supabase
     .from("documents")
     .insert({
       title,
-      source_organisation: sourceOrganisation,
+      source_organisation: sourceOrganisation || null,
       document_type: sanitiseDocumentType(documentType),
       published_date: (publishedDate && publishedDate.trim() !== "") ? publishedDate : null,
       file_url: filePath,
-      file_size_bytes: file.size,
+      file_size_bytes: fileSizeBytes || 0,
       is_public: true,
       status: "approved",
       submitted_by: null,

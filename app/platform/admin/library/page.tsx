@@ -207,17 +207,52 @@ export default function AdminLibraryPage() {
   async function handleUpload() {
     if (!file || !title.trim()) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("title", title.trim());
-    fd.append("source_organisation", sourceOrg.trim());
-    fd.append("document_type", docType);
-    fd.append("published_date", pubDate);
-    fd.append("topic_tags", topicTags.join(","));
-    fd.append("region_tags", regionTags.join(","));
 
     try {
-      const res = await fetch("/api/admin/documents/upload", { method: "POST", body: fd });
+      // Step 1: Get signed upload URL
+      const urlRes = await fetch("/api/admin/documents/signed-upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type }),
+      });
+
+      if (!urlRes.ok) {
+        setToast("Failed to get upload URL");
+        setUploading(false);
+        return;
+      }
+
+      const { signedUrl, filePath } = await urlRes.json();
+
+      // Step 2: Upload file directly to Supabase Storage
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        setToast("Failed to upload file");
+        setUploading(false);
+        return;
+      }
+
+      // Step 3: Save metadata via API
+      const res = await fetch("/api/admin/documents/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          source_organisation: sourceOrg.trim(),
+          document_type: docType,
+          published_date: pubDate,
+          topic_tags: topicTags,
+          region_tags: regionTags,
+          file_path: filePath,
+          file_size_bytes: file.size,
+        }),
+      });
+
       if (res.ok) {
         window.open('/platform/library', '_blank');
         setToast("Document added to library");
@@ -228,7 +263,7 @@ export default function AdminLibraryPage() {
         setTimeout(() => setToast(""), 3000);
       }
     } catch {
-      // silent
+      setToast("Upload failed");
     }
     setUploading(false);
   }
