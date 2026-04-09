@@ -624,21 +624,21 @@ export default function LandingPage() {
       </div>
 
       {/* Library */}
-      <section className="section" style={{borderTop:"1px solid var(--border)"}}>
+      <section className="section" id="library" style={{borderTop:"1px solid var(--border)",scrollMarginTop:"80px"}}>
         <span className="section-label">The library</span>
         <h2 className="section-title">The Tideline Library</h2>
         <p className="section-sub">Citable sources. Fast.</p>
-        <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,maxWidth:"620px",marginBottom:"20px"}}>
+        <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"20px"}}>
           The most common problem professionals in this sector describe: difficult to find citable sources quickly. Treaty text. ISA publications. IMO circulars. Peer-reviewed science. FAO reports. Search across all of it in plain language. Cite directly. Not summaries of summaries {"\u2014"} the actual documents, the moment you need them.
         </p>
-        <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,maxWidth:"620px",marginBottom:"48px"}}>
+        <p style={{fontSize:"16px",color:"var(--secondary)",lineHeight:1.75,marginBottom:"48px"}}>
           The library grows every time a Tideline subscriber contributes a document. Every NGO policy brief, every regulatory filing, every scientific paper added by the community makes every other subscriber{"\u2019"}s research faster and more complete. This is the world{"\u2019"}s biggest ocean library. It is being built right now, by the people who use it.
         </p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"32px",marginBottom:"24px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px",marginBottom:"24px"}} className="replaces-grid">
           {[{n:"2,400+",l:"Documents"},{n:"Growing",l:"Every day"},{n:"Primary",l:"Sources only"}].map((s)=>(
-            <div key={s.l}>
-              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"28px",color:"var(--ink)",letterSpacing:"-0.03em"}}>{s.n}</div>
-              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",textTransform:"uppercase",color:"var(--tertiary)",letterSpacing:"0.1em",marginTop:"2px"}}>{s.l}</div>
+            <div key={s.l} style={{border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"24px",textAlign:"center"}}>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:"28px",color:"var(--ink)",letterSpacing:"-0.03em",marginBottom:"4px"}}>{s.n}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:"10px",textTransform:"uppercase",color:"var(--tertiary)",letterSpacing:"0.1em"}}>{s.l}</div>
             </div>
           ))}
         </div>

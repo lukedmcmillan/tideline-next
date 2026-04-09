@@ -16,6 +16,40 @@ const ALLOWED_TYPES = [
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
+const VALID_DOCUMENT_TYPES = [
+  "treaty", "resolution", "report", "regulation",
+  "scientific_paper", "ngo_report",
+  "government_document", "court_filing", "other",
+];
+
+const DOCUMENT_TYPE_MAP: Record<string, string> = {
+  "international agreement": "treaty",
+  "agreement": "treaty",
+  "convention": "treaty",
+  "protocol": "treaty",
+  "directive": "regulation",
+  "decision": "resolution",
+  "recommendation": "resolution",
+  "assessment": "report",
+  "review": "report",
+  "paper": "scientific_paper",
+  "journal article": "scientific_paper",
+  "article": "scientific_paper",
+  "civil society": "ngo_report",
+  "policy brief": "ngo_report",
+  "government report": "government_document",
+  "national report": "government_document",
+  "filing": "court_filing",
+  "judgment": "court_filing",
+};
+
+function sanitiseDocumentType(raw: string | null): string {
+  if (!raw) return "other";
+  const lower = raw.toLowerCase().trim();
+  if (VALID_DOCUMENT_TYPES.includes(lower)) return lower;
+  return DOCUMENT_TYPE_MAP[lower] || "other";
+}
+
 export async function POST(req: NextRequest) {
   const email = await getEmailFromSession(req);
   if (!email) {
@@ -83,7 +117,7 @@ export async function POST(req: NextRequest) {
     .insert({
       title,
       source_organisation: sourceOrganisation,
-      document_type: documentType,
+      document_type: sanitiseDocumentType(documentType),
       published_date: (publishedDate && publishedDate.trim() !== "") ? publishedDate : null,
       file_url: filePath,
       file_size_bytes: file.size,
