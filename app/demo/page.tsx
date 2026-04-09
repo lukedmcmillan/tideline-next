@@ -7,6 +7,7 @@ import EarlyAccessModal from "@/components/EarlyAccessModal";
 
 export default function DemoPage() {
   const [showEarlyAccess, setShowEarlyAccess] = useState(false);
+  const [showBrief, setShowBrief] = useState(false);
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans','DM Sans',sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
@@ -69,16 +70,14 @@ export default function DemoPage() {
           <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"16px",color:"#5F6368",lineHeight:1.6,margin:"0 0 32px",maxWidth:"620px"}}>Type a topic. Get a professional brief drawn from primary treaty text and official publications.</p>
 
           <div style={{background:"#fff",border:"1px solid #E5E7EB",borderRadius:"12px",overflow:"hidden"}}>
-            <div style={{padding:"20px",display:"flex",gap:"12px",borderBottom:"1px solid #E5E7EB"}}>
-              <input
-                type="text"
-                readOnly
-                value="e.g. Latest BBNJ ratification developments"
-                style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#9AA0A6",border:"1px solid #E5E7EB",borderRadius:"8px",padding:"10px 14px",background:"#FAFAFA",outline:"none"}}
-              />
-              <button style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:"#fff",background:"#1D9E75",border:"none",borderRadius:"8px",padding:"10px 20px",cursor:"default",whiteSpace:"nowrap"}}>Generate brief</button>
+            <div style={{padding:"20px",display:"flex",gap:"12px",alignItems:"center",borderBottom:showBrief?"1px solid #E5E7EB":"none"}}>
+              <div style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#9AA0A6",background:"#FAFAFA",borderRadius:"8px",padding:"10px 14px"}}>Latest BBNJ ratification developments</div>
+              <button
+                onClick={() => setShowBrief(!showBrief)}
+                style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:"#fff",background:"#1D9E75",border:"none",borderRadius:"8px",padding:"10px 20px",cursor:"pointer",whiteSpace:"nowrap"}}
+              >{showBrief ? "Clear" : "Generate brief"}</button>
             </div>
-            <div style={{padding:"24px"}}>
+            <div style={{padding:showBrief?"24px":"0",maxHeight:showBrief?"600px":"0",overflow:"hidden",transition:"max-height 0.3s ease, padding 0.3s ease"}}>
               <div style={{fontFamily:"'DM Mono',monospace",fontSize:"9px",textTransform:"uppercase",color:"#1D9E75",letterSpacing:"0.12em",marginBottom:"16px"}}>TIDELINE BRIEF {"\u00B7"} 3 SOURCES CITED</div>
               <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#202124",lineHeight:1.7,marginTop:0,marginBottom:"12px"}}>
                 Under Article 38 of the BBNJ Agreement, parties must conduct environmental impact assessments for planned activities in areas beyond national jurisdiction. The threshold is assessed against cumulative impacts on marine biodiversity.
@@ -113,7 +112,7 @@ export default function DemoPage() {
                 <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:"#202124",lineHeight:1.7}}>
                   <p style={{margin:"0 0 12px"}}>The proposed OSPAR MPA network designates 34 areas across UK and Norwegian waters. Current draft criteria would affect existing offshore energy licences issued before the 2023 ministerial decision.</p>
                   <p style={{margin:"0 0 12px"}}>Under Annex V, Article 4(2), existing licensed activities may continue subject to a compatibility review within 18 months of designation. States retain discretion over enforcement timing within that window.</p>
-                  <p style={{margin:0,color:"#9AA0A6",fontStyle:"italic"}}>Continue writing...</p>
+                  <p style={{margin:0,color:"#9AA0A6",fontSize:"12px"}}>2 paragraphs {"\u00B7"} 3 sources saved</p>
                 </div>
               </div>
               <div style={{padding:"20px",background:"#FAFAFA"}}>
@@ -136,7 +135,7 @@ export default function DemoPage() {
               </div>
             </div>
             <div style={{borderTop:"1px solid #E5E7EB",padding:"16px 24px"}}>
-              <button style={{width:"100%",fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:"#fff",background:"#1D9E75",border:"none",borderRadius:"8px",padding:"12px",cursor:"default"}}>Generate Report {"\u2192"}</button>
+              <div style={{width:"100%",fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:"#fff",background:"#1D9E75",borderRadius:"8px",padding:"12px",textAlign:"center"}}>Generate Report {"\u2192"}</div>
             </div>
           </div>
         </div>
