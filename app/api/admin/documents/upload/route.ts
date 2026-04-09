@@ -114,7 +114,6 @@ export async function POST(req: NextRequest) {
     file_url: filePath,
     file_size_bytes: file.size,
     status: "approved",
-    approved_by: user.id,
   }));
   const { data: doc, error: insertError } = await supabase
     .from("documents")
@@ -128,8 +127,7 @@ export async function POST(req: NextRequest) {
       is_public: true,
       status: "approved",
       submitted_by: null,
-      approved_by: user.id,
-      approved_at: new Date().toISOString(),
+      approved_by: null,
       contributor_confirmed: false,
       topic_tags: topicTags,
       region_tags: regionTags,
