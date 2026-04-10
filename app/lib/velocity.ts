@@ -126,6 +126,9 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   const { error } = await supabase.from("velocity_scores").insert({
     tracker_slug: trackerSlug,
     score,
+    score_volume: Math.round(scoreA * 10) / 10,
+    score_recency: Math.round(scoreB * 10) / 10,
+    score_signals: Math.round(scoreC * 10) / 10,
     story_count_30d: currentCount,
     momentum_direction: momentumDirection,
     interpretation,
@@ -134,5 +137,5 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
 
   if (error) console.error(`velocity_scores insert error for ${trackerSlug}:`, error.message);
 
-  return { trackerSlug, score, currentCount, momentumDirection, interpretation };
+  return { trackerSlug, score, scoreA: Math.round(scoreA * 10) / 10, scoreB: Math.round(scoreB * 10) / 10, scoreC: Math.round(scoreC * 10) / 10, currentCount, momentumDirection, interpretation };
 }

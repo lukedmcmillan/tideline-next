@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 interface VelocityData {
   score: number;
+  score_volume: number;
+  score_recency: number;
+  score_signals: number;
   story_count_30d: number;
   momentum_direction: "accelerating" | "stable" | "decelerating";
   interpretation: string;
@@ -11,6 +14,9 @@ interface VelocityData {
 
 interface HistoryPoint {
   score: number;
+  score_volume: number;
+  score_recency: number;
+  score_signals: number;
   calculated_at: string;
 }
 
@@ -102,6 +108,18 @@ export default function VelocityScore({ slug }: { slug: string }) {
           transition: "width 0.5s ease",
         }} />
       </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "10px" }}>
+        {[
+          { label: "VOLUME TREND", value: data.score_volume },
+          { label: "RECENCY", value: data.score_recency },
+          { label: "DECISION SIGNALS", value: data.score_signals },
+        ].map((s) => (
+          <div key={s.label}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#64748b", marginBottom: "2px" }}>{s.label}</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "16px", fontWeight: 700, color: getColor(s.value) }}>{s.value}<span style={{ fontSize: "11px", fontWeight: 400, color: "#64748b" }}>/10</span></div>
+          </div>
+        ))}
+      </div>
       {(() => {
         const indices = [2, 4, 8, 11];
         const points = indices.filter((i) => history[i]).map((i) => history[i]);
@@ -116,7 +134,7 @@ export default function VelocityScore({ slug }: { slug: string }) {
                 const d = new Date(p.calculated_at);
                 const label = d.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
                 return (
-                  <div key={p.calculated_at} style={{ textAlign: "center" }}>
+                  <div key={p.calculated_at} style={{ textAlign: "center" }} title={`Vol: ${p.score_volume ?? "\u2014"} | Rec: ${p.score_recency ?? "\u2014"} | Sig: ${p.score_signals ?? "\u2014"}`}>
                     <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 700, color: getColor(p.score) }}>
                       {p.score}
                     </div>

@@ -14,7 +14,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("velocity_scores")
-    .select("score, story_count_30d, momentum_direction, interpretation, calculated_at")
+    .select("score, score_volume, score_recency, score_signals, story_count_30d, momentum_direction, interpretation, calculated_at")
     .eq("tracker_slug", slug)
     .order("calculated_at", { ascending: false })
     .limit(12);
@@ -24,7 +24,7 @@ export async function GET(
   }
 
   const latest = data[0];
-  const history = data.map((d) => ({ score: d.score, calculated_at: d.calculated_at }));
+  const history = data.map((d) => ({ score: d.score, score_volume: d.score_volume, score_recency: d.score_recency, score_signals: d.score_signals, calculated_at: d.calculated_at }));
 
   return NextResponse.json({ latest, history });
 }
