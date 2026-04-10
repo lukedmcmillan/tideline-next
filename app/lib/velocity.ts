@@ -23,11 +23,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-export async function calculateVelocityScore(trackerSlug: string) {
+export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   const topics = TRACKER_TOPICS[trackerSlug];
   if (!topics) throw new Error(`Unknown tracker slug: ${trackerSlug}`);
 
-  const now = new Date();
+  const now = asOf ?? new Date();
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const d60 = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -129,6 +129,7 @@ export async function calculateVelocityScore(trackerSlug: string) {
     story_count_30d: currentCount,
     momentum_direction: momentumDirection,
     interpretation,
+    ...(asOf ? { calculated_at: asOf.toISOString() } : {}),
   });
 
   if (error) console.error(`velocity_scores insert error for ${trackerSlug}:`, error.message);
