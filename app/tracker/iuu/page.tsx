@@ -199,7 +199,7 @@ export default function IUUTracker() {
       <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 700, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>Illegal Fishing</h1>
+          <h1 style={{ fontFamily: "'DM Sans',system-ui,sans-serif", fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>Illegal Fishing</h1>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 600, lineHeight: 1.7 }}>Monitoring IUU fishing enforcement, EU carding decisions, PSMA ratification, and RFMO actions globally.</p>
         </div>
       </div>
