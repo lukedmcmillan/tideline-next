@@ -163,8 +163,10 @@ async function scrapePage(
   const pdfLinks = extractPdfLinks(html, url);
   console.log(`  [${source.name}] Found ${pdfLinks.length} PDF links on ${url}`);
 
+  const NON_EN = /_chi\.pdf$|_rus\.pdf$|_ar\.pdf$|_fr\.pdf$|_es\.pdf$|-fr\.pdf$|-es\.pdf$|-ar\.pdf$|-ch\.pdf$|_FR_|_ES_|_AR_|_ZH_|_RU_/i;
   let inserted = 0;
   for (const pdfUrl of pdfLinks) {
+    if (NON_EN.test(pdfUrl)) continue;
     const exists = await isAlreadyQueued(pdfUrl);
     if (exists) continue;
 
@@ -191,8 +193,11 @@ async function scrapePage(
   // Follow pagination if we found new PDFs
   if (inserted === 0 && pdfLinks.length === 0) return inserted;
 
+  const currentBase = url.split("#")[0];
   const nextPages = extractPaginationLinks(html, url, source.domain);
   for (const nextUrl of nextPages) {
+    const nextBase = nextUrl.split("#")[0];
+    if (currentBase === nextBase) continue;
     inserted += await scrapePage(nextUrl, source, visited, depth + 1);
   }
 
