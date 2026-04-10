@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import VelocityScore from "@/components/VelocityScore";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const NAVY = "#1a2f4a";
@@ -1065,6 +1066,7 @@ export default function ISATracker() {
 
       {/* Body */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <VelocityScore slug="isa" />
         <MetricCards pendingApplications={pendingApplications} eventsThisYear={eventsThisYear} />
 
         {loading ? (

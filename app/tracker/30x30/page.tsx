@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import VelocityScore from "@/components/VelocityScore";
 
 const NAVY = "#0a1628";
 const BLUE = "#1d6fa4";
@@ -227,6 +228,7 @@ export default function ThirtyByThirtyTracker() {
 
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
+        <VelocityScore slug="30x30" />
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 14, color: MUTED, fontFamily: SANS }}>Loading tracker data...</div>

@@ -17,6 +17,7 @@ const PRICE_MAP: Record<string, string | undefined> = {
   individual: process.env.STRIPE_PRICE_INDIVIDUAL_MONTHLY,
   individual_annual: process.env.STRIPE_PRICE_INDIVIDUAL_ANNUAL,
   team: process.env.STRIPE_PRICE_TEAM_MONTHLY,
+  corporate: process.env.STRIPE_PRICE_CORPORATE_MONTHLY,
 };
 
 const TIER_MAP: Record<string, string> = {
@@ -24,6 +25,7 @@ const TIER_MAP: Record<string, string> = {
   individual: "individual",
   individual_annual: "individual",
   team: "team",
+  corporate: "corporate",
 };
 
 export async function POST(req: NextRequest) {

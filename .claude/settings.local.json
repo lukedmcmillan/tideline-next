@@ -53,7 +53,13 @@
       "Bash(npm ls:*)",
       "Bash(npm uninstall:*)",
       "Bash(Get-Content app/api/admin/documents/upload/route.ts)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx dotenv:*)",
+      "Bash(node -e \"require\\(''''dotenv''''\\).config\\({path:''''.env.local''''}\\)\")",
+      "Bash(set -a)",
+      "Bash(source .env.local)",
+      "Bash(set +a)"
     ]
   }
 }

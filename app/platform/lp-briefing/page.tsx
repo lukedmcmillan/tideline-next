@@ -329,12 +329,23 @@ export default function LpBriefingPage() {
             <div style={{ fontSize: 13, color: T3, lineHeight: 1.6, marginBottom: 24 }}>
               Portfolio Intelligence is available on the Tideline Corporate tier, designed for funds, family offices and institutional investors tracking ocean-related portfolio exposure.
             </div>
-            <a href="/upgrade" style={{
-              display: "inline-block", background: TEAL, color: WHITE, padding: "10px 22px",
-              borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none",
-            }}>
-              Contact us about Corporate
-            </a>
+            <button
+              onClick={async () => {
+                const res = await fetch("/api/stripe/checkout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ tier: "corporate" }),
+                });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              }}
+              style={{
+                display: "inline-block", background: TEAL, color: WHITE, padding: "10px 22px",
+                borderRadius: 6, fontSize: 13, fontWeight: 500, border: "none", cursor: "pointer",
+              }}
+            >
+              Subscribe to Corporate
+            </button>
           </div>
         </div>
       </div>
