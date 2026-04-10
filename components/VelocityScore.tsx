@@ -243,9 +243,9 @@ export default function VelocityScore({ slug }: { slug: string }) {
 
       {/* 2. Score */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, padding: "8px 20px 6px" }}>
-        <span style={{ fontSize: 36, fontWeight: 600, color: c, lineHeight: 1 }}>{data.score}</span>
-        <span style={{ fontSize: 14, color: MUTED }}>/10</span>
-        <span style={{ fontSize: 12, fontWeight: 500, color: c, marginLeft: 8 }}>
+        <span style={{ fontFamily: F, fontSize: 36, fontWeight: 600, color: c, lineHeight: 1 }}>{data.score}</span>
+        <span style={{ fontFamily: F, fontSize: 14, color: MUTED }}>/10</span>
+        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: c, marginLeft: 8 }}>
           {arrowChar(data.momentum_direction)} {data.momentum_direction.charAt(0).toUpperCase() + data.momentum_direction.slice(1)}
         </span>
       </div>
@@ -269,26 +269,31 @@ export default function VelocityScore({ slug }: { slug: string }) {
         <div style={{ padding: "14px 20px 0", position: "relative" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED }}>10-week trend</div>
-            <div style={{ fontSize: 10, color: MUTED }}>Hover for weekly detail</div>
+            <div style={{ fontFamily: F, fontSize: 10, color: MUTED }}>Hover for weekly detail</div>
           </div>
           <div style={{ height: 88, position: "relative" }} onMouseLeave={() => setTooltip(null)}>
             <canvas ref={canvasRef} />
             {tooltip && (
               <div style={{
                 position: "absolute", left: tooltip.x + 12, top: Math.max(0, tooltip.y - 60),
-                background: "#fff", border: `0.5px solid ${BORDER}`, borderRadius: 6,
-                padding: "10px 14px", zIndex: 10, pointerEvents: "none",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)", minWidth: 140,
+                fontFamily: F, background: "#fff", border: `0.5px solid ${BORDER}`, borderRadius: 6,
+                padding: "8px 10px", zIndex: 10, pointerEvents: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)", maxWidth: 160,
               }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 4 }}>{fmtDate(tooltip.point.calculated_at)}</div>
-                <div style={{ fontSize: 20, fontWeight: 600, color: color(tooltip.point.score), marginBottom: 6 }}>{tooltip.point.score}<span style={{ fontSize: 11, color: MUTED }}>/10</span></div>
-                <div style={{ borderTop: `0.5px solid ${BORDER}`, paddingTop: 6, fontSize: 11, color: TEXT, lineHeight: 1.8 }}>
-                  <div>Volume: {tooltip.point.score_volume ?? "\u2014"}/10</div>
-                  <div>Recency: {tooltip.point.score_recency ?? "\u2014"}/10</div>
-                  <div>Signals: {tooltip.point.score_signals ?? "\u2014"}/10</div>
-                </div>
+                <div style={{ fontFamily: F, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: MUTED, marginBottom: 4 }}>{fmtDate(tooltip.point.calculated_at)}</div>
+                <div style={{ fontFamily: F, fontSize: 16, fontWeight: 600, color: color(tooltip.point.score), marginBottom: 4 }}>{tooltip.point.score}<span style={{ fontSize: 10, fontWeight: 400, color: MUTED }}>/10</span></div>
+                {[
+                  ["Volume", tooltip.point.score_volume],
+                  ["Recency", tooltip.point.score_recency],
+                  ["Signals", tooltip.point.score_signals],
+                ].map(([label, val]) => (
+                  <div key={label as string} style={{ fontFamily: F, fontSize: 10, color: TEXT, display: "flex", justifyContent: "space-between" }}>
+                    <span>{label as string}</span>
+                    <span>{val != null ? `${val}` : "\u2014"}</span>
+                  </div>
+                ))}
                 {tooltip.point.interpretation && (
-                  <div style={{ fontSize: 10, color: MUTED, fontStyle: "italic", marginTop: 4 }}>{tooltip.point.interpretation}</div>
+                  <div style={{ fontFamily: F, fontSize: 10, fontStyle: "italic", color: MUTED, marginTop: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{tooltip.point.interpretation}</div>
                 )}
               </div>
             )}
@@ -303,7 +308,7 @@ export default function VelocityScore({ slug }: { slug: string }) {
 
       {/* 6. Interpretation */}
       {data.interpretation && (
-        <div style={{ padding: "12px 20px", borderTop: `0.5px solid ${BORDER}`, fontSize: 12, color: TEXT, lineHeight: 1.6 }}>
+        <div style={{ fontFamily: F, padding: "12px 20px", borderTop: `0.5px solid ${BORDER}`, fontSize: 12, color: TEXT, lineHeight: 1.6 }}>
           {data.interpretation}
         </div>
       )}
