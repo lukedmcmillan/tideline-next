@@ -5,121 +5,87 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const SEARCH_QUERIES = [
-  "ocean governance",
-  "marine environment protection",
-  "law of the sea",
-  "deep sea mining seabed",
-  "marine biodiversity conservation",
-  "fisheries management",
-  "maritime pollution MARPOL",
-  "coral reef protection",
-  "blue carbon ocean",
-  "marine protected areas",
-  "BBNJ high seas treaty",
-  "ocean climate change",
-  "illegal unreported fishing IUU",
-  "whaling moratorium IWC",
-  "UNCLOS convention sea",
-];
-
-const BASE_URL = "https://digitallibrary.un.org/search";
-const RESULTS_PER_PAGE = 100;
-const MAX_RECORDS_PER_QUERY = 500;
+// OAI-PMH endpoint — works without browser, unlike the search UI
+const OAI_BASE = "https://digitallibrary.un.org/oai2d";
 const USER_AGENT = "Tideline Library Bot/1.0";
+const MAX_PAGES = 10; // ~200 records per page, max ~2000 records per run
 
-const OCEAN_KEYWORDS = /ocean|marine|sea|maritime|fisheries|coral|mangrove|seabed|aquatic|coastal|unclos|marpol|iwc|isa|bbnj|whaling/i;
-const NON_EN_URL = /\/arabic\/|\/french\/|\/spanish\/|\/russian\/|\/chinese\/|_A_|_F_|_S_|_R_|_C_|-ar-|-fr-|-es-/i;
-const NON_EN_FILE = /_chi\.pdf$|_rus\.pdf$|_ar\.pdf$|_fr\.pdf$|_es\.pdf$|-fr\.pdf$|-es\.pdf$|-ar\.pdf$|-ch\.pdf$|_FR_|_ES_|_AR_|_ZH_|_RU_/i;
+const OCEAN_KEYWORDS = /ocean|marine|sea\b|maritime|fisheries|coral|mangrove|seabed|aquatic|coastal|unclos|marpol|iwc|isa\b|bbnj|whaling|shipping|vessel|port state|deep.sea|continental shelf|exclusive economic zone|high seas|law of the sea|pollution.*marine|biodiversity.*marine/i;
+const NON_EN_PDF = /-AR\.pdf|-FR\.pdf|-ES\.pdf|-RU\.pdf|-ZH\.pdf|_AR\.|_FR\.|_ES\.|_RU\.|_ZH\./i;
 
-// --- MARC XML parsing helpers (regex, no XML dependency) ---
+// --- MARC XML parsing (namespace-aware: marc:datafield, marc:subfield) ---
 
-function extractMarcField(xml: string, tag: string, subfieldCode?: string): string {
+function extractMarcFields(recordXml: string, tag: string, subfieldCode: string): string[] {
+  // Match both marc:datafield and datafield variants
   const tagRegex = new RegExp(
-    `<datafield[^>]+tag=["']${tag}["'][^>]*>([\\s\\S]*?)</datafield>`,
-    "gi"
-  );
-  const match = tagRegex.exec(xml);
-  if (!match) return "";
-
-  if (subfieldCode) {
-    const sfRegex = new RegExp(
-      `<subfield[^>]+code=["']${subfieldCode}["'][^>]*>([^<]*)</subfield>`,
-      "i"
-    );
-    const sfMatch = sfRegex.exec(match[1]);
-    return sfMatch ? sfMatch[1].trim() : "";
-  }
-
-  const allSf = [...match[1].matchAll(/<subfield[^>]*>([^<]*)<\/subfield>/gi)];
-  return allSf.map(m => m[1].trim()).join(" ");
-}
-
-function extractAllMarcFields(xml: string, tag: string, subfieldCode?: string): string[] {
-  const tagRegex = new RegExp(
-    `<datafield[^>]+tag=["']${tag}["'][^>]*>([\\s\\S]*?)</datafield>`,
+    `<(?:marc:)?datafield[^>]+tag=["']${tag}["'][^>]*>([\\s\\S]*?)</(?:marc:)?datafield>`,
     "gi"
   );
   const results: string[] = [];
   let match;
-  while ((match = tagRegex.exec(xml)) !== null) {
-    if (subfieldCode) {
-      const sfRegex = new RegExp(
-        `<subfield[^>]+code=["']${subfieldCode}["'][^>]*>([^<]*)</subfield>`,
-        "i"
-      );
-      const sfMatch = sfRegex.exec(match[1]);
-      if (sfMatch) results.push(sfMatch[1].trim());
-    } else {
-      const allSf = [...match[1].matchAll(/<subfield[^>]*>([^<]*)<\/subfield>/gi)];
-      results.push(allSf.map(m => m[1].trim()).join(" "));
+  while ((match = tagRegex.exec(recordXml)) !== null) {
+    const sfRegex = new RegExp(
+      `<(?:marc:)?subfield[^>]+code=["']${subfieldCode}["'][^>]*>([^<]*)</(?:marc:)?subfield>`,
+      "gi"
+    );
+    let sfMatch;
+    while ((sfMatch = sfRegex.exec(match[1])) !== null) {
+      const val = sfMatch[1].trim();
+      if (val) results.push(val);
     }
   }
   return results;
 }
 
-function extractPdfUrls(xml: string): string[] {
-  const urls = extractAllMarcFields(xml, "856", "u");
-  return urls.filter(u => /\.pdf/i.test(u) && !NON_EN_URL.test(u) && !NON_EN_FILE.test(u));
+function extractFirstMarcField(recordXml: string, tag: string, subfieldCode: string): string {
+  const vals = extractMarcFields(recordXml, tag, subfieldCode);
+  return vals[0] || "";
 }
 
 interface ParsedRecord {
   title: string;
-  date: string;
+  docSymbol: string;
   subjects: string[];
   pdfUrls: string[];
-  docSymbol: string;
-  issuingBody: string;
 }
 
-function parseRecords(xmlResponse: string): ParsedRecord[] {
+function parseRecords(xml: string): ParsedRecord[] {
   const recordRegex = /<record>([\s\S]*?)<\/record>/gi;
   const records: ParsedRecord[] = [];
   let match;
-  while ((match = recordRegex.exec(xmlResponse)) !== null) {
-    const xml = match[1];
-    const title = extractMarcField(xml, "245", "a");
-    const date = extractMarcField(xml, "269", "a") || extractMarcField(xml, "260", "c");
-    const subjects = extractAllMarcFields(xml, "650", "a");
-    const pdfUrls = extractPdfUrls(xml);
-    const docSymbol = extractMarcField(xml, "191", "a") || extractMarcField(xml, "099", "a");
-    const issuingBody = extractMarcField(xml, "110", "a") || extractMarcField(xml, "710", "a");
-    records.push({ title, date, subjects, pdfUrls, docSymbol, issuingBody });
+  while ((match = recordRegex.exec(xml)) !== null) {
+    const rec = match[1];
+    const title = extractFirstMarcField(rec, "245", "a");
+    const docSymbol = extractFirstMarcField(rec, "191", "a") || extractFirstMarcField(rec, "099", "a");
+    const subjects = extractMarcFields(rec, "650", "a");
+
+    // Get all 856$u URLs, filter to English PDFs only
+    const allUrls = extractMarcFields(rec, "856", "u");
+    const pdfUrls = allUrls.filter(u =>
+      /\.pdf/i.test(u) && !NON_EN_PDF.test(u) && /-EN\.pdf/i.test(u)
+    );
+    // If no explicit EN PDF, try any English-looking PDF (no language suffix = likely English)
+    if (pdfUrls.length === 0) {
+      const fallback = allUrls.filter(u =>
+        /\.pdf/i.test(u) && !NON_EN_PDF.test(u) && !/-[A-Z]{2}\.pdf/i.test(u)
+      );
+      pdfUrls.push(...fallback);
+    }
+
+    records.push({ title, docSymbol, subjects, pdfUrls });
   }
   return records;
 }
 
-function extractTotalResults(xml: string): number {
-  const match = xml.match(/search_nbrecs[^>]*>(\d+)</i) || xml.match(/<!-- Search-Engine-Total-Number-Of-Results: (\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+function extractResumptionToken(xml: string): string | null {
+  const match = xml.match(/<resumptionToken[^>]*>([^<]+)<\/resumptionToken>/);
+  return match ? match[1] : null;
 }
 
-function isRelevant(record: ParsedRecord): boolean {
+function isOceanRelevant(record: ParsedRecord): boolean {
   if (record.pdfUrls.length === 0) return false;
-  const allSubjects = record.subjects.join(" ").toLowerCase();
-  const titleLower = record.title.toLowerCase();
-  const combined = allSubjects + " " + titleLower;
-  return OCEAN_KEYWORDS.test(combined);
+  const text = [...record.subjects, record.title].join(" ");
+  return OCEAN_KEYWORDS.test(text);
 }
 
 // --- Queue helpers ---
@@ -148,11 +114,14 @@ async function isAlreadyQueued(fileUrl: string): Promise<boolean> {
   return !!(d && d.length > 0);
 }
 
-async function queuePdf(pdfUrl: string, searchUrl: string, fileName: string): Promise<boolean> {
+async function queuePdf(pdfUrl: string, docSymbol: string): Promise<boolean> {
   const exists = await isAlreadyQueued(pdfUrl);
   if (exists) return false;
+  const fileName = docSymbol
+    ? `${docSymbol.replace(/\//g, "_")}.pdf`
+    : fileNameFromUrl(pdfUrl);
   const { error } = await supabase.from("document_queue").insert({
-    source_url: searchUrl,
+    source_url: OAI_BASE,
     source_domain: "digitallibrary.un.org",
     file_url: pdfUrl,
     file_name: fileName,
@@ -172,88 +141,72 @@ function sleep(ms: number) {
 
 // --- Main ---
 
-async function searchQuery(query: string): Promise<number> {
-  console.log(`\n  Query: "${query}"`);
+async function main() {
+  console.log("=== Tideline UN Digital Library Scraper (OAI-PMH) ===\n");
+
+  // Harvest records from last 90 days
+  const since = new Date();
+  since.setDate(since.getDate() - 90);
+  const fromDate = since.toISOString().split("T")[0];
+
+  let url = `${OAI_BASE}?verb=ListRecords&metadataPrefix=marcxml&from=${fromDate}`;
   let totalQueued = 0;
-  let jrec = 1;
-  let totalResults = 0;
+  let totalRecords = 0;
+  let totalRelevant = 0;
   let page = 0;
 
-  while (jrec <= MAX_RECORDS_PER_QUERY) {
+  while (url && page < MAX_PAGES) {
     page++;
-    const params = new URLSearchParams({
-      p: query,
-      of: "hx",
-      action_search: "Search",
-      rg: String(RESULTS_PER_PAGE),
-      jrec: String(jrec),
-    });
-    const searchUrl = `${BASE_URL}?${params}`;
+    console.log(`  Page ${page}: fetching...`);
 
     let xml: string;
     try {
-      const res = await fetch(searchUrl, {
-        headers: { "User-Agent": USER_AGENT },
-      });
+      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
       if (!res.ok) {
-        console.log(`  HTTP ${res.status} for page ${page}`);
+        console.log(`  HTTP ${res.status}, stopping`);
         break;
       }
       xml = await res.text();
     } catch (err) {
-      console.log(`  Fetch error page ${page}: ${err}`);
+      console.log(`  Fetch error: ${err}`);
       break;
-    }
-
-    if (page === 1) {
-      totalResults = extractTotalResults(xml);
-      console.log(`  Total results: ${totalResults}`);
     }
 
     const records = parseRecords(xml);
-    if (records.length === 0) {
-      console.log(`  No records on page ${page}, stopping`);
-      break;
-    }
+    totalRecords += records.length;
+    console.log(`  Page ${page}: ${records.length} records`);
+
+    if (records.length === 0) break;
 
     let pageQueued = 0;
     for (const record of records) {
-      if (!isRelevant(record)) continue;
+      if (!isOceanRelevant(record)) continue;
+      totalRelevant++;
 
       for (const pdfUrl of record.pdfUrls) {
-        const fileName = record.docSymbol
-          ? `${record.docSymbol.replace(/\//g, "_")}.pdf`
-          : fileNameFromUrl(pdfUrl);
-        const queued = await queuePdf(pdfUrl, searchUrl, fileName);
+        const queued = await queuePdf(pdfUrl, record.docSymbol);
         if (queued) pageQueued++;
       }
     }
 
     totalQueued += pageQueued;
-    console.log(`  Page ${page}: ${records.length} records, ${pageQueued} queued`);
+    console.log(`  Page ${page}: ${pageQueued} ocean-relevant PDFs queued`);
 
-    jrec += RESULTS_PER_PAGE;
-    if (jrec > totalResults || jrec > MAX_RECORDS_PER_QUERY) break;
+    // Follow resumption token for next page
+    const token = extractResumptionToken(xml);
+    if (token) {
+      url = `${OAI_BASE}?verb=ListRecords&resumptionToken=${encodeURIComponent(token)}`;
+    } else {
+      url = "";
+    }
 
-    await sleep(1000);
+    await sleep(1000); // polite delay
   }
 
-  return totalQueued;
-}
-
-async function main() {
-  console.log("=== Tideline UN Digital Library Scraper ===");
-  console.log(`Running ${SEARCH_QUERIES.length} queries\n`);
-
-  let totalQueued = 0;
-
-  for (const query of SEARCH_QUERIES) {
-    const count = await searchQuery(query);
-    totalQueued += count;
-    await sleep(1000);
-  }
-
-  console.log(`\n=== Complete. ${totalQueued} new PDFs queued. ===`);
+  console.log(`\n=== Complete ===`);
+  console.log(`  Records scanned: ${totalRecords}`);
+  console.log(`  Ocean-relevant: ${totalRelevant}`);
+  console.log(`  New PDFs queued: ${totalQueued}`);
 }
 
 main().catch(console.error);
