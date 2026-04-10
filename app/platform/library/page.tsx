@@ -66,6 +66,7 @@ function fmtSize(bytes: number | null) {
 export default function LibraryPage() {
   const [docs, setDocs] = useState<Document[]>([]);
   const [count, setCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [query, setQuery] = useState("");
   const [activeType, setActiveType] = useState("");
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,7 @@ export default function LibraryPage() {
       const data = await res.json();
       setDocs(data.documents || []);
       setCount(data.count || 0);
+      setTotalCount(data.totalCount || 0);
     } catch {
       setDocs([]);
       setCount(0);
@@ -139,7 +141,7 @@ export default function LibraryPage() {
           fontFamily: M, fontSize: 13, color: TEAL,
           marginBottom: 20,
         }}>
-          {loading ? "..." : `${count} curated documents`}
+          {loading ? "..." : `${totalCount} curated documents`}
         </div>
 
         {/* Search */}

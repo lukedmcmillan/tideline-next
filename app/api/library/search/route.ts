@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     query = query.or(`title.ilike.%${q}%,source_organisation.ilike.%${q}%`);
   }
 
-  query = query.order("created_at", { ascending: false }).limit(20);
+  query = query.order("created_at", { ascending: false }).limit(100);
 
   const { data, error } = await query;
 
@@ -38,5 +38,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ documents: data, count: data?.length || 0 });
+  const { count: totalCount } = await supabase
+    .from("documents")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "approved")
+    .eq("is_public", true);
+
+  return NextResponse.json({ documents: data, count: data?.length || 0, totalCount: totalCount || 0 });
 }
