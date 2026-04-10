@@ -57,8 +57,9 @@ const SOURCES: Source[] = [
     defaultType: "resolution",
     is_primary_source: true,
     urls: [
-      "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.353(79).pdf",
-      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Air%20pollution/MARPOL%20Annex%20VI_2021%20edition_e.pdf",
+      "https://wwwcdn.imo.org/localresources/en/publications/Documents/Supplements/English/QQF520E_supplement_May2024_PQ.pdf",
+      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Fifth%20IMO%20GHG%20Study%202023%20Full%20report.pdf",
+      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Air%20pollution/Sulphur%202020%20-%20Consistent%20implementation%20of%20regulation%2014.1.3%20of%20MARPOL%20Annex%20VI.pdf",
     ],
   },
   {
@@ -86,7 +87,8 @@ const SOURCES: Source[] = [
     defaultType: "resolution",
     is_primary_source: true,
     urls: [
-      "https://iwc.int/api/downloads/documents/2024-schedule-extract.pdf",
+      "https://iwc.int/api/downloads/documents/86/download",
+      "https://iwc.int/api/downloads/documents/87/download",
     ],
   },
 ];
@@ -252,7 +254,7 @@ async function main() {
     const visited = new Set<string>();
 
     for (const url of source.urls) {
-      if (url.toLowerCase().endsWith(".pdf")) {
+      if (url.toLowerCase().endsWith(".pdf") || /\/downloads?\/documents?\/\d+\/download$/i.test(url)) {
         const queued = await queuePdf(url, source);
         if (queued) {
           totalQueued++;
