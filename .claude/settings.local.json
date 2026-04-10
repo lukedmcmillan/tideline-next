@@ -59,7 +59,10 @@
       "Bash(node -e \"require\\(''''dotenv''''\\).config\\({path:''''.env.local''''}\\)\")",
       "Bash(set -a)",
       "Bash(source .env.local)",
-      "Bash(set +a)"
+      "Bash(set +a)",
+      "Bash(npx playwright:*)",
+      "Bash(echo \"NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL\")",
+      "Bash(bash -c 'set -a; source .env.local; set +a; npx tsx scripts/scraper-playwright.ts')"
     ]
   }
 }

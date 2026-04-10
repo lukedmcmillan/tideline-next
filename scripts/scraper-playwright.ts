@@ -19,61 +19,72 @@ interface PlaywrightSource {
 
 const SOURCES: PlaywrightSource[] = [
   {
-    name: "OSPAR Documents",
+    name: "OSPAR Publications",
     domain: "ospar.org",
     defaultOrg: "OSPAR Commission",
     defaultType: "regulation",
     is_primary_source: true,
-    url: "https://www.ospar.org/documents",
-    waitFor: "table, .document-list, a[href$='.pdf']",
+    url: "https://www.ospar.org/about/publications?q=&y=2026",
+    waitFor: ".publication, .item, a[href*='.pdf']",
     scrollToBottom: true,
   },
   {
-    name: "IMO Resolutions",
+    name: "OSPAR Publications 2025",
+    domain: "ospar.org",
+    defaultOrg: "OSPAR Commission",
+    defaultType: "regulation",
+    is_primary_source: true,
+    url: "https://www.ospar.org/about/publications?q=&y=2025",
+    waitFor: ".publication, .item, a[href*='.pdf']",
+    scrollToBottom: true,
+  },
+  {
+    name: "IMO Circulars",
     domain: "imo.org",
     defaultOrg: "International Maritime Organization",
     defaultType: "resolution",
     is_primary_source: true,
-    url: "https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions",
-    waitFor: "table, .resolution-list, a[href$='.pdf']",
+    url: "https://www.imo.org/en/MediaCentre/MeetingSummaries",
+    waitFor: ".sfContentBlock, article, a[href*='.pdf']",
     scrollToBottom: true,
   },
   {
-    name: "IWC Resources",
+    name: "IWC Conservation",
     domain: "iwc.int",
     defaultOrg: "International Whaling Commission",
     defaultType: "resolution",
     is_primary_source: true,
-    url: "https://iwc.int/en/resources",
-    waitFor: "a[href$='.pdf'], .document",
+    url: "https://iwc.int/en/conservation",
+    waitFor: "a[href*='.pdf'], .card, article",
     scrollToBottom: true,
   },
   {
-    name: "FAO Fisheries Publications",
+    name: "FAO SOFIA Reports",
     domain: "fao.org",
     defaultOrg: "Food and Agriculture Organization of the United Nations",
     defaultType: "report",
     is_primary_source: true,
-    url: "https://www.fao.org/fishery/en/publications",
-    waitFor: "a[href$='.pdf'], .publication",
+    url: "https://www.fao.org/fishery/en/publications/search?page=1&size=50&sort=date_desc",
+    waitFor: ".search-result, .list-group-item, a[href*='.pdf']",
     scrollToBottom: true,
   },
   {
-    name: "UNFCCC Ocean",
+    name: "UNFCCC Ocean Documents",
     domain: "unfccc.int",
     defaultOrg: "United Nations Framework Convention on Climate Change",
     defaultType: "report",
     is_primary_source: true,
-    url: "https://unfccc.int/topics/ocean-and-water",
-    waitFor: "a[href$='.pdf']",
-    scrollToBottom: false,
+    url: "https://unfccc.int/topics/ocean-and-water/resources",
+    waitFor: "a[href*='.pdf'], .node, article",
+    scrollToBottom: true,
   },
 ];
 
 const NON_EN = /_chi\.pdf$|_rus\.pdf$|_ar\.pdf$|_fr\.pdf$|_es\.pdf$|-fr\.pdf$|-es\.pdf$|-ar\.pdf$|-ch\.pdf$|_FR_|_ES_|_AR_|_ZH_|_RU_/i;
 
 function extractPdfLinks(html: string, baseUrl: string): string[] {
-  const regex = /href=["']([^"']*\.pdf[^"']*)/gi;
+  // Match .pdf links in href, data-href, src, and data-url attributes
+  const regex = /(?:href|data-href|src|data-url)=["']([^"']*\.pdf[^"']*)/gi;
   const links: string[] = [];
   let match;
   while ((match = regex.exec(html)) !== null) {
@@ -148,27 +159,38 @@ async function scrapeSource(source: PlaywrightSource): Promise<number> {
   const page = await context.newPage();
 
   try {
-    await page.goto(source.url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.goto(source.url, { waitUntil: "networkidle", timeout: 45000 });
 
     // Wait for content selector or timeout
     try {
-      await page.waitForSelector(source.waitFor, { timeout: 10000 });
+      await page.waitForSelector(source.waitFor, { timeout: 15000 });
     } catch {
       console.log(`  [${source.name}] waitFor selector not found, proceeding with current content`);
     }
 
-    // Scroll to bottom for lazy-loaded content
+    // Scroll to bottom in multiple passes for lazy-loaded content
     if (source.scrollToBottom) {
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(2000);
+      for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await page.waitForTimeout(1500);
+      }
     }
 
     const html = await page.content();
-    const pdfLinks = extractPdfLinks(html, source.url);
-    console.log(`  [${source.name}] Found ${pdfLinks.length} PDF links`);
+
+    // Also extract PDF links via Playwright in-page evaluation (catches JS-generated links)
+    const jsLinks = await page.$$eval("a[href]", (anchors) =>
+      anchors.map((a) => a.href).filter((h) => /\.pdf/i.test(h))
+    );
+
+    const htmlPdfLinks = extractPdfLinks(html, source.url);
+    const allPdfLinks = [...new Set([...htmlPdfLinks, ...jsLinks])].filter(
+      (l) => !NON_EN.test(l)
+    );
+    console.log(`  [${source.name}] Found ${allPdfLinks.length} PDF links (${htmlPdfLinks.length} html + ${jsLinks.length} js)`);
 
     let inserted = 0;
-    for (const pdfUrl of pdfLinks) {
+    for (const pdfUrl of allPdfLinks) {
       const queued = await queuePdf(pdfUrl, source.url, source);
       if (queued) inserted++;
     }

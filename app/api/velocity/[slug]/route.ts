@@ -17,12 +17,14 @@ export async function GET(
     .select("score, story_count_30d, momentum_direction, interpretation, calculated_at")
     .eq("tracker_slug", slug)
     .order("calculated_at", { ascending: false })
-    .limit(1)
-    .single();
+    .limit(12);
 
-  if (error || !data) {
+  if (error || !data || data.length === 0) {
     return NextResponse.json({ error: "No velocity data" }, { status: 404 });
   }
 
-  return NextResponse.json(data);
+  const latest = data[0];
+  const history = data.map((d) => ({ score: d.score, calculated_at: d.calculated_at }));
+
+  return NextResponse.json({ latest, history });
 }
