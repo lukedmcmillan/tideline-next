@@ -106,7 +106,8 @@ async function processItem(item: {
   // STEP 0 — RELEVANCE (first 1000 chars)
   let fullText: string;
   try {
-    const result = await extractText(new Uint8Array(pdfBuffer));
+    const bufferCopy = pdfBuffer.slice(0);
+    const result = await extractText(new Uint8Array(bufferCopy));
     const pages = result.text;
     fullText = Array.isArray(pages) ? pages.join("\n") : String(pages);
   } catch (err) {
