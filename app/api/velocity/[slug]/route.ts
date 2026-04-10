@@ -24,7 +24,7 @@ export async function GET(
   }
 
   const latest = data[0];
-  const history = data.map((d) => ({ score: d.score, score_volume: d.score_volume, score_recency: d.score_recency, score_signals: d.score_signals, calculated_at: d.calculated_at }));
+  const history = data.map((d) => ({ score: d.score, score_volume: d.score_volume, score_recency: d.score_recency, score_signals: d.score_signals, calculated_at: d.calculated_at, interpretation: d.interpretation }));
 
   return NextResponse.json({ latest, history });
 }

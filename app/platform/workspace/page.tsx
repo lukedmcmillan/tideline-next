@@ -28,7 +28,8 @@ const F     = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
 const M     = "var(--font-mono), 'DM Mono', monospace";
 
 interface SourceStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null; source_type?: string }
-interface AskResult { answer: string; sources?: { title: string; source_name: string; published_at: string; link: string; source_type: string; similarity: number }[] }
+interface AskSource { document_id: string | null; title: string; source_organisation: string | null; published_date: string | null; file_url: string | null }
+interface AskResult { answer: string; sources?: AskSource[] }
 
 function decodeHtml(str: string): string {
   return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&#8217;/g, "\u2019").replace(/&#8216;/g, "\u2018").replace(/&#8220;/g, "\u201C").replace(/&#8221;/g, "\u201D").replace(/&#8211;/g, "-").replace(/&#8212;/g, ", ").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, c) => String.fromCharCode(parseInt(c)));
@@ -670,16 +671,23 @@ function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) =
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState("");
+  const [sources, setSources] = useState<AskSource[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const ask = async () => {
     if (!query.trim() || loading) return;
     setLoading(true);
+    setError("");
+    setAnswer("");
+    setSources([]);
     try {
-      const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
+      const r = await fetch("/api/workspace/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: query.trim() }) });
       const d = await r.json();
+      if (!r.ok) { setError(d.error || "Request failed"); return; }
       if (d.answer) setAnswer(d.answer);
-    } catch {}
+      if (d.sources) setSources(d.sources);
+    } catch { setError("Network error"); }
     setLoading(false);
   };
 
@@ -697,19 +705,35 @@ function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) =
       </div>
       {open && (
         <div style={{ marginTop: 12 }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: answer ? 14 : 0 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: answer || error ? 14 : 0 }}>
             <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") ask(); }} placeholder="Type your question..." style={{ flex: 1, height: 36, padding: "0 12px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", background: WHITE }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
-            <button onClick={ask} disabled={!query.trim() || loading} style={{ height: 36, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: query.trim() && !loading ? TEAL : "#BDC1C6", border: "none", borderRadius: 6, cursor: query.trim() && !loading ? "pointer" : "default" }}>{loading ? "..." : "Ask"}</button>
+            <button onClick={ask} disabled={!query.trim() || loading} style={{ height: 36, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: WHITE, background: query.trim() && !loading ? TEAL : "#BDC1C6", border: "none", borderRadius: 6, cursor: query.trim() && !loading ? "pointer" : "default" }}>{loading ? "Searching..." : "Ask"}</button>
           </div>
+          {loading && <div style={{ fontFamily: F, fontSize: 12, color: T4, marginBottom: 8 }}>Searching library and primary sources...</div>}
+          {error && <div style={{ fontFamily: F, fontSize: 12, color: "#D93025", marginBottom: 8 }}>{error}</div>}
           {answer && (
             <>
-              <div style={{ borderLeft: `3px solid ${TEAL}`, paddingLeft: 16, fontFamily: F, fontWeight: 400, lineHeight: 1.75, color: T3, fontSize: 13, marginBottom: 12 }}>{answer}</div>
+              <div style={{ borderLeft: `3px solid ${TEAL}`, paddingLeft: 16, fontFamily: F, fontWeight: 400, lineHeight: 1.75, color: T1, fontSize: 13, marginBottom: 12, whiteSpace: "pre-wrap" }}>{answer}</div>
+              {sources.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontFamily: FUI, fontSize: 10, fontWeight: 600, color: T4, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sources ({sources.length})</div>
+                  {sources.map((s, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 8, fontFamily: F, fontSize: 11.5, color: T3, lineHeight: 1.5, marginBottom: 3 }}>
+                      <span style={{ color: TEAL, flexShrink: 0, fontWeight: 600 }}>{i + 1}.</span>
+                      <span>
+                        {s.file_url ? <a href={s.file_url} target="_blank" rel="noopener noreferrer" style={{ color: TEAL, textDecoration: "none" }}>{s.title}</a> : s.title}
+                        {s.source_organisation && <span style={{ color: T4 }}> {"\u2014"} {s.source_organisation}</span>}
+                        {s.published_date && <span style={{ color: T4 }}> ({s.published_date})</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}`)} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
                   Paste into notes
                 </button>
-                <span style={{ fontFamily: F, fontSize: 10, color: T4, cursor: "pointer" }}>View previous questions</span>
               </div>
             </>
           )}
@@ -1170,7 +1194,9 @@ function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAs
 function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; insertIntoNotes: (text: string) => void }) {
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState("");
+  const [sources, setSources] = useState<AskSource[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1182,11 +1208,16 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
   const ask = async () => {
     if (!query.trim() || loading) return;
     setLoading(true);
+    setError("");
+    setAnswer("");
+    setSources([]);
     try {
-      const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
+      const r = await fetch("/api/workspace/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: query.trim() }) });
       const d = await r.json();
+      if (!r.ok) { setError(d.error || "Request failed"); return; }
       if (d.answer) setAnswer(d.answer);
-    } catch {}
+      if (d.sources) setSources(d.sources);
+    } catch { setError("Network error"); }
     setLoading(false);
   };
 
@@ -1203,11 +1234,28 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
       <div style={{ fontFamily: F, fontSize: 11.5, color: T3, marginBottom: 12 }}>Ask a question, paste the answer straight into your notes.</div>
       <div style={{ display: "flex", gap: 8 }}>
         <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") ask(); }} placeholder="Type your question..." autoFocus style={{ flex: 1, height: 36, padding: "0 12px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none" }} />
-        <button onClick={ask} disabled={!query.trim() || loading} style={{ height: 36, padding: "0 16px", fontFamily: F, fontSize: 13, fontWeight: 600, color: WHITE, background: query.trim() && !loading ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: query.trim() && !loading ? "pointer" : "default" }}>{loading ? "..." : "Ask"}</button>
+        <button onClick={ask} disabled={!query.trim() || loading} style={{ height: 36, padding: "0 16px", fontFamily: F, fontSize: 13, fontWeight: 600, color: WHITE, background: query.trim() && !loading ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: query.trim() && !loading ? "pointer" : "default" }}>{loading ? "Searching..." : "Ask"}</button>
       </div>
+      {loading && <div style={{ marginTop: 10, fontFamily: F, fontSize: 12, color: T4 }}>Searching library and primary sources...</div>}
+      {error && <div style={{ marginTop: 10, fontFamily: F, fontSize: 12, color: "#D93025" }}>{error}</div>}
       {answer && (
         <>
-          <div style={{ marginTop: 14, borderLeft: `3px solid ${TEAL}`, paddingLeft: 14, fontFamily: F, fontSize: 13, color: T3, lineHeight: 1.7 }}>{answer}</div>
+          <div style={{ marginTop: 14, borderLeft: `3px solid ${TEAL}`, paddingLeft: 14, fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{answer}</div>
+          {sources.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: T4, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sources ({sources.length})</div>
+              {sources.map((s, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 6, fontFamily: F, fontSize: 11, color: T3, lineHeight: 1.5, marginBottom: 2 }}>
+                  <span style={{ color: TEAL, flexShrink: 0, fontWeight: 600 }}>{i + 1}.</span>
+                  <span>
+                    {s.file_url ? <a href={s.file_url} target="_blank" rel="noopener noreferrer" style={{ color: TEAL, textDecoration: "none" }}>{s.title}</a> : s.title}
+                    {s.source_organisation && <span style={{ color: T4 }}> {"\u2014"} {s.source_organisation}</span>}
+                    {s.published_date && <span style={{ color: T4 }}> ({s.published_date})</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}`); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
             Paste into notes
