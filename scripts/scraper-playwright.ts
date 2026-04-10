@@ -78,6 +78,26 @@ const SOURCES: PlaywrightSource[] = [
     waitFor: "a[href*='.pdf'], .node, article",
     scrollToBottom: true,
   },
+  {
+    name: "CBD Documents",
+    domain: "cbd.int",
+    defaultOrg: "Convention on Biological Diversity",
+    defaultType: "government_document",
+    is_primary_source: true,
+    url: "https://www.cbd.int/doc",
+    waitFor: "a[href*='.pdf'], .document, table",
+    scrollToBottom: true,
+  },
+  {
+    name: "CBD Decisions",
+    domain: "cbd.int",
+    defaultOrg: "Convention on Biological Diversity",
+    defaultType: "resolution",
+    is_primary_source: true,
+    url: "https://www.cbd.int/decisions",
+    waitFor: "a[href*='.pdf'], .decision, table",
+    scrollToBottom: true,
+  },
 ];
 
 const NON_EN = /_chi\.pdf$|_rus\.pdf$|_ar\.pdf$|_fr\.pdf$|_es\.pdf$|-fr\.pdf$|-es\.pdf$|-ar\.pdf$|-ch\.pdf$|_FR_|_ES_|_AR_|_ZH_|_RU_/i;

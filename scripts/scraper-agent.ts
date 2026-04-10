@@ -25,6 +25,8 @@ const SOURCES: Source[] = [
       "https://www.isa.org.jm/publications",
       "https://www.isa.org.jm/satya-n-nandan-library",
       "https://www.isa.org.jm/selected-decisions",
+      "https://www.isa.org.jm/technical-studies",
+      "https://www.isa.org.jm/annual-reports",
     ],
   },
   {
@@ -35,6 +37,9 @@ const SOURCES: Source[] = [
     urls: [
       "https://www.un.org/depts/los",
       "https://www.un.org/depts/los/general_assembly/general_assembly_resolutions.htm",
+      "https://www.un.org/depts/los/convention_agreements/convention_agreements.htm",
+      "https://www.un.org/depts/los/clcs_new/clcs_home.htm",
+      "https://www.un.org/depts/los/reference_files/status2010.pdf",
     ],
   },
   {
@@ -63,11 +68,17 @@ const SOURCES: Source[] = [
     ],
   },
   {
-    name: "CBD", domain: "cbd.int",
-    defaultOrg: "Convention on Biological Diversity",
-    defaultType: "government_document",
+    name: "CCAMLR",
+    domain: "ccamlr.org",
+    defaultOrg: "Commission for the Conservation of Antarctic Marine Living Resources",
+    defaultType: "regulation",
     is_primary_source: true,
-    urls: ["https://www.cbd.int/doc"],
+    urls: [
+      "https://www.ccamlr.org/en/publications/conservation-measures",
+      "https://www.ccamlr.org/en/publications/schedule-conservation-measures",
+      "https://www.ccamlr.org/en/organisation/camlr-convention-text",
+      "https://www.ccamlr.org/en/publications/science-publications",
+    ],
   },
   {
     name: "Food and Agriculture Organization",

@@ -7,7 +7,7 @@ on:
 jobs:
   scrape-and-process:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,8 +16,14 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
-      - name: Run scraper
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+      - name: Run static scraper
         run: npx tsx scripts/scraper-agent.ts
+      - name: Run UN library scraper
+        run: npx tsx scripts/scraper-un-library.ts
+      - name: Run Playwright scraper
+        run: npx tsx scripts/scraper-playwright.ts
       - name: Run processor
         run: npx tsx scripts/processor-agent.ts
       - name: Run embeddings
