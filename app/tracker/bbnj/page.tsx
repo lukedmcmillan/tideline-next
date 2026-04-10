@@ -12,11 +12,11 @@ const NAVY = "#0a1628";
 const BLUE = "#1d6fa4";
 const TEAL = "#1D9E75";
 const WHITE = "#ffffff";
-const OFF_WHITE = "#f8f9fa";
-const BORDER = "#e2e8f0";
+const OFF_WHITE = "#ffffff";
+const BORDER = "#DADCE0";
 const MUTED = "#64748b";
 const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
-const SERIF = "Georgia, 'Times New Roman', serif";
+const SERIF = "'DM Sans', system-ui, sans-serif";
 
 // ─── Country name → ISO 3166-1 numeric code mapping (for world-atlas topology) ─
 const COUNTRY_CODES: Record<string, string> = {
@@ -214,7 +214,7 @@ function StatCards({ stats }: { stats: Stats }) {
       {cards.map((c) => (
         <div key={c.label} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderTop: `3px solid ${c.color}`, padding: "20px" }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 8, fontFamily: SANS }}>{c.label}</div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: c.color, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "-0.04em" }}>{c.value}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: c.color, fontFamily: SANS, letterSpacing: "-0.04em" }}>{c.value}</div>
         </div>
       ))}
     </div>
@@ -237,7 +237,7 @@ function WorldMap({ countries }: { countries: Country[] }) {
     }
 
     const width = 800;
-    const height = 420;
+    const height = 220;
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
     svg.attr("viewBox", `0 0 ${width} ${height}`);
@@ -335,7 +335,7 @@ function RegionalBreakdown({ countries }: { countries: Country[] }) {
               <span style={{ fontSize: 13, fontFamily: SANS, color: NAVY, fontWeight: 500 }}>{region}</span>
               <span style={{ fontSize: 12, fontFamily: SANS, color: MUTED }}>{d.ratified}/{d.total} ({pct}%)</span>
             </div>
-            <div style={{ height: 8, background: "#e5e7eb", borderRadius: 4, overflow: "hidden" }}>
+            <div style={{ height: 8, background: "#DADCE0", borderRadius: 4, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: TEAL, borderRadius: 4, transition: "width 0.5s" }} />
             </div>
           </div>
@@ -538,7 +538,7 @@ function RecentEvents({ events }: { events: TrackerEvent[] }) {
               }} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: MUTED, marginBottom: 4 }}>
+              <div style={{ fontFamily: SANS, fontSize: 11, color: MUTED, marginBottom: 4 }}>
                 {new Date(e.event_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
               </div>
               <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, marginBottom: 4, lineHeight: 1.4 }}>
@@ -575,23 +575,18 @@ function RecentStories({ stories }: { stories: FeedStory[] }) {
           <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
             <div style={{
               background: WHITE,
-              border: "1px solid #E4E4E4",
+              border: `1px solid ${BORDER}`,
               padding: "16px 20px",
               marginBottom: 8,
-              borderRadius: 6,
-              transition: "box-shadow 0.15s",
-            }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
-            >
+            }}>
               <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, lineHeight: 1.4, marginBottom: 4 }}>
                 {s.title}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: MUTED }}>
+                <span style={{ fontFamily: SANS, fontSize: 10, color: MUTED }}>
                   {s.source_name}
                 </span>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: MUTED }}>
+                <span style={{ fontFamily: SANS, fontSize: 10, color: MUTED }}>
                   {new Date(s.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}
                 </span>
               </div>
@@ -645,7 +640,7 @@ export default function BBNJTracker() {
   return (
     <div style={{ fontFamily: SANS, color: NAVY, background: OFF_WHITE, minHeight: "100vh" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @media (max-width: 768px) {
           .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }

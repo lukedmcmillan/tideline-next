@@ -94,7 +94,9 @@ export default function VelocityScore({ slug }: { slug: string }) {
               const m = (chartRef.current as any).getDatasetMeta(0);
               const p = m.data[i];
               const cw = wrapRef.current?.getBoundingClientRect().width ?? 400;
-              setTip({ x: Math.min(p.x + 10, cw - 224), y: Math.max(p.y - 40, 0), pt: hist[i] });
+              const ttWidth = 224;
+              const left = p.x + 10 + ttWidth > cw ? p.x - ttWidth - 10 : p.x + 10;
+              setTip({ x: left, y: Math.max(p.y - 40, 0), pt: hist[i] });
             } else setTip(null);
           },
         },
