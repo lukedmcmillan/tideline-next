@@ -25,8 +25,8 @@ const SOURCES: Source[] = [
       "https://www.isa.org.jm/publications",
       "https://www.isa.org.jm/satya-n-nandan-library",
       "https://www.isa.org.jm/selected-decisions",
-      "https://www.isa.org.jm/technical-studies",
-      "https://www.isa.org.jm/annual-reports",
+      "https://www.isa.org.jm/document-type/technical-study",
+      "https://www.isa.org.jm/document-type/annual-report",
     ],
   },
   {
@@ -39,6 +39,7 @@ const SOURCES: Source[] = [
       "https://www.un.org/depts/los/general_assembly/general_assembly_resolutions.htm",
       "https://www.un.org/depts/los/convention_agreements/convention_agreements.htm",
       "https://www.un.org/depts/los/clcs_new/clcs_home.htm",
+      "https://www.un.org/depts/los/LEGISLATIONANDTREATIES/index.htm",
       "https://www.un.org/depts/los/reference_files/status2010.pdf",
     ],
   },
@@ -49,6 +50,7 @@ const SOURCES: Source[] = [
     defaultType: "regulation",
     is_primary_source: true,
     urls: [
+      "https://www.ospar.org/convention/agreements",
       "https://www.ospar.org/site/assets/files/1169/ospar_convention.pdf",
       "https://www.ospar.org/site/assets/files/1210/list_of_decs_and_recs_agreements_2025-1.pdf",
       "https://www.ospar.org/site/assets/files/36552/vigo_declaration_2025-1.pdf",
@@ -62,6 +64,7 @@ const SOURCES: Source[] = [
     defaultType: "resolution",
     is_primary_source: true,
     urls: [
+      "https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions/Pages/MEPC.aspx",
       "https://wwwcdn.imo.org/localresources/en/publications/Documents/Supplements/English/QQF520E_supplement_May2024_PQ.pdf",
       "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Fifth%20IMO%20GHG%20Study%202023%20Full%20report.pdf",
       "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Air%20pollution/Sulphur%202020%20-%20Consistent%20implementation%20of%20regulation%2014.1.3%20of%20MARPOL%20Annex%20VI.pdf",
@@ -74,10 +77,9 @@ const SOURCES: Source[] = [
     defaultType: "regulation",
     is_primary_source: true,
     urls: [
-      "https://www.ccamlr.org/en/publications/conservation-measures",
-      "https://www.ccamlr.org/en/publications/schedule-conservation-measures",
-      "https://www.ccamlr.org/en/organisation/camlr-convention-text",
-      "https://www.ccamlr.org/en/publications/science-publications",
+      "https://www.ccamlr.org/en/conservation-and-management/conservation-measures",
+      "https://www.ccamlr.org/en/science/science-publications",
+      "https://www.ccamlr.org/en/organisation/convention-text",
     ],
   },
   {
