@@ -170,10 +170,9 @@ async function processDocument(doc: {
 }
 
 async function main() {
-  console.log("=== Tideline Document Embeddings Pipeline ===\n");
+  const reembed = process.argv.includes("--reembed");
+  console.log(`=== Tideline Document Embeddings Pipeline${reembed ? " (RE-EMBED)" : ""} ===\n`);
 
-  // Find documents with no chunks yet
-  // LEFT JOIN approach: fetch documents, check which have no chunks
   const { data: allDocs, error: fetchError } = await supabase
     .from("documents")
     .select("id, title, file_url")
@@ -191,15 +190,31 @@ async function main() {
     return;
   }
 
-  // Filter to those with no existing chunks
-  const unembedded: typeof allDocs = [];
-  for (const doc of allDocs) {
-    const { count } = await supabase
-      .from("document_chunks")
-      .select("id", { count: "exact", head: true })
-      .eq("document_id", doc.id);
+  let unembedded: typeof allDocs;
 
-    if (count === 0) unembedded.push(doc);
+  if (reembed) {
+    // Delete all existing chunks then re-embed everything
+    console.log(`--reembed: Deleting existing chunks for ${allDocs.length} documents...`);
+    for (const doc of allDocs) {
+      const { error: delError } = await supabase
+        .from("document_chunks")
+        .delete()
+        .eq("document_id", doc.id);
+      if (delError) console.log(`  Delete error for ${doc.id}: ${delError.message}`);
+    }
+    console.log("Existing chunks deleted.\n");
+    unembedded = allDocs;
+  } else {
+    // Filter to those with no existing chunks
+    unembedded = [];
+    for (const doc of allDocs) {
+      const { count } = await supabase
+        .from("document_chunks")
+        .select("id", { count: "exact", head: true })
+        .eq("document_id", doc.id);
+
+      if (count === 0) unembedded.push(doc);
+    }
   }
 
   if (unembedded.length === 0) {
