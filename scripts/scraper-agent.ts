@@ -10,65 +10,68 @@ interface Source {
   domain: string;
   defaultOrg: string;
   defaultType: string;
+  is_primary_source: boolean;
   urls: string[];
 }
 
 const SOURCES: Source[] = [
   {
-    name: "ISA", domain: "isa.int",
+    name: "International Seabed Authority",
+    domain: "isa.org.jm",
     defaultOrg: "International Seabed Authority",
     defaultType: "resolution",
+    is_primary_source: true,
     urls: [
-      "https://www.isa.int/en/documents/decisions",
-      "https://www.isa.int/en/documents/regulations",
-      "https://www.isa.int/en/documents/legal-and-technical-commission",
+      "https://www.isa.org.jm/publications",
+      "https://www.isa.org.jm/satya-n-nandan-library",
+      "https://www.isa.org.jm/selected-decisions",
     ],
   },
-  {
-    name: "DOALOS", domain: "un.org",
-    defaultOrg: "United Nations Division for Ocean Affairs and the Law of the Sea",
-    defaultType: "government_document",
-    urls: [
-      "https://www.un.org/depts/los",
-      "https://www.un.org/depts/los/general_assembly/general_assembly_resolutions.htm",
-    ],
-  },
-  {
-    name: "OSPAR", domain: "ospar.org",
-    defaultOrg: "OSPAR Commission",
-    defaultType: "regulation",
-    urls: ["https://www.ospar.org/convention/agreements"],
-  },
-  {
-    name: "IMO", domain: "imo.org",
-    defaultOrg: "International Maritime Organization",
-    defaultType: "resolution",
-    urls: ["https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions"],
-  },
-  {
-    name: "CBD", domain: "cbd.int",
-    defaultOrg: "Convention on Biological Diversity",
-    defaultType: "government_document",
-    urls: ["https://www.cbd.int/doc"],
-  },
-  {
-    name: "FAO", domain: "fao.org",
-    defaultOrg: "Food and Agriculture Organization",
-    defaultType: "report",
-    urls: ["https://www.fao.org/fishery/en/publications"],
-  },
-  {
-    name: "IWC", domain: "iwc.int",
-    defaultOrg: "International Whaling Commission",
-    defaultType: "resolution",
-    urls: ["https://iwc.int/en/resources"],
-  },
-  {
-    name: "UNFCCC Ocean", domain: "unfccc.int",
-    defaultOrg: "United Nations Framework Convention on Climate Change",
-    defaultType: "report",
-    urls: ["https://unfccc.int/topics/ocean-and-water"],
-  },
+  // {
+  //   name: "DOALOS", domain: "un.org",
+  //   defaultOrg: "United Nations Division for Ocean Affairs and the Law of the Sea",
+  //   defaultType: "government_document",
+  //   urls: [
+  //     "https://www.un.org/depts/los",
+  //     "https://www.un.org/depts/los/general_assembly/general_assembly_resolutions.htm",
+  //   ],
+  // },
+  // {
+  //   name: "OSPAR", domain: "ospar.org",
+  //   defaultOrg: "OSPAR Commission",
+  //   defaultType: "regulation",
+  //   urls: ["https://www.ospar.org/convention/agreements"],
+  // },
+  // {
+  //   name: "IMO", domain: "imo.org",
+  //   defaultOrg: "International Maritime Organization",
+  //   defaultType: "resolution",
+  //   urls: ["https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions"],
+  // },
+  // {
+  //   name: "CBD", domain: "cbd.int",
+  //   defaultOrg: "Convention on Biological Diversity",
+  //   defaultType: "government_document",
+  //   urls: ["https://www.cbd.int/doc"],
+  // },
+  // {
+  //   name: "FAO", domain: "fao.org",
+  //   defaultOrg: "Food and Agriculture Organization",
+  //   defaultType: "report",
+  //   urls: ["https://www.fao.org/fishery/en/publications"],
+  // },
+  // {
+  //   name: "IWC", domain: "iwc.int",
+  //   defaultOrg: "International Whaling Commission",
+  //   defaultType: "resolution",
+  //   urls: ["https://iwc.int/en/resources"],
+  // },
+  // {
+  //   name: "UNFCCC Ocean", domain: "unfccc.int",
+  //   defaultOrg: "United Nations Framework Convention on Climate Change",
+  //   defaultType: "report",
+  //   urls: ["https://unfccc.int/topics/ocean-and-water"],
+  // },
 ];
 
 const USER_AGENT = "Tideline Library Bot/1.0";
@@ -170,7 +173,7 @@ async function scrapePage(
       source_domain: source.domain,
       file_url: pdfUrl,
       file_name: fileNameFromUrl(pdfUrl),
-      is_primary_source: true,
+      is_primary_source: source.is_primary_source,
       status: "pending",
     });
 
