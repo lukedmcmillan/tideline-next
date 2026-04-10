@@ -8,9 +8,9 @@ const supabase = createClient(
 // OAI-PMH endpoint — works without browser, unlike the search UI
 const OAI_BASE = "https://digitallibrary.un.org/oai2d";
 const USER_AGENT = "Tideline Library Bot/1.0";
-const MAX_PAGES = 10; // ~200 records per page, max ~2000 records per run
+const MAX_PAGES = 50; // ~200 records/page = ~10,000 records scanned
 
-const OCEAN_KEYWORDS = /ocean|marine|sea\b|maritime|fisheries|coral|mangrove|seabed|aquatic|coastal|unclos|marpol|iwc|isa\b|bbnj|whaling|shipping|vessel|port state|deep.sea|continental shelf|exclusive economic zone|high seas|law of the sea|pollution.*marine|biodiversity.*marine/i;
+const OCEAN_KEYWORDS = /ocean|marine|sea\b|seas\b|maritime|fisheries|fisher|coral|mangrove|seabed|aquatic|coastal|unclos|marpol|iwc|isa\b|bbnj|whaling|shipping|vessel|port state|deep.sea|continental shelf|exclusive economic zone|high seas|law of the sea|pollution|biodiversity|climate change|sustainable development|small island|pacific island|arctic|antarctic|tuna|salmon|fishing|piracy|naval|harbour|harbor|blue economy|wetland|estuar|atoll|reef|desalin|tsunami|flood|erosion.*coast/i;
 const NON_EN_PDF = /-AR\.pdf|-FR\.pdf|-ES\.pdf|-RU\.pdf|-ZH\.pdf|_AR\.|_FR\.|_ES\.|_RU\.|_ZH\./i;
 
 // --- MARC XML parsing (namespace-aware: marc:datafield, marc:subfield) ---
@@ -144,9 +144,9 @@ function sleep(ms: number) {
 async function main() {
   console.log("=== Tideline UN Digital Library Scraper (OAI-PMH) ===\n");
 
-  // Harvest records from last 90 days
+  // Harvest records from last 365 days
   const since = new Date();
-  since.setDate(since.getDate() - 90);
+  since.setDate(since.getDate() - 365);
   const fromDate = since.toISOString().split("T")[0];
 
   let url = `${OAI_BASE}?verb=ListRecords&metadataPrefix=marcxml&from=${fromDate}`;
