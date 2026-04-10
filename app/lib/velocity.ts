@@ -60,11 +60,7 @@ export async function calculateVelocityScore(trackerSlug: string) {
   if (currentStories && currentStories.length > 0) {
     const latest = new Date(currentStories[0].published_at);
     const daysSince = (now.getTime() - latest.getTime()) / (24 * 60 * 60 * 1000);
-    if (daysSince <= 2) scoreB = 10;
-    else if (daysSince <= 7) scoreB = 8;
-    else if (daysSince <= 14) scoreB = 6;
-    else if (daysSince <= 30) scoreB = 4;
-    else scoreB = 2;
+    scoreB = Math.max(2, parseFloat((10 * Math.exp(-0.05 * daysSince)).toFixed(1)));
   }
 
   // Component C: Decision Signals (25%)
@@ -74,10 +70,31 @@ export async function calculateVelocityScore(trackerSlug: string) {
     .in("topic", topics)
     .gte("published_at", d30);
 
-  const decisionCount = decisionStories?.filter(
+  const matchedDecisions = decisionStories?.filter(
     (s) => DECISION_PATTERN.test(s.title)
-  ).length ?? 0;
-  const scoreC = Math.min(decisionCount * 2, 10);
+  ) ?? [];
+
+  const classifications = await Promise.all(
+    matchedDecisions.map(async (s) => {
+      try {
+        const res = await anthropic.messages.create({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 10,
+          messages: [{
+            role: "user",
+            content: `Does this headline indicate a positive regulatory development (adopted, ratified, enforced, signed, agreed, implemented) or a negative one (failed, rejected, stalled, delayed, withdrawn, collapsed)? Reply with one word: positive or negative.\n\nHeadline: ${s.title}`,
+          }],
+        });
+        const word = res.content[0].type === "text" ? res.content[0].text.trim().toLowerCase() : "";
+        return word.startsWith("positive") ? "positive" : "negative";
+      } catch {
+        return "positive";
+      }
+    })
+  );
+
+  const signalTotal = classifications.reduce((sum, c) => sum + (c === "positive" ? 2 : -1), 0);
+  const scoreC = clamp(signalTotal, 0, 10);
 
   // Final score
   const score = Math.round((scoreA * 0.4 + scoreB * 0.35 + scoreC * 0.25) * 10) / 10;
@@ -96,7 +113,7 @@ export async function calculateVelocityScore(trackerSlug: string) {
       system: "You write one-sentence regulatory velocity interpretations for ocean governance trackers. Maximum 20 words. No preamble. Just the sentence.",
       messages: [{
         role: "user",
-        content: `Tracker: ${trackerSlug}. Score: ${score}/10. Stories last 30 days: ${currentCount}. Previous 30 days: ${prevCount}. Decision signals: ${decisionCount}. Momentum: ${momentumDirection}. Write one sentence interpreting this velocity.`,
+        content: `Tracker: ${trackerSlug}. Score: ${score}/10. Stories last 30 days: ${currentCount}. Previous 30 days: ${prevCount}. Decision signals: ${matchedDecisions.length}. Momentum: ${momentumDirection}. Write one sentence interpreting this velocity.`,
       }],
     });
     const text = res.content[0];
