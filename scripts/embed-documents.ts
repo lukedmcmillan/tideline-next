@@ -62,8 +62,29 @@ function chunkText(text: string): string[] {
     if (buf) raw.push(buf);
   }
 
+  // Hard cap: split any chunk exceeding 1200 chars by sentence boundary
+  const HARD_CAP = 1200;
+  const capped: string[] = [];
+  for (const chunk of raw) {
+    if (chunk.length <= HARD_CAP) {
+      capped.push(chunk);
+    } else {
+      const sentences = chunk.match(/[^.!?]+[.!?]+/g) || [chunk];
+      let buf = "";
+      for (const s of sentences) {
+        if ((buf + " " + s).length > HARD_CAP && buf) {
+          capped.push(buf.trim());
+          buf = s;
+        } else {
+          buf = buf ? buf + " " + s : s;
+        }
+      }
+      if (buf) capped.push(buf.trim());
+    }
+  }
+
   const tocPattern = /Article\s+\d+\./gi;
-  return raw.filter((c) => {
+  return capped.filter((c) => {
     if (c.length < 100) return false;
     const refs = c.match(tocPattern);
     if (refs && refs.length >= 3) {
@@ -85,6 +106,7 @@ async function embedBatch(texts: string[]): Promise<number[][]> {
     body: JSON.stringify({
       model: "jina-embeddings-v2-base-en",
       input: texts,
+      truncate: true,
     }),
   });
 
