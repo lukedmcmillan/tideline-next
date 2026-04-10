@@ -27,51 +27,58 @@ const SOURCES: Source[] = [
       "https://www.isa.org.jm/selected-decisions",
     ],
   },
-  // {
-  //   name: "DOALOS", domain: "un.org",
-  //   defaultOrg: "United Nations Division for Ocean Affairs and the Law of the Sea",
-  //   defaultType: "government_document",
-  //   urls: [
-  //     "https://www.un.org/depts/los",
-  //     "https://www.un.org/depts/los/general_assembly/general_assembly_resolutions.htm",
-  //   ],
-  // },
-  // {
-  //   name: "OSPAR", domain: "ospar.org",
-  //   defaultOrg: "OSPAR Commission",
-  //   defaultType: "regulation",
-  //   urls: ["https://www.ospar.org/convention/agreements"],
-  // },
-  // {
-  //   name: "IMO", domain: "imo.org",
-  //   defaultOrg: "International Maritime Organization",
-  //   defaultType: "resolution",
-  //   urls: ["https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions"],
-  // },
-  // {
-  //   name: "CBD", domain: "cbd.int",
-  //   defaultOrg: "Convention on Biological Diversity",
-  //   defaultType: "government_document",
-  //   urls: ["https://www.cbd.int/doc"],
-  // },
-  // {
-  //   name: "FAO", domain: "fao.org",
-  //   defaultOrg: "Food and Agriculture Organization",
-  //   defaultType: "report",
-  //   urls: ["https://www.fao.org/fishery/en/publications"],
-  // },
-  // {
-  //   name: "IWC", domain: "iwc.int",
-  //   defaultOrg: "International Whaling Commission",
-  //   defaultType: "resolution",
-  //   urls: ["https://iwc.int/en/resources"],
-  // },
-  // {
-  //   name: "UNFCCC Ocean", domain: "unfccc.int",
-  //   defaultOrg: "United Nations Framework Convention on Climate Change",
-  //   defaultType: "report",
-  //   urls: ["https://unfccc.int/topics/ocean-and-water"],
-  // },
+  {
+    name: "DOALOS", domain: "un.org",
+    defaultOrg: "United Nations Division for Ocean Affairs and the Law of the Sea",
+    defaultType: "government_document",
+    is_primary_source: true,
+    urls: [
+      "https://www.un.org/depts/los",
+      "https://www.un.org/depts/los/general_assembly/general_assembly_resolutions.htm",
+    ],
+  },
+  {
+    name: "OSPAR", domain: "ospar.org",
+    defaultOrg: "OSPAR Commission",
+    defaultType: "regulation",
+    is_primary_source: true,
+    urls: ["https://www.ospar.org/convention/agreements"],
+  },
+  {
+    name: "IMO", domain: "imo.org",
+    defaultOrg: "International Maritime Organization",
+    defaultType: "resolution",
+    is_primary_source: true,
+    urls: ["https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions"],
+  },
+  {
+    name: "CBD", domain: "cbd.int",
+    defaultOrg: "Convention on Biological Diversity",
+    defaultType: "government_document",
+    is_primary_source: true,
+    urls: ["https://www.cbd.int/doc"],
+  },
+  {
+    name: "FAO", domain: "fao.org",
+    defaultOrg: "Food and Agriculture Organization",
+    defaultType: "report",
+    is_primary_source: true,
+    urls: ["https://www.fao.org/fishery/en/publications"],
+  },
+  {
+    name: "IWC", domain: "iwc.int",
+    defaultOrg: "International Whaling Commission",
+    defaultType: "resolution",
+    is_primary_source: true,
+    urls: ["https://iwc.int/en/resources"],
+  },
+  {
+    name: "UNFCCC Ocean", domain: "unfccc.int",
+    defaultOrg: "United Nations Framework Convention on Climate Change",
+    defaultType: "report",
+    is_primary_source: true,
+    urls: ["https://unfccc.int/topics/ocean-and-water"],
+  },
 ];
 
 const USER_AGENT = "Tideline Library Bot/1.0";
