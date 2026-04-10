@@ -27,7 +27,7 @@ function InfoTip({ text }: { text: string }) {
     <span style={{ position: "relative", display: "inline-block", marginLeft: 4 }} onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
       <span style={{ fontFamily: F, fontSize: 10, color: MU, cursor: "pointer" }}>{"\u24D8"}</span>
       {show && (
-        <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", width: 200, fontFamily: F, fontSize: 11, color: T2, lineHeight: 1.5, background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 6, padding: "8px 10px", zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+        <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", width: 200, fontFamily: F, fontSize: 11, fontWeight: 400, color: "#5F6368", lineHeight: 1.6, textTransform: "none", letterSpacing: "normal", background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 6, padding: "8px 10px", zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
           {text}
         </div>
       )}
