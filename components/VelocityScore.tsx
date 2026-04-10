@@ -96,6 +96,17 @@ export default function VelocityScore({ slug }: { slug: string }) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; point: HistoryPoint } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<unknown>(null);
+  const [showMethod, setShowMethod] = useState(false);
+  const methodRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMethod) return;
+    function handleClick(e: MouseEvent) {
+      if (methodRef.current && !methodRef.current.contains(e.target as Node)) setShowMethod(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMethod]);
 
   useEffect(() => {
     fetch(`/api/velocity/${slug}`)
@@ -203,11 +214,31 @@ export default function VelocityScore({ slug }: { slug: string }) {
   return (
     <div style={{ fontFamily: F, background: "#fff", border: `0.5px solid ${BORDER}`, borderRadius: 8, marginBottom: 24 }}>
       {/* 1. Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px 0" }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED }}>Regulatory Velocity</div>
-        <button onClick={() => {}} style={{ fontFamily: F, fontSize: 10, color: TEXT, background: "none", border: `0.5px solid ${BORDER}`, borderRadius: 99, padding: "3px 10px", cursor: "pointer" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px 0", position: "relative" }}>
+        <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED }}>Pulse</div>
+        <button onClick={() => setShowMethod(!showMethod)} style={{ fontFamily: F, fontSize: 10, color: TEXT, background: "none", border: `0.5px solid ${BORDER}`, borderRadius: 99, padding: "3px 10px", cursor: "pointer" }}>
           {"\u24D8"} How this is calculated
         </button>
+        {showMethod && (
+          <div ref={methodRef} style={{ position: "absolute", top: 28, right: 20, zIndex: 20, background: "#fff", border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: 24, maxWidth: 480, boxShadow: "0 4px 16px rgba(0,0,0,0.1)" }}>
+            <button onClick={() => setShowMethod(false)} style={{ position: "absolute", top: 12, right: 14, background: "none", border: "none", fontSize: 14, color: MUTED, cursor: "pointer", lineHeight: 1 }}>{"\u2715"}</button>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 12 }}>Pulse Score {"\u2014"} Methodology</div>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 16px" }}>The Pulse score measures how much is happening in this domain right now {"\u2014"} the volume, recency and weight of verified intelligence indexed by Tideline this week.</p>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 4 }}>The equation</div>
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#202124", lineHeight: 1.6, margin: "0 0 16px" }}>Score = (Volume trend {"\u00D7"} 0.4) + (Recency {"\u00D7"} 0.35) + (Decision signals {"\u00D7"} 0.25)</p>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 4 }}>Volume trend (40%)</div>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 16px" }}>Compares verified news, reports and regulatory developments indexed in the last 30 days against the prior 30-day period. Rising volume indicates increased institutional attention {"\u2014"} a leading indicator of regulatory movement.</p>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 4 }}>Recency (35%)</div>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 16px" }}>Measures days elapsed since the most recent indexed development, using exponential decay. Momentum that goes quiet scores lower regardless of historical activity.</p>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 4 }}>Decision signals (25%)</div>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 16px" }}>Identifies intelligence containing language associated with concrete regulatory action {"\u2014"} ratification, adoption, enforcement, sanctions, signed agreements, implementation, deadlines {"\u2014"} then classifies each as positive (+2) or negative ({"\u2212"}1) using AI to distinguish real decisions from failed ones.</p>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MUTED, marginBottom: 4 }}>What it means</div>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 4px" }}><strong>Above 7, accelerating</strong> {"\u2014"} high activity. Decisions are being made, frameworks are moving. Pay close attention.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 4px" }}><strong>4 to 7, stable</strong> {"\u2014"} moderate activity. Worth monitoring weekly.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: TEXT, lineHeight: 1.6, margin: "0 0 16px" }}><strong>Below 4, decelerating</strong> {"\u2014"} quiet period. Pressure is off for now.</p>
+            <p style={{ fontFamily: F, fontSize: 11, color: MUTED, lineHeight: 1.5, margin: 0 }}>No editorial judgement is applied. All underlying intelligence is accessible on the platform.</p>
+          </div>
+        )}
       </div>
 
       {/* 2. Score */}
