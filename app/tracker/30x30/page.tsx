@@ -3,225 +3,180 @@
 import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 
+const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#0a1628";
-const BLUE = "#1d6fa4";
 const TEAL = "#1D9E75";
+const AMBER = "#EF9F27";
+const RED = "#E24B4A";
 const WHITE = "#ffffff";
-const OFF_WHITE = "#f8f9fa";
-const BORDER = "#e2e8f0";
-const MUTED = "#64748b";
-const SANS = "'DM Sans', 'Helvetica Neue', Arial, sans-serif";
-const SERIF = "Georgia, 'Times New Roman', serif";
+const BD = "#DADCE0";
+const MU = "#9AA0A6";
+const T1 = "#202124";
+const T2 = "#5F6368";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+interface TrackerEvent { id: string; event_date: string; title: string; summary: string | null; source_url: string | null; event_type: string }
+interface FeedStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null }
 
-interface Stats {
-  ocean_protected: string;
-  mpas_designated: number;
-  states_committed: number;
-  years_remaining: number;
-}
+function fdt(iso: string) { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
 
-interface TrackerEvent {
-  id: string;
-  event_date: string;
-  title: string;
-  summary: string | null;
-  source_url: string | null;
-  event_type: string;
-}
+// ─── Info Tooltip ────────────────────────────────────────────────────────────
 
-interface FeedStory {
-  id: string;
-  title: string;
-  source_name: string;
-  published_at: string;
-  short_summary: string | null;
-}
-
-const EVENT_TYPE_COLORS: Record<string, string> = {
-  milestone: "#0E7C86",
-  setback: "#DC2626",
-  update: "#9CA3AF",
-};
-
-// ─── Stat Cards ───────────────────────────────────────────────────────────────
-
-function StatCards({ stats }: { stats: Stats }) {
-  const cards = [
-    { label: "Ocean Protected", value: stats.ocean_protected, color: TEAL },
-    { label: "MPAs Designated", value: String(stats.mpas_designated), color: BLUE },
-    { label: "States Committed", value: String(stats.states_committed), color: MUTED },
-    { label: "Years Remaining", value: String(stats.years_remaining), color: stats.years_remaining <= 4 ? "#d97706" : TEAL },
-  ];
+function InfoTip({ text }: { text: string }) {
+  const [show, setShow] = useState(false);
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }} className="stat-grid">
-      {cards.map((c) => (
-        <div key={c.label} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderTop: `3px solid ${c.color}`, padding: "20px" }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 8, fontFamily: SANS }}>{c.label}</div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: c.color, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "-0.04em" }}>{c.value}</div>
+    <span style={{ position: "relative", display: "inline-block", marginLeft: 4 }} onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      <span style={{ fontFamily: F, fontSize: 10, color: MU, cursor: "pointer" }}>{"\u24D8"}</span>
+      {show && (
+        <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", width: 200, fontFamily: F, fontSize: 11, fontWeight: 400, color: T2, lineHeight: 1.6, textTransform: "none", letterSpacing: "normal", background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 6, padding: "8px 10px", zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+          {text}
+        </div>
+      )}
+    </span>
+  );
+}
+
+// ─── Metric Cards ────────────────────────────────────────────────────────────
+
+const CARDS = [
+  { label: "Ocean Designated", value: "9.9%", color: AMBER, src: "MPAtlas \u00B7 December 2025", tip: "Total ocean area within designated marine protected areas globally. Includes paper parks and multi-use areas where destructive activities like bottom trawling may still occur." },
+  { label: "Effectively Protected", value: "3.2%", color: RED, src: "MPAtlas \u00B7 rigorous assessment", tip: "Ocean area in fully or highly protected MPAs with active management \u2014 the ecologically meaningful figure. Excludes paper parks. Source: Marine Conservation Institute MPAtlas assessment of over 90% of global MPA area." },
+  { label: "Target", value: "30%", color: MU, src: "GBF Target 3 \u00B7 by 2030", tip: "Kunming-Montreal Global Biodiversity Framework Target 3, adopted at COP15 in 2022. Requires at least 30% of land and sea to be effectively conserved and managed by 2030. Four years remaining." },
+  { label: "Years Remaining", value: "4", color: RED, src: "to 2030 deadline", tip: "The 30x30 target must be met by 2030. At the current rate of MPA designation, independent assessments suggest global ocean protection will reach approximately 12\u201314% by 2030 \u2014 less than half the target." },
+];
+
+function MetricCards() {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }} className="mpa-metrics">
+      {CARDS.map((c) => (
+        <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${c.color}`, borderRadius: 8, padding: "16px 20px" }}>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 6, display: "flex", alignItems: "center" }}>
+            {c.label}<InfoTip text={c.tip} />
+          </div>
+          <div style={{ fontFamily: F, fontSize: 28, fontWeight: 700, color: c.color, letterSpacing: "-0.03em" }}>{c.value}</div>
+          <div style={{ fontFamily: F, fontSize: 10, color: MU, marginTop: 4 }}>{c.src}</div>
         </div>
       ))}
     </div>
   );
 }
 
-// ─── Recent Events Timeline ──────────────────────────────────────────────────
+// ─── Paper Parks Callout ─────────────────────────────────────────────────────
 
-function RecentEvents({ events }: { events: TrackerEvent[] }) {
+function PaperParksCallout() {
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "20px", marginBottom: 40 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 20, fontFamily: SANS }}>Recent Events</div>
-      {events.length === 0 ? (
-        <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS, fontStyle: "italic", padding: "20px 0" }}>No events recorded yet</div>
-      ) : (
-        events.map((e) => (
-          <div key={e.id} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: `1px solid ${BORDER}` }}>
-            <div style={{ paddingTop: 5, flexShrink: 0 }}>
-              <span style={{
-                display: "inline-block",
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: EVENT_TYPE_COLORS[e.event_type] || EVENT_TYPE_COLORS.update,
-              }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: MUTED, marginBottom: 4 }}>
-                {new Date(e.event_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-              </div>
-              <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, marginBottom: 4, lineHeight: 1.4 }}>
-                {e.title}
-              </div>
-              {e.summary && (
-                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 300, color: MUTED, lineHeight: 1.6 }}>
-                  {e.summary}
-                </div>
-              )}
-              {e.source_url && (
-                <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SANS, fontSize: 11, color: BLUE, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
-                  Source &#8599;
-                </a>
-              )}
-            </div>
-          </div>
-        ))
-      )}
+    <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderLeft: `3px solid ${RED}`, borderRadius: 8, padding: "16px 20px", marginBottom: 24 }}>
+      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 8 }}>The Numbers Gap</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: AMBER }}>9.9%</div>
+          <div style={{ fontFamily: F, fontSize: 11, color: MU }}>designated</div>
+        </div>
+        <div style={{ width: 0, height: 36, borderLeft: `0.5px solid ${BD}` }} />
+        <div>
+          <div style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: RED }}>3.2%</div>
+          <div style={{ fontFamily: F, fontSize: 11, color: MU }}>effectively protected</div>
+        </div>
+      </div>
+      <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6, marginBottom: 8 }}>
+        The gap between these two numbers is the defining challenge of 30x30. Approximately one quarter of existing designated marine protection is not yet implemented, and an additional third allows destructive activities including bottom trawling {"\u2014"} meaning they count toward the target but deliver no conservation benefit. Source: Marine Conservation Institute MPAtlas, 2025.
+      </div>
+      <div style={{ fontFamily: F, fontSize: 11, color: MU, fontStyle: "italic", lineHeight: 1.6 }}>
+        Note: Six nations {"\u2014"} the United Kingdom, United States, Australia, Argentina, France and New Zealand {"\u2014"} include MPAs in overseas territories rather than home waters in their 30x30 reporting. Source: npj Ocean Sustainability, Feb 2026.
+      </div>
     </div>
   );
 }
 
-// ─── Recent Stories from Feed ────────────────────────────────────────────────
+// ─── Recent Events ───────────────────────────────────────────────────────────
+
+function RecentEvents({ events }: { events: TrackerEvent[] }) {
+  const badge = (type: string) => type === "milestone"
+    ? { bg: "rgba(29,158,117,0.08)", color: TEAL, border: "0.5px solid rgba(29,158,117,0.2)" }
+    : { bg: "rgba(156,163,175,0.1)", color: MU, border: "0.5px solid rgba(156,163,175,0.2)" };
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Recent Events</div>
+      {events.length === 0 ? (
+        <div style={{ fontFamily: F, fontSize: 12, color: MU, padding: "24px 0" }}>No events recorded yet</div>
+      ) : events.map((e) => {
+        const b = badge(e.event_type);
+        return (
+          <div key={e.id} style={{ padding: "14px 0", borderBottom: `0.5px solid ${BD}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontFamily: F, fontSize: 11, color: MU }}>{fdt(e.event_date)}</span>
+              <span style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".06em", padding: "1px 7px", borderRadius: 4, background: b.bg, color: b.color, border: b.border }}>{e.event_type}</span>
+            </div>
+            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>{e.title}</div>
+            {e.summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6 }}>{e.summary}</div>}
+            {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source {"\u2197"}</a>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Related Stories ─────────────────────────────────────────────────────────
 
 function RecentStories({ stories }: { stories: FeedStory[] }) {
   return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 16, fontFamily: SANS }}>Related Stories from Tideline</div>
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Related Stories</div>
       {stories.length === 0 ? (
-        <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "20px", fontSize: 13, color: MUTED, fontFamily: SANS, fontStyle: "italic" }}>No stories matched to this tracker yet</div>
+        <div style={{ fontFamily: F, fontSize: 12, color: MU, padding: "24px 0" }}>No stories matched to this tracker yet</div>
       ) : (
-        stories.map((s) => (
-          <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
-            <div style={{
-              background: WHITE,
-              border: "1px solid #E4E4E4",
-              padding: "16px 20px",
-              marginBottom: 8,
-              borderRadius: 6,
-              transition: "box-shadow 0.15s",
-            }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
-            >
-              <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, lineHeight: 1.4, marginBottom: 4 }}>
-                {s.title}
+        <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
+          {stories.map((s) => (
+            <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block", padding: "14px 16px", borderBottom: `0.5px solid ${BD}` }}>
+              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 3 }}>{s.title}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: F, fontSize: 10, color: MU }}>{s.source_name}</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: MU }}>{new Date(s.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: MUTED }}>
-                  {s.source_name}
-                </span>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: MUTED }}>
-                  {new Date(s.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}
-                </span>
-              </div>
-              {s.short_summary && (
-                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 300, color: MUTED, lineHeight: 1.6 }}>
-                  {s.short_summary}
-                </div>
-              )}
-            </div>
-          </a>
-        ))
+              {s.short_summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6, marginTop: 4 }}>{s.short_summary}</div>}
+            </a>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ThirtyByThirtyTracker() {
-  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
-  const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
+  const [events, setEvents] = useState<TrackerEvent[]>([]);
+  const [stories, setStories] = useState<FeedStory[]>([]);
 
   useEffect(() => { document.title = "Marine Protected Areas | Tideline"; }, []);
 
   useEffect(() => {
-    fetch("/api/30x30-status")
-      .then((r) => r.json())
-      .then((data) => setStats(data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-
-    fetch("/api/tracker-events?slug=30x30&limit=20")
-      .then((r) => r.json())
-      .then((data) => setTrackerEvents(data.events || []))
-      .catch(() => {});
-
-    fetch("/api/stories?limit=5&tracker=30x30")
-      .then((r) => r.json())
-      .then((data) => setFeedStories(data.stories || []))
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/tracker-events?slug=30x30&limit=8").then(r => r.ok ? r.json() : { events: [] }),
+      fetch("/api/stories?limit=5&tracker=30x30").then(r => r.ok ? r.json() : { stories: [] }),
+    ]).then(([ev, st]) => {
+      setEvents(ev.events || []);
+      setStories(st.stories || []);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (
-    <div style={{ fontFamily: SANS, color: NAVY, background: OFF_WHITE, minHeight: "100vh" }}>
+    <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @media (max-width: 768px) {
-          .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .mpa-metrics { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
-
-      {/* Header */}
-      <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}`, padding: "0 20px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", height: 48, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="/" style={{ fontSize: 18, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
-            <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
-            <a href="/tracker/isa" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Deep-Sea Mining</a>
-            <a href="/tracker/iuu" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Illegal Fishing</a>
-            <a href="/tracker/30x30" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Marine Protected Areas</a>
-            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
-          </div>
-        </div>
-      </div>
 
       {/* Hero */}
       <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 14, fontFamily: SANS }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>
-            Marine Protected Areas
-          </h1>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: SANS, maxWidth: 600, lineHeight: 1.7 }}>
-            Tracking progress toward the 30x30 global ocean protection target by 2030.
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
+          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>Marine Protected Areas</h1>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 640, lineHeight: 1.7 }}>
+            Tracking global progress toward protecting 30% of the ocean by 2030 {"\u2014"} the Kunming-Montreal Global Biodiversity Framework Target 3.
           </p>
         </div>
       </div>
@@ -230,14 +185,13 @@ export default function ThirtyByThirtyTracker() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="30x30" />
         {loading ? (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: 14, color: MUTED, fontFamily: SANS }}>Loading tracker data...</div>
-          </div>
+          <div style={{ fontFamily: F, textAlign: "center", padding: "60px 20px", fontSize: 13, color: MU }}>Loading tracker data...</div>
         ) : (
           <>
-            {stats && <StatCards stats={stats} />}
-            <RecentEvents events={trackerEvents} />
-            <RecentStories stories={feedStories} />
+            <MetricCards />
+            <PaperParksCallout />
+            <RecentEvents events={events} />
+            <RecentStories stories={stories} />
           </>
         )}
       </div>
