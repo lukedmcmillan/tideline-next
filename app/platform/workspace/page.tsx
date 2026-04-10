@@ -297,7 +297,11 @@ function CreateProjectPanel({ onCreate }: { onCreate: (name: string, type: strin
   const handleCreate = async () => {
     if (!canCreate) return;
     setCreating(true);
-    onCreate(name.trim(), selected!);
+    try {
+      await onCreate(name.trim(), selected!);
+    } catch {
+      setCreating(false);
+    }
   };
 
   return (
@@ -836,14 +840,10 @@ function WritingAssistant({ sourceCount, onCopyToNotes }: { sourceCount: number;
 }
 
 // -- New since last visit banner --------------------------------------------------
-function NewSinceLastVisitBanner() {
+function NewSinceLastVisitBanner({ updates = [] }: { updates?: { text: string; tier: string; time: string }[] }) {
   const [open, setOpen] = useState(true);
-  const count = 3;
-  const updates = [
-    { text: "ISA Council vote deferred to July session", tier: "Official", time: "06:42" },
-    { text: "BBNJ ratification crossed 87 threshold", tier: "Wire", time: "05:18" },
-    { text: "New deep-sea mining moratorium proposal published", tier: "Original", time: "03:30" },
-  ];
+  const count = updates.length;
+  if (count === 0) return null;
   return (
     <div style={{ background: "linear-gradient(135deg, rgba(29,158,117,0.06), rgba(29,158,117,0.03))", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, marginBottom: 16 }}>
       <div onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, cursor: "pointer" }}>
@@ -881,18 +881,15 @@ function NewSinceLastVisitBanner() {
 }
 
 // -- Right sidebar tabs -----------------------------------------------------------
-const ATTACHED_SOURCES = [
-  { id: "1", type: "PDF", name: "ISA Council Report Mar 2026.pdf", summary: "Council deferred deep-sea mining vote to July session, citing insufficient environmental data.", time: "2h ago", tier: "Official", contributor: null as string | null },
-  { id: "2", type: "URL", name: "Reuters: Pacific bloc deposit", summary: "Tideline will summarise this document shortly.", time: "5h ago", tier: "Wire", contributor: "EM" as string | null },
-];
+// Source type badge mapping for workspace
+const SOURCE_TYPE_TIER: Record<string, string> = { gov: "Official", reg: "Official", ngo: "Wire", res: "Original", media: "Wire", esg: "Wire" };
 
-function SourcesTabContent() {
-  const attached = ATTACHED_SOURCES;
+function SourcesTabContent({ stories, docs }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[] }) {
+  const totalCount = stories.length + docs.length;
   const tierColors: Record<string, { bg: string; color: string; border: string }> = {
     Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
     Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
     Official: { bg: "#F5F3FF", color: "#7C3AED", border: "#EDE9FE" },
-    Community: { bg: "#FEF9C3", color: "#A16207", border: "#FDE047" },
   };
   const typeColors: Record<string, { bg: string; color: string }> = {
     PDF: { bg: "#FEF2F2", color: "#EF4444" },
@@ -903,45 +900,51 @@ function SourcesTabContent() {
     <div>
       <div style={{ background: "rgba(29,158,117,0.04)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
-        <span style={{ fontFamily: F, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{attached.length}</span>
+        <span style={{ fontFamily: F, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{totalCount}</span>
       </div>
       <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-        {attached.map(s => {
-          const tier = tierColors[s.tier];
-          const tc = typeColors[s.type];
+        {stories.map(s => {
+          const tierLabel = SOURCE_TYPE_TIER[s.source_type || ""] || "Wire";
+          const tier = tierColors[tierLabel] || tierColors.Wire;
+          const tc = typeColors.URL;
           return (
             <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderRadius: 7, background: WHITE, position: "relative" }}>
-              <span style={{ width: 20, height: 20, borderRadius: 3, background: tc.bg, color: tc.color, fontFamily: F, fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.type}</span>
+              <span style={{ width: 20, height: 20, borderRadius: 3, background: tc.bg, color: tc.color, fontFamily: F, fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>URL</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
-                <div style={{ fontFamily: F, fontSize: 10.5, color: T3, lineHeight: 1.45, marginTop: 2 }}>{s.summary}</div>
+                <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</div>
+                {s.short_summary && <div style={{ fontFamily: F, fontSize: 10.5, color: T3, lineHeight: 1.45, marginTop: 2 }}>{s.short_summary}</div>}
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginTop: 6 }}>
-                  <span style={{ fontFamily: F, fontSize: 9.5, color: T4 }}>{s.time}</span>
-                  <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 500, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{s.tier}</span>
-                  {s.contributor && (
-                    <>
-                      <span style={{ width: 16, height: 16, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: F, fontSize: 7, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{s.contributor}</span>
-                      <span style={{ fontFamily: F, fontSize: 10, color: T3 }}>Eva M</span>
-                    </>
-                  )}
+                  <span style={{ fontFamily: F, fontSize: 9.5, color: T4 }}>{s.source_name}</span>
+                  <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 500, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{tierLabel}</span>
                 </div>
               </div>
-              <button style={{ position: "absolute", top: 4, right: 6, background: "none", border: "none", color: T4, fontSize: 12, cursor: "pointer", opacity: 0.4, padding: 0, lineHeight: 1 }}>x</button>
             </div>
           );
         })}
+        {docs.map(d => {
+          const tc = typeColors.Doc;
+          return (
+            <div key={d.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderRadius: 7, background: WHITE }}>
+              <span style={{ width: 20, height: 20, borderRadius: 3, background: tc.bg, color: tc.color, fontFamily: F, fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>Doc</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                <div style={{ fontFamily: F, fontSize: 9.5, color: T4, marginTop: 4 }}>Updated {fmtDate(d.updated_at)}</div>
+              </div>
+            </div>
+          );
+        })}
+        {totalCount === 0 && (
+          <div style={{ padding: "24px 12px", textAlign: "center" }}>
+            <div style={{ fontFamily: F, fontSize: 12, color: T4, lineHeight: 1.6 }}>No sources attached yet. Save stories from the feed or upload documents to build your project library.</div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function IntelTabContent() {
+function IntelTabContent({ entries = [] }: { entries?: { id: string; text: string; sources: string[]; tier: string; time: string }[] }) {
   const [verified, setVerified] = useState<Set<string>>(new Set());
-
-  const entries = [
-    { id: "e1", text: "ISA Council deferral aligns with Pacific bloc BBNJ deposit, suggesting vote was conditional on treaty implementation terms.", sources: ["ISA Mar 2026", "Reuters Pacific"], tier: "Original", time: "06:42" },
-    { id: "e2", text: "Three sponsoring states have publicly conditioned support on environmental safeguards. Watch for July session amendments.", sources: ["ISA Mar 2026"], tier: "Official", time: "05:18" },
-  ];
 
   const toggleVerify = (id: string) => {
     setVerified(prev => {
@@ -1110,7 +1113,7 @@ function LiveTabContent() {
   );
 }
 
-function RightSidebar() {
+function RightSidebar({ stories, docs }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[] }) {
   const [tab, setTab] = useState<"sources" | "intel" | "people" | "live">("sources");
   const tabs = [
     { id: "sources" as const, label: "Sources", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="9" height="9" rx="1"/><path d="M4 5h5M4 7h5M4 9h3"/></svg> },
@@ -1139,7 +1142,7 @@ function RightSidebar() {
         })}
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {tab === "sources" && <SourcesTabContent />}
+        {tab === "sources" && <SourcesTabContent stories={stories} docs={docs} />}
         {tab === "intel" && <IntelTabContent />}
         {tab === "people" && <PeopleTabContent />}
         {tab === "live" && <LiveTabContent />}
@@ -1380,6 +1383,8 @@ function WorkspaceContent() {
   const [draftExists, setDraftExists] = useState(false);
   const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [projectStories, setProjectStories] = useState<SourceStory[]>([]);
+  const [projectDocs, setProjectDocs] = useState<{ id: string; title: string; updated_at: string }[]>([]);
   const [slashMenu, setSlashMenu] = useState<{ open: boolean; x: number; y: number; query: string; selected: number }>({ open: false, x: 0, y: 0, query: "", selected: 0 });
   const slashMenuRef = useRef(slashMenu);
   useEffect(() => { slashMenuRef.current = slashMenu; }, [slashMenu]);
@@ -1423,9 +1428,7 @@ function WorkspaceContent() {
     { name: "Divider", desc: "Horizontal rule", icon: "\u2015", insert: "\n---\n" },
   ];
 
-  // Intelligence timeline uses the same attached-sources data as the right sidebar.
-  // TODO: wire to real source history table when available; dates below are still placeholders.
-  const placeholderSourceCount = ATTACHED_SOURCES.length;
+  const sourceCount = projectStories.length + projectDocs.length;
 
   // Fetch draft indicator status (Feature 5)
   useEffect(() => {
@@ -1507,7 +1510,10 @@ function WorkspaceContent() {
           const d = await projRes.json();
           if (d.project_id) setProjectId(d.project_id);
           if (d.project_type) setProjectType(d.project_type);
+          if (d.stories) setProjectStories(d.stories);
+          if (d.topics) setDetectedTopics(d.topics);
           const docs = d.documents || [];
+          setProjectDocs(docs);
           if (!cancelled && docs.length > 0) {
             const docRes = await fetch(`/api/documents/${docs[0].id}`);
             if (docRes.ok) {
@@ -1515,11 +1521,13 @@ function WorkspaceContent() {
               setDocId(doc.id); setDocContent(doc.content || null);
               if (doc.content?.fields) setFields(doc.content.fields);
               if (doc.title && doc.title !== "Untitled document" && doc.title !== "Project brief") setTitle(doc.title);
+              else setTitle(projectName);
               setReady(true); return;
             }
           }
         }
         if (cancelled) return;
+        setTitle(projectName);
         const createRes = await fetch("/api/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ project_name: projectName, title: "Untitled document" }) });
         if (createRes.ok) {
           const created = await createRes.json();
@@ -1628,10 +1636,13 @@ function WorkspaceContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, project_type: type }),
       });
-      if (!projRes.ok) return;
+      if (!projRes.ok) {
+        const err = await projRes.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create project");
+      }
       const projData = await projRes.json();
       const newDocId = projData.document_id;
-      if (!newDocId) return;
+      if (!newDocId) throw new Error("No document created");
 
       // Set defaults from schema
       const schema = FIELD_SCHEMAS[type] || [];
@@ -1734,7 +1745,7 @@ function WorkspaceContent() {
                     <span key={init} style={{ width: 24, height: 24, borderRadius: "50%", background: TEAL, color: WHITE, fontFamily: F, fontSize: 9, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", border: `2px solid ${WHITE}`, marginLeft: i === 0 ? 0 : -6 }}>{init}</span>
                   ))}
                 </div>
-                <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>Tracking 5 sources</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>Tracking {sourceCount} source{sourceCount !== 1 ? "s" : ""}</span>
               </div>
             </div>
 
@@ -1787,44 +1798,38 @@ function WorkspaceContent() {
               ))}
             </div>
 
-            {/* Intelligence timeline (Feature 4) */}
-            {/* TODO: wire to real source history table when one exists. Using placeholder dates + current source count. */}
+            {/* Intelligence timeline */}
             <div style={{ margin: "16px 0", border: "1px solid #F3F4F6", borderRadius: 10 }}>
               <div onClick={() => setTimelineOpen(o => !o)} style={{ padding: "10px 14px", background: "#F8F9FA", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", borderRadius: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#1D9E75" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="5"/><path d="M6.5 3.5v3l2 1.5" strokeLinecap="round"/></svg>
                   <span style={{ fontFamily: FUI, fontSize: 12, fontWeight: 500, color: "#202124" }}>Project intelligence timeline</span>
-                  <span style={{ fontFamily: FUI, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{placeholderSourceCount} sources · 23 days</span>
+                  <span style={{ fontFamily: FUI, fontSize: 10, color: "#1D9E75", background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 10, padding: "1px 8px" }}>{sourceCount} sources</span>
                 </div>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#9AA0A6" strokeWidth="1.5" style={{ transform: timelineOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}><path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
               {timelineOpen && (
                 <div style={{ borderTop: "1px solid #F3F4F6", padding: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontFamily: F, fontSize: 11 }}>
-                    <span style={{ color: "#5F6368" }}>Source growth</span>
-                    <span style={{ color: "#1D9E75", fontWeight: 500 }}>Started with 1. Now {placeholderSourceCount}. Tideline added {Math.max(0, placeholderSourceCount - 1)}.</span>
-                  </div>
-                  <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden", marginBottom: 6 }}>
-                    <div style={{ height: "100%", width: "100%", background: "linear-gradient(90deg, rgba(29,158,117,0.25), #1D9E75)", borderRadius: 3 }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontFamily: FUI, fontSize: 9.5, color: "#9AA0A6", marginBottom: 16 }}>
-                    <span>15 Mar</span><span>22 Mar</span><span>29 Mar</span><span>7 Apr</span>
-                  </div>
-                  {[
-                    { when: "Today", desc: "3 new entries filed while you were away", sources: "3 sources added", active: true },
-                    { when: "2 days ago", desc: "Network contribution from a verified member joined this project", sources: "1 source added" },
-                    { when: "5 days ago", desc: "Tideline agent added a regulatory filing from ISA", sources: "1 source added" },
-                    { when: "23 days ago", desc: "Project created with an initial reference document", sources: "1 source added" },
-                  ].map((e, i) => (
-                    <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0" }}>
-                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.active ? "#1D9E75" : "#E5E7EB", flexShrink: 0, marginTop: 4 }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#5F6368" }}>{e.when}</div>
-                        <div style={{ fontFamily: F, fontSize: 12, color: "#202124", lineHeight: 1.5, marginTop: 2 }}>{e.desc}</div>
-                        <div style={{ fontFamily: FUI, fontSize: 10, color: "#9AA0A6", marginTop: 3 }}>{e.sources}</div>
+                  {sourceCount > 0 ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontFamily: F, fontSize: 11 }}>
+                        <span style={{ color: "#5F6368" }}>Attached sources</span>
+                        <span style={{ color: "#1D9E75", fontWeight: 500 }}>{projectStories.length} stories, {projectDocs.length} documents</span>
                       </div>
-                    </div>
-                  ))}
+                      {projectStories.slice(0, 5).map(s => (
+                        <div key={s.id} style={{ display: "flex", gap: 10, padding: "6px 0" }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1D9E75", flexShrink: 0, marginTop: 4 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#5F6368" }}>{fmtDate(s.published_at)}</div>
+                            <div style={{ fontFamily: F, fontSize: 12, color: "#202124", lineHeight: 1.5, marginTop: 2 }}>{s.title}</div>
+                            <div style={{ fontFamily: FUI, fontSize: 10, color: "#9AA0A6", marginTop: 3 }}>{s.source_name}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <div style={{ fontFamily: F, fontSize: 12, color: T4, textAlign: "center", padding: "12px 0" }}>Save stories from the feed to start building your timeline.</div>
+                  )}
                 </div>
               )}
             </div>
@@ -1877,11 +1882,11 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <RightSidebar />
+      <RightSidebar stories={projectStories} docs={projectDocs} />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
       {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} />}
-      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={ATTACHED_SOURCES.length} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} sources={ATTACHED_SOURCES} onToast={setToast} />}
+      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={sourceCount} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} sources={projectStories.map(s => ({ name: s.title, summary: s.short_summary || undefined }))} onToast={setToast} />}
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />
