@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import VelocitySparkline from "@/components/VelocitySparkline";
-
 interface VelocityData {
   score: number;
   story_count_30d: number;
@@ -104,33 +102,34 @@ export default function VelocityScore({ slug }: { slug: string }) {
           transition: "width 0.5s ease",
         }} />
       </div>
-      {history.length >= 2 && (
-        <>
-          <div style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px",
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            color: "#64748b",
-            marginTop: "12px",
-            marginBottom: "4px",
-          }}>
-            12-week trend
-          </div>
-          <VelocitySparkline data={history} />
-          <div style={{
-            display: "flex",
-            gap: "16px",
-            marginTop: "4px",
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: "11px",
-            color: "#64748b",
-          }}>
-            <span>4 weeks ago: {history[3]?.score?.toFixed(1) ?? "\u2014"}</span>
-            <span>12 weeks ago: {history[11]?.score?.toFixed(1) ?? "\u2014"}</span>
-          </div>
-        </>
-      )}
+      {(() => {
+        const indices = [2, 4, 8, 11];
+        const points = indices.filter((i) => history[i]).map((i) => history[i]);
+        if (points.length === 0) return null;
+        return (
+          <>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#64748b", marginTop: "12px", marginBottom: "6px" }}>
+              Trend
+            </div>
+            <div style={{ display: "flex", gap: "16px" }}>
+              {points.map((p) => {
+                const d = new Date(p.calculated_at);
+                const label = d.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
+                return (
+                  <div key={p.calculated_at} style={{ textAlign: "center" }}>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 700, color: getColor(p.score) }}>
+                      {p.score}
+                    </div>
+                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", color: "#64748b" }}>
+                      {label}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        );
+      })()}
       {data.interpretation && (
         <div style={{
           fontFamily: "'DM Sans', sans-serif",
