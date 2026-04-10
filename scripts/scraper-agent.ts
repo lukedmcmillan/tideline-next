@@ -38,18 +38,28 @@ const SOURCES: Source[] = [
     ],
   },
   {
-    name: "OSPAR", domain: "ospar.org",
+    name: "OSPAR Commission",
+    domain: "ospar.org",
     defaultOrg: "OSPAR Commission",
     defaultType: "regulation",
     is_primary_source: true,
-    urls: ["https://www.ospar.org/convention/agreements"],
+    urls: [
+      "https://www.ospar.org/site/assets/files/1169/ospar_convention.pdf",
+      "https://www.ospar.org/site/assets/files/1210/list_of_decs_and_recs_agreements_2025-1.pdf",
+      "https://www.ospar.org/site/assets/files/36552/vigo_declaration_2025-1.pdf",
+      "https://www.ospar.org/site/assets/files/44218/98-152e_agreement.pdf",
+    ],
   },
   {
-    name: "IMO", domain: "imo.org",
+    name: "International Maritime Organization",
+    domain: "imo.org",
     defaultOrg: "International Maritime Organization",
     defaultType: "resolution",
     is_primary_source: true,
-    urls: ["https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions"],
+    urls: [
+      "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.353(79).pdf",
+      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Air%20pollution/MARPOL%20Annex%20VI_2021%20edition_e.pdf",
+    ],
   },
   {
     name: "CBD", domain: "cbd.int",
@@ -59,25 +69,25 @@ const SOURCES: Source[] = [
     urls: ["https://www.cbd.int/doc"],
   },
   {
-    name: "FAO", domain: "fao.org",
-    defaultOrg: "Food and Agriculture Organization",
+    name: "Food and Agriculture Organization",
+    domain: "fao.org",
+    defaultOrg: "Food and Agriculture Organization of the United Nations",
     defaultType: "report",
     is_primary_source: true,
-    urls: ["https://www.fao.org/fishery/en/publications"],
+    urls: [
+      "https://www.fao.org/3/v9878e/v9878e.pdf",
+      "https://www.fao.org/3/i9540en/i9540en.pdf",
+    ],
   },
   {
-    name: "IWC", domain: "iwc.int",
+    name: "International Whaling Commission",
+    domain: "iwc.int",
     defaultOrg: "International Whaling Commission",
     defaultType: "resolution",
     is_primary_source: true,
-    urls: ["https://iwc.int/en/resources"],
-  },
-  {
-    name: "UNFCCC Ocean", domain: "unfccc.int",
-    defaultOrg: "United Nations Framework Convention on Climate Change",
-    defaultType: "report",
-    is_primary_source: true,
-    urls: ["https://unfccc.int/topics/ocean-and-water"],
+    urls: [
+      "https://iwc.int/api/downloads/documents/2024-schedule-extract.pdf",
+    ],
   },
 ];
 
@@ -140,6 +150,26 @@ async function isAlreadyQueued(fileUrl: string): Promise<boolean> {
     .eq("file_url", fileUrl)
     .limit(1);
   return !!(d && d.length > 0);
+}
+
+async function queuePdf(pdfUrl: string, source: Source): Promise<boolean> {
+  const exists = await isAlreadyQueued(pdfUrl);
+  if (exists) return false;
+
+  const { error } = await supabase.from("document_queue").insert({
+    source_url: pdfUrl,
+    source_domain: source.domain,
+    file_url: pdfUrl,
+    file_name: fileNameFromUrl(pdfUrl),
+    is_primary_source: source.is_primary_source,
+    status: "pending",
+  });
+
+  if (error && !error.message.includes("duplicate")) {
+    console.log(`  [${source.name}] Insert error: ${error.message}`);
+    return false;
+  }
+  return !error;
 }
 
 async function scrapePage(
@@ -222,6 +252,14 @@ async function main() {
     const visited = new Set<string>();
 
     for (const url of source.urls) {
+      if (url.toLowerCase().endsWith(".pdf")) {
+        const queued = await queuePdf(url, source);
+        if (queued) {
+          totalQueued++;
+          console.log(`  [${source.name}] Queued direct PDF: ${fileNameFromUrl(url)}`);
+        }
+        continue;
+      }
       const count = await scrapePage(url, source, visited, 0);
       totalQueued += count;
     }
