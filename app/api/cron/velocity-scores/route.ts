@@ -1,16 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { calculateVelocityScore } from "@/app/lib/velocity";
 
 export const maxDuration = 60;
 
 const TRACKER_SLUGS = ["isa", "bbnj", "iuu", "30x30", "blue-finance"];
 
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function GET() {
   const results = [];
   for (const slug of TRACKER_SLUGS) {
     try {
