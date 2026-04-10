@@ -14,6 +14,7 @@ const TRACKER_TOPICS: Record<string, string[]> = {
   iuu: ["iuu"],
   "30x30": ["mpa", "30x30"],
   "blue-finance": ["blue-finance", "esg"],
+  plastics: ["plastics", "pollution"],
 };
 
 const DECISION_PATTERN =

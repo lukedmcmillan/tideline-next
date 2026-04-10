@@ -9,6 +9,11 @@ const PAYWALL_EXEMPT = ['/platform/projects']
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // TEMP: bypass auth on /platform for local development — remove before deploy
+  if (pathname.startsWith('/platform')) {
+    return NextResponse.next()
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,

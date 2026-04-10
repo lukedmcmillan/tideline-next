@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const TRACKER_SLUGS = ["isa", "bbnj", "iuu", "30x30", "blue-finance"];
+const TRACKER_SLUGS = ["isa", "bbnj", "iuu", "30x30", "blue-finance", "plastics"];
 
 function getLastNMondays(n: number): Date[] {
   const now = new Date();

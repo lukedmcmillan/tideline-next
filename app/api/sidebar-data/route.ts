@@ -13,6 +13,7 @@ const TRACKERS: { name: string; topics: string[] }[] = [
   { name: "Illegal Fishing", topics: ["iuu"] },
   { name: "Marine Protected Areas", topics: ["mpa"] },
   { name: "Ocean Finance", topics: ["bluefinance"] },
+  { name: "Plastics Treaty", topics: ["plastics", "pollution"] },
 ];
 
 export async function GET(req: NextRequest) {

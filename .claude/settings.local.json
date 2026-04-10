@@ -62,7 +62,12 @@
       "Bash(set +a)",
       "Bash(npx playwright:*)",
       "Bash(echo \"NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL\")",
-      "Bash(bash -c 'set -a; source .env.local; set +a; npx tsx scripts/scraper-playwright.ts')"
+      "Bash(bash -c 'set -a; source .env.local; set +a; npx tsx scripts/scraper-playwright.ts')",
+      "Bash(for dir:*)",
+      "Bash(do mv:*)",
+      "Bash(done)",
+      "Bash(ls -1 \"\\(shell\\)/\")",
+      "Bash(ls -1 \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/\")"
     ]
   }
 }

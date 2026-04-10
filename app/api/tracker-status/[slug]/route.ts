@@ -13,6 +13,7 @@ const ALLOWED_SLUGS = new Set([
   "30x30",
   "blue-finance",
   "governance",
+  "plastics",
 ]);
 
 export async function GET(
