@@ -171,12 +171,12 @@ function NewProjectCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (name: string, type: string) => void }) {
+function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (name: string, type: string, description: string) => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("situation_report");
   if (!open) return null;
-  const canCreate = name.trim().length > 0 && description.trim().length > 0;
+  const canCreate = name.trim().length > 0;
   const types = [
     { id: "situation_report", label: "Situation", desc: "What is happening with a topic right now" },
     { id: "investigation", label: "Investigation", desc: "Build a case file on a developing story" },
@@ -194,7 +194,7 @@ function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: 
         <div style={{ padding: "16px 24px 20px" }}>
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginBottom: 8 }}>Project name</div>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Name your project" style={{ width: "100%", padding: "10px 14px", fontFamily: FUI, fontSize: 14, fontWeight: 600, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box" }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
-          <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 4 }}>What is this project about? <span style={{ color: "#EA4335" }}>*</span></div>
+          <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 4 }}>What is this project about?</div>
           <div style={{ fontFamily: F, fontSize: 11, color: T4, marginBottom: 8 }}>One sentence, this becomes the card summary and helps Tideline match the right intelligence.</div>
           <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project tracking?" rows={2} style={{ width: "100%", padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5 }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 8 }}>Project type</div>
@@ -212,7 +212,7 @@ function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: 
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
           <button onClick={onClose} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T3, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, cursor: "pointer" }}>Cancel</button>
-          <button onClick={() => { if (canCreate) onCreate(name.trim(), type); }} disabled={!canCreate} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: canCreate ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: canCreate ? "pointer" : "not-allowed" }}>{"Create project \u203a"}</button>
+          <button onClick={() => { if (canCreate) onCreate(name.trim(), type, description.trim()); }} disabled={!canCreate} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: canCreate ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: canCreate ? "pointer" : "not-allowed" }}>{"Create project \u203a"}</button>
         </div>
       </div>
     </div>
@@ -243,9 +243,9 @@ export default function ProjectsIndexPage() {
     return label === filter;
   });
 
-  const handleCreate = async (name: string, type: string) => {
+  const handleCreate = async (name: string, type: string, description: string) => {
     try {
-      const r = await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, project_type: type }) });
+      const r = await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, project_type: type, description }) });
       if (r.ok) {
         setShowNewModal(false);
         router.push(`/platform/projects/${encodeURIComponent(name)}`);

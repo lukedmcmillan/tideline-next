@@ -1,23 +1,20 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import WorkspacePage from "@/app/platform/workspace/page";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function ProjectByIdPage() {
   const params = useParams();
+  const router = useRouter();
   const id = decodeURIComponent(params.id as string);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("project") !== id) {
-      url.searchParams.set("project", id);
-      window.history.replaceState({}, "", url.toString());
-    }
-    setReady(true);
-  }, [id]);
+    router.replace(`/platform/workspace?project=${encodeURIComponent(id)}`);
+  }, [id, router]);
 
-  if (!ready) return null;
-  return <WorkspacePage />;
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#9AA0A6" }}>
+      Loading project...
+    </div>
+  );
 }

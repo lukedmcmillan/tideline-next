@@ -8,56 +8,70 @@ const supabase = createClient(
 
 const JINA_API_KEY = process.env.JINA_API_KEY!;
 const BATCH_SIZE = 20; // Jina batch limit
-const MAX_CHUNK_TOKENS = 500;
-const APPROX_CHARS_PER_TOKEN = 4;
-const MAX_CHUNK_CHARS = MAX_CHUNK_TOKENS * APPROX_CHARS_PER_TOKEN;
+const ARTICLE_MAX = 800;
+const PARA_MAX = 600;
+const OVERLAP = 100;
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// Split text into paragraph-based chunks, each ≤ MAX_CHUNK_CHARS
+// Article-aware chunking: legal documents split on Article boundaries,
+// non-legal documents split by paragraph. Both use 100-char overlap.
 function chunkText(text: string): string[] {
-  const paragraphs = text.split(/\n{2,}/);
-  const chunks: string[] = [];
-  let current = "";
+  const articleParts = text.split(/(?=\nArticle\s+\d+)/i);
+  const isLegal = articleParts.length >= 3;
 
-  for (const para of paragraphs) {
-    const trimmed = para.trim();
-    if (!trimmed) continue;
+  let raw: string[];
 
-    // If a single paragraph exceeds the limit, split it by sentences
-    if (trimmed.length > MAX_CHUNK_CHARS) {
-      if (current) {
-        chunks.push(current.trim());
-        current = "";
-      }
-      const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || [trimmed];
-      let sentBuf = "";
-      for (const sent of sentences) {
-        if ((sentBuf + " " + sent).length > MAX_CHUNK_CHARS && sentBuf) {
-          chunks.push(sentBuf.trim());
-          sentBuf = sent;
-        } else {
-          sentBuf = sentBuf ? sentBuf + " " + sent : sent;
+  if (isLegal) {
+    raw = [];
+    for (const article of articleParts) {
+      const trimmed = article.trim();
+      if (!trimmed) continue;
+      if (trimmed.length <= ARTICLE_MAX) {
+        raw.push(trimmed);
+      } else {
+        const paras = trimmed.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+        let buf = "";
+        for (const p of paras) {
+          if ((buf + "\n\n" + p).length > ARTICLE_MAX && buf) {
+            raw.push(buf);
+            const tail = buf.slice(-OVERLAP);
+            buf = tail + "\n\n" + p;
+          } else {
+            buf = buf ? buf + "\n\n" + p : p;
+          }
         }
+        if (buf) raw.push(buf);
       }
-      if (sentBuf) chunks.push(sentBuf.trim());
-      continue;
     }
-
-    if ((current + "\n\n" + trimmed).length > MAX_CHUNK_CHARS && current) {
-      chunks.push(current.trim());
-      current = trimmed;
-    } else {
-      current = current ? current + "\n\n" + trimmed : trimmed;
+  } else {
+    raw = [];
+    const paras = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+    let buf = "";
+    for (const p of paras) {
+      if ((buf + "\n\n" + p).length > PARA_MAX && buf) {
+        raw.push(buf);
+        const tail = buf.slice(-OVERLAP);
+        buf = tail + "\n\n" + p;
+      } else {
+        buf = buf ? buf + "\n\n" + p : p;
+      }
     }
+    if (buf) raw.push(buf);
   }
 
-  if (current.trim()) chunks.push(current.trim());
-
-  // Filter out tiny chunks (< 50 chars) that are just headers or noise
-  return chunks.filter((c) => c.length >= 50);
+  const tocPattern = /Article\s+\d+\./gi;
+  return raw.filter((c) => {
+    if (c.length < 100) return false;
+    const refs = c.match(tocPattern);
+    if (refs && refs.length >= 3) {
+      const withoutRefs = c.replace(tocPattern, "").replace(/\s+/g, " ").trim();
+      if (withoutRefs.length < 100) return false;
+    }
+    return true;
+  });
 }
 
 // Batch embed via Jina API

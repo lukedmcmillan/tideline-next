@@ -104,17 +104,18 @@ export async function POST(req: NextRequest) {
   }
 
   const embeddingJson = JSON.stringify(embedding);
+  console.log("[workspace/ask] Embedding generated, length:", embedding.length);
 
   // 2. Parallel RPC calls: library document chunks + primary source chunks
   const [docChunksResult, primaryChunksResult] = await Promise.all([
     supabase.rpc("match_document_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: 0.7,
+      match_threshold: 0.6,
       match_count: 12,
     }),
     supabase.rpc("match_primary_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: 0.65,
+      match_threshold: 0.55,
       match_count: 8,
     }),
   ]);
@@ -122,18 +123,10 @@ export async function POST(req: NextRequest) {
   const docChunks: DocChunkMatch[] = docChunksResult.data || [];
   const primaryChunks: PrimaryChunkMatch[] = primaryChunksResult.data || [];
 
-  if (docChunksResult.error) {
-    console.error(
-      "[workspace/ask] document_chunks RPC error:",
-      docChunksResult.error
-    );
-  }
-  if (primaryChunksResult.error) {
-    console.error(
-      "[workspace/ask] primary_chunks RPC error:",
-      primaryChunksResult.error
-    );
-  }
+  console.log("[workspace/ask] match_document_chunks:", docChunksResult.error ? `ERROR: ${JSON.stringify(docChunksResult.error)}` : `${docChunks.length} results`);
+  console.log("[workspace/ask] match_primary_chunks:", primaryChunksResult.error ? `ERROR: ${JSON.stringify(primaryChunksResult.error)}` : `${primaryChunks.length} results`);
+  if (docChunks.length > 0) console.log("[workspace/ask] Top doc chunk similarity:", docChunks[0].similarity);
+  if (primaryChunks.length > 0) console.log("[workspace/ask] Top primary chunk similarity:", primaryChunks[0].similarity);
 
   // 3. Fetch document metadata for library chunks
   const docIds = [...new Set(docChunks.map((c) => c.document_id))];
@@ -186,6 +179,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 5. Build context for Claude
+  console.log("[workspace/ask] Total sources for Claude:", sources.length, "(doc:", docChunks.length, "primary:", primaryChunks.length, ")");
   if (sources.length === 0) {
     return NextResponse.json({
       answer:

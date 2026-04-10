@@ -469,7 +469,7 @@ function IntelligencePanel({ editor, topics, projectId }: {
     if (!query.trim() || loading) return;
     setLoading(true); setResult(null);
     try {
-      const r = await fetch("/api/research/inline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: query.trim() }) });
+      const r = await fetch("/api/workspace/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: query.trim() }) });
       const d = await r.json();
       if (d.answer) setResult(d);
     } catch {}
@@ -1483,6 +1483,14 @@ function WorkspaceContent() {
   // Boot
   useEffect(() => {
     let cancelled = false;
+    // Reset project-specific state before loading new project
+    setProjectStories([]);
+    setProjectDocs([]);
+    setProjectId(null);
+    setProjectType(null);
+    setDetectedTopics([]);
+    setFields({});
+    setTitle("");
     async function boot() {
       try {
         let projectName = projectParam || "";
