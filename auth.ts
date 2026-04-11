@@ -9,6 +9,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const supabaseNextAuth = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { db: { schema: 'next_auth' } }
+)
+
 export const authOptions = {
   providers: [
     GoogleProvider({
@@ -76,8 +82,46 @@ export const authOptions = {
       if (url.startsWith('/')) return `${baseUrl}${url}`
       return `${baseUrl}/platform/feed`
     },
-    async signIn({ user }: { user: any }) {
+    async signIn({ user, account }: { user: any; account: any }) {
       if (!user?.email) return false
+
+      // Auto-link Google account for users who signed up via email
+      if (account?.provider === 'google') {
+        try {
+          const { data: naUser } = await supabaseNextAuth
+            .from('users')
+            .select('id')
+            .eq('email', user.email)
+            .maybeSingle()
+
+          if (naUser) {
+            const { data: existing } = await supabaseNextAuth
+              .from('accounts')
+              .select('id')
+              .eq('provider', 'google')
+              .eq('providerAccountId', account.providerAccountId)
+              .maybeSingle()
+
+            if (!existing) {
+              await supabaseNextAuth.from('accounts').insert({
+                userId: naUser.id,
+                type: account.type || 'oauth',
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                refresh_token: account.refresh_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              })
+              console.log('[auth] linked Google account for:', user.email)
+            }
+          }
+        } catch (err) {
+          console.error('[auth] account linking error:', err)
+        }
+      }
 
       // Create user in public.users on first login
       try {
