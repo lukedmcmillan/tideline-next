@@ -10,7 +10,12 @@ const OAI_BASE = "https://digitallibrary.un.org/oai2d";
 const USER_AGENT = "Tideline Library Bot/1.0";
 const MAX_PAGES = 50; // ~200 records/page = ~10,000 records scanned
 
-const OCEAN_KEYWORDS = /ocean|marine|sea\b|seas\b|maritime|fisheries|fisher|coral|mangrove|seabed|aquatic|coastal|unclos|marpol|iwc|isa\b|bbnj|whaling|shipping|vessel|port state|deep.sea|continental shelf|exclusive economic zone|high seas|law of the sea|pollution|biodiversity|climate change|sustainable development|small island|pacific island|arctic|antarctic|tuna|salmon|fishing|piracy|naval|harbour|harbor|blue economy|wetland|estuar|atoll|reef|desalin|tsunami|flood|erosion.*coast/i;
+// Hard ocean terms — at least one must appear in subjects or title
+const HARD_OCEAN = /ocean|marine|sea\b|seas\b|maritime|fisheries|seabed|coral|unclos|bbnj|aquaculture|coastal/i;
+// Exclusion subjects — skip records about these topics
+const EXCLUDE_SUBJECTS = /decolonization|colonial|apartheid|sanctions|terrorism|yugoslavia|libya\b|iraq\b/i;
+// Procedural filename patterns to skip (unless title is ocean-relevant)
+const PROCEDURAL_FILE = /_PV\.|_SR\.|_PV-|_SR-/i;
 const NON_EN_PDF = /-AR\.pdf|-FR\.pdf|-ES\.pdf|-RU\.pdf|-ZH\.pdf|_AR\.|_FR\.|_ES\.|_RU\.|_ZH\./i;
 
 // --- MARC XML parsing (namespace-aware: marc:datafield, marc:subfield) ---
@@ -84,8 +89,23 @@ function extractResumptionToken(xml: string): string | null {
 
 function isOceanRelevant(record: ParsedRecord): boolean {
   if (record.pdfUrls.length === 0) return false;
-  const text = [...record.subjects, record.title].join(" ");
-  return OCEAN_KEYWORDS.test(text);
+
+  const subjectText = record.subjects.join(" ");
+  const combined = subjectText + " " + record.title;
+
+  // Exclude known irrelevant topics
+  if (EXCLUDE_SUBJECTS.test(subjectText)) return false;
+
+  // Must contain at least one hard ocean term
+  if (!HARD_OCEAN.test(combined)) return false;
+
+  // Filter out procedural records (PV, SR) unless title is ocean-relevant
+  record.pdfUrls = record.pdfUrls.filter(url => {
+    if (PROCEDURAL_FILE.test(url) && !HARD_OCEAN.test(record.title)) return false;
+    return true;
+  });
+
+  return record.pdfUrls.length > 0;
 }
 
 // --- Queue helpers ---
