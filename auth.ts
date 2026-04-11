@@ -1,19 +1,62 @@
 import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import EmailProvider from 'next-auth/providers/email'
-import { SupabaseAdapter } from '@auth/supabase-adapter'
 import { createClient } from '@supabase/supabase-js'
+import type { Adapter } from 'next-auth/adapters'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const supabaseNextAuth = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { db: { schema: 'next_auth' } }
-)
+// Minimal adapter: only verification tokens for magic links.
+// No user/account/session storage — JWT handles sessions.
+// This avoids OAuthAccountNotLinked errors from the full adapter.
+function verificationOnlyAdapter(): Adapter {
+  return {
+    async createVerificationToken(token) {
+      await supabase.from('magic_links').insert({
+        email: token.identifier,
+        token: token.token,
+        expires_at: new Date(token.expires).toISOString(),
+        used: false,
+      })
+      return token
+    },
+    async useVerificationToken({ identifier, token: tkn }) {
+      const { data } = await supabase
+        .from('magic_links')
+        .select('email, token, expires_at')
+        .eq('email', identifier)
+        .eq('token', tkn)
+        .eq('used', false)
+        .maybeSingle()
+
+      if (data) {
+        await supabase
+          .from('magic_links')
+          .update({ used: true })
+          .eq('email', identifier)
+          .eq('token', tkn)
+        return { identifier: data.email, token: data.token, expires: new Date(data.expires_at) }
+      }
+      return null
+    },
+    // Stubs — not used with JWT strategy but required by the interface
+    createUser: async (u: any) => ({ ...u, id: u.id || crypto.randomUUID(), emailVerified: null }),
+    getUser: async () => null,
+    getUserByEmail: async () => null,
+    getUserByAccount: async () => null,
+    updateUser: async (u: any) => ({ id: u.id || '', email: u.email || '', emailVerified: null }),
+    linkAccount: async () => undefined as any,
+    unlinkAccount: async () => undefined as any,
+    createSession: async (s: any) => ({ ...s, id: '' }),
+    getSessionAndUser: async () => null,
+    updateSession: async (s: any) => ({ ...s, userId: '', expires: new Date() }),
+    deleteSession: async () => undefined as any,
+    deleteUser: async () => undefined as any,
+  }
+}
 
 export const authOptions = {
   providers: [
@@ -62,10 +105,7 @@ export const authOptions = {
       },
     }),
   ],
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  }),
+  adapter: verificationOnlyAdapter(),
   pages: {
     signIn: '/sign-in',
     verifyRequest: '/sign-in?verify=1',
@@ -82,46 +122,8 @@ export const authOptions = {
       if (url.startsWith('/')) return `${baseUrl}${url}`
       return `${baseUrl}/platform/feed`
     },
-    async signIn({ user, account }: { user: any; account: any }) {
+    async signIn({ user }: { user: any }) {
       if (!user?.email) return false
-
-      // Auto-link Google account for users who signed up via email
-      if (account?.provider === 'google') {
-        try {
-          const { data: naUser } = await supabaseNextAuth
-            .from('users')
-            .select('id')
-            .eq('email', user.email)
-            .maybeSingle()
-
-          if (naUser) {
-            const { data: existing } = await supabaseNextAuth
-              .from('accounts')
-              .select('id')
-              .eq('provider', 'google')
-              .eq('providerAccountId', account.providerAccountId)
-              .maybeSingle()
-
-            if (!existing) {
-              await supabaseNextAuth.from('accounts').insert({
-                userId: naUser.id,
-                type: account.type || 'oauth',
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-              })
-              console.log('[auth] linked Google account for:', user.email)
-            }
-          }
-        } catch (err) {
-          console.error('[auth] account linking error:', err)
-        }
-      }
 
       // Create user in public.users on first login
       try {

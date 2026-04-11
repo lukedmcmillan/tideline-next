@@ -19,7 +19,10 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
     signal = data;
-  } catch {}
+    console.log("[dashboard] signal query for", new Date().toISOString().split("T")[0], "→", signal ? "found" : "null");
+  } catch (err) {
+    console.log("[dashboard] signal query error:", err);
+  }
 
   // Velocity scores — latest per tracker
   let velocityScores: { tracker_slug: string; score: number; momentum_direction: string }[] = [];

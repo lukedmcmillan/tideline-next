@@ -9,8 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.69",
     "@anthropic-ai/sdk": "^0.82.0",
     "@auth/supabase-adapter": "^1.11.1",
+    "@mastra/core": "^1.24.1",
+    "@mastra/rag": "^2.2.0",
     "@stripe/react-stripe-js": "^5.6.1",
     "@stripe/stripe-js": "^8.11.0",
     "@supabase/supabase-js": "^2.99.2",
@@ -23,6 +26,7 @@
     "@types/d3": "^7.4.3",
     "@types/pdfkit": "^0.17.5",
     "@types/topojson-client": "^3.1.5",
+    "ai": "^6.0.158",
     "chart.js": "^4.5.1",
     "d3": "^7.9.0",
     "docx": "^9.6.1",

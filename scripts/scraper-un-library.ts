@@ -50,6 +50,7 @@ function extractFirstMarcField(recordXml: string, tag: string, subfieldCode: str
 interface ParsedRecord {
   title: string;
   docSymbol: string;
+  date: string;
   subjects: string[];
   pdfUrls: string[];
 }
@@ -62,6 +63,7 @@ function parseRecords(xml: string): ParsedRecord[] {
     const rec = match[1];
     const title = extractFirstMarcField(rec, "245", "a");
     const docSymbol = extractFirstMarcField(rec, "191", "a") || extractFirstMarcField(rec, "099", "a");
+    const date = extractFirstMarcField(rec, "269", "a") || extractFirstMarcField(rec, "260", "c");
     const subjects = extractMarcFields(rec, "650", "a");
 
     // Get all 856$u URLs, filter to English PDFs only
@@ -77,7 +79,7 @@ function parseRecords(xml: string): ParsedRecord[] {
       pdfUrls.push(...fallback);
     }
 
-    records.push({ title, docSymbol, subjects, pdfUrls });
+    records.push({ title, docSymbol, date, subjects, pdfUrls });
   }
   return records;
 }
@@ -90,22 +92,32 @@ function extractResumptionToken(xml: string): string | null {
 function isOceanRelevant(record: ParsedRecord): boolean {
   if (record.pdfUrls.length === 0) return false;
 
+  // Skip documents published before 1994 (UNCLOS entry into force)
+  if (record.date) {
+    const year = parseInt(record.date.slice(0, 4), 10);
+    if (!isNaN(year) && year < 1994) return false;
+  }
+
   const subjectText = record.subjects.join(" ");
-  const combined = subjectText + " " + record.title;
 
   // Exclude known irrelevant topics
   if (EXCLUDE_SUBJECTS.test(subjectText)) return false;
 
-  // Must contain at least one hard ocean term
-  if (!HARD_OCEAN.test(combined)) return false;
+  // Filter out procedural records (PV, SR)
+  record.pdfUrls = record.pdfUrls.filter(url => !PROCEDURAL_FILE.test(url));
+  if (record.pdfUrls.length === 0) return false;
 
-  // Filter out procedural records (PV, SR) unless title is ocean-relevant
-  record.pdfUrls = record.pdfUrls.filter(url => {
-    if (PROCEDURAL_FILE.test(url) && !HARD_OCEAN.test(record.title)) return false;
-    return true;
-  });
+  // PASS if title contains ocean term (strong signal)
+  if (HARD_OCEAN.test(record.title)) return true;
 
-  return record.pdfUrls.length > 0;
+  // PASS if 2+ different ocean terms in subjects (not just one incidental "INDIAN OCEAN")
+  const oceanMatches = record.subjects.filter(s => HARD_OCEAN.test(s));
+  if (oceanMatches.length >= 2) return true;
+
+  // PASS if doc symbol indicates ocean body (A/CONF.62 = UNCLOS, ISBA = ISA)
+  if (/CONF\.62|ISBA|BBNJ|IMO|MEPC/i.test(record.docSymbol)) return true;
+
+  return false;
 }
 
 // --- Queue helpers ---
