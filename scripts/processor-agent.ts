@@ -115,8 +115,13 @@ async function processItem(item: {
     return;
   }
 
+  if (!fullText || fullText.trim().length === 0) {
+    await markFailed(item.id, "SKIP: empty text extraction");
+    return;
+  }
+
   const previewText = fullText.slice(0, 1000);
-  if (previewText.length < 100) {
+  if (previewText.trim().length < 100) {
     await markFailed(item.id, "Scanned PDF — insufficient text");
     return;
   }
