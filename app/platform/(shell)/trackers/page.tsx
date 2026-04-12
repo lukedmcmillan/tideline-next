@@ -114,23 +114,22 @@ function Card({ t, anim, feat, onClick, live }: {
       {/* accent */}
       <div style={{ height: 3, background: c, flexShrink: 0 }} />
       {/* body */}
-      <div style={{ flex: 1, padding: feat ? "8px 10px 5px" : "7px 9px 5px", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ flex: 1, padding: feat ? "6px 9px 4px" : "5px 8px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT2, marginBottom: 2 }}>{t.domain}</div>
-        <div style={{ fontSize: feat ? 12 : 10, fontWeight: 600, color: TEXT0, lineHeight: 1.2, marginBottom: 4 }}>{t.name}</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 3 }}>
-          <span style={{ fontSize: feat ? 24 : 20, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
+          <span style={{ fontSize: feat ? 22 : 18, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
           <span style={{ fontSize: 10, color: TEXT2, marginRight: 6 }}>/10</span>
           <Mom m={t.mom} />
         </div>
-        <div style={{ height: 2, background: BORDER2, borderRadius: 1, marginBottom: 6 }}>
+        <div style={{ height: 2, background: BORDER2, borderRadius: 1, marginBottom: 4 }}>
           <div style={{ height: 2, borderRadius: 1, background: c, width: anim ? `${score * 10}%` : "0%", transition: "width 0.9s cubic-bezier(.4,0,.2,1)" }} />
         </div>
         {/* sub-scores */}
         <div style={{ display: "flex", border: `0.5px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 4, flexShrink: 0 }}>
           {([["Vol", sv], ["Rec", sr], ["Sig", ss]] as [string, number][]).map(([lbl, val], i) => (
-            <div key={lbl} style={{ padding: "3px 5px", flex: 1, borderRight: i < 2 ? `0.5px solid ${BORDER}` : "none" }}>
+            <div key={lbl} style={{ padding: "2px 4px", flex: 1, borderRight: i < 2 ? `0.5px solid ${BORDER}` : "none" }}>
               <div style={{ fontSize: 7, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".08em", color: TEXT2, marginBottom: 1 }}>{lbl}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: sc(val) }}>{val.toFixed(1)}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: sc(val) }}>{val.toFixed(1)}</div>
             </div>
           ))}
         </div>
@@ -178,7 +177,7 @@ export default function TrackersPage() {
       <div style={{ background: BG, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: F }}>
 
         {/* S1 — topbar */}
-        <div style={{ height: 46, background: SURFACE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "0 20px", flexShrink: 0 }}>
+        <div style={{ height: 38, background: SURFACE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "0 12px 0 20px", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT0 }}>Ocean Governance Trackers</span>
           <span style={{ width: 1, height: 16, background: BORDER, margin: "0 14px" }} />
           <span style={{ fontSize: 11, color: TEXT2 }}>Pulse Score v2 {"\u00B7"} recalculated every Monday</span>
@@ -198,7 +197,7 @@ export default function TrackersPage() {
         </div>
 
         {/* S2 — ticker */}
-        <div style={{ height: 30, flexShrink: 0, borderBottom: `1px solid ${BORDER}`, background: SURFACE, overflow: "hidden", display: "flex", alignItems: "center" }}>
+        <div style={{ height: 24, flexShrink: 0, borderBottom: `1px solid ${BORDER}`, background: SURFACE, overflow: "hidden", display: "flex", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", animation: "scrollLeft 45s linear infinite" }}>
             {tkDupe.map((it, i) => (
               <span key={i} style={{ fontSize: 10, fontFamily: M, color: TEXT2, padding: "0 18px", borderRight: `1px solid ${BORDER2}` }}>
@@ -209,12 +208,12 @@ export default function TrackersPage() {
         </div>
 
         {/* S3 — grid area */}
-        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "8px 14px 10px", display: "flex", flexDirection: "column", gap: 5 }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "6px 14px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
           {/* countdowns */}
-          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
             {CDS.map(cd => (
-              <div key={cd.ev} style={{ flex: 1, background: cd.bg, border: `0.5px solid ${cd.bd}`, borderRadius: 6, padding: "5px 10px", display: "flex", alignItems: "center", gap: 10 }}>
-                <div><span style={{ fontSize: 20, fontWeight: 700, color: cd.c, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
+              <div key={cd.ev} style={{ flex: 1, background: cd.bg, border: `0.5px solid ${cd.bd}`, borderRadius: 6, padding: "4px 10px", display: "flex", alignItems: "center", gap: 10 }}>
+                <div><span style={{ fontSize: 18, fontWeight: 700, color: cd.c, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", color: TEXT0 }}>{cd.ev}</span>
                   <span style={{ fontSize: 9, color: TEXT2, marginTop: 1 }}>{cd.sub}</span>
@@ -223,7 +222,7 @@ export default function TrackersPage() {
             ))}
           </div>
           {/* grid */}
-          <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 0.8fr 0.8fr", gap: 5 }}>
+          <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 0.75fr 0.75fr", gap: 4 }}>
             {TRACKERS.map(t => {
               const cols = t.grid.split("/"); const rows = t.gridR.split("/");
               const feat = Number(cols[1]) - Number(cols[0]) >= 2 || Number(rows[1]) - Number(rows[0]) >= 2;

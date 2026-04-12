@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#1a2f4a";
@@ -56,6 +57,7 @@ export default function OffshoreWindTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="offshore-wind" />
+        <TrackerMethodology slug="offshore-wind" />
         {/* Events */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Recent Events</div>
@@ -91,6 +93,7 @@ export default function OffshoreWindTracker() {
           )}
         </div>
       </div>
+      <TrackerDisclosure />
     </div>
   );
 }

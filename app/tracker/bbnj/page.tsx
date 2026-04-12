@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 import { Chart, registerables } from "chart.js";
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
@@ -678,6 +679,7 @@ export default function BBNJTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="bbnj" />
+        <TrackerMethodology slug="bbnj" />
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 14, color: MUTED, fontFamily: SANS }}>Loading treaty data...</div>
@@ -696,6 +698,7 @@ export default function BBNJTracker() {
           </>
         )}
       </div>
+      <TrackerDisclosure />
     </div>
   );
 }

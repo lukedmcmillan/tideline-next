@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#0a1628";
@@ -184,6 +185,7 @@ export default function ThirtyByThirtyTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="30x30" />
+        <TrackerMethodology slug="30x30" />
         {loading ? (
           <div style={{ fontFamily: F, textAlign: "center", padding: "60px 20px", fontSize: 13, color: MU }}>Loading tracker data...</div>
         ) : (
@@ -195,6 +197,7 @@ export default function ThirtyByThirtyTracker() {
           </>
         )}
       </div>
+      <TrackerDisclosure />
     </div>
   );
 }

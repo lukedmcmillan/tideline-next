@@ -118,6 +118,13 @@ function fmtTimeAgo(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+function fmtDateTime(iso: string) {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `${day}, ${time}`;
+}
+
 function isPro(s: Story) {
   return s.is_pro || s.source_type === "gov" || s.source_type === "reg";
 }

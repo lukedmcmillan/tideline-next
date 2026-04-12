@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const HERO_BG = "#1a2f4a";
@@ -230,6 +231,7 @@ export default function PlasticsTreatyTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="plastics" />
+        <TrackerMethodology slug="plastics" />
         {loading ? (
           <div style={{ fontFamily: F, textAlign: "center", padding: "60px 20px", fontSize: 13, color: MU }}>Loading tracker data...</div>
         ) : (
@@ -241,6 +243,7 @@ export default function PlasticsTreatyTracker() {
           </>
         )}
       </div>
+      <TrackerDisclosure />
     </div>
   );
 }
