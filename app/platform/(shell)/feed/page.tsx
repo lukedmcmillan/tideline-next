@@ -113,7 +113,9 @@ function fmtTimeAgo(iso: string) {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 function isPro(s: Story) {
@@ -372,7 +374,7 @@ export default function FeedPage() {
                   {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
                   {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
                   <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4 }}>{topicLabel(s.topic)}</span>
-                  <span style={{ fontSize: 11, color: TEAL, fontWeight: 600 }}>{fmtTime(s.published_at)}</span>
+                  <span style={{ fontSize: 11, color: T4, fontWeight: 400 }}>{fmtTimeAgo(s.published_at)}</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{decodeHtml(s.title)}</div>
                 {s.short_summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.short_summary}</div>}
