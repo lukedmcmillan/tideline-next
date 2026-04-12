@@ -194,30 +194,6 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
         })}
       </div>
 
-      {/* Divider + Trackers */}
-      <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 0" }} />
-      <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", padding: "20px 20px 8px" }}>Trackers</div>
-      {trackers.map(t => (
-        <div key={t.name} style={{ position: "relative" }} onMouseEnter={() => setHTip(t.name)} onMouseLeave={() => setHTip(null)}>
-          <a href="/tracker/bbnj" style={{
-            display: "flex", alignItems: "center", height: 40, padding: "0 20px 0 28px",
-            fontSize: 13, fontFamily: F, color: "rgba(255,255,255,.6)", textDecoration: "none",
-            borderRight: t.pulse ? `2px solid ${RED}` : "2px solid transparent",
-            transition: "background .12s",
-          }}>
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: t.color, flexShrink: 0, marginRight: 12, animation: t.pulse ? "pulse 1.8s ease-in-out infinite" : "none" }} />
-            {t.name}
-            {t.badge && <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, background: "rgba(255,255,255,.1)", borderRadius: 8, padding: "1px 7px", color: "rgba(255,255,255,.5)" }}>{t.badge}</span>}
-          </a>
-          {hTip === t.name && TIPS[t.name] && (
-            <div style={{ position: "absolute", left: "calc(100% + 8px)", top: "50%", transform: "translateY(-50%)", background: "#1a1a2e", border: "1px solid rgba(255,255,255,.12)", borderRadius: 10, padding: "10px 14px", width: 220, zIndex: 500, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: TIPS[t.name].c, marginBottom: 4 }}>{"\u25CF"} {TIPS[t.name].st}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,.85)", lineHeight: 1.5 }}>{TIPS[t.name].d}</div>
-            </div>
-          )}
-        </div>
-      ))}
-
       {/* Footer: streak + queries */}
       <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,.08)", padding: 16 }}>
         <div style={{ background: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14, marginBottom: 10 }}>

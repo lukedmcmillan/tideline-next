@@ -209,6 +209,17 @@ export async function GET(request: NextRequest) {
         continue
       }
 
+      // Skip non-English titles
+      if (/\b(les|des|une|pour|dans|avec|sur|est|del|los|las|por|una|con|que|como|der|die|und|auch|nicht)\b/i.test(item.title)) {
+        totalSkipped++
+        continue
+      }
+      // Skip titles with predominantly non-Latin characters
+      if (/[\u0400-\u04FF\u10A0-\u10FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u30FF]/.test(item.title)) {
+        totalSkipped++
+        continue
+      }
+
       // Skip non-ocean stories from general sources
       const isDedicated = OCEAN_DEDICATED_SOURCES.has(source.name)
       if (!isDedicated) {

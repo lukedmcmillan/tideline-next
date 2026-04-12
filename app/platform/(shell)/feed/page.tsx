@@ -338,8 +338,8 @@ export default function FeedPage() {
 
         {/* Lead story card */}
         {lead && (
-          <div onClick={() => { markRead(lead.id); router.push(`/platform/story/${lead.id}`); }} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, display: "grid", gridTemplateColumns: "3fr 2fr", cursor: "pointer", opacity: isRead(lead.id) ? 0.55 : 1 }}>
-            <div style={{ padding: "26px 30px", borderRight: `1px solid ${BLT}` }}>
+          <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, display: "grid", gridTemplateColumns: "3fr 2fr" }}>
+            <div onClick={() => { markRead(lead.id); router.push(`/platform/story/${lead.id}`); }} style={{ padding: "26px 30px", borderRight: `1px solid ${BLT}`, cursor: "pointer", opacity: isRead(lead.id) ? 0.55 : 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
                 {!isRead(lead.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
                 {isRead(lead.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
