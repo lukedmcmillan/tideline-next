@@ -43,6 +43,8 @@ export default function IMOShippingTracker() {
       .catch(() => {});
   }, []);
 
+  const sectionLabel = { fontFamily: F, fontSize: 9, fontWeight: 500 as const, letterSpacing: ".12em", textTransform: "uppercase" as const, color: MU, marginBottom: 10 };
+
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
@@ -58,6 +60,66 @@ export default function IMOShippingTracker() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="imo-shipping" />
         <TrackerMethodology slug="imo-shipping" />
+
+        {/* Status Blocks */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+          {[
+            { label: "MEPC 84", value: "Convening 27 Apr 2026", detail: "Net-Zero Framework implementing measures. Carbon intensity targets under review.", source: "IMO official calendar", url: "https://www.imo.org" },
+            { label: "EU ETS Shipping", value: "Live \u2014 Phase 1 compliance", detail: "First compliance period closed March 2025. Allowance surrender deadline passed. Phase 2 reporting underway.", source: "European Commission", url: "https://transport.ec.europa.eu" },
+            { label: "FuelEU Maritime", value: "In force since 1 Jan 2026", detail: "Applies to vessels over 5000 GT calling at EU ports. GHG intensity targets binding.", source: "EUR-Lex", url: "https://eur-lex.europa.eu" },
+          ].map((b) => (
+            <div key={b.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, padding: "16px 20px" }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", fontFamily: F, fontWeight: 500, letterSpacing: ".1em", color: MU, marginBottom: 6 }}>{b.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: T1, marginBottom: 6 }}>{b.value}</div>
+              <div style={{ fontSize: 12, color: T2, lineHeight: 1.6, marginBottom: 8 }}>{b.detail}</div>
+              <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: TEAL, textDecoration: "none" }}>{b.source}</a>
+            </div>
+          ))}
+        </div>
+
+        {/* Metric Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+          {[
+            { value: "~3,700", unit: "EU-flagged + calling", label: "Vessels affected by EU ETS" },
+            { value: "Annual", unit: "reporting cycle", label: "CII compliance deadline" },
+            { value: "Net zero", unit: "by 2050", label: "IMO GHG reduction target" },
+            { value: "2", unit: "sessions", label: "MEPC sessions per year" },
+          ].map((c) => (
+            <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", fontFamily: F, fontWeight: 500, letterSpacing: ".1em", color: MU, marginBottom: 6 }}>{c.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: T1, letterSpacing: "-0.03em" }}>{c.value}</div>
+              <div style={{ fontSize: 10, color: MU, marginTop: 2 }}>{c.unit}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Key Actors */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={sectionLabel}>Key Actors</div>
+          {[
+            { name: "IMO Secretariat", role: "Convenes MEPC, sets agenda" },
+            { name: "EU Commission (DG MOVE)", role: "EU ETS and FuelEU implementation" },
+            { name: "Getting to Zero Coalition", role: "Industry decarbonisation lobby" },
+            { name: "BIMCO", role: "Shipowner interests, MEPC delegation" },
+            { name: "Pacific Island States", role: "Push for stronger GHG targets" },
+          ].map((a) => (
+            <div key={a.name} style={{ padding: "10px 0", borderBottom: `0.5px solid ${BD}`, display: "flex", gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: T1 }}>{a.name}</span>
+              <span style={{ fontSize: 12, color: T2 }}>{a.role}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* What to Watch */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={sectionLabel}>What to Watch</div>
+          <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderLeft: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+            <div style={{ fontSize: 12, color: T2, lineHeight: 1.7 }}>
+              MEPC 84 (27 April 2026) is the first session since the Net-Zero Framework adoption at MEPC 83. Implementing measures for CII trajectory and fuel standards are on the agenda. Watch for: basket of measures decision, lifecycle GHG methodology, and whether the EU ETS interaction with IMO measures produces a double-counting dispute. The Getting to Zero Coalition position paper submitted in March signals industry is willing to accept stronger measures than the minimum required text.
+            </div>
+          </div>
+        </div>
+
         {/* Events */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Recent Events</div>

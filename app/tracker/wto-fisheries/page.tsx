@@ -27,6 +27,27 @@ const PLACEHOLDER_EVENTS: TrackerEvent[] = [
   { id:"e3", event_date:"2025-11-01", title:"Agreement enters into force \u2014 ratification threshold met", summary:"Two-thirds acceptance threshold reached. Prohibitions on IUU and overfished stock subsidies now binding.", source_url:null, event_type:"milestone" },
 ];
 
+const STATUS_BLOCKS = [
+  { label: "Agreement on Fisheries Subsidies", value: "In force \u2014 15 Sep 2025", detail: "Entered into force after two-thirds of WTO membership ratified. First multilateral agreement targeting a sector\u2019s environmental impact directly.", source: "WTO", url: "https://www.wto.org/english/tratop_e/fish_e" },
+  { label: "Fish Two (Phase 2)", value: "Stalled \u2014 no chair", detail: "Phase 2 negotiations covering capacity-building subsidies and special and differential treatment have no chair and no agreed timeline. Four-year sunset clause on Phase 1 provisions is running.", source: "WTO Fisheries Committee", url: "https://www.wto.org" },
+  { label: "Domestic Compliance", value: "15 Sep 2026 \u2014 156 days", detail: "Members must bring domestic subsidy regimes into compliance. No formal enforcement mechanism exists \u2014 compliance is self-reported.", source: "WTO Agreement text", url: "https://www.wto.org/english/tratop_e/fish_e" },
+];
+
+const METRIC_CARDS = [
+  { big: "$35bn", sub: "annual (pre-agreement)", label: "Global fisheries subsidies" },
+  { big: "91", sub: "of 166 members", label: "WTO members bound" },
+  { big: "4 years", sub: "from entry into force", label: "Fish Two sunset clause" },
+  { big: "156", sub: "days remaining", label: "Compliance deadline" },
+];
+
+const KEY_ACTORS = [
+  { name: "WTO Fisheries Committee", role: "Oversees implementation" },
+  { name: "EU", role: "Largest fishing subsidy reformer, compliance model" },
+  { name: "China", role: "Largest distant water fishing fleet, compliance scrutiny" },
+  { name: "Pacific Island Forum", role: "Small island developing states, special treatment provisions" },
+  { name: "Pew Charitable Trusts", role: "Primary civil society monitor" },
+];
+
 export default function WTOFisheriesTracker() {
   const [events, setEvents] = useState<TrackerEvent[]>(PLACEHOLDER_EVENTS);
   const [stories, setStories] = useState<FeedStory[]>([]);
@@ -58,6 +79,51 @@ export default function WTOFisheriesTracker() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="wto-fisheries" />
         <TrackerMethodology slug="wto-fisheries" />
+
+        {/* Status Blocks */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+          {STATUS_BLOCKS.map((s) => (
+            <div key={s.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, padding: "16px 20px" }}>
+              <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 8 }}>{s.label}</div>
+              <div style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: T1, marginBottom: 6 }}>{s.value}</div>
+              <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6, marginBottom: 8 }}>{s.detail}</div>
+              <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 10, color: TEAL, textDecoration: "none" }}>{s.source} {"\u2197"}</a>
+            </div>
+          ))}
+        </div>
+
+        {/* Metric Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+          {METRIC_CARDS.map((c) => (
+            <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+              <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 6 }}>{c.label}</div>
+              <div style={{ fontFamily: F, fontSize: 28, fontWeight: 700, color: TEAL, letterSpacing: "-0.03em" }}>{c.big}</div>
+              <div style={{ fontFamily: F, fontSize: 10, color: MU, marginTop: 4 }}>{c.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Key Actors */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Key Actors</div>
+          <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
+            {KEY_ACTORS.map((a, i) => (
+              <div key={a.name} style={{ padding: "12px 16px", borderBottom: i < KEY_ACTORS.length - 1 ? `0.5px solid ${BD}` : "none", display: "flex", alignItems: "baseline", gap: 12 }}>
+                <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1 }}>{a.name}</div>
+                <div style={{ fontFamily: F, fontSize: 12, color: T2 }}>{a.role}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What to Watch */}
+        <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderLeft: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px", marginBottom: 32 }}>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 8 }}>What to Watch</div>
+          <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.7 }}>
+            Fish Two negotiations have no chair and no timeline. The four-year sunset clause on Phase 1 provisions means that if Phase 2 fails, the entire agreement framework risks unravelling by 2029. The 15 September 2026 domestic compliance deadline has no enforcement mechanism {"\u2014"} watch for whether major fishing nations submit compliance notifications or quietly ignore the deadline. China{"\u2019"}s position is the critical variable. The EU{"\u2019"}s compliance approach will set the template other developed members follow.
+          </div>
+        </div>
+
         {/* Events */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Recent Events</div>
@@ -69,7 +135,7 @@ export default function WTOFisheriesTracker() {
               </div>
               <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>{e.title}</div>
               {e.summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6 }}>{e.summary}</div>}
-              {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source ↗</a>}
+              {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source {"\u2197"}</a>}
             </div>
           ))}
         </div>

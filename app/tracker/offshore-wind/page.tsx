@@ -17,8 +17,8 @@ interface FeedStory { id: string; title: string; source_name: string; published_
 
 function fdt(iso: string) { return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); }
 
-const TITLE = "Offshore Wind & Marine Spatial Planning";
 const SLUG = "offshore-wind";
+const TITLE = "Offshore Wind & Marine Spatial Planning";
 const DESCRIPTION = "Tracks leasing rounds, planning consents, marine spatial plan adoptions, and regulatory decisions affecting offshore wind development globally.";
 
 const PLACEHOLDER_EVENTS: TrackerEvent[] = [
@@ -43,6 +43,8 @@ export default function OffshoreWindTracker() {
       .catch(() => {});
   }, []);
 
+  const sectionLabel = { fontFamily: F, fontSize: 9, fontWeight: 500 as const, letterSpacing: ".12em", textTransform: "uppercase" as const, color: MU, marginBottom: 10 };
+
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
@@ -58,6 +60,66 @@ export default function OffshoreWindTracker() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="offshore-wind" />
         <TrackerMethodology slug="offshore-wind" />
+
+        {/* Status Blocks */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+          {[
+            { label: "US Offshore Wind Leasing", value: "Suspended \u2014 appellate review", detail: "Federal leasing suspended pending appellate court ruling on executive order challenged by developers. Outcome determines Atlantic wind buildout timeline.", source: "BOEM", url: "https://www.boem.gov/renewable-energy" },
+            { label: "Crown Estate Round 5", value: "Awards confirmed \u2014 Nov 2025", detail: "Largest UK leasing round confirmed. Projects now in planning and consenting phase. First power expected 2031-2033.", source: "The Crown Estate", url: "https://www.thecrownestate.co.uk" },
+            { label: "EU Maritime Spatial Plans", value: "Submission deadline passed", detail: "Member state maritime spatial plans submitted June 2025. Commission reviewing compliance. Cross-border coherence is primary concern.", source: "European Commission", url: "https://maritime-spatial-planning.ec.europa.eu" },
+          ].map((b) => (
+            <div key={b.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, padding: "16px 20px" }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", fontFamily: F, fontWeight: 500, letterSpacing: ".1em", color: MU, marginBottom: 6 }}>{b.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: T1, marginBottom: 6 }}>{b.value}</div>
+              <div style={{ fontSize: 12, color: T2, lineHeight: 1.6, marginBottom: 8 }}>{b.detail}</div>
+              <a href={b.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: TEAL, textDecoration: "none" }}>{b.source}</a>
+            </div>
+          ))}
+        </div>
+
+        {/* Metric Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+          {[
+            { value: "280GW", unit: "installed by 2030 target", label: "Global offshore wind capacity" },
+            { value: "\u00A31bn+", unit: "annual seabed rent", label: "Crown Estate Round 5" },
+            { value: "12+", unit: "projects affected", label: "US projects stalled" },
+            { value: "21", unit: "of 23 member states", label: "EU MSP plans submitted" },
+          ].map((c) => (
+            <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+              <div style={{ fontSize: 9, textTransform: "uppercase", fontFamily: F, fontWeight: 500, letterSpacing: ".1em", color: MU, marginBottom: 6 }}>{c.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: T1, letterSpacing: "-0.03em" }}>{c.value}</div>
+              <div style={{ fontSize: 10, color: MU, marginTop: 2 }}>{c.unit}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Key Actors */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={sectionLabel}>Key Actors</div>
+          {[
+            { name: "BOEM", role: "US federal leasing authority" },
+            { name: "The Crown Estate", role: "UK seabed leasing" },
+            { name: "\u00D8rsted / Vattenfall / RWE", role: "Major European developers" },
+            { name: "US appellate courts", role: "Ruling on lease suspension" },
+            { name: "EU Commission DG MARE", role: "MSP directive compliance" },
+          ].map((a) => (
+            <div key={a.name} style={{ padding: "10px 0", borderBottom: `0.5px solid ${BD}`, display: "flex", gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: T1 }}>{a.name}</span>
+              <span style={{ fontSize: 12, color: T2 }}>{a.role}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* What to Watch */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={sectionLabel}>What to Watch</div>
+          <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderLeft: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+            <div style={{ fontSize: 12, color: T2, lineHeight: 1.7 }}>
+              The US appellate court ruling is the single most consequential near-term event. A ruling upholding the lease suspension effectively ends the current Atlantic wind development pipeline. Developers with billions committed are watching this case daily. In the UK, Round 5 projects are now in the planning phase {"\u2014"} grid connection and consenting timelines are the bottleneck, not leasing. The EU MSP compliance review will determine whether cross-border offshore wind projects in the North Sea can proceed without bilateral negotiation for each installation.
+            </div>
+          </div>
+        </div>
+
         {/* Events */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Recent Events</div>
@@ -69,7 +131,7 @@ export default function OffshoreWindTracker() {
               </div>
               <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>{e.title}</div>
               {e.summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6 }}>{e.summary}</div>}
-              {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source ↗</a>}
+              {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source {"\u2197"}</a>}
             </div>
           ))}
         </div>
