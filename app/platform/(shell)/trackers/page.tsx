@@ -120,15 +120,21 @@ function TrackerCard({
   animated,
   featured,
   onClick,
+  live,
 }: {
   t: typeof TRACKERS[number];
   animated: boolean;
   featured: boolean;
   onClick: () => void;
+  live?: { score: number; sv: number; sr: number; ss: number };
 }) {
   const [hovered, setHovered] = useState(false);
-  const c = scoreColor(t.score);
-  const displayScore = animated ? t.score : 0;
+  const score = live?.score ?? t.score;
+  const sv = live?.sv ?? t.sv;
+  const sr = live?.sr ?? t.sr;
+  const ss = live?.ss ?? t.ss;
+  const c = scoreColor(score);
+  const displayScore = animated ? score : 0;
   const momColor = t.mom === "up" ? TEAL : t.mom === "dn" ? RED : AMBER;
   const urgentColor = t.urgent === "Stalled" ? RED : AMBER;
   const urgentBg = t.urgent === "Stalled" ? "rgba(226,75,74,.08)" : "rgba(239,159,39,.1)";
@@ -190,7 +196,7 @@ function TrackerCard({
           <div
             style={{
               height: "100%",
-              width: animated ? `${t.score * 10}%` : "0%",
+              width: animated ? `${score * 10}%` : "0%",
               background: c,
               borderRadius: 2,
               transition: "width 900ms cubic-bezier(.4,0,.2,1)",
@@ -200,13 +206,13 @@ function TrackerCard({
 
         {/* sub-scores */}
         <div style={{ display: "flex", gap: 8, marginTop: 4, fontSize: 9, fontFamily: M }}>
-          <span style={{ color: scoreColor(t.sv) }}>Vol {t.sv.toFixed(1)}</span>
-          <span style={{ color: scoreColor(t.sr) }}>Reg {t.sr.toFixed(1)}</span>
-          <span style={{ color: scoreColor(t.ss) }}>Stk {t.ss.toFixed(1)}</span>
+          <span style={{ color: scoreColor(sv) }}>Vol {sv.toFixed(1)}</span>
+          <span style={{ color: scoreColor(sr) }}>Rec {sr.toFixed(1)}</span>
+          <span style={{ color: scoreColor(ss) }}>Sig {ss.toFixed(1)}</span>
         </div>
 
         {/* sparkline */}
-        <Sparkline history={t.history} score={t.score} />
+        <Sparkline history={t.history} score={score} />
 
         {/* footer */}
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "auto", paddingTop: 4 }}>
@@ -241,10 +247,27 @@ function TrackerCard({
 export default function TrackersPage() {
   const router = useRouter();
   const [animated, setAnimated] = useState(false);
+  const [liveScores, setLiveScores] = useState<Record<string, { score: number; sv: number; sr: number; ss: number }>>({});
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setAnimated(true));
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  useEffect(() => {
+    const slugs = TRACKERS.map(t => t.slug);
+    Promise.all(
+      slugs.map(slug =>
+        fetch(`/api/velocity/${slug}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => d?.latest ? { slug, score: d.latest.score, sv: d.latest.score_volume ?? 0, sr: d.latest.score_recency ?? 0, ss: d.latest.score_signals ?? 0 } : null)
+          .catch(() => null)
+      )
+    ).then(results => {
+      const map: Record<string, { score: number; sv: number; sr: number; ss: number }> = {};
+      results.forEach(r => { if (r) map[r.slug] = { score: r.score, sv: r.sv, sr: r.sr, ss: r.ss }; });
+      if (Object.keys(map).length > 0) setLiveScores(map);
+    });
   }, []);
 
   /* duplicate ticker items for seamless loop */
@@ -266,7 +289,10 @@ export default function TrackersPage() {
       <div style={{ display: "flex", flexDirection: "column", height: "100%", fontFamily: F }}>
 
         {/* ── Section 1: Status chips ───────────────────── */}
-        <div style={{ display: "flex", gap: 8, padding: "12px 16px" }}>
+        <div style={{ display: "flex", gap: 8, padding: "12px 16px", alignItems: "center" }}>
+          {Object.keys(liveScores).length === 0 && (
+            <span style={{ fontFamily: F, fontSize: 10, color: T4, marginRight: 8 }}>Recalculating scores...</span>
+          )}
           {/* MEPC 84 chip */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 6,
@@ -368,7 +394,7 @@ export default function TrackersPage() {
             const spanRows = Number(rows[1]) - Number(rows[0]);
             const featured = spanCols >= 2 || spanRows >= 2;
             return (
-              <TrackerCard key={t.slug} t={t} animated={animated} featured={featured} onClick={() => router.push(`/tracker/${t.slug}`)} />
+              <TrackerCard key={t.slug} t={t} animated={animated} featured={featured} onClick={() => router.push(`/tracker/${t.slug}`)} live={liveScores[t.slug]} />
             );
           })}
         </div>
