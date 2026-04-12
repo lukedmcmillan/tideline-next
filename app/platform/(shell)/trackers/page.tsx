@@ -2,8 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Chart } from "chart.js/auto";
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Filler,
+  Tooltip,
+} from "chart.js";
 import { Line } from "react-chartjs-2";
+
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const NAVY = "#0A1628";
