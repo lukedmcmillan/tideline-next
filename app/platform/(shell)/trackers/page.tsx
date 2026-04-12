@@ -106,7 +106,7 @@ function Card({ t, anim, feat, onClick, live }: {
 
   return (
     <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ gridColumn: t.grid, gridRow: t.gridR, background: SURFACE, border: `0.5px solid ${hov ? "#BBBFC3" : BORDER}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "border-color 0.15s, box-shadow 0.15s", boxShadow: hov ? "0 1px 8px rgba(0,0,0,.06)" : "none" }}>
+      style={{ background: hov ? "#F8FAF9" : SURFACE, border: `0.5px solid ${hov ? TEAL : BORDER}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "background 0.15s, border-color 0.15s" }}>
       {/* open */}
       <span style={{ position: "absolute", top: 8, right: t.urgent ? 56 : 8, fontSize: 9, color: TEXT2, opacity: hov ? 1 : 0, pointerEvents: "none", transition: "opacity 0.12s", zIndex: 2 }}>Open {"\u2197"}</span>
       {/* urgent */}
@@ -114,10 +114,10 @@ function Card({ t, anim, feat, onClick, live }: {
       {/* accent */}
       <div style={{ height: 3, background: c, flexShrink: 0 }} />
       {/* body */}
-      <div style={{ flex: 1, padding: feat ? "6px 9px 4px" : "5px 8px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ flex: 1, padding: "6px 9px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT2, marginBottom: 2 }}>{t.domain}</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 3 }}>
-          <span style={{ fontSize: feat ? 22 : 18, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
           <span style={{ fontSize: 10, color: TEXT2, marginRight: 6 }}>/10</span>
           <Mom m={t.mom} />
         </div>
@@ -221,13 +221,15 @@ export default function TrackersPage() {
               </div>
             ))}
           </div>
-          {/* grid */}
-          <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 0.75fr 0.75fr", gap: 4 }}>
-            {TRACKERS.map(t => {
-              const cols = t.grid.split("/"); const rows = t.gridR.split("/");
-              const feat = Number(cols[1]) - Number(cols[0]) >= 2 || Number(rows[1]) - Number(rows[0]) >= 2;
-              return <Card key={t.slug} t={t} anim={anim} feat={feat} onClick={() => router.push(`/tracker/${t.slug}`)} live={liveScores[t.slug]} />;
-            })}
+          {/* grid — equal cards, sorted by momentum: up → flat → dn */}
+          <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridAutoRows: "1fr", gap: 4 }}>
+            {[...TRACKERS].sort((a, b) => {
+              const order = { up: 0, flat: 1, dn: 2 };
+              const diff = order[a.mom] - order[b.mom];
+              return diff !== 0 ? diff : b.score - a.score;
+            }).map(t => (
+              <Card key={t.slug} t={t} anim={anim} feat={false} onClick={() => router.push(`/tracker/${t.slug}`)} live={liveScores[t.slug]} />
+            ))}
           </div>
         </div>
       </div>
