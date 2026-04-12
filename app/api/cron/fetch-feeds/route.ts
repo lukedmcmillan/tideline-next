@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { extractEntities } from '@/lib/entities'
 
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -168,11 +171,14 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
 }
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  const url = new URL(request.url)
-  const querySecret = url.searchParams.get('secret')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && querySecret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get('authorization');
+    const url = new URL(request.url);
+    const querySecret = url.searchParams.get('secret');
+    if (authHeader !== `Bearer ${cronSecret}` && querySecret !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   let totalSaved = 0
