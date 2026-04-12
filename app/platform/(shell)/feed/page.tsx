@@ -310,6 +310,8 @@ export default function FeedPage() {
       </Suspense>
       <style>{`
         .feed-mobile { display: none; }
+        .feed-card:hover { border-color: #B0B8C1 !important; background: #FAFBFC !important; }
+        .feed-row:hover { background: #FAFBFC !important; }
         @media (max-width: 768px) {
           .feed-desktop { display: none !important; }
           .feed-mobile { display: block !important; }
@@ -351,7 +353,7 @@ export default function FeedPage() {
             </div>
             <div>
               {LEAD.slice(1, 3).map((s, i) => (
-                <div key={s.id} onClick={(e) => { e.stopPropagation(); markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ padding: "18px 22px", borderBottom: i === 0 ? `1px solid ${BLT}` : "none", opacity: isRead(s.id) ? 0.55 : 1 }}>
+                <div className="feed-row" key={s.id} onClick={(e) => { e.stopPropagation(); markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ padding: "18px 22px", borderBottom: i === 0 ? `1px solid ${BLT}` : "none", cursor: "pointer", opacity: isRead(s.id) ? 0.55 : 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                     {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
                     {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
@@ -369,7 +371,7 @@ export default function FeedPage() {
         {LEAD.length > 3 && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
             {LEAD.slice(3, 6).map(s => (
-              <div key={s.id} onClick={() => { markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, cursor: "pointer", transition: "all .15s", opacity: isRead(s.id) ? 0.55 : 1 }}>
+              <div className="feed-card" key={s.id} onClick={() => { markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, cursor: "pointer", transition: "all .15s", opacity: isRead(s.id) ? 0.55 : 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                   {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px" }}>New</span>}
                   {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px" }}>Viewed</span>}
@@ -392,7 +394,7 @@ export default function FeedPage() {
               <span style={{ fontSize: 12, color: T4 }}>{totalCount} stories</span>
             </div>
             {COMPACT.map(s => (
-              <div key={s.id} onClick={() => { markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 22px", borderBottom: `1px solid ${BLT}`, cursor: "pointer", transition: "background .1s", opacity: isRead(s.id) ? 0.45 : 1 }}>
+              <div className="feed-row" key={s.id} onClick={() => { markRead(s.id); router.push(`/platform/story/${s.id}`); }} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 22px", borderBottom: `1px solid ${BLT}`, cursor: "pointer", transition: "background .1s", opacity: isRead(s.id) ? 0.45 : 1 }}>
                 {!isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase", color: "#fff", background: TEAL, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>New</span>}
                 {isRead(s.id) && <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: ".04em", textTransform: "uppercase", color: T4, background: BLT, borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Viewed</span>}
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: T4, flexShrink: 0, minWidth: 84 }}>{topicLabel(s.topic)}</span>
