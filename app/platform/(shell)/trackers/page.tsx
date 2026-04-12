@@ -136,7 +136,7 @@ function Card({ t, anim, feat, onClick, live }: {
         <Spark h={t.history} s={score} feat={feat} />
       </div>
       {/* footer */}
-      <div style={{ padding: "4px 10px", borderTop: `0.5px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: BG }}>
+      <div style={{ padding: "3px 8px", borderTop: `0.5px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: BG }}>
         <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", color: c }}>{t.traj}</span>
         <span style={{ fontSize: 9, color: t.nextHot ? c : TEXT2 }}>{t.next}</span>
       </div>
