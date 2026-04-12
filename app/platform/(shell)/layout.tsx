@@ -330,9 +330,52 @@ function WorkspaceRightPanel() {
   );
 }
 
+function ConnectionsPanel() {
+  const [conn, setConn] = useState<{ trackers: string[]; insight: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/connections")
+      .then(r => r.json())
+      .then(d => { if (d.connection) setConn(d.connection); })
+      .catch(() => {});
+  }, []);
+
+  const copyInsight = () => {
+    if (!conn) return;
+    navigator.clipboard.writeText(conn.insight).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  if (!conn) return null;
+
+  return (
+    <div style={{ padding: 20, borderBottom: `1px solid ${BLT}` }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL, animation: "pulse 2.5s ease-in-out infinite" }} />
+        Tideline connections
+      </div>
+      <div style={{ fontSize: 12, color: T4, fontStyle: "italic", marginBottom: 14 }}>Patterns across trackers today.</div>
+      <div style={{ borderLeft: `3px solid ${TEAL}`, padding: "14px 14px 14px 16px" }}>
+        <div style={{ fontSize: 13, lineHeight: 1.65, color: T1, marginBottom: 12 }}>{conn.insight}</div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+          {conn.trackers.map(t => (
+            <span key={t} style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", border: `1px solid rgba(29,158,117,.22)`, borderRadius: 4, padding: "3px 9px", color: TEAL, background: "rgba(255,255,255,.7)" }}>{t}</span>
+          ))}
+        </div>
+        <button onClick={copyInsight} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", background: WHITE, border: `1.5px solid rgba(29,158,117,.22)`, borderRadius: 8, padding: "8px 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer" }}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M4 4V3a1.5 1.5 0 011.5-1.5h5A1.5 1.5 0 0112 3v5a1.5 1.5 0 01-1.5 1.5H9" stroke="currentColor" strokeWidth="1.3"/></svg>
+          {copied ? "Copied" : "Copy for meeting"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function RightPanel() {
   const path = usePathname();
-  const [copied, setCopied] = useState(false);
   const isCalendar = path === "/platform/calendar";
   const isWorkspace = path === "/platform/workspace";
   const isProjects = path?.startsWith("/platform/projects") || false;
@@ -343,35 +386,9 @@ function RightPanel() {
   if (isWorkspace) return null;
   if (isProjects) return null;
 
-  const copyInsight = () => {
-    navigator.clipboard.writeText("ISA deferral and BBNJ ratification are directly linked. Three sponsoring states conditioning their ISA vote on implementation terms.").then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
   return (
     <div style={{ width: 268, flexShrink: 0, background: WHITE, borderLeft: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }} className="rp-desktop">
-      {/* Connections */}
-      <div style={{ padding: 20, borderBottom: `1px solid ${BLT}` }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL, animation: "pulse 2.5s ease-in-out infinite" }} />
-          Tideline connections
-        </div>
-        <div style={{ fontSize: 12, color: T4, fontStyle: "italic", marginBottom: 14 }}>Patterns across trackers today.</div>
-        <div style={{ borderLeft: `3px solid ${TEAL}`, padding: "14px 14px 14px 16px" }}>
-          <div style={{ fontSize: 13, lineHeight: 1.65, color: T1, marginBottom: 12 }}>The ISA deferral and accelerating BBNJ ratification are directly linked. Three sponsoring states are conditioning their ISA vote on BBNJ implementation terms.</div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-            {["ISA Mining", "BBNJ Treaty"].map(t => (
-              <span key={t} style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", border: `1px solid rgba(29,158,117,.22)`, borderRadius: 4, padding: "3px 9px", color: TEAL, background: "rgba(255,255,255,.7)" }}>{t}</span>
-            ))}
-          </div>
-          <button onClick={copyInsight} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", background: WHITE, border: `1.5px solid rgba(29,158,117,.22)`, borderRadius: 8, padding: "8px 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, cursor: "pointer" }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M4 4V3a1.5 1.5 0 011.5-1.5h5A1.5 1.5 0 0112 3v5a1.5 1.5 0 01-1.5 1.5H9" stroke="currentColor" strokeWidth="1.3"/></svg>
-            {copied ? "Copied" : "Copy for meeting"}
-          </button>
-        </div>
-      </div>
+      <ConnectionsPanel />
 
       {/* Calendar widget, always visible */}
       <CalendarWidget />

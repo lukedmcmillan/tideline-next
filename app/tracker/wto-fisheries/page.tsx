@@ -34,10 +34,10 @@ const STATUS_BLOCKS = [
 ];
 
 const METRIC_CARDS = [
-  { big: "$35bn", sub: "annual (pre-agreement)", label: "Global fisheries subsidies" },
-  { big: "91", sub: "of 166 members", label: "WTO members bound" },
-  { big: "4 years", sub: "from entry into force", label: "Fish Two sunset clause" },
-  { big: "156", sub: "days remaining", label: "Compliance deadline" },
+  { big: "$35bn", sub: "annual (pre-agreement)", label: "Global fisheries subsidies", note: "World Bank estimate \u2014 63% deemed harmful to fish stocks by FAO", url: "https://www.wto.org/english/tratop_e/fish_e" },
+  { big: "91", sub: "of 166 members", label: "WTO members bound by agreement", note: "Two-thirds threshold met Sep 2025 \u2014 agreement entered into force", url: "https://www.wto.org" },
+  { big: "4 years", sub: "from entry into force", label: "Fish Two sunset clause", note: "Phase 2 must conclude by 2029 or Phase 1 provisions lapse", url: "https://www.wto.org" },
+  { big: "156", sub: "days remaining", label: "Compliance deadline", note: "15 Sep 2026 \u2014 no formal enforcement mechanism, self-reported compliance", url: "https://www.wto.org/english/tratop_e/fish_e" },
 ];
 
 const KEY_ACTORS = [
@@ -66,7 +66,7 @@ export default function WTOFisheriesTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
       {/* Hero */}
       <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -95,10 +95,13 @@ export default function WTOFisheriesTracker() {
         {/* Metric Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
           {METRIC_CARDS.map((c) => (
-            <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+            <div key={c.label} className="metric-card" onClick={() => window.open(c.url, "_blank")} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px", cursor: "pointer", position: "relative", transition: "box-shadow 0.15s" }}>
+              <span className="mc-arrow" style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: MU, opacity: 0, transition: "opacity 0.15s", pointerEvents: "none" }}>{"\u2197"}</span>
               <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 6 }}>{c.label}</div>
               <div style={{ fontFamily: F, fontSize: 28, fontWeight: 700, color: TEAL, letterSpacing: "-0.03em" }}>{c.big}</div>
               <div style={{ fontFamily: F, fontSize: 10, color: MU, marginTop: 4 }}>{c.sub}</div>
+              <div style={{ fontFamily: F, fontSize: 10, color: T2, marginTop: 4, lineHeight: 1.4 }}>{c.note}</div>
+              <div style={{ fontFamily: F, fontSize: 9, color: TEAL, marginTop: 4 }}>Source {"\u2197"}</div>
             </div>
           ))}
         </div>

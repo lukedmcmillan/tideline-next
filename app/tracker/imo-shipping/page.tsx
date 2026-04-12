@@ -47,7 +47,7 @@ export default function IMOShippingTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
       {/* Hero */}
       <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -80,15 +80,18 @@ export default function IMOShippingTracker() {
         {/* Metric Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
           {[
-            { value: "~3,700", unit: "EU-flagged + calling", label: "Vessels affected by EU ETS" },
-            { value: "Annual", unit: "reporting cycle", label: "CII compliance deadline" },
-            { value: "Net zero", unit: "by 2050", label: "IMO GHG reduction target" },
-            { value: "2", unit: "sessions", label: "MEPC sessions per year" },
+            { value: "~3,700", unit: "EU-flagged + calling", label: "Vessels affected by EU ETS", note: "Subject to EU ETS allowance surrender from Jan 2024 \u2014 first compliance period closed March 2025", url: "https://transport.ec.europa.eu" },
+            { value: "Annual", unit: "reporting cycle", label: "CII compliance deadline", note: "Carbon Intensity Indicator rating determines vessel operational restrictions", url: "https://www.imo.org" },
+            { value: "Net zero", unit: "by 2050", label: "IMO GHG reduction target", note: "Adopted at MEPC 80 July 2023 \u2014 implementing measures at MEPC 84 Apr 2026", url: "https://www.imo.org" },
+            { value: "2", unit: "sessions", label: "MEPC sessions per year", note: "MEPC 84 convenes 27 Apr 2026 \u2014 next decision window now open", url: "https://www.imo.org" },
           ].map((c) => (
-            <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+            <div key={c.label} className="metric-card" onClick={() => window.open(c.url, "_blank")} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px", cursor: "pointer", position: "relative", transition: "box-shadow 0.15s" }}>
+              <span className="mc-arrow" style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: MU, opacity: 0, transition: "opacity 0.15s", pointerEvents: "none" }}>{"\u2197"}</span>
               <div style={{ fontSize: 9, textTransform: "uppercase", fontFamily: F, fontWeight: 500, letterSpacing: ".1em", color: MU, marginBottom: 6 }}>{c.label}</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: T1, letterSpacing: "-0.03em" }}>{c.value}</div>
               <div style={{ fontSize: 10, color: MU, marginTop: 2 }}>{c.unit}</div>
+              <div style={{ fontSize: 10, color: T2, marginTop: 4, lineHeight: 1.4 }}>{c.note}</div>
+              <div style={{ fontSize: 9, color: TEAL, marginTop: 4 }}>Source {"\u2197"}</div>
             </div>
           ))}
         </div>

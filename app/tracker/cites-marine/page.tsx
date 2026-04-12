@@ -47,7 +47,7 @@ export default function CITESMarineTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
       {/* Hero */}
       <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -80,15 +80,18 @@ export default function CITESMarineTracker() {
         {/* Metric Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
           {[
-            { value: "~20M", unit: "individuals pre-listing", label: "Blue shark annual trade" },
-            { value: "14", unit: "marine species", label: "Species newly listed at CoP20" },
-            { value: "183", unit: "member states", label: "CITES Appendix II parties" },
-            { value: "2028", unit: "CoP21 date TBC", label: "Next CoP" },
+            { value: "~20M", unit: "individuals pre-listing", label: "Blue shark annual trade", note: "Blue shark listed Appendix II at CoP20 Nov 2025 \u2014 permits now required for all trade", url: "https://trade.cites.org" },
+            { value: "14", unit: "marine species", label: "Species newly listed at CoP20", note: "Includes blue shark, shortfin mako, and 12 ray species \u2014 largest marine listing in CITES history", url: "https://cites.org/eng/cop" },
+            { value: "183", unit: "member states", label: "CITES Appendix II parties", note: "All parties must implement permit requirements for newly listed species", url: "https://cites.org/eng/disc/parties" },
+            { value: "2028", unit: "CoP21 date TBC", label: "Next CoP", note: "CoP21 \u2014 implementation compliance review for CoP20 listings expected on agenda", url: "https://cites.org/eng/cop" },
           ].map((c) => (
-            <div key={c.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px" }}>
+            <div key={c.label} className="metric-card" onClick={() => window.open(c.url, "_blank")} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px", cursor: "pointer", position: "relative", transition: "box-shadow 0.15s" }}>
+              <span className="mc-arrow" style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: MU, opacity: 0, transition: "opacity 0.15s", pointerEvents: "none" }}>{"\u2197"}</span>
               <div style={{ fontSize: 9, textTransform: "uppercase", fontFamily: F, fontWeight: 500, letterSpacing: ".1em", color: MU, marginBottom: 6 }}>{c.label}</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: T1, letterSpacing: "-0.03em" }}>{c.value}</div>
               <div style={{ fontSize: 10, color: MU, marginTop: 2 }}>{c.unit}</div>
+              <div style={{ fontSize: 10, color: T2, marginTop: 4, lineHeight: 1.4 }}>{c.note}</div>
+              <div style={{ fontSize: 9, color: TEAL, marginTop: 4 }}>Source {"\u2197"}</div>
             </div>
           ))}
         </div>
