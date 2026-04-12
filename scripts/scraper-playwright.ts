@@ -263,11 +263,17 @@ async function scrapeSource(source: PlaywrightSource): Promise<number> {
       anchors.map((a) => a.href).filter((h) => /\.pdf/i.test(h))
     );
 
+    // Extract /handle/ links for DSpace repositories (e.g. FAO Open Knowledge)
+    const handleLinks = await page.$$eval("a[href]", (anchors) =>
+      anchors.map((a) => a.href).filter((h) => /\/handle\/\d+\/\d+/.test(h) && !/\/handle\/\d+\/\d+\//.test(h))
+    );
+    const handlePdfLinks = handleLinks.map(h => `${h.replace(/\/$/, "")}/download`);
+
     const htmlPdfLinks = extractPdfLinks(html, source.url);
-    const allPdfLinks = [...new Set([...htmlPdfLinks, ...jsLinks])].filter(
+    const allPdfLinks = [...new Set([...htmlPdfLinks, ...jsLinks, ...handlePdfLinks])].filter(
       (l) => !NON_EN.test(l)
     );
-    console.log(`  [${source.name}] Found ${allPdfLinks.length} PDF links (${htmlPdfLinks.length} html + ${jsLinks.length} js)`);
+    console.log(`  [${source.name}] Found ${allPdfLinks.length} PDF links (${htmlPdfLinks.length} html + ${jsLinks.length} js + ${handlePdfLinks.length} handle)`);
 
     let inserted = 0;
     for (const pdfUrl of allPdfLinks) {

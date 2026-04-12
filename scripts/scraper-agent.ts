@@ -123,6 +123,28 @@ const SOURCES: Source[] = [
       "https://documents.un.org/doc/undoc/gen/n24/195/16/pdf/n2419516.pdf",
     ],
   },
+  {
+    name: "ACOBAMS",
+    domain: "acobams.org",
+    defaultOrg: "Agreement on the Conservation of Cetaceans of the Black Sea, Mediterranean Sea and Contiguous Atlantic Area",
+    defaultType: "resolution",
+    is_primary_source: true,
+    urls: [
+      "https://www.acobams.org/publications/",
+      "https://www.acobams.org/meetings/mop/",
+    ],
+  },
+  {
+    name: "CITES",
+    domain: "cites.org",
+    defaultOrg: "Convention on International Trade in Endangered Species",
+    defaultType: "resolution",
+    is_primary_source: true,
+    urls: [
+      "https://cites.org/eng/res/index.php",
+      "https://cites.org/eng/cop/index.php",
+    ],
+  },
 ];
 
 const USER_AGENT = "Tideline Library Bot/1.0";
