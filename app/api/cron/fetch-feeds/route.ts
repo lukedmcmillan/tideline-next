@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { extractEntities } from '@/lib/entities'
 
@@ -170,15 +170,10 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
   }
 }
 
-export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization');
-    const url = new URL(request.url);
-    const querySecret = url.searchParams.get('secret');
-    if (authHeader !== `Bearer ${cronSecret}` && querySecret !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(request: NextRequest) {
+  const secret = request.nextUrl.searchParams.get('secret') || request.headers.get('authorization')?.replace('Bearer ', '');
+  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let totalSaved = 0
