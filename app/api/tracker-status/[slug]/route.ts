@@ -14,6 +14,10 @@ const ALLOWED_SLUGS = new Set([
   "blue-finance",
   "governance",
   "plastics",
+  "imo-shipping",
+  "offshore-wind",
+  "cites-marine",
+  "wto-fisheries",
 ]);
 
 export async function GET(

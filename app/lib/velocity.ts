@@ -15,6 +15,10 @@ const TRACKER_TOPICS: Record<string, string[]> = {
   "30x30": ["mpa", "30x30"],
   "blue-finance": ["blue-finance", "esg"],
   plastics: ["plastics", "pollution"],
+  "imo-shipping": ["shipping", "imo", "mepc", "cii", "ghg", "fueleu"],
+  "offshore-wind": ["offshore-wind", "wind", "msp", "boem", "seabed-leasing"],
+  "cites-marine": ["cites", "sharks", "shark", "rays", "guitarfish"],
+  "wto-fisheries": ["wto-fisheries", "fisheries-subsidies", "subsidies"],
 };
 
 const DECISION_PATTERN =

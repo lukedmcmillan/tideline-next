@@ -1,0 +1,96 @@
+"use client";
+import { useState, useEffect } from "react";
+import VelocityScore from "@/components/VelocityScore";
+
+const F = "'DM Sans',system-ui,sans-serif";
+const NAVY = "#1a2f4a";
+const TEAL = "#1D9E75";
+const WHITE = "#ffffff";
+const BD = "#DADCE0";
+const MU = "#9AA0A6";
+const T1 = "#202124";
+const T2 = "#5F6368";
+
+interface TrackerEvent { id: string; event_date: string; title: string; summary: string | null; source_url: string | null; event_type: string }
+interface FeedStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null }
+
+function fdt(iso: string) { return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); }
+
+const TITLE = "CITES Marine Species Trade";
+const SLUG = "cites-marine";
+const DESCRIPTION = "Tracks CITES listings, trade permit enforcement, and implementation of Appendix II protections for commercially traded marine species including sharks, rays, and guitarfish.";
+
+const PLACEHOLDER_EVENTS: TrackerEvent[] = [
+  { id:"e1", event_date:"2025-11-15", title:"CITES CoP20 adopts new shark listing proposals", summary:"Requiem shark and hammerhead proposals adopted. Implementation begins 90 days after CoP close.", source_url:null, event_type:"milestone" },
+  { id:"e2", event_date:"2025-08-01", title:"Blue shark Appendix II implementation deadline passes", summary:"Parties required to issue CITES permits for blue shark fin trade. Compliance audits scheduled for Q4.", source_url:null, event_type:"update" },
+  { id:"e3", event_date:"2025-06-01", title:"CITES trade database compliance review published", summary:"Secretariat identifies 14 parties with incomplete trade reporting for listed marine species.", source_url:null, event_type:"update" },
+];
+
+export default function CITESMarineTracker() {
+  const [events, setEvents] = useState<TrackerEvent[]>(PLACEHOLDER_EVENTS);
+  const [stories, setStories] = useState<FeedStory[]>([]);
+
+  useEffect(() => {
+    document.title = "CITES Marine Species | Tideline";
+    fetch(`/api/tracker-events?slug=${SLUG}&limit=8`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.events?.length) setEvents(d.events); })
+      .catch(() => {});
+    fetch(`/api/stories?limit=5&tracker=${SLUG}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.stories?.length) setStories(d.stories); })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
+      {/* Hero */}
+      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
+          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>{TITLE}</h1>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 640, lineHeight: 1.7 }}>{DESCRIPTION}</p>
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
+        <VelocityScore slug="cites-marine" />
+        {/* Events */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Recent Events</div>
+          {events.map((e) => (
+            <div key={e.id} style={{ padding: "14px 0", borderBottom: `0.5px solid ${BD}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontFamily: F, fontSize: 11, color: MU }}>{fdt(e.event_date)}</span>
+                <span style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".06em", padding: "1px 7px", borderRadius: 4, background: e.event_type==="milestone" ? "rgba(29,158,117,0.08)" : "rgba(156,163,175,0.1)", color: e.event_type==="milestone" ? TEAL : MU, border: e.event_type==="milestone" ? "0.5px solid rgba(29,158,117,0.2)" : "0.5px solid rgba(156,163,175,0.2)" }}>{e.event_type}</span>
+              </div>
+              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 4 }}>{e.title}</div>
+              {e.summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6 }}>{e.summary}</div>}
+              {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source ↗</a>}
+            </div>
+          ))}
+        </div>
+        {/* Stories */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Related Stories</div>
+          {stories.length === 0 ? (
+            <div style={{ fontFamily: F, fontSize: 12, color: MU, padding: "24px 0" }}>No stories matched to this tracker yet</div>
+          ) : (
+            <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
+              {stories.map((s) => (
+                <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block", padding: "14px 16px", borderBottom: `0.5px solid ${BD}` }}>
+                  <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 3 }}>{s.title}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: F, fontSize: 10, color: MU }}>{s.source_name}</span>
+                  </div>
+                  {s.short_summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6, marginTop: 4 }}>{s.short_summary}</div>}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

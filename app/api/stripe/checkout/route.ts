@@ -3,9 +3,9 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { getEmailFromSession } from "@/app/lib/auth";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-02-25.clover" });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   let customerId = user?.stripe_customer_id;
 
   if (!customerId) {
-    const customer = await stripe.customers.create({ email });
+    const customer = await getStripe().customers.create({ email });
     customerId = customer.id;
     await supabase.from("users").update({ stripe_customer_id: customerId }).eq("email", email);
   }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   // Only offer trial if user hasn't had one yet
   const hadTrial = user?.trial_ends_at != null;
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
     line_items: [{ price: priceId, quantity: tier === "team" ? 10 : 1 }],

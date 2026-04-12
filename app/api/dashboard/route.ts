@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const TRACKER_SLUGS = ["bbnj", "iuu", "isa", "30x30", "blue-finance", "plastics"];
+const TRACKER_SLUGS = ["bbnj", "iuu", "isa", "30x30", "blue-finance", "plastics", "imo-shipping", "offshore-wind", "cites-marine", "wto-fisheries"];
 
 export async function GET() {
   // Signal of the day

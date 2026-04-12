@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-02-25.clover" });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,7 +12,7 @@ const supabase = createClient(
 );
 
 async function getCustomerEmail(customerId: string): Promise<string | null> {
-  const customer = await stripe.customers.retrieve(customerId);
+  const customer = await getStripe().customers.retrieve(customerId);
   if (customer.deleted) return null;
   return customer.email ?? null;
 }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 
         // Also sync the subscriptions table if there's a subscription
         if (subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
           await upsertSubscription(email, subscription);
         }
       }
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
         const subId = typeof subDetail.subscription === "string"
           ? subDetail.subscription
           : subDetail.subscription.id;
-        const subscription = await stripe.subscriptions.retrieve(subId);
+        const subscription = await getStripe().subscriptions.retrieve(subId);
         const email = await getCustomerEmail(subscription.customer as string);
         if (email) {
           // Mark past_due in subscriptions table but do NOT cancel user access yet.

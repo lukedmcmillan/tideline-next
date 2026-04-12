@@ -6,9 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-02-25.clover" });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find or create Stripe customer
-    const existingCustomers = await stripe.customers.list({ email, limit: 1 });
+    const existingCustomers = await getStripe().customers.list({ email, limit: 1 });
     let customer;
     let isExisting = false;
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       customer = existingCustomers.data[0];
       isExisting = true;
     } else {
-      customer = await stripe.customers.create({
+      customer = await getStripe().customers.create({
         email,
         payment_method: paymentMethodId,
         invoice_settings: { default_payment_method: paymentMethodId },
@@ -41,13 +41,13 @@ export async function POST(req: NextRequest) {
 
     // Only attach payment method for existing customers (new customers already have it attached)
     if (isExisting) {
-      await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-      await stripe.customers.update(customer.id, {
+      await getStripe().paymentMethods.attach(paymentMethodId, { customer: customer.id });
+      await getStripe().customers.update(customer.id, {
         invoice_settings: { default_payment_method: paymentMethodId },
       });
     }
 
-    const subscription = await stripe.subscriptions.create({
+    const subscription = await getStripe().subscriptions.create({
       customer: customer.id,
       items: [{ price: process.env.STRIPE_PRICE_ID! }],
       trial_period_days: 14,

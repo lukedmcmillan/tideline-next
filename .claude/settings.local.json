@@ -67,7 +67,10 @@
       "Bash(do mv:*)",
       "Bash(done)",
       "Bash(ls -1 \"\\(shell\\)/\")",
-      "Bash(ls -1 \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/\")"
+      "Bash(ls -1 \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/\")",
+      "Bash(ls \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/trackers/\")",
+      "Bash(ls \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/\")",
+      "Bash(wc:*)"
     ]
   }
 }
