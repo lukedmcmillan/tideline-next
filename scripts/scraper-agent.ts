@@ -104,6 +104,25 @@ const SOURCES: Source[] = [
       "https://iwc.int/api/downloads/documents/87/download",
     ],
   },
+  {
+    name: "United Nations",
+    domain: "un.org",
+    defaultOrg: "United Nations",
+    defaultType: "government_document",
+    is_primary_source: true,
+    urls: [
+      // BBNJ / High Seas Treaty
+      "https://documents.un.org/doc/undoc/gen/n23/076/27/pdf/n2307627.pdf",
+      "https://www.un.org/bbnj/sites/www.un.org.bbnj/files/bbnj_agreement_-_informal_consolidated_draft_text.pdf",
+      // UNCLOS General Assembly resolutions
+      "https://documents.un.org/doc/undoc/gen/n22/464/71/pdf/n2246471.pdf",
+      "https://documents.un.org/doc/undoc/gen/n23/405/11/pdf/n2340511.pdf",
+      "https://documents.un.org/doc/undoc/gen/n24/347/89/pdf/n2434789.pdf",
+      // Secretary-General ocean reports
+      "https://documents.un.org/doc/undoc/gen/n23/195/22/pdf/n2319522.pdf",
+      "https://documents.un.org/doc/undoc/gen/n24/195/16/pdf/n2419516.pdf",
+    ],
+  },
 ];
 
 const USER_AGENT = "Tideline Library Bot/1.0";

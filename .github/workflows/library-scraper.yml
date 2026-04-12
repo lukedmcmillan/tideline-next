@@ -20,8 +20,6 @@ jobs:
         run: npx playwright install chromium
       - name: Run static scraper
         run: npx tsx scripts/scraper-agent.ts
-      - name: Run UN library scraper
-        run: npx tsx scripts/scraper-un-library.ts
       - name: Run Playwright scraper
         run: npx tsx scripts/scraper-playwright.ts
       - name: Run processor
