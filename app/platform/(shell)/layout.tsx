@@ -362,6 +362,7 @@ function RightPanel() {
   const isProjects = path?.startsWith("/platform/projects") || false;
 
   if (path === "/platform") return null;
+  if (path?.startsWith("/platform/trackers")) return null;
   if (isCalendar) return <CalendarRightPanel />;
   if (isWorkspace) return null;
   if (isProjects) return null;
