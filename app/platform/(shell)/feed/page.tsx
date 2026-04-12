@@ -357,6 +357,7 @@ export default function FeedPage() {
               <div style={{ fontSize: 21, fontWeight: 600, lineHeight: 1.28, letterSpacing: "-.025em", color: T1, marginBottom: 10 }}>{decodeHtml(lead.title)}</div>
               {lead.short_summary && <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: T3, marginBottom: 14 }}>{lead.short_summary}</div>}
               <Src name={lead.source_name} t1={isPro(lead)} link={lead.link} />
+              <div style={{ fontSize: 11, color: T4, marginTop: 4 }}>{fmtDateTime(lead.published_at)}</div>
             </div>
             <div>
               {LEAD.slice(1, 3).map((s, i) => (
@@ -368,6 +369,7 @@ export default function FeedPage() {
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 6, marginTop: 3 }}>{decodeHtml(s.title)}</div>
                   <Src name={s.source_name} t1={isPro(s)} link={s.link} />
+                  <div style={{ fontSize: 11, color: T4, marginTop: 4 }}>{fmtDateTime(s.published_at)}</div>
                 </div>
               ))}
             </div>
@@ -388,6 +390,7 @@ export default function FeedPage() {
                 <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-.01em", color: T1, marginBottom: 8, marginTop: 4 }}>{decodeHtml(s.title)}</div>
                 {s.short_summary && <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.65, color: T3, marginBottom: 9 }}>{s.short_summary}</div>}
                 <Src name={s.source_name} t1={isPro(s)} link={s.link} />
+                <div style={{ fontSize: 11, color: T4, marginTop: 4 }}>{fmtDateTime(s.published_at)}</div>
               </div>
             ))}
           </div>
@@ -407,6 +410,7 @@ export default function FeedPage() {
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: T4, flexShrink: 0, minWidth: 84 }}>{topicLabel(s.topic)}</span>
                 <span style={{ fontSize: 13, color: T1, flex: 1, lineHeight: 1.35 }}>{decodeHtml(s.title)}</span>
                 <Src name={s.source_name} t1={isPro(s)} link={s.link} />
+                <span style={{ fontSize: 11, color: T4, flexShrink: 0 }}>{fmtDateTime(s.published_at)}</span>
               </div>
             ))}
           </div>

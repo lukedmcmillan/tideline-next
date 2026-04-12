@@ -477,7 +477,7 @@ export default function StoryPage() {
           <span className="story-source-tag" style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: sc.bg, color: sc.color, borderRadius: 4 }}>{story.source_name}</span>
           <span className="story-source-type" style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase", color: T4, background: BG, borderRadius: 4, padding: "2px 8px" }}>{story.source_type}</span>
           {isPro && <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: TEAL, background: "rgba(29,158,117,.1)", borderRadius: 4, padding: "2px 7px" }}>Tier 1</span>}
-          <span style={{ fontSize: 12, color: T4 }}>{fmtDate(story.published_at)}</span>
+          <span style={{ fontSize: 12, color: T4 }}>{new Date(story.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}, {new Date(story.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
           <div className="story-byline-actions" style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             <SaveToLibrary storyId={id} />
             <SaveToProject storyId={id} />
