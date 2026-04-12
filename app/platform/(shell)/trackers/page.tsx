@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Chart } from "chart.js/auto";
 import { Line } from "react-chartjs-2";
 
@@ -28,16 +29,16 @@ function scoreColor(s: number) {
 
 /* ── Data ──────────────────────────────────────────────────── */
 const TRACKERS = [
-  { domain: "IMO · Decarbonisation", name: "Shipping Emissions", score: 7.4, sv: 8.1, sr: 8.8, ss: 4.0, mom: "up" as const, traj: "Accelerating", next: "MEPC 84 · 27 Apr", nextHot: true, urgent: "16 days", history: [4.2,5.1,5.4,5.8,6.1,6.4,6.8,7.1,7.3,7.4], grid: "1/3", gridR: "1/3" },
-  { domain: "WTO · Trade", name: "Fisheries Subsidies", score: 6.5, sv: 6.8, sr: 7.9, ss: 3.0, mom: "up" as const, traj: "Advancing", next: "Deadline · 15 Sep", history: [4.8,5.1,5.3,5.5,5.7,5.9,6.1,6.3,6.4,6.5], grid: "3/5", gridR: "1/3" },
-  { domain: "ISA · Deep-Sea Mining", name: "Mining Code", score: 6.1, sv: 8.3, sr: 6.4, ss: 2.0, mom: "flat" as const, traj: "Stalling", next: "Council II · Jul", history: [3.8,4.6,5.4,6.1,6.8,7.3,8.1,8.4,7.2,6.1], grid: "5/6", gridR: "1/2" },
-  { domain: "High Seas Treaty", name: "BBNJ", score: 6.1, sv: 6.4, sr: 8.1, ss: 3.0, mom: "flat" as const, traj: "Advancing", next: "COP1 · Jan 2027", history: [7.2,8.1,7.8,7.4,6.9,6.6,7.1,7.3,6.8,6.1], grid: "5/6", gridR: "2/3" },
-  { domain: "Plastics Treaty", name: "INC Negotiations", score: 3.2, sv: 2.8, sr: 4.1, ss: 1.0, mom: "dn" as const, traj: "Stalled", next: "INC-6 · date TBC", urgent: "Stalled", history: [5.1,4.8,4.2,3.9,3.6,3.4,3.3,3.4,3.3,3.2], grid: "1/3", gridR: "3/4" },
-  { domain: "Ocean MPAs", name: "30×30 Target", score: 6.1, sv: 6.8, sr: 7.4, ss: 2.0, mom: "up" as const, traj: "Advancing", next: "CBD COP17 · Oct", history: [5.8,6.9,6.6,6.3,6.1,5.9,6.4,6.6,6.2,6.1], grid: "3/4", gridR: "3/4" },
-  { domain: "IUU Fishing", name: "Enforcement", score: 5.4, sv: 5.8, sr: 7.1, ss: 2.0, mom: "flat" as const, traj: "Advancing", next: "EU review · Q3", history: [5.9,6.4,6.1,5.8,5.6,5.4,5.7,5.9,5.6,5.4], grid: "4/5", gridR: "3/4" },
-  { domain: "Ocean Finance", name: "Blue Finance / TNFD", score: 5.9, sv: 6.1, sr: 7.8, ss: 2.0, mom: "flat" as const, traj: "Advancing", next: "ISSB draft · Oct", history: [5.2,6.1,6.4,6.2,6.0,5.8,6.1,6.3,6.0,5.9], grid: "5/6", gridR: "3/4" },
-  { domain: "Marine Spatial Planning", name: "Offshore Wind", score: 5.9, sv: 6.2, sr: 7.6, ss: 3.0, mom: "flat" as const, traj: "Blocked (US)", next: "Appellate ruling · 2026", history: [5.9,7.2,7.8,7.4,6.9,6.6,6.8,6.4,6.1,5.9], grid: "1/2", gridR: "4/5" },
-  { domain: "Species Trade", name: "CITES Marine", score: 5.3, sv: 5.6, sr: 6.8, ss: 2.0, mom: "flat" as const, traj: "Implementing", next: "Std Committee · 2026", history: [8.4,8.1,7.6,7.1,6.6,6.2,5.9,5.7,5.5,5.3], grid: "2/3", gridR: "4/5" },
+  { slug: "imo-shipping", domain: "IMO · Decarbonisation", name: "Shipping Emissions", score: 7.4, sv: 8.1, sr: 8.8, ss: 4.0, mom: "up" as const, traj: "Accelerating", next: "MEPC 84 · 27 Apr", nextHot: true, urgent: "16 days", history: [4.2,5.1,5.4,5.8,6.1,6.4,6.8,7.1,7.3,7.4], grid: "1/3", gridR: "1/3" },
+  { slug: "wto-fisheries", domain: "WTO · Trade", name: "Fisheries Subsidies", score: 6.5, sv: 6.8, sr: 7.9, ss: 3.0, mom: "up" as const, traj: "Advancing", next: "Deadline · 15 Sep", history: [4.8,5.1,5.3,5.5,5.7,5.9,6.1,6.3,6.4,6.5], grid: "3/5", gridR: "1/3" },
+  { slug: "isa", domain: "ISA · Deep-Sea Mining", name: "Mining Code", score: 6.1, sv: 8.3, sr: 6.4, ss: 2.0, mom: "flat" as const, traj: "Stalling", next: "Council II · Jul", history: [3.8,4.6,5.4,6.1,6.8,7.3,8.1,8.4,7.2,6.1], grid: "5/6", gridR: "1/2" },
+  { slug: "bbnj", domain: "High Seas Treaty", name: "BBNJ", score: 6.1, sv: 6.4, sr: 8.1, ss: 3.0, mom: "flat" as const, traj: "Advancing", next: "COP1 · Jan 2027", history: [7.2,8.1,7.8,7.4,6.9,6.6,7.1,7.3,6.8,6.1], grid: "5/6", gridR: "2/3" },
+  { slug: "plastics", domain: "Plastics Treaty", name: "INC Negotiations", score: 3.2, sv: 2.8, sr: 4.1, ss: 1.0, mom: "dn" as const, traj: "Stalled", next: "INC-6 · date TBC", urgent: "Stalled", history: [5.1,4.8,4.2,3.9,3.6,3.4,3.3,3.4,3.3,3.2], grid: "1/3", gridR: "3/4" },
+  { slug: "30x30", domain: "Ocean MPAs", name: "30×30 Target", score: 6.1, sv: 6.8, sr: 7.4, ss: 2.0, mom: "up" as const, traj: "Advancing", next: "CBD COP17 · Oct", history: [5.8,6.9,6.6,6.3,6.1,5.9,6.4,6.6,6.2,6.1], grid: "3/4", gridR: "3/4" },
+  { slug: "iuu", domain: "IUU Fishing", name: "Enforcement", score: 5.4, sv: 5.8, sr: 7.1, ss: 2.0, mom: "flat" as const, traj: "Advancing", next: "EU review · Q3", history: [5.9,6.4,6.1,5.8,5.6,5.4,5.7,5.9,5.6,5.4], grid: "4/5", gridR: "3/4" },
+  { slug: "blue-finance", domain: "Ocean Finance", name: "Blue Finance / TNFD", score: 5.9, sv: 6.1, sr: 7.8, ss: 2.0, mom: "flat" as const, traj: "Advancing", next: "ISSB draft · Oct", history: [5.2,6.1,6.4,6.2,6.0,5.8,6.1,6.3,6.0,5.9], grid: "5/6", gridR: "3/4" },
+  { slug: "offshore-wind", domain: "Marine Spatial Planning", name: "Offshore Wind", score: 5.9, sv: 6.2, sr: 7.6, ss: 3.0, mom: "flat" as const, traj: "Blocked (US)", next: "Appellate ruling · 2026", history: [5.9,7.2,7.8,7.4,6.9,6.6,6.8,6.4,6.1,5.9], grid: "1/2", gridR: "4/5" },
+  { slug: "cites-marine", domain: "Species Trade", name: "CITES Marine", score: 5.3, sv: 5.6, sr: 6.8, ss: 2.0, mom: "flat" as const, traj: "Implementing", next: "Std Committee · 2026", history: [8.4,8.1,7.6,7.1,6.6,6.2,5.9,5.7,5.5,5.3], grid: "2/3", gridR: "4/5" },
 ];
 
 const TICKER_ITEMS = [
@@ -118,11 +119,14 @@ function TrackerCard({
   t,
   animated,
   featured,
+  onClick,
 }: {
   t: typeof TRACKERS[number];
   animated: boolean;
   featured: boolean;
+  onClick: () => void;
 }) {
+  const [hovered, setHovered] = useState(false);
   const c = scoreColor(t.score);
   const displayScore = animated ? t.score : 0;
   const momColor = t.mom === "up" ? TEAL : t.mom === "dn" ? RED : AMBER;
@@ -131,18 +135,25 @@ function TrackerCard({
 
   return (
     <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         gridColumn: t.grid,
         gridRow: t.gridR,
         background: WHITE,
-        border: `1px solid ${BORDER}`,
+        border: `1px solid ${hovered ? TEAL : BORDER}`,
         borderRadius: 6,
         overflow: "hidden",
         position: "relative",
         display: "flex",
         flexDirection: "column",
+        cursor: "pointer",
+        transition: "border-color 0.15s",
       }}
     >
+      {/* open indicator */}
+      <span style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: T4, opacity: hovered ? 1 : 0, pointerEvents: "none", transition: "opacity 0.15s", zIndex: 2 }}>Open {"\u2197"}</span>
       {/* top accent bar */}
       <div style={{ height: 3, background: c }} />
 
@@ -228,6 +239,7 @@ function TrackerCard({
 
 /* ── Page ──────────────────────────────────────────────────── */
 export default function TrackersPage() {
+  const router = useRouter();
   const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
@@ -356,7 +368,7 @@ export default function TrackersPage() {
             const spanRows = Number(rows[1]) - Number(rows[0]);
             const featured = spanCols >= 2 || spanRows >= 2;
             return (
-              <TrackerCard key={t.name} t={t} animated={animated} featured={featured} />
+              <TrackerCard key={t.slug} t={t} animated={animated} featured={featured} onClick={() => router.push(`/tracker/${t.slug}`)} />
             );
           })}
         </div>
