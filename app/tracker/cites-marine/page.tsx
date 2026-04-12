@@ -21,9 +21,9 @@ const SLUG = "cites-marine";
 const DESCRIPTION = "Tracks CITES listings, trade permit enforcement, and implementation of Appendix II protections for commercially traded marine species including sharks, rays, and guitarfish.";
 
 const PLACEHOLDER_EVENTS: TrackerEvent[] = [
-  { id:"e1", event_date:"2025-11-15", title:"CITES CoP20 adopts new shark listing proposals", summary:"Requiem shark and hammerhead proposals adopted. Implementation begins 90 days after CoP close.", source_url:null, event_type:"milestone" },
-  { id:"e2", event_date:"2025-08-01", title:"Blue shark Appendix II implementation deadline passes", summary:"Parties required to issue CITES permits for blue shark fin trade. Compliance audits scheduled for Q4.", source_url:null, event_type:"update" },
-  { id:"e3", event_date:"2025-06-01", title:"CITES trade database compliance review published", summary:"Secretariat identifies 14 parties with incomplete trade reporting for listed marine species.", source_url:null, event_type:"update" },
+  { id:"e1", event_date:"2025-11-14", title:"CITES CoP20 \u2014 shark and ray listing proposals tabled", summary:"Requiem shark and hammerhead proposals tabled for plenary vote. Implementation begins 90 days after adoption.", source_url:null, event_type:"milestone" },
+  { id:"e2", event_date:"2026-03-01", title:"Blue shark Appendix II listing \u2014 trade controls begin", summary:"Parties required to issue CITES permits for blue shark fin trade. Compliance audits scheduled.", source_url:null, event_type:"update" },
+  { id:"e3", event_date:"2026-06-01", title:"CITES trade database annual review \u2014 marine species report", summary:"Secretariat assesses party compliance with trade reporting obligations for listed marine species.", source_url:null, event_type:"update" },
 ];
 
 export default function CITESMarineTracker() {

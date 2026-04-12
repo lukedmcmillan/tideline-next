@@ -192,6 +192,16 @@ async function scrapeSource(source: ScrapedSource): Promise<ScrapeResult> {
               const title = titleMatch?.[1]?.trim();
               if (!title || title.length < 10) return;
 
+              // Skip pagination, index, and navigation pages
+              if (/- Page \d+|- Documents|- Members|- Agenda|Index of|Table of Contents/i.test(title)) return;
+
+              // Skip document codes masquerading as titles (e.g. NP-MOP-02, COP13-HLS)
+              const wordCount = title.split(/\s+/).length;
+              if (wordCount < 10 && /^[A-Z]{2,}[-/]\d|^[A-Z]+\d+[-/]/.test(title)) return;
+
+              // Skip non-English titles
+              if (/\b(les|des|une|pour|dans|avec|sur|est|del|los|las|por|una|con|que|como)\b/i.test(title)) return;
+
               const hash = contentHash(markdown);
 
               // Check hash for dedup
@@ -222,7 +232,18 @@ async function scrapeSource(source: ScrapedSource): Promise<ScrapeResult> {
                 return;
               }
 
-              // Also insert into stories for the summary pipeline
+              // Deduplicate by title+source within last 7 days
+              const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+              const { data: recentDupe } = await supabase
+                .from("stories")
+                .select("id")
+                .eq("source_name", source.name)
+                .eq("title", title)
+                .gte("published_at", sevenDaysAgo)
+                .limit(1);
+              if (recentDupe && recentDupe.length > 0) return;
+
+              // Insert into stories for the summary pipeline
               await supabase.from("stories").upsert(
                 {
                   title,

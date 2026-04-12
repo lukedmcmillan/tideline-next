@@ -21,9 +21,9 @@ const SLUG = "offshore-wind";
 const DESCRIPTION = "Tracks leasing rounds, planning consents, marine spatial plan adoptions, and regulatory decisions affecting offshore wind development globally.";
 
 const PLACEHOLDER_EVENTS: TrackerEvent[] = [
-  { id:"e1", event_date:"2025-06-15", title:"Crown Estate Round 5 lease awards announced for Celtic Sea", summary:"Six projects selected for seabed rights totalling 4.5GW capacity. Environmental assessments begin Q3.", source_url:null, event_type:"milestone" },
-  { id:"e2", event_date:"2025-04-10", title:"BOEM Atlantic wind lease auction concludes", summary:"Two lease areas offshore New Jersey awarded. Combined capacity target 2.8GW.", source_url:null, event_type:"update" },
-  { id:"e3", event_date:"2025-03-01", title:"EU Maritime Spatial Planning Directive implementation review published", summary:"Commission assessment finds 60% of coastal states have adopted plans. Remaining states given 12-month extension.", source_url:null, event_type:"update" },
+  { id:"e1", event_date:"2026-01-01", title:"US appellate court ruling on offshore wind lease suspension", summary:"Federal court to decide whether BOEM lease suspensions are lawful. Outcome affects 5 Atlantic projects.", source_url:null, event_type:"milestone" },
+  { id:"e2", event_date:"2025-11-01", title:"Crown Estate Round 5 \u2014 seabed lease awards confirmed", summary:"Celtic Sea leasing round completes. Six projects awarded totalling 4.5GW capacity.", source_url:null, event_type:"milestone" },
+  { id:"e3", event_date:"2025-06-01", title:"EU MSP Directive \u2014 member state plan submission deadline", summary:"Coastal states required to submit maritime spatial plans. Commission to review compliance.", source_url:null, event_type:"update" },
 ];
 
 export default function OffshoreWindTracker() {

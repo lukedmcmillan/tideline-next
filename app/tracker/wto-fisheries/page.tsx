@@ -21,9 +21,9 @@ const SLUG = "wto-fisheries";
 const DESCRIPTION = "Tracks implementation of the WTO Agreement on Fisheries Subsidies, Fish Two negotiations, compliance deadlines, and subsidy notification requirements.";
 
 const PLACEHOLDER_EVENTS: TrackerEvent[] = [
-  { id:"e1", event_date:"2025-09-15", title:"WTO Fisheries Subsidies Agreement enters into force", summary:"Agreement prohibits subsidies for IUU fishing and overfished stocks. 109 members have ratified.", source_url:null, event_type:"milestone" },
-  { id:"e2", event_date:"2025-10-20", title:"First Committee on Fisheries Subsidies convenes in Geneva", summary:"Committee reviews notification obligations and establishes compliance procedures.", source_url:null, event_type:"update" },
-  { id:"e3", event_date:"2025-12-01", title:"Fish Two negotiating session opens in Geneva", summary:"Second pillar negotiations resume on subsidies contributing to overcapacity and overfishing.", source_url:null, event_type:"update" },
+  { id:"e1", event_date:"2026-09-15", title:"WTO Agreement on Fisheries Subsidies \u2014 compliance deadline", summary:"Members must notify subsidy programmes. Non-compliant states face dispute settlement proceedings.", source_url:null, event_type:"milestone" },
+  { id:"e2", event_date:"2026-02-01", title:"Fish Two Geneva session \u2014 implementation review", summary:"Negotiators assess second pillar progress on overcapacity and overfishing subsidies.", source_url:null, event_type:"update" },
+  { id:"e3", event_date:"2025-11-01", title:"Agreement enters into force \u2014 ratification threshold met", summary:"Two-thirds acceptance threshold reached. Prohibitions on IUU and overfished stock subsidies now binding.", source_url:null, event_type:"milestone" },
 ];
 
 export default function WTOFisheriesTracker() {

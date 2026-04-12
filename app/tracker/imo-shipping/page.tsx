@@ -21,9 +21,9 @@ const SLUG = "imo-shipping";
 const DESCRIPTION = "Tracks regulatory momentum across IMO MEPC sessions, CII rating enforcement, EU ETS shipping compliance, FuelEU Maritime implementation, and the net-zero shipping transition.";
 
 const PLACEHOLDER_EVENTS: TrackerEvent[] = [
-  { id:"e1", event_date:"2025-04-15", title:"MEPC 83 approves net-zero framework for international shipping", summary:"Framework adopted with binding 2030 checkpoints. Fleet operators face mandatory CII reporting from 2026.", source_url:null, event_type:"milestone" },
-  { id:"e2", event_date:"2025-03-01", title:"EU ETS shipping compliance — first reporting period closes", summary:"Shipping companies must surrender allowances for 2024 emissions. Non-compliance penalties apply.", source_url:null, event_type:"update" },
-  { id:"e3", event_date:"2025-01-01", title:"FuelEU Maritime regulation enters into force", summary:"Mandatory greenhouse gas intensity limits for energy used on board ships in EU waters.", source_url:null, event_type:"milestone" },
+  { id:"e1", event_date:"2026-04-27", title:"MEPC 84 convenes in London \u2014 net-zero framework vote", summary:"Committee to decide on binding 2030 GHG intensity checkpoints. Fleet-wide CII enforcement on the agenda.", source_url:null, event_type:"milestone" },
+  { id:"e2", event_date:"2026-01-01", title:"FuelEU Maritime regulation enters into force", summary:"Mandatory greenhouse gas intensity limits for energy used on board ships in EU waters.", source_url:null, event_type:"milestone" },
+  { id:"e3", event_date:"2025-03-01", title:"EU ETS shipping compliance \u2014 first reporting period closes", summary:"Shipping companies must surrender allowances for 2024 emissions. Non-compliance penalties apply.", source_url:null, event_type:"update" },
 ];
 
 export default function IMOShippingTracker() {
