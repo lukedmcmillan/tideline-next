@@ -21,6 +21,19 @@ const TRACKER_TOPICS: Record<string, string[]> = {
   "wto-fisheries": ["wto-fisheries", "fisheries-subsidies", "subsidies"],
 };
 
+const INSTITUTIONAL_MULTIPLIER: Record<string, number> = {
+  "imo-shipping": 0.75,
+  "wto-fisheries": 0.75,
+  isa: 0.75,
+  bbnj: 0.46,
+  plastics: 0.46,
+  "30x30": 0.85,
+  iuu: 0.85,
+  "blue-finance": 0.80,
+  "offshore-wind": 0.85,
+  "cites-marine": 0.75,
+};
+
 const DECISION_PATTERN =
   /ratif|adopt|enforc|sanction|decision|resolution|agreement|signed|implement|deadline/i;
 
@@ -101,8 +114,10 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   const signalTotal = classifications.reduce((sum, c) => sum + (c === "positive" ? 2 : -1), 0);
   const scoreC = clamp(signalTotal, 0, 10);
 
-  // Final score
-  const score = Math.round((scoreA * 0.4 + scoreB * 0.35 + scoreC * 0.25) * 10) / 10;
+  // Final score (base + institutional multiplier)
+  const baseScore = Math.round((scoreA * 0.4 + scoreB * 0.35 + scoreC * 0.25) * 10) / 10;
+  const multiplier = INSTITUTIONAL_MULTIPLIER[trackerSlug] ?? 0.75;
+  const score = Math.round(baseScore * multiplier * 10) / 10;
 
   // Momentum
   let momentumDirection: "accelerating" | "stable" | "decelerating" = "stable";
@@ -131,9 +146,9 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   const { error } = await supabase.from("velocity_scores").insert({
     tracker_slug: trackerSlug,
     score,
-    score_volume: Math.round(scoreA * 10) / 10,
-    score_recency: Math.round(scoreB * 10) / 10,
-    score_signals: Math.round(scoreC * 10) / 10,
+    score_volume: Math.round(scoreA * multiplier * 10) / 10,
+    score_recency: Math.round(scoreB * multiplier * 10) / 10,
+    score_signals: Math.round(scoreC * multiplier * 10) / 10,
     story_count_30d: currentCount,
     momentum_direction: momentumDirection,
     interpretation,
@@ -142,5 +157,5 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
 
   if (error) console.error(`velocity_scores insert error for ${trackerSlug}:`, error.message);
 
-  return { trackerSlug, score, scoreA: Math.round(scoreA * 10) / 10, scoreB: Math.round(scoreB * 10) / 10, scoreC: Math.round(scoreC * 10) / 10, currentCount, momentumDirection, interpretation };
+  return { trackerSlug, score, scoreA: Math.round(scoreA * multiplier * 10) / 10, scoreB: Math.round(scoreB * multiplier * 10) / 10, scoreC: Math.round(scoreC * multiplier * 10) / 10, currentCount, momentumDirection, interpretation };
 }

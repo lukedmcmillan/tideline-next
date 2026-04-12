@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:events": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-tracker-events.ts"
+    "seed:events": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-tracker-events.ts",
+    "backfill:multipliers": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-multipliers.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.69",
