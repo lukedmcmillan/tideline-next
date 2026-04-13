@@ -12,7 +12,7 @@ const anthropic = new Anthropic({
 });
 
 const SUMMARY_SYSTEM_PROMPT =
-  "You are an ocean policy analyst writing for professionals in maritime law, ESG finance, and ocean governance. Write exactly two sentences. The first states precisely what happened — include the institution, document reference, or decision where known. The second states the specific professional consequence: who is affected, what decision this changes, or what deadline this creates. Never write 'this is important.' Show why. No AI language. No cause language. No exclamation marks. No passive voice.";
+  'You are an ocean policy analyst. Respond with valid JSON only. No preamble, no explanation, no markdown. Return exactly this structure: {"sentence1": "what happened", "sentence2": "why it matters"} Sentence 1: state precisely what happened — include the institution, document reference, or decision where known. Sentence 2: state the specific professional consequence — who is affected, what decision this changes, or what deadline this creates. No AI language. No cause language. No exclamation marks.';
 
 function decodeHtml(str: string): string {
   return str
@@ -67,23 +67,36 @@ function fmtDate(d: Date): string {
 async function generateSummary(
   title: string,
   description: string | null
-): Promise<string> {
-  const input = description
-    ? `Title: ${title}\n\nDescription: ${description}`
-    : `Title: ${title}`;
+): Promise<string | null> {
+  // Skip if no content to summarise
+  if (!description || description.trim().length === 0) {
+    console.log(`[generate-brief] Skipping "${title}" — no description to summarise`);
+    return null;
+  }
 
   try {
     const res = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
       system: SUMMARY_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: input }],
+      messages: [{ role: "user", content: `Respond with JSON only. Story: Title: ${title}\n\nDescription: ${description}` }],
     });
-    const text = res.content[0];
-    return text.type === "text" ? text.text.trim() : "";
+    const rawText = res.content[0].type === "text" ? res.content[0].text.trim() : "";
+
+    try {
+      const parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+      return `${parsed.sentence1} ${parsed.sentence2}`;
+    } catch {
+      console.log("Raw Haiku response:", rawText);
+      // Fall back to using the raw text if it looks like two sentences
+      if (rawText.length > 20 && rawText.includes(".")) {
+        return rawText;
+      }
+      return null;
+    }
   } catch (err) {
     console.error(`[generate-brief] Summary failed for "${title}":`, err);
-    return "";
+    return null;
   }
 }
 
@@ -225,12 +238,13 @@ export async function GET(request: Request) {
     const storyList = stories || [];
 
     // ── 2. Generate fresh 2-sentence summaries via Haiku ──
-    const briefStories = await Promise.all(
+    const allResults = await Promise.all(
       storyList.map(async (s) => {
         const briefSummary = await generateSummary(
           decodeHtml(s.title),
           s.description || s.short_summary
         );
+        if (!briefSummary) return null;
         return {
           id: s.id,
           title: s.title,
@@ -241,6 +255,7 @@ export async function GET(request: Request) {
         };
       })
     );
+    const briefStories = allResults.filter((s): s is NonNullable<typeof s> => s !== null);
 
     // ── 3. Fetch archive story (gov/reg, older than 24h, high significance) ──
     let archiveStory: { id: string; title: string; source_name: string; source_type: string; brief_summary: string } | null = null;
@@ -260,13 +275,15 @@ export async function GET(request: Request) {
           decodeHtml(a.title),
           a.description || a.short_summary
         );
-        archiveStory = {
-          id: a.id,
-          title: a.title,
-          source_name: a.source_name,
-          source_type: a.source_type,
-          brief_summary: archiveSummary,
-        };
+        if (archiveSummary) {
+          archiveStory = {
+            id: a.id,
+            title: a.title,
+            source_name: a.source_name,
+            source_type: a.source_type,
+            brief_summary: archiveSummary,
+          };
+        }
       }
     } catch (err) {
       console.error("[generate-brief] Archive story fetch failed:", err);
