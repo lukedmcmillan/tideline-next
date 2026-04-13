@@ -25,7 +25,7 @@ function getAnthropic() {
   return _anthropic;
 }
 
-const BATCH_LIMIT = 200;
+const BATCH_LIMIT = 500;
 const DELAY_MS = 2000;
 
 const VALID_DOCUMENT_TYPES = [
