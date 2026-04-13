@@ -246,8 +246,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const rawStories = stories || [];
+    console.log("Raw stories from Supabase:", rawStories.length, rawStories.map(s => ({ title: s.title.slice(0, 50), topic: s.topic, flags: s.cross_tracker_flags, published_at: s.published_at })));
+
     // Filter to stories with at least one valid ocean tracker flag
-    const storyList = (stories || [])
+    const storyList = rawStories
       .filter((s) => {
         try {
           const flags: string[] = typeof s.cross_tracker_flags === "string"
@@ -259,6 +262,8 @@ export async function GET(request: Request) {
         }
       })
       .slice(0, 5);
+
+    console.log("Stories after post-filter:", storyList.length, storyList.map(s => ({ title: s.title.slice(0, 50), topic: s.topic, flags: s.cross_tracker_flags })));
 
     // ── 2. Generate fresh 2-sentence summaries via Haiku ──
     const allResults = await Promise.all(
