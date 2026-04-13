@@ -12,7 +12,7 @@ const anthropic = new Anthropic({
 });
 
 const SUMMARY_SYSTEM_PROMPT =
-  'You are a senior analyst at a financial intelligence terminal. Write exactly two sentences as JSON.\n\nRules:\n- Sentence 1: Name the institution. State the specific decision, document, or finding. Include numbers, dates, or references where available.\n- Sentence 2: State the consequence for one of these groups: maritime lawyers, ESG analysts, shipping compliance teams, or ocean investors. Name the group. State what changes for them specifically.\n- Never use: must, should, need to, crucial, important, landmark, historic, significant\n- Never prescribe action. Analyse consequence.\n- Model tone: FT Alphaville data note.\n\nReturn JSON only: {"sentence1": "...", "sentence2": "..."}';
+  'You are a senior analyst at a financial intelligence terminal. Write exactly two sentences as JSON.\n\nRules:\n- Sentence 1: Name the institution. State the specific decision, document, or finding. Include numbers, dates, or references where available.\n- Sentence 2: State the consequence for the most relevant professional group given this specific story. Choose the single most affected group from: maritime lawyers, ESG analysts, shipping compliance teams, ocean investors, NGO policy directors, fisheries regulators. Pick the ONE group most affected by this specific story. Do not default to ocean investors for every story. Name the group. State what specifically changes for them.\n- Never use: must, should, need to, crucial, important, landmark, historic, significant\n- Never prescribe action. Analyse consequence.\n- Model tone: FT Alphaville data note.\n\nReturn JSON only: {"sentence1": "...", "sentence2": "..."}';
 
 function decodeHtml(str: string): string {
   return str
@@ -227,8 +227,9 @@ export async function GET(request: Request) {
     const dateStr = fmtDate(now);
 
     const OCEAN_TOPICS = ["governance", "fisheries", "dsm", "shipping", "bluefinance", "conservation", "science"];
+    const SOURCE_PRIORITY: Record<string, number> = { gov: 0, reg: 1, ngo: 2, esg: 3, media: 4, science: 5 };
 
-    // ── 1. Fetch top 5 stories by significance (last 48h, ocean topics only, live, summarised) ──
+    // ── 1. Fetch top 20 stories, prioritise by source type then significance ──
     const { data: stories, error } = await supabase
       .from("stories")
       .select(
@@ -240,14 +241,21 @@ export async function GET(request: Request) {
       .in("topic", OCEAN_TOPICS)
       .order("significance_score", { ascending: false })
       .order("published_at", { ascending: false })
-      .limit(5);
+      .limit(20);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const storyList = stories || [];
-    console.log("Stories selected:", storyList.length, storyList.map(s => ({ title: s.title.slice(0, 50), topic: s.topic, published_at: s.published_at })));
+    const storyList = (stories || [])
+      .sort((a, b) => {
+        const pa = SOURCE_PRIORITY[a.source_type] ?? 9;
+        const pb = SOURCE_PRIORITY[b.source_type] ?? 9;
+        if (pa !== pb) return pa - pb;
+        return (b.significance_score || 0) - (a.significance_score || 0);
+      })
+      .slice(0, 5);
+    console.log("Stories selected:", storyList.length, storyList.map(s => ({ title: s.title.slice(0, 50), topic: s.topic, source_type: s.source_type, published_at: s.published_at })));
 
     // ── 2. Generate fresh 2-sentence summaries via Haiku ──
     const allResults = await Promise.all(
@@ -320,10 +328,7 @@ export async function GET(request: Request) {
       console.error("[generate-brief] Velocity score fetch failed:", err);
     }
 
-    // ── 5. Compile HTML ──
-    const htmlContent = compileHtml(briefStories, dateStr, trackerData, archiveStory);
-
-    // ── 6. Quality gate ──
+    // ── 5. Quality gate ──
     let qualityResult: { passed: boolean; failed_items: { index: number; reason: string }[]; overall_quality: string } | null = null;
 
     try {
@@ -346,11 +351,21 @@ export async function GET(request: Request) {
       qualityResult = JSON.parse(cleanedGate);
       console.log(`[Quality Gate] Result: ${qualityResult!.overall_quality}, failed: ${qualityResult!.failed_items?.length || 0}/${briefStories.length}`);
     } catch (err) {
-      console.error("[Quality Gate] Failed, proceeding with upsert:", err);
+      console.error("[Quality Gate] Failed, proceeding with all stories:", err);
     }
 
-    const overallQuality = qualityResult?.overall_quality || "publish";
-    const failedCount = qualityResult?.failed_items?.length || 0;
+    // Filter: keep only passing stories, brief passes if 3+ survive
+    const failedIndices = new Set((qualityResult?.failed_items || []).map(f => f.index));
+    const passingStories = briefStories.filter((_, i) => !failedIndices.has(i + 1));
+    const droppedStories = briefStories.filter((_, i) => failedIndices.has(i + 1));
+    const failedCount = droppedStories.length;
+
+    if (droppedStories.length > 0) {
+      console.log("[Quality Gate] Dropped stories:", droppedStories.map(s => s.title.slice(0, 50)));
+    }
+    console.log(`[Quality Gate] ${passingStories.length} passing, ${droppedStories.length} dropped`);
+
+    const overallQuality = passingStories.length >= 3 ? "publish" : passingStories.length > 0 ? "review" : "reject";
 
     // Log quality result
     await supabase.from("brief_quality_log").insert({
@@ -360,9 +375,9 @@ export async function GET(request: Request) {
       raw_feedback: qualityResult ? JSON.stringify(qualityResult) : null,
     });
 
-    // If rejected: do not upsert, send alert email, return
+    // If fewer than 3 passing stories: reject, send alert, return
     if (overallQuality === "reject") {
-      console.log("[Quality Gate] Brief REJECTED. Sending alert.");
+      console.log("[Quality Gate] Brief REJECTED — fewer than 3 passing stories. Sending alert.");
       try {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -376,7 +391,7 @@ export async function GET(request: Request) {
             subject: `Brief REJECTED \u2014 ${dateStr}`,
             html: `<div style="font-family:sans-serif;max-width:560px;margin:40px auto;padding:24px;">
               <h2 style="color:#D93025;margin:0 0 12px;">Brief rejected by quality gate</h2>
-              <p style="color:#3C4043;font-size:14px;line-height:1.6;">${failedCount} of ${briefStories.length} summaries failed editorial review.</p>
+              <p style="color:#3C4043;font-size:14px;line-height:1.6;">${failedCount} of ${briefStories.length} summaries failed. Only ${passingStories.length} passed (minimum 3 required).</p>
               <h3 style="color:#202124;font-size:14px;margin:20px 0 8px;">Failed items:</h3>
               <ul style="font-size:13px;color:#5F6368;line-height:1.7;">
                 ${(qualityResult?.failed_items || []).map((f) => `<li><strong>#${f.index}:</strong> ${f.reason}</li>`).join("")}
@@ -393,10 +408,14 @@ export async function GET(request: Request) {
         status: "rejected",
         overall_quality: "reject",
         failed_count: failedCount,
+        passing_count: passingStories.length,
         story_count: briefStories.length,
         date: todayDate,
       });
     }
+
+    // ── 6. Compile HTML with passing stories only ──
+    const htmlContent = compileHtml(passingStories, dateStr, trackerData, archiveStory);
 
     // ── 7. Upsert into brief_buffer ──
     const { error: upsertError } = await supabase
@@ -404,9 +423,9 @@ export async function GET(request: Request) {
       .upsert(
         {
           date: todayDate,
-          subject_line: `Tideline \u00B7 ${dateStr} \u00B7 ${briefStories.length} stories`,
+          subject_line: `Tideline \u00B7 ${dateStr} \u00B7 ${passingStories.length} stories`,
           html_content: htmlContent,
-          story_count: briefStories.length,
+          story_count: passingStories.length,
           needs_review: overallQuality === "review",
           tracker_data: trackerData,
           archive_story: archiveStory,
@@ -425,6 +444,7 @@ export async function GET(request: Request) {
       status: "buffered",
       overall_quality: overallQuality,
       failed_count: failedCount,
+      passing_count: passingStories.length,
       story_count: briefStories.length,
       has_tracker: !!trackerData,
       has_archive: !!archiveStory,
