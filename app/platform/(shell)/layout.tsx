@@ -231,6 +231,153 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
   );
 }
 
+// ── Notification Bell ────────────────────────────────────────────────────
+const IcBell = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>;
+
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  document_id: string | null;
+  created_at: string;
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function NotificationBell() {
+  const [notes, setNotes] = useState<Notification[]>([]);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then(r => r.ok ? r.json() : { notifications: [] })
+      .then(d => setNotes(d.notifications || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const markRead = async (id: string) => {
+    setNotes(prev => prev.filter(n => n.id !== id));
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notification_id: id }),
+    });
+    setOpen(false);
+  };
+
+  const markAllRead = async () => {
+    const ids = notes.map(n => n.id);
+    setNotes([]);
+    setOpen(false);
+    for (const id of ids) {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notification_id: id }),
+      });
+    }
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: 36, height: 36, borderRadius: "50%",
+          background: "none", border: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: T3, position: "relative",
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BG; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+      >
+        <IcBell />
+        {notes.length > 0 && (
+          <span style={{
+            position: "absolute", top: 6, right: 6,
+            width: 8, height: 8, borderRadius: "50%",
+            background: "#D93025", border: `2px solid ${WHITE}`,
+          }} />
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: 44, right: 0,
+          width: 340, background: WHITE,
+          border: `1px solid ${BORDER}`, borderRadius: 12,
+          boxShadow: "0 8px 24px rgba(0,0,0,.12)",
+          zIndex: 200, overflow: "hidden",
+        }}>
+          <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${BLT}` }}>
+            <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: NAVY }}>Notifications</span>
+          </div>
+
+          {notes.length === 0 ? (
+            <div style={{ padding: "32px 16px", textAlign: "center", fontFamily: F, fontSize: 13, color: T4 }}>
+              No new notifications
+            </div>
+          ) : (
+            <>
+              <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                {notes.slice(0, 5).map(n => (
+                  <div
+                    key={n.id}
+                    onClick={() => markRead(n.id)}
+                    style={{
+                      padding: "12px 16px", cursor: "pointer",
+                      borderBottom: `1px solid ${BLT}`,
+                      transition: "background .12s",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BG; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = WHITE; }}
+                  >
+                    <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: NAVY, marginBottom: 2 }}>{n.title}</div>
+                    <div style={{ fontFamily: F, fontSize: 12, fontWeight: 400, color: T3, lineHeight: 1.4, marginBottom: 4 }}>{n.message}</div>
+                    <div style={{ fontFamily: M, fontSize: 11, color: T4 }}>{timeAgo(n.created_at)}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: "10px 16px", borderTop: `1px solid ${BLT}`, textAlign: "right" }}>
+                <button
+                  onClick={markAllRead}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL,
+                    padding: 0,
+                  }}
+                >
+                  Mark all read
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Calendar widget (shared) ─────────────────────────────────────────────
 function CalendarWidget() {
   return (
@@ -809,6 +956,7 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 16px 0 24px", marginLeft: "auto" }}>
           <span className="top-bar-right-tier" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE }}>Individual</span>
           <a href="/api/portal" className="top-bar-manage-sub" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none", letterSpacing: "0.04em" }}>Manage subscription</a>
+          <NotificationBell />
           <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${NAVY},${TEAL})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>LM</div>
         </div>
       </div>

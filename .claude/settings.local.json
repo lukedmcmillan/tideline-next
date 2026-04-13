@@ -70,7 +70,16 @@
       "Bash(ls -1 \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/\")",
       "Bash(ls \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/trackers/\")",
       "Bash(ls \"C:/Users/luke.mcmillan/tideline-next/app/platform/\\(shell\\)/\")",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(for slug:*)",
+      "Bash(do cp:*)",
+      "WebFetch(domain:www.informea.org)",
+      "WebFetch(domain:informea.org)",
+      "WebSearch",
+      "WebFetch(domain:odata.informea.org)",
+      "Bash(npx dotenvx:*)",
+      "Bash(npx:*)",
+      "Bash(npx @dotenvx/dotenvx run -f .env.local -- node -e \"console.log\\(''''URL:'''', process.env.NEXT_PUBLIC_SUPABASE_URL ? ''''SET'''' : ''''UNSET''''\\); console.log\\(''''KEY:'''', process.env.SUPABASE_SERVICE_ROLE_KEY ? ''''SET'''' : ''''UNSET''''\\);\")"
     ]
   }
 }

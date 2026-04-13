@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("documents")
-    .select("id, title, source_organisation, document_type, published_date, topic_tags, region_tags, file_size_bytes, created_at")
+    .select("id, title, source_organisation, document_type, published_date, topic_tags, region_tags, file_size_bytes, created_at, submitted_by")
     .eq("status", "approved")
     .eq("is_public", true);
 

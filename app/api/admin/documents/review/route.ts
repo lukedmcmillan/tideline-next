@@ -67,5 +67,37 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Notify contributor on approval
+  if (action === "approve") {
+    const { data: doc } = await supabase
+      .from("documents")
+      .select("title, submitted_by")
+      .eq("id", document_id)
+      .single();
+
+    if (doc?.submitted_by) {
+      const { data: contributor } = await supabase
+        .from("users")
+        .select("documents_contributed")
+        .eq("id", doc.submitted_by)
+        .single();
+
+      await supabase
+        .from("users")
+        .update({
+          documents_contributed: (contributor?.documents_contributed || 0) + 1,
+        })
+        .eq("id", doc.submitted_by);
+
+      await supabase.from("notifications").insert({
+        user_id: doc.submitted_by,
+        type: "document_approved",
+        title: "Your document is live",
+        message: `Your document "${doc.title}" is now live in the Tideline Library.`,
+        document_id,
+      });
+    }
+  }
+
   return NextResponse.json({ success: true, status: update.status });
 }

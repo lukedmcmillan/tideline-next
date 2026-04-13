@@ -24,6 +24,15 @@ interface Document {
   region_tags: string[] | null;
   file_size_bytes: number | null;
   created_at: string;
+  submitted_by: string | null;
+}
+
+interface Activity {
+  id: string;
+  title: string;
+  document_type: string | null;
+  approved_at: string | null;
+  submitted_by: string | null;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -72,6 +81,14 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
   const [drawerDoc, setDrawerDoc] = useState<Document | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
+  const [activities, setActivities] = useState<Activity[]>([]);
+
+  useEffect(() => {
+    fetch("/api/library/activity")
+      .then(r => r.ok ? r.json() : { activities: [] })
+      .then(d => setActivities((d.activities || []).slice(0, 3)))
+      .catch(() => {});
+  }, []);
 
   const search = useCallback(async (q: string, type: string) => {
     setLoading(true);
@@ -160,6 +177,17 @@ export default function LibraryPage() {
             }}
           />
         </div>
+
+        {/* Activity strip */}
+        {activities.length > 0 && (
+          <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 4 }}>
+            {activities.map(a => (
+              <div key={a.id} style={{ fontFamily: M, fontSize: 12, color: TEAL, lineHeight: 1.5 }}>
+                {"\uD83D\uDCC4"} {(a.title || "").length > 40 ? (a.title || "").slice(0, 40) + "..." : a.title} — just added
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Filter chips */}
         <div style={{
@@ -256,6 +284,21 @@ export default function LibraryPage() {
                         {tag}
                       </span>
                     ))}
+                  </div>
+                )}
+
+                {/* Community contribution badge */}
+                {doc.submitted_by && (
+                  <div style={{ marginTop: 10 }}>
+                    <span style={{
+                      fontFamily: M, fontSize: 10, fontWeight: 500,
+                      color: TEAL, border: `1px solid ${TEAL}`,
+                      background: "transparent",
+                      padding: "2px 8px", borderRadius: 3,
+                      letterSpacing: ".03em",
+                    }}>
+                      Community contribution
+                    </span>
                   </div>
                 )}
               </div>
