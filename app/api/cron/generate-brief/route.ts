@@ -237,7 +237,6 @@ export async function GET(request: Request) {
       .eq("status", "live")
       .not("short_summary", "is", null)
       .gte("published_at", h48)
-      .neq("cross_tracker_flags", "[]")
       .in("topic", OCEAN_TOPICS)
       .order("significance_score", { ascending: false })
       .order("published_at", { ascending: false })
