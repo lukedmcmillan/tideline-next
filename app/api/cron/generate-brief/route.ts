@@ -91,7 +91,9 @@ async function generateSummary(
 
     try {
       const cleaned = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/, "").trim();
-      const parsed = JSON.parse(cleaned);
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON found in summary response");
+      const parsed = JSON.parse(jsonMatch[0]);
       return `${parsed.sentence1} ${parsed.sentence2}`;
     } catch {
       console.log("Raw Haiku response:", rawText);
@@ -248,6 +250,11 @@ export async function GET(request: Request) {
     }
 
     const storyList = (stories || [])
+      .filter((s) => {
+        if (/air pollution/i.test(s.title)) return false;
+        if (s.link && /gov\.uk\/guidance/i.test(s.link)) return false;
+        return true;
+      })
       .sort((a, b) => {
         const pa = SOURCE_PRIORITY[a.source_type] ?? 9;
         const pb = SOURCE_PRIORITY[b.source_type] ?? 9;
@@ -348,7 +355,9 @@ export async function GET(request: Request) {
 
       const text = message.content[0].type === "text" ? message.content[0].text : "";
       const cleanedGate = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/, "").trim();
-      qualityResult = JSON.parse(cleanedGate);
+      const gateMatch = cleanedGate.match(/\{[\s\S]*\}/);
+      if (!gateMatch) throw new Error("No JSON found in quality gate response");
+      qualityResult = JSON.parse(gateMatch[0]);
       console.log(`[Quality Gate] Result: ${qualityResult!.overall_quality}, failed: ${qualityResult!.failed_items?.length || 0}/${briefStories.length}`);
     } catch (err) {
       console.error("[Quality Gate] Failed, proceeding with all stories:", err);
