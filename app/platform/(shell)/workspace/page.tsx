@@ -671,7 +671,7 @@ function ExportModal({ open, onClose, docId, isLocal }: { open: boolean; onClose
 }
 
 // -- Ask Tideline panel (collapsible) ---------------------------------------------
-function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) => void }) {
+function AskTidelinePanel({ onPasteToNotes, onSourcesFound }: { onPasteToNotes: (text: string) => void; onSourcesFound?: (sources: AskSource[]) => void }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState("");
@@ -690,7 +690,7 @@ function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) =
       const d = await r.json();
       if (!r.ok) { setError(d.error || "Request failed"); return; }
       if (d.answer) setAnswer(d.answer);
-      if (d.sources) setSources(d.sources);
+      if (d.sources) { setSources(d.sources); onSourcesFound?.(d.sources); }
     } catch { setError("Network error"); }
     setLoading(false);
   };
@@ -725,7 +725,7 @@ function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) =
                     <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 8, fontFamily: F, fontSize: 11.5, color: T3, lineHeight: 1.5, marginBottom: 3 }}>
                       <span style={{ color: TEAL, flexShrink: 0, fontWeight: 600 }}>{i + 1}.</span>
                       <span>
-                        {s.file_url ? <a href={s.file_url} target="_blank" rel="noopener noreferrer" style={{ color: TEAL, textDecoration: "none" }}>{s.title}</a> : s.title}
+                        {s.document_id ? <a href="#" onClick={async (e) => { e.preventDefault(); const res = await fetch(`/api/library/signed-url?id=${s.document_id}`); const d = await res.json(); if (d.url) window.open(d.url, "_blank"); }} style={{ color: TEAL, textDecoration: "none", cursor: "pointer" }}>{s.title}</a> : s.title}
                         {s.source_organisation && <span style={{ color: T4 }}> {"\u2014"} {s.source_organisation}</span>}
                         {s.published_date && <span style={{ color: T4 }}> ({s.published_date})</span>}
                       </span>
@@ -734,7 +734,7 @@ function AskTidelinePanel({ onPasteToNotes }: { onPasteToNotes: (text: string) =
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}`)} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
+                <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}` + (sources && sources.length > 0 ? `\n\n**Sources**\n` + sources.map((s, i) => `${i + 1}. ${s.title} — ${s.source_organisation || ""} (${s.published_date || "n/d"})`).join("\n") : ""))} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
                   Paste into notes
                 </button>
@@ -1194,7 +1194,7 @@ function FloatingDock({ onUpload, onAsk, onDraft }: { onUpload: () => void; onAs
   );
 }
 
-function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; insertIntoNotes: (text: string) => void }) {
+function FloatingAskPanel({ onClose, insertIntoNotes, onSourcesFound }: { onClose: () => void; insertIntoNotes: (text: string) => void; onSourcesFound?: (sources: AskSource[]) => void }) {
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState("");
   const [sources, setSources] = useState<AskSource[]>([]);
@@ -1219,7 +1219,7 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
       const d = await r.json();
       if (!r.ok) { setError(d.error || "Request failed"); return; }
       if (d.answer) setAnswer(d.answer);
-      if (d.sources) setSources(d.sources);
+      if (d.sources) { setSources(d.sources); onSourcesFound?.(d.sources); }
     } catch { setError("Network error"); }
     setLoading(false);
   };
@@ -1251,7 +1251,7 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
                 <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 6, fontFamily: F, fontSize: 11, color: T3, lineHeight: 1.5, marginBottom: 2 }}>
                   <span style={{ color: TEAL, flexShrink: 0, fontWeight: 600 }}>{i + 1}.</span>
                   <span>
-                    {s.file_url ? <a href={s.file_url} target="_blank" rel="noopener noreferrer" style={{ color: TEAL, textDecoration: "none" }}>{s.title}</a> : s.title}
+                    {s.document_id ? <a href="#" onClick={async (e) => { e.preventDefault(); const res = await fetch(`/api/library/signed-url?id=${s.document_id}`); const d = await res.json(); if (d.url) window.open(d.url, "_blank"); }} style={{ color: TEAL, textDecoration: "none", cursor: "pointer" }}>{s.title}</a> : s.title}
                     {s.source_organisation && <span style={{ color: T4 }}> {"\u2014"} {s.source_organisation}</span>}
                     {s.published_date && <span style={{ color: T4 }}> ({s.published_date})</span>}
                   </span>
@@ -1259,7 +1259,7 @@ function FloatingAskPanel({ onClose, insertIntoNotes }: { onClose: () => void; i
               ))}
             </div>
           )}
-          <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}`); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
+          <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}` + (sources && sources.length > 0 ? `\n\n**Sources**\n` + sources.map((s, i) => `${i + 1}. ${s.title} — ${s.source_organisation || ""} (${s.published_date || "n/d"})`).join("\n") : "")); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
             Paste into notes
           </button>
@@ -1379,6 +1379,7 @@ function WorkspaceContent() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
+  const [askLibrarySources, setAskLibrarySources] = useState<AskSource[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [draftExists, setDraftExists] = useState(false);
   const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null);
@@ -1893,8 +1894,8 @@ function WorkspaceContent() {
       <RightSidebar stories={projectStories} docs={projectDocs} />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
-      {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} />}
-      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={sourceCount} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} sources={projectStories.map(s => ({ name: s.title, summary: s.short_summary || undefined }))} onToast={setToast} />}
+      {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} onSourcesFound={setAskLibrarySources} />}
+      {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={sourceCount + askLibrarySources.length} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} sources={[...projectStories.map(s => ({ name: s.title, summary: s.short_summary || undefined })), ...askLibrarySources.map(s => ({ name: s.title, summary: `${s.source_organisation || ""} (${s.published_date || "n/d"})` }))]} onToast={setToast} />}
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
       <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} docId={docId} isLocal={isLocal} />
