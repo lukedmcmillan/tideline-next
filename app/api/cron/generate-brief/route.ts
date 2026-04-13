@@ -225,25 +225,41 @@ export async function GET(request: Request) {
     const todayDate = now.toISOString().split("T")[0];
     const dateStr = fmtDate(now);
 
-    // ── 1. Fetch top 5 stories by significance (last 48h, tracker-tagged, live, summarised) ──
+    const OCEAN_TOPICS = ["governance", "fisheries", "dsm", "shipping", "bluefinance", "conservation", "science"];
+    const VALID_TRACKER_SLUGS = ["isa", "bbnj", "30x30", "blue_finance", "imo_shipping", "iuu", "wto_fisheries", "cites_marine", "offshore_wind", "msp"];
+
+    // ── 1. Fetch top stories by significance (last 48h, ocean topics, tracker-tagged, live, summarised) ──
     const { data: stories, error } = await supabase
       .from("stories")
       .select(
-        "id, title, link, source_name, topic, source_type, published_at, short_summary, description, significance_score"
+        "id, title, link, source_name, topic, source_type, published_at, short_summary, description, significance_score, cross_tracker_flags"
       )
       .eq("status", "live")
       .not("short_summary", "is", null)
       .gte("published_at", h48)
       .neq("cross_tracker_flags", "[]")
+      .in("topic", OCEAN_TOPICS)
       .order("significance_score", { ascending: false })
       .order("published_at", { ascending: false })
-      .limit(5);
+      .limit(20);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const storyList = stories || [];
+    // Filter to stories with at least one valid ocean tracker flag
+    const storyList = (stories || [])
+      .filter((s) => {
+        try {
+          const flags: string[] = typeof s.cross_tracker_flags === "string"
+            ? JSON.parse(s.cross_tracker_flags)
+            : s.cross_tracker_flags || [];
+          return flags.some((f: string) => VALID_TRACKER_SLUGS.includes(f));
+        } catch {
+          return false;
+        }
+      })
+      .slice(0, 5);
 
     // ── 2. Generate fresh 2-sentence summaries via Haiku ──
     const allResults = await Promise.all(
