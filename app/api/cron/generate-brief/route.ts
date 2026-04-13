@@ -407,7 +407,7 @@ export async function GET(request: Request) {
     }
     console.log(`[Quality Gate] ${passingStories.length} passing, ${droppedStories.length} dropped`);
 
-    const overallQuality = passingStories.length >= 3 ? "publish" : passingStories.length > 0 ? "review" : "reject";
+    const overallQuality = passingStories.length > 0 ? "publish" : archiveStory ? "publish" : "reject";
 
     // Log quality result
     await supabase.from("brief_quality_log").insert({
@@ -417,9 +417,9 @@ export async function GET(request: Request) {
       raw_feedback: qualityResult ? JSON.stringify(qualityResult) : null,
     });
 
-    // If fewer than 3 passing stories: reject, send alert, return
+    // If zero passing stories AND no archive story: reject
     if (overallQuality === "reject") {
-      console.log("[Quality Gate] Brief REJECTED — fewer than 3 passing stories. Sending alert.");
+      console.log("[Quality Gate] Brief REJECTED — zero passing stories and no archive. Sending alert.");
       try {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
