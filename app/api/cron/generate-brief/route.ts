@@ -75,6 +75,11 @@ async function generateSummary(
   }
 
   try {
+    console.log("Story content being summarised:", {
+      title,
+      description: description?.slice(0, 200),
+    });
+
     const res = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
@@ -82,6 +87,7 @@ async function generateSummary(
       messages: [{ role: "user", content: `Respond with JSON only. Story: Title: ${title}\n\nDescription: ${description}` }],
     });
     const rawText = res.content[0].type === "text" ? res.content[0].text.trim() : "";
+    console.log("Raw Haiku response:", rawText);
 
     try {
       const parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
