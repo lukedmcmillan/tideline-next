@@ -210,6 +210,21 @@ const SOURCES: Source[] = [
       "https://helcom.fi/helcom-at-work/publications/",
     ],
   },
+  {
+    name: "ORRAA",
+    domain: "oceanriskalliance.org",
+    defaultOrg: "Ocean Risk and Resilience Action Alliance",
+    defaultType: "report",
+    is_primary_source: false,
+    urls: [
+      "https://www.oceanriskalliance.org/resources/",
+      "https://oceanriskalliance.org/wp-content/uploads/ORRAA-Action-Report-2025-.pdf",
+      "https://oceanriskalliance.org/wp-content/uploads/Financing-Waves-Brief_textdesign_final.pdf",
+      "https://oceanriskalliance.org/wp-content/uploads/ORRAA-DSM-POLICY-BRIEF_Aug2025_final.pdf",
+      "https://oceanriskalliance.org/wp-content/uploads/Transformative-Ocean-Investment-Opportunities.pdf",
+      "https://oceanriskalliance.org/wp-content/uploads/2025_A-Critical-Year-for-the-Ocean-1.pdf",
+    ],
+  },
 ];
 
 const USER_AGENT = "Tideline Library Bot/1.0";
