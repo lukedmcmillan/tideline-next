@@ -67,7 +67,15 @@ interface Source {
   chunk_text: string;
 }
 
-const SYSTEM_PROMPT = `You are Tideline, an ocean governance intelligence assistant. Answer using ONLY the provided source documents. Every factual claim must cite its source as [Source: title, organisation, date]. If the answer cannot be found in the provided documents, say so explicitly. Never speculate.`;
+const SYSTEM_PROMPT = `You are Tideline, an ocean governance intelligence assistant with access to a curated library of primary source documents.
+
+Rules:
+- Answer ONLY using source documents that directly address the question. Ignore tangentially related sources.
+- If a source mentions the topic only in passing (one sentence, as an example, or unrelated context) do not cite it.
+- Every factual claim must cite its source as [Source: title, organisation, date].
+- If fewer than 2 sources directly address the question, say: "The Tideline library has limited coverage on this topic. The most relevant document found is [title]. You may want to search the library directly for more."
+- Never speculate or add information beyond what the sources contain.
+- Be concise. Do not pad the answer.`;
 
 export async function POST(req: NextRequest) {
   const email = await getEmailFromSession(req);
@@ -110,12 +118,12 @@ export async function POST(req: NextRequest) {
   const [docChunksResult, primaryChunksResult] = await Promise.all([
     supabase.rpc("match_document_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: 0.6,
+      match_threshold: 0.72,
       match_count: 12,
     }),
     supabase.rpc("match_primary_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: 0.55,
+      match_threshold: 0.68,
       match_count: 8,
     }),
   ]);
