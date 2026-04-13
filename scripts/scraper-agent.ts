@@ -71,9 +71,16 @@ const SOURCES: Source[] = [
     defaultType: "resolution",
     is_primary_source: true,
     urls: [
+      // MEPC resolution index (links to sub-pages with further PDFs)
       "https://www.imo.org/en/KnowledgeCentre/IndexofIMOResolutions/Pages/MEPC.aspx",
+      // GHG Strategy page (has links to CDN-hosted PDFs)
+      "https://www.imo.org/en/OurWork/Environment/Pages/2023-IMO-Strategy-on-Reduction-of-GHG-Emissions-from-Ships.aspx",
+      // Direct CDN PDFs — verified accessible
+      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/annex/MEPC%2080/Annex%2015.pdf",
+      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/annex/MEPC%2080/Annex%2014.pdf",
+      "https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MEPCDocuments/MEPC.366%2879%29.pdf",
+      "https://wwwcdn.imo.org/localresources/en/MediaCentre/PressBriefings/Documents/MP%20CONF.3%2035%20Resolution%208%201997%20CO2.pdf",
       "https://wwwcdn.imo.org/localresources/en/publications/Documents/Supplements/English/QQF520E_supplement_May2024_PQ.pdf",
-      "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Fifth%20IMO%20GHG%20Study%202023%20Full%20report.pdf",
       "https://wwwcdn.imo.org/localresources/en/OurWork/Environment/Documents/Air%20pollution/Sulphur%202020%20-%20Consistent%20implementation%20of%20regulation%2014.1.3%20of%20MARPOL%20Annex%20VI.pdf",
     ],
   },
