@@ -77,9 +77,11 @@ const SOURCES: Source[] = [
     defaultType: "regulation",
     is_primary_source: true,
     urls: [
-      "https://www.ccamlr.org/en/conservation-and-management/conservation-measures",
-      "https://www.ccamlr.org/en/science/science-publications",
-      "https://www.ccamlr.org/en/organisation/convention-text",
+      "https://www.ccamlr.org/en/conservation-and-management/conservation-and-managment",
+      "https://www.ccamlr.org/en/meetings-and-publications/publications",
+      "https://www.ccamlr.org/en/document/publications/basic-documents-december-2011",
+      "https://www.ccamlr.org/en/publications/fishery-reports",
+      "https://fishdocs.ccamlr.org/Status_of_stocks_2024.pdf",
     ],
   },
   {
