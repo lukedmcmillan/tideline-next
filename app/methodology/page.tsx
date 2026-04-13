@@ -11,33 +11,15 @@ export default function MethodologyPage() {
   const BD = "#E8EAED";
   const NAVY = "#0A1628";
 
-  const multiplierRows = [
-    { type: "Type 1", label: "Unilateral", value: "0.85", examples: "EU carding, US enforcement, Crown Estate leasing" },
-    { type: "Type 2", label: "Mixed architecture", value: "0.75", examples: "IMO MEPC, ISA Council, CITES CoP" },
-    { type: "Type 3", label: "Consensus-dependent", value: "0.46", examples: "BBNJ, Plastics Treaty, CCAMLR" },
-    { type: "Type 4", label: "Confidential commercial", value: "0.40", examples: "Debt-for-nature swaps, sovereign blue bonds" },
-    { type: "Type 5", label: "Ratification milestone", value: "0.90", examples: "WTO compliance threshold, BBNJ ratification counter" },
-    { type: "Type 6", label: "Voluntary standard-setting", value: "0.80", examples: "TNFD releases, GRI updates" },
-  ];
-
-  const validationRows = [
-    { event: "ISA July 2023 deadline session", base: "9.33", mult: "0.75", adj: "6.53", result: "True positive", icon: "check" },
-    { event: "BBNJ IGC-4 March 2022 (failed)", base: "8.45", mult: "0.46", adj: "3.89", result: "FP correctly suppressed", icon: "check" },
-    { event: "Nauru two-year trigger June 2021", base: "2.93", mult: "0.75", adj: "2.05", result: "Score fails. Flag needed.", icon: "warn" },
-    { event: "IMO MEPC 80 July 2023", base: "8.80", mult: "0.75", adj: "6.60", result: "True positive", icon: "check" },
-    { event: "INC-5 Busan Nov 2024 (failed)", base: "9.33", mult: "0.46", adj: "4.01", result: "FP correctly suppressed", icon: "check" },
-    { event: "WTO Fish ratification Sep 2025", base: "7.33", mult: "0.90", adj: "5.86", result: "True positive", icon: "check" },
-  ];
-
-  const th = { padding: "10px 14px", fontFamily: MONO, fontSize: 11, fontWeight: 600 as const, color: T4, textTransform: "uppercase" as const, letterSpacing: "0.05em", textAlign: "left" as const, borderBottom: `2px solid ${BD}` };
-  const td = { padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, borderBottom: `1px solid ${BD}`, lineHeight: 1.5 };
-  const tdMono = { ...td, fontFamily: MONO, fontSize: 12 };
+  const th: React.CSSProperties = { padding: "10px 14px", fontFamily: MONO, fontSize: 11, fontWeight: 600, color: T4, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left", borderBottom: `2px solid ${BD}` };
+  const td: React.CSSProperties = { padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, borderBottom: `1px solid ${BD}`, lineHeight: 1.5, verticalAlign: "top" };
+  const tdMono: React.CSSProperties = { ...td, fontFamily: MONO, fontSize: 12 };
 
   return (
     <div style={{ background: BG, minHeight: "100vh", fontFamily: F }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');`}</style>
 
-      {/* Nav bar */}
+      {/* Nav */}
       <div style={{ background: NAVY, padding: "16px 0" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <a href="/" style={{ textDecoration: "none" }}>
@@ -48,7 +30,6 @@ export default function MethodologyPage() {
         </div>
       </div>
 
-      {/* Content */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px 80px" }}>
 
         {/* Title */}
@@ -59,8 +40,8 @@ export default function MethodologyPage() {
           A published methodology with honest hit rates and documented failure modes. Version 1.2, April 2026.
         </p>
 
-        {/* Section 1 */}
-        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px", letterSpacing: "-0.01em" }}>What it is</h2>
+        {/* ── Section 1: What it is ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px" }}>What it is</h2>
         <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 16px" }}>
           The Ocean Governance Pulse Score is a structured monitoring index. It measures the intensity of observable public regulatory activity across ten ocean governance domains and produces a weekly numerical output on a 0 to 10 scale.
         </p>
@@ -74,215 +55,200 @@ export default function MethodologyPage() {
           The distinction is not a weakness. It is the most important honest claim the score makes, and the one that makes it defensible under scrutiny.
         </p>
 
-        {/* Section 2 */}
-        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 24px", letterSpacing: "-0.01em" }}>How it is calculated</h2>
+        {/* ── Section 2: How it is calculated ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 24px" }}>How it is calculated</h2>
 
-        {/* Formula block */}
-        <div style={{ background: WHITE, border: `1px solid ${BD}`, borderRadius: 8, padding: "24px 28px", marginBottom: 32, overflow: "hidden" }}>
+        <div style={{ background: WHITE, border: `1px solid ${BD}`, borderRadius: 8, padding: "24px 28px", marginBottom: 32 }}>
           <div style={{ fontFamily: MONO, fontSize: 13, color: T1, lineHeight: 2 }}>
             <div style={{ color: T4, fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>Base Score</div>
-            <div>
-              <span style={{ color: TEAL, fontWeight: 500 }}>BASE</span> = (Volume Trend <span style={{ color: T4 }}>x</span> 0.40) + (Recency <span style={{ color: T4 }}>x</span> 0.35) + (Decision Signals <span style={{ color: T4 }}>x</span> 0.25)
-            </div>
+            <div><span style={{ color: TEAL, fontWeight: 500 }}>BASE</span> = (Volume Trend <span style={{ color: T4 }}>x</span> 0.40) + (Recency <span style={{ color: T4 }}>x</span> 0.35) + (Decision Signals <span style={{ color: T4 }}>x</span> 0.25)</div>
             <div style={{ height: 1, background: BD, margin: "16px 0" }} />
             <div style={{ color: T4, fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>Adjusted Score</div>
-            <div>
-              <span style={{ color: TEAL, fontWeight: 500 }}>ADJUSTED</span> = Base Score <span style={{ color: T4 }}>x</span> Institutional Risk Multiplier
-            </div>
+            <div><span style={{ color: TEAL, fontWeight: 500 }}>ADJUSTED</span> = Base Score <span style={{ color: T4 }}>x</span> Institutional Risk Multiplier</div>
           </div>
         </div>
 
-        {/* Component: Volume Trend */}
+        {/* Volume Trend */}
         <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: T1, margin: "0 0 8px" }}>Volume Trend <span style={{ fontFamily: MONO, fontSize: 13, color: T4, fontWeight: 400 }}>(40%)</span></h3>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>
-          Compares document volume in the past 30 days against the preceding 30 days.
-        </p>
-        <div style={{ fontFamily: MONO, fontSize: 13, color: T3, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, padding: "8px 14px", marginBottom: 8, display: "inline-block" }}>
-          clamp(5 + growth x 5, 0, 10)
-        </div>
-        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "8px 0 28px" }}>
-          Weighted highest because it is the most consistently collectable and verifiable signal across all ten domains.
-        </p>
+        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>Compares document volume in the past 30 days against the preceding 30 days.</p>
+        <div style={{ fontFamily: MONO, fontSize: 13, color: T3, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, padding: "8px 14px", marginBottom: 8, display: "inline-block" }}>clamp(5 + growth x 5, 0, 10)</div>
+        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "8px 0 28px" }}>Weighted highest because it is the most consistently collectable and verifiable signal across all ten domains.</p>
 
-        {/* Component: Recency */}
+        {/* Recency */}
         <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: T1, margin: "0 0 8px" }}>Recency <span style={{ fontFamily: MONO, fontSize: 13, color: T4, fontWeight: 400 }}>(35%)</span></h3>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>
-          Exponential decay from most recent significant document. A document 14 days old scores 5.0. A document 30 days old scores 2.2.
-        </p>
-        <div style={{ fontFamily: MONO, fontSize: 13, color: T3, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, padding: "8px 14px", marginBottom: 8, display: "inline-block" }}>
-          {"10 x e^(-0.05 x days)"}
-        </div>
-        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "8px 0 28px" }}>
-          Captures whether the domain is currently live or dormant.
-        </p>
+        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>Exponential decay from most recent significant document. A document 14 days old scores 5.0. A document 30 days old scores 2.2.</p>
+        <div style={{ fontFamily: MONO, fontSize: 13, color: T3, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, padding: "8px 14px", marginBottom: 8, display: "inline-block" }}>{"10 x e^(-0.05 x days)"}</div>
+        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "8px 0 28px" }}>Captures whether the domain is currently live or dormant.</p>
 
-        {/* Component: Decision Signals */}
+        {/* Decision Signals */}
         <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: T1, margin: "0 0 8px" }}>Decision Signals <span style={{ fontFamily: MONO, fontSize: 13, color: T4, fontWeight: 400 }}>(25%)</span></h3>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>
-          Count of documents containing signal terms: ratif, adopt, enforc, sanction, decision, resolution, agreement, signed, implement, deadline, entry into force, final text, mandate, conclude, binding.
-        </p>
-        <div style={{ fontFamily: MONO, fontSize: 13, color: T3, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, padding: "8px 14px", marginBottom: 8, display: "inline-block" }}>
-          min(signal_count x 2, 10)
-        </div>
-        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "8px 0 36px" }}>
-          Weighted lowest because advocacy language appears in both successful and failed sessions.
-        </p>
+        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>Count of documents containing signal terms: ratif, adopt, enforc, sanction, decision, resolution, agreement, signed, implement, deadline, entry into force, final text, mandate, conclude, binding.</p>
+        <div style={{ fontFamily: MONO, fontSize: 13, color: T3, background: WHITE, border: `1px solid ${BD}`, borderRadius: 6, padding: "8px 14px", marginBottom: 8, display: "inline-block" }}>min(signal_count x 2, 10)</div>
+        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "8px 0 36px" }}>Weighted lowest because advocacy language appears in both successful and failed sessions.</p>
 
         {/* Institutional Risk Multiplier */}
         <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 600, color: T1, margin: "0 0 8px" }}>Institutional Risk Multiplier</h3>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>
-          Adjusts the Base Score based on the decision-making architecture of the governance body. Derived from George Tsebelis&apos;s veto player theory (Princeton University Press, 2002).
-        </p>
-        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "0 0 16px" }}>
-          Bodies with more veto players and consensus requirements are less likely to convert high activity into a binding outcome. The multiplier compresses their scores accordingly.
-        </p>
+        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>Adjusts the Base Score based on the decision-making architecture of the governance body. Derived from George Tsebelis&apos;s veto player theory (Princeton University Press, 2002).</p>
+        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "0 0 16px" }}>Bodies with more veto players and consensus requirements are less likely to convert high activity into a binding outcome. The multiplier compresses their scores accordingly.</p>
 
         <div style={{ overflowX: "auto", marginBottom: 48 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", background: WHITE, border: `1px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
-            <thead>
-              <tr>
-                <th style={th}>Type</th>
-                <th style={th}>Architecture</th>
-                <th style={th}>Multiplier</th>
-                <th style={th}>Examples</th>
-              </tr>
-            </thead>
+          <table style={{ width: "100%", borderCollapse: "collapse", background: WHITE, border: `1px solid ${BD}`, borderRadius: 8 }}>
+            <thead><tr><th style={th}>Type</th><th style={th}>Architecture</th><th style={th}>Multiplier</th><th style={th}>Examples</th></tr></thead>
             <tbody>
-              {multiplierRows.map((r) => (
-                <tr key={r.type}>
-                  <td style={tdMono}>{r.type}</td>
-                  <td style={td}>{r.label}</td>
-                  <td style={tdMono}>{r.value}</td>
-                  <td style={{ ...td, fontSize: 13, color: T3 }}>{r.examples}</td>
-                </tr>
+              {([
+                ["Type 1", "Unilateral", "0.85", "EU carding, US enforcement, Crown Estate leasing"],
+                ["Type 2", "Mixed architecture", "0.75", "IMO MEPC, ISA Council, CITES CoP"],
+                ["Type 3", "Consensus-dependent", "0.46", "BBNJ, Plastics Treaty, CCAMLR"],
+                ["Type 4", "Confidential commercial", "0.40", "Debt-for-nature swaps, sovereign blue bonds"],
+                ["Type 5", "Ratification milestone", "0.90", "WTO compliance threshold, BBNJ ratification counter"],
+                ["Type 6", "Voluntary standard-setting", "0.80", "TNFD releases, GRI updates"],
+              ] as const).map(([type, arch, mult, ex]) => (
+                <tr key={type}><td style={tdMono}>{type}</td><td style={td}>{arch}</td><td style={tdMono}>{mult}</td><td style={{ ...td, color: T3 }}>{ex}</td></tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Section 3 */}
-        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px", letterSpacing: "-0.01em" }}>Validated performance</h2>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 8px" }}>
-          The framework was tested against ten discrete historical event-periods selected to stress-test each component. Results are reported with failures included.
-        </p>
-        <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: "0 0 24px" }}>
-          Six representative cases are shown below. The full validation dataset is available on request.
-        </p>
+        {/* ── Section 3: Validated performance ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px" }}>Validated performance</h2>
+        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 24px" }}>The framework was tested against ten discrete historical event-periods selected to stress-test each component. Results are reported with failures included.</p>
 
         <div style={{ overflowX: "auto", marginBottom: 32 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", background: WHITE, border: `1px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
-            <thead>
-              <tr>
-                <th style={th}>Event</th>
-                <th style={th}>Base</th>
-                <th style={th}>Mult.</th>
-                <th style={th}>Adj.</th>
-                <th style={th}>Result</th>
-              </tr>
-            </thead>
+          <table style={{ width: "100%", borderCollapse: "collapse", background: WHITE, border: `1px solid ${BD}`, borderRadius: 8 }}>
+            <thead><tr><th style={th}>Event</th><th style={th}>Base</th><th style={th}>Mult.</th><th style={th}>Adj.</th><th style={th}>Result</th></tr></thead>
             <tbody>
-              {validationRows.map((r) => (
-                <tr key={r.event}>
-                  <td style={td}>{r.event}</td>
-                  <td style={tdMono}>{r.base}</td>
-                  <td style={tdMono}>{r.mult}</td>
-                  <td style={tdMono}>{r.adj}</td>
-                  <td style={{ ...td, color: r.icon === "check" ? TEAL : "#B45309" }}>
-                    <span style={{ marginRight: 6 }}>{r.icon === "check" ? "\u2713" : "\u26A0"}</span>
-                    {r.result}
-                  </td>
+              {([
+                ["ISA July 2023 deadline session", "9.33", "0.75", "6.53", "True positive", true],
+                ["BBNJ IGC-4 March 2022 (failed)", "8.45", "0.46", "3.89", "FP correctly suppressed", true],
+                ["Nauru two-year trigger June 2021", "2.93", "0.75", "2.05", "Score fails. Flag needed.", false],
+                ["IMO MEPC 80 July 2023", "8.80", "0.75", "6.60", "True positive", true],
+                ["INC-5 Busan Nov 2024 (failed)", "9.33", "0.46", "4.01", "FP correctly suppressed", true],
+                ["WTO Fish ratification Sep 2025", "7.33", "0.90", "5.86", "True positive", true],
+              ] as [string, string, string, string, string, boolean][]).map(([event, base, mult, adj, result, pass]) => (
+                <tr key={event}>
+                  <td style={td}>{event}</td><td style={tdMono}>{base}</td><td style={tdMono}>{mult}</td><td style={tdMono}>{adj}</td>
+                  <td style={{ ...td, color: pass ? TEAL : "#B45309" }}><span style={{ marginRight: 6 }}>{pass ? "\u2713" : "\u26A0"}</span>{result}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Performance metrics */}
         <div style={{ background: WHITE, border: `1px solid ${BD}`, borderRadius: 8, padding: "24px 28px", marginBottom: 48 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 600, color: T4, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Performance metrics (n=10)</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 20 }}>
             <div>
               <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 500, color: T1 }}>0.83</div>
-              <div style={{ fontFamily: F, fontSize: 13, color: T3, marginTop: 4 }}>Precision. Of events flagged, 83% produced a governance outcome within 30 days.</div>
+              <div style={{ fontFamily: F, fontSize: 13, color: T3, marginTop: 4 }}>Precision. Of events flagged, 83% produced a significant outcome.</div>
             </div>
             <div>
-              <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 500, color: T1 }}>0.71</div>
-              <div style={{ fontFamily: F, fontSize: 13, color: T3, marginTop: 4 }}>Recall. Of known governance events in the test set, 71% were flagged in advance.</div>
+              <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 500, color: T1 }}>0.83</div>
+              <div style={{ fontFamily: F, fontSize: 13, color: T3, marginTop: 4 }}>Recall. Of significant outcomes, 83% were flagged.</div>
             </div>
             <div>
-              <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 500, color: T1 }}>0.77</div>
+              <div style={{ fontFamily: MONO, fontSize: 28, fontWeight: 500, color: T1 }}>0.83</div>
               <div style={{ fontFamily: F, fontSize: 13, color: T3, marginTop: 4 }}>F1 Score. Harmonic mean of precision and recall across the validation set.</div>
             </div>
           </div>
         </div>
 
-        {/* Section 4: What it cannot tell you */}
-        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px", letterSpacing: "-0.01em" }}>Known failure modes</h2>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 16px" }}>
-          The score fails in predictable, documented ways. These are not bugs. They are structural limitations of any index built on observable public signals.
-        </p>
+        {/* ── Section 4: Hard limits ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px" }}>Hard limits</h2>
+        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 20px" }}>Three categories of events are structurally invisible to the Pulse Score:</p>
 
-        <div style={{ marginBottom: 48 }}>
-          {[
-            {
-              title: "Procedural triggers without public signal buildup",
-              body: "The Nauru two-year trigger (June 2021) activated a regulatory deadline with minimal preceding document activity. The score read 2.05. The event happened anyway. Any calendar-driven trigger that does not require negotiation or public deliberation will produce a low score regardless of consequence."
-            },
-            {
-              title: "Confidential negotiations",
-              body: "Debt-for-nature swaps, sovereign blue bond structuring, and bilateral enforcement deals generate almost no public documentation until announcement. The score cannot see what is not published. The 0.40 multiplier compresses these domains but does not eliminate the blind spot."
-            },
-            {
-              title: "Advocacy noise in document signals",
-              body: "NGO submissions, side-event reports, and advocacy press releases use the same signal terms as binding decisions. The decision signal component cannot distinguish a resolution from a call for one. This is why it carries the lowest weight (25%), but it still introduces noise during active campaign periods."
-            },
-            {
-              title: "Language and jurisdiction gaps",
-              body: "The index monitors English-language public documents. Governance activity in non-English jurisdictions, regional fisheries management organisations with limited English publication, or bodies that publish primarily in French or Spanish will be underrepresented."
-            },
-          ].map((item) => (
-            <div key={item.title} style={{ borderLeft: `3px solid ${BD}`, paddingLeft: 16, marginBottom: 20 }}>
-              <div style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: T1, marginBottom: 4 }}>{item.title}</div>
-              <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: 0 }}>{item.body}</p>
-            </div>
-          ))}
+        {([
+          {
+            title: "1. Surprise strategic actions",
+            body: "Individual state actors using unfamiliar institutional channels. The canonical case: Nauru\u2019s June 2021 invocation of the ISA two-year rule. Score was 2.05. The most consequential ISA event of the decade. This failure mode is addressed by the Actor Anomaly Flag (in development).",
+          },
+          {
+            title: "2. Confidential commercial transactions",
+            body: "Debt-for-nature swaps and sovereign blue bonds are deliberately designed to avoid public signal detection. The Belize blue bond ($364M) had a preceding signal of approximately 3/10. These transactions cannot be detected through public document monitoring.",
+          },
+          {
+            title: "3. Consensus-blocked institutions",
+            body: "The framework cannot distinguish high-signal sessions that will succeed from those that will deadlock. BBNJ IGC-4 and IGC-5.2 produced identical adjusted scores (3.89) despite one failing and one succeeding. This is the framework\u2019s most important honest limitation.",
+          },
+        ]).map((item) => (
+          <div key={item.title} style={{ borderLeft: `3px solid ${BD}`, paddingLeft: 16, marginBottom: 20 }}>
+            <div style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: T1, marginBottom: 4 }}>{item.title}</div>
+            <p style={{ fontFamily: F, fontSize: 14, color: T3, lineHeight: 1.65, margin: 0 }}>{item.body}</p>
+          </div>
+        ))}
+
+        <div style={{ background: "#FFF8F0", border: "1px solid #FDE68A", borderRadius: 8, padding: "16px 20px", marginBottom: 48 }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 600, color: "#92400E", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Mandatory disclosure</div>
+          <p style={{ fontFamily: F, fontSize: 14, color: "#78350F", lineHeight: 1.65, margin: 0 }}>
+            This score measures observable public regulatory activity. It cannot detect surprise unilateral actions, confidential commercial transactions, or informal negotiating dynamics. Elevated score = conditions present, not outcome predicted.
+          </p>
         </div>
 
-        {/* Section 5: How to use it */}
-        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px", letterSpacing: "-0.01em" }}>How to use the score</h2>
-        <p style={{ fontFamily: F, fontSize: 15, color: T2, lineHeight: 1.75, margin: "0 0 16px" }}>
-          The Pulse Score is a monitoring instrument, not a forecast. It is designed to be used as one input alongside professional judgement, not as a replacement for it.
-        </p>
-        <div style={{ background: WHITE, border: `1px solid ${BD}`, borderRadius: 8, padding: "24px 28px", marginBottom: 48 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        {/* ── Section 5: Domain thresholds ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px" }}>Alert thresholds by domain</h2>
+
+        <div style={{ overflowX: "auto", marginBottom: 48 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", background: WHITE, border: `1px solid ${BD}`, borderRadius: 8 }}>
+            <thead><tr><th style={th}>Domain</th><th style={th}>Threshold</th><th style={th}>TPR</th><th style={th}>FPR</th><th style={th}>Honest caveat</th></tr></thead>
+            <tbody>
+              {([
+                ["ISA / Deep-Sea Mining", "6.5", "~70%", "~25-30%", "Tracks session activity. Misses surprise unilateral actors."],
+                ["BBNJ / High Seas Treaty", "7.0", "~46%", "~46-54%", "Cannot distinguish breakthrough from deadlock in Type 3 body."],
+                ["IUU Fishing", "6.0", "~35-80%*", "~15-50%*", "*Varies by sub-domain. WCPFC 80%, CCAMLR 15%."],
+                ["30x30 / MPAs", "7.5", "~25-35%", "~70-75%", "Valid for framework outcomes only. Not individual designations."],
+                ["Blue Finance / TNFD", "7.0", "~37-70%*", "~37%", "*70% for policy events. 30% for market transactions."],
+                ["IMO Shipping", "5.0", "~75%", "~25%", "Strong for scheduled MEPC sessions."],
+                ["WTO Fisheries", "5.0", "~75%", "~25%", "Strong for ratification milestones."],
+                ["Offshore Wind", "3.5*", "~70%", "~30%", "*Threshold adjusted -1.5 points for commercial regulatory signals."],
+                ["CITES Marine", "5.0", "~75%", "~25%", "Strong for CoP listing decisions."],
+                ["Plastics Treaty", "5.0", "~0-10%", "~90-100%", "Petrostate veto dynamics. Score rarely reaches threshold."],
+              ] as const).map(([domain, thresh, tpr, fpr, caveat]) => (
+                <tr key={domain}>
+                  <td style={{ ...td, fontWeight: 500 }}>{domain}</td>
+                  <td style={tdMono}>{thresh}</td>
+                  <td style={tdMono}>{tpr}</td>
+                  <td style={tdMono}>{fpr}</td>
+                  <td style={{ ...td, fontSize: 12, color: T3 }}>{caveat}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Section 6: Version history ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "0 0 16px" }}>Methodology governance</h2>
+
+        {([
+          { version: "Version 1.0", date: "April 2026", desc: "Initial publication." },
+          { version: "Version 1.2", date: "April 2026", desc: "Revised in response to two rounds of external peer review. Exponential decay recency function replacing stepwise scoring. Type 6 institutional classification added. Multiplier values presented as indicative point estimates with ranges." },
+          { version: "Version 2.0", date: "Planned", desc: "Expanded validation dataset (50+ events), statistically derived multipliers with confidence intervals, NLP-based decision-signal analysis, commercial regulatory sub-index for Offshore Wind." },
+        ]).map((v) => (
+          <div key={v.version} style={{ display: "flex", gap: 16, marginBottom: 16, alignItems: "baseline" }}>
+            <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 500, color: TEAL, flexShrink: 0, minWidth: 90 }}>{v.version}</div>
             <div>
-              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: TEAL, marginBottom: 8 }}>Use it to</div>
-              <ul style={{ fontFamily: F, fontSize: 14, color: T2, lineHeight: 1.75, margin: 0, paddingLeft: 18 }}>
-                <li>Prioritise which domains need attention this week</li>
-                <li>Brief colleagues on where regulatory conditions are intensifying</li>
-                <li>Cross-reference against your own intelligence before a session</li>
-                <li>Track whether a domain is accelerating, stable, or quiet</li>
-              </ul>
-            </div>
-            <div>
-              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#B45309", marginBottom: 8 }}>Do not use it to</div>
-              <ul style={{ fontFamily: F, fontSize: 14, color: T2, lineHeight: 1.75, margin: 0, paddingLeft: 18 }}>
-                <li>Predict whether a treaty session will succeed or fail</li>
-                <li>Make investment decisions without independent due diligence</li>
-                <li>Replace domain expertise or direct source monitoring</li>
-                <li>Infer causation from correlation between domains</li>
-              </ul>
+              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>{v.date}.</span>{" "}
+              <span style={{ fontFamily: F, fontSize: 13, color: T3 }}>{v.desc}</span>
             </div>
           </div>
-        </div>
+        ))}
+
+        {/* ── Section 7: Academic references ── */}
+        <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: T1, margin: "36px 0 16px" }}>Academic references</h2>
+
+        {([
+          "Tsebelis, G. (2002). Veto Players: How Political Institutions Work. Princeton University Press. [Foundation for institutional risk multiplier]",
+          "Young, O.R. (1994). International Governance. Cornell University Press.",
+          "Mitchell, R.B. (2003). International Environmental Agreements. Annual Review of Environment and Resources.",
+        ]).map((ref) => (
+          <p key={ref} style={{ fontFamily: F, fontSize: 14, color: T2, lineHeight: 1.65, margin: "0 0 10px", paddingLeft: 16, borderLeft: `2px solid ${BD}` }}>{ref}</p>
+        ))}
 
         {/* Footer */}
-        <div style={{ borderTop: `1px solid ${BD}`, paddingTop: 24 }}>
+        <div style={{ borderTop: `1px solid ${BD}`, paddingTop: 24, marginTop: 48 }}>
           <p style={{ fontFamily: F, fontSize: 13, color: T4, lineHeight: 1.6, margin: "0 0 8px" }}>
-            This methodology is published for transparency and professional citation. If you reference the Pulse Score in published work, cite as: Tideline Ocean Governance Pulse Score, Version 1.2, April 2026. thetideline.co/methodology.
+            Tideline Ocean Intelligence. Questions about this methodology: <a href="mailto:methodology@thetideline.co" style={{ color: TEAL, textDecoration: "none" }}>methodology@thetideline.co</a>
           </p>
           <p style={{ fontFamily: F, fontSize: 13, color: T4, lineHeight: 1.6, margin: 0 }}>
-            Questions about the methodology can be directed to <a href="mailto:luke@thetideline.co" style={{ color: TEAL, textDecoration: "none" }}>luke@thetideline.co</a>.
+            Citation: Tideline Ocean Governance Pulse Score, Version 1.2, April 2026. thetideline.co/methodology
           </p>
         </div>
       </div>
