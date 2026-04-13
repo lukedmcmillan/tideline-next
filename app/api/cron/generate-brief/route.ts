@@ -221,10 +221,11 @@ export async function GET(request: Request) {
   try {
     const now = new Date();
     const h24 = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const h48 = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
     const todayDate = now.toISOString().split("T")[0];
     const dateStr = fmtDate(now);
 
-    // ── 1. Fetch top 5 stories by significance (last 24h, live, summarised) ──
+    // ── 1. Fetch top 5 stories by significance (last 48h, tracker-tagged, live, summarised) ──
     const { data: stories, error } = await supabase
       .from("stories")
       .select(
@@ -232,7 +233,8 @@ export async function GET(request: Request) {
       )
       .eq("status", "live")
       .not("short_summary", "is", null)
-      .gte("published_at", h24)
+      .gte("published_at", h48)
+      .neq("cross_tracker_flags", "[]")
       .order("significance_score", { ascending: false })
       .order("published_at", { ascending: false })
       .limit(5);
