@@ -11,6 +11,9 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
+const SUMMARY_SYSTEM_PROMPT =
+  "You are an ocean policy analyst writing for professionals in maritime law, ESG finance, and ocean governance. Write exactly two sentences. The first states precisely what happened — include the institution, document reference, or decision where known. The second states the specific professional consequence: who is affected, what decision this changes, or what deadline this creates. Never write 'this is important.' Show why. No AI language. No cause language. No exclamation marks. No passive voice.";
+
 function decodeHtml(str: string): string {
   return str
     .replace(/&amp;/g, "&")
@@ -61,9 +64,34 @@ function fmtDate(d: Date): string {
   });
 }
 
+async function generateSummary(
+  title: string,
+  description: string | null
+): Promise<string> {
+  const input = description
+    ? `Title: ${title}\n\nDescription: ${description}`
+    : `Title: ${title}`;
+
+  try {
+    const res = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 200,
+      system: SUMMARY_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: input }],
+    });
+    const text = res.content[0];
+    return text.type === "text" ? text.text.trim() : "";
+  } catch (err) {
+    console.error(`[generate-brief] Summary failed for "${title}":`, err);
+    return "";
+  }
+}
+
 function compileHtml(
-  stories: any[],
-  dateStr: string
+  stories: { id: string; title: string; source_name: string; source_type: string; topic: string; brief_summary: string }[],
+  dateStr: string,
+  trackerData: { tracker_slug: string; score: number; momentum_direction: string; interpretation: string } | null,
+  archiveStory: { id: string; title: string; source_name: string; source_type: string; brief_summary: string } | null
 ): string {
   const storyRows = stories
     .map((s) => {
@@ -78,11 +106,45 @@ function compileHtml(
               <span style="font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#9aa0a6;margin-left:8px;">${topic}</span>
             </div>
             <a href="https://www.thetideline.co/platform/story/${s.id}" style="font-size:15px;font-weight:600;color:#202124;text-decoration:none;line-height:1.4;display:block;margin-bottom:8px;">${title}</a>
-            ${s.short_summary ? `<p style="font-size:13px;color:#5f6368;line-height:1.65;margin:0;">${s.short_summary}</p>` : ""}
+            ${s.brief_summary ? `<p style="font-size:13px;color:#5f6368;line-height:1.65;margin:0;">${s.brief_summary}</p>` : ""}
           </td>
         </tr>`;
     })
     .join("");
+
+  // Tracker Pulse section
+  let trackerSection = "";
+  if (trackerData) {
+    const slugLabel = trackerData.tracker_slug
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    trackerSection = `
+        <tr>
+          <td style="padding:24px 32px;border-bottom:1px solid #e8eaed;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1d6fa4;margin-bottom:12px;">Tracker Pulse</div>
+            <div style="font-size:15px;font-weight:600;color:#202124;margin-bottom:6px;">${slugLabel}: ${trackerData.score}/10 — ${trackerData.momentum_direction}</div>
+            <p style="font-size:13px;color:#5f6368;line-height:1.65;margin:0;">${trackerData.interpretation}</p>
+          </td>
+        </tr>`;
+  }
+
+  // From the Archive section
+  let archiveSection = "";
+  if (archiveStory) {
+    const asc = SOURCE_COLORS[archiveStory.source_type] || SOURCE_COLORS.gov;
+    archiveSection = `
+        <tr>
+          <td style="padding:24px 32px;border-bottom:1px solid #e8eaed;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1d6fa4;margin-bottom:12px;">From the Archive</div>
+            <div style="margin-bottom:6px;">
+              <span style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${asc.color};background:${asc.bg};padding:2px 7px;border-radius:3px;">${archiveStory.source_name}</span>
+              <span style="font-size:10px;font-weight:500;color:#9aa0a6;margin-left:8px;">Tideline Library</span>
+            </div>
+            <a href="https://www.thetideline.co/platform/story/${archiveStory.id}" style="font-size:15px;font-weight:600;color:#202124;text-decoration:none;line-height:1.4;display:block;margin-bottom:8px;">${decodeHtml(archiveStory.title)}</a>
+            ${archiveStory.brief_summary ? `<p style="font-size:13px;color:#5f6368;line-height:1.65;margin:0;">${archiveStory.brief_summary}</p>` : ""}
+          </td>
+        </tr>`;
+  }
 
   return `<!DOCTYPE html>
 <html>
@@ -107,9 +169,14 @@ function compileHtml(
         </tr>
         <!-- Stories -->
         ${storyRows}
+        <!-- Tracker Pulse -->
+        ${trackerSection}
+        <!-- From the Archive -->
+        ${archiveSection}
         <!-- Footer -->
         <tr>
           <td style="padding:24px 32px;background:#f8f9fa;border-top:1px solid #e8eaed;">
+            <p style="font-size:13px;color:#5f6368;line-height:1.6;margin:0 0 16px;">Reply to ask a question about today's brief.</p>
             <a href="https://www.thetideline.co/platform/feed" style="display:inline-block;padding:10px 22px;background:#0a1628;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;border-radius:6px;">Open your feed</a>
             <p style="font-size:11px;color:#9aa0a6;margin:16px 0 0;line-height:1.5;">Tideline. Ocean intelligence for professionals.<br/>
             <a href="https://www.thetideline.co" style="color:#9aa0a6;">thetideline.co</a></p>
@@ -123,6 +190,10 @@ function compileHtml(
 }
 
 export async function GET(request: Request) {
+  console.log("CRON_SECRET env:", process.env.CRON_SECRET ?
+    "SET — " + process.env.CRON_SECRET.slice(0, 4) + "..." : "NOT SET");
+  console.log("Auth header received:", request.headers.get("authorization"));
+
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -132,35 +203,103 @@ export async function GET(request: Request) {
     const now = new Date();
     const h24 = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const todayDate = now.toISOString().split("T")[0];
+    const dateStr = fmtDate(now);
 
-    // Fetch summarised live stories from last 24h, ranked by significance then recency
+    // ── 1. Fetch top 5 stories by significance (last 24h, live, summarised) ──
     const { data: stories, error } = await supabase
       .from("stories")
       .select(
-        "id, title, link, source_name, topic, source_type, published_at, short_summary, significance_score"
+        "id, title, link, source_name, topic, source_type, published_at, short_summary, description, significance_score"
       )
       .eq("status", "live")
       .not("short_summary", "is", null)
       .gte("published_at", h24)
       .order("significance_score", { ascending: false })
       .order("published_at", { ascending: false })
-      .limit(15);
+      .limit(5);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     const storyList = stories || [];
-    const dateStr = fmtDate(now);
-    const subjectLine = `Tideline \u00B7 ${dateStr} \u00B7 ${storyList.length} stories`;
-    const htmlContent = compileHtml(storyList, dateStr);
 
-    // ── Quality gate ──────────────────────────────────────────────────
+    // ── 2. Generate fresh 2-sentence summaries via Haiku ──
+    const briefStories = await Promise.all(
+      storyList.map(async (s) => {
+        const briefSummary = await generateSummary(
+          decodeHtml(s.title),
+          s.description || s.short_summary
+        );
+        return {
+          id: s.id,
+          title: s.title,
+          source_name: s.source_name,
+          source_type: s.source_type,
+          topic: s.topic,
+          brief_summary: briefSummary,
+        };
+      })
+    );
+
+    // ── 3. Fetch archive story (gov/reg, older than 24h, high significance) ──
+    let archiveStory: { id: string; title: string; source_name: string; source_type: string; brief_summary: string } | null = null;
+    try {
+      const { data: archiveRows } = await supabase
+        .from("stories")
+        .select("id, title, source_name, source_type, description, short_summary")
+        .eq("status", "live")
+        .in("source_type", ["gov", "reg"])
+        .lt("published_at", h24)
+        .order("significance_score", { ascending: false })
+        .limit(1);
+
+      if (archiveRows && archiveRows[0]) {
+        const a = archiveRows[0];
+        const archiveSummary = await generateSummary(
+          decodeHtml(a.title),
+          a.description || a.short_summary
+        );
+        archiveStory = {
+          id: a.id,
+          title: a.title,
+          source_name: a.source_name,
+          source_type: a.source_type,
+          brief_summary: archiveSummary,
+        };
+      }
+    } catch (err) {
+      console.error("[generate-brief] Archive story fetch failed:", err);
+    }
+
+    // ── 4. Fetch top accelerating velocity score (last 7 days) ──
+    let trackerData: { tracker_slug: string; score: number; momentum_direction: string; interpretation: string } | null = null;
+    try {
+      const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: velocityRows } = await supabase
+        .from("velocity_scores")
+        .select("tracker_slug, score, momentum_direction, interpretation")
+        .eq("momentum_direction", "accelerating")
+        .gte("calculated_at", d7)
+        .order("score", { ascending: false })
+        .limit(1);
+
+      if (velocityRows && velocityRows[0]) {
+        trackerData = velocityRows[0];
+      }
+    } catch (err) {
+      console.error("[generate-brief] Velocity score fetch failed:", err);
+    }
+
+    // ── 5. Compile HTML ──
+    const htmlContent = compileHtml(briefStories, dateStr, trackerData, archiveStory);
+
+    // ── 6. Quality gate ──
     let qualityResult: { passed: boolean; failed_items: { index: number; reason: string }[]; overall_quality: string } | null = null;
 
     try {
-      const summaryList = storyList
-        .map((s, i) => `${i + 1}. "${decodeHtml(s.title)}" — ${s.short_summary || "(no summary)"}`)
+      const summaryList = briefStories
+        .map((s, i) => `${i + 1}. "${decodeHtml(s.title)}" — ${s.brief_summary || "(no summary)"}`)
         .join("\n");
 
       const message = await anthropic.messages.create({
@@ -175,7 +314,7 @@ export async function GET(request: Request) {
 
       const text = message.content[0].type === "text" ? message.content[0].text : "";
       qualityResult = JSON.parse(text.replace(/```json|```/g, "").trim());
-      console.log(`[Quality Gate] Result: ${qualityResult!.overall_quality}, failed: ${qualityResult!.failed_items?.length || 0}/${storyList.length}`);
+      console.log(`[Quality Gate] Result: ${qualityResult!.overall_quality}, failed: ${qualityResult!.failed_items?.length || 0}/${briefStories.length}`);
     } catch (err) {
       console.error("[Quality Gate] Failed, proceeding with upsert:", err);
     }
@@ -202,12 +341,12 @@ export async function GET(request: Request) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Tideline <brief@thetideline.co>",
+            from: "Tideline <luke@thetideline.co>",
             to: "lukedmcmillan@hotmail.com",
-            subject: `Brief REJECTED — ${dateStr}`,
+            subject: `Brief REJECTED \u2014 ${dateStr}`,
             html: `<div style="font-family:sans-serif;max-width:560px;margin:40px auto;padding:24px;">
               <h2 style="color:#D93025;margin:0 0 12px;">Brief rejected by quality gate</h2>
-              <p style="color:#3C4043;font-size:14px;line-height:1.6;">${failedCount} of ${storyList.length} summaries failed editorial review.</p>
+              <p style="color:#3C4043;font-size:14px;line-height:1.6;">${failedCount} of ${briefStories.length} summaries failed editorial review.</p>
               <h3 style="color:#202124;font-size:14px;margin:20px 0 8px;">Failed items:</h3>
               <ul style="font-size:13px;color:#5F6368;line-height:1.7;">
                 ${(qualityResult?.failed_items || []).map((f) => `<li><strong>#${f.index}:</strong> ${f.reason}</li>`).join("")}
@@ -224,21 +363,23 @@ export async function GET(request: Request) {
         status: "rejected",
         overall_quality: "reject",
         failed_count: failedCount,
-        story_count: storyList.length,
+        story_count: briefStories.length,
         date: todayDate,
       });
     }
 
-    // Upsert into brief_buffer (with needs_review flag if quality is "review")
+    // ── 7. Upsert into brief_buffer ──
     const { error: upsertError } = await supabase
       .from("brief_buffer")
       .upsert(
         {
           date: todayDate,
-          subject_line: subjectLine,
+          subject_line: `Tideline \u00B7 ${dateStr} \u00B7 ${briefStories.length} stories`,
           html_content: htmlContent,
-          story_count: storyList.length,
+          story_count: briefStories.length,
           needs_review: overallQuality === "review",
+          tracker_data: trackerData,
+          archive_story: archiveStory,
         },
         { onConflict: "date" }
       );
@@ -254,7 +395,9 @@ export async function GET(request: Request) {
       status: "buffered",
       overall_quality: overallQuality,
       failed_count: failedCount,
-      story_count: storyList.length,
+      story_count: briefStories.length,
+      has_tracker: !!trackerData,
+      has_archive: !!archiveStory,
       date: todayDate,
     });
   } catch (err) {
