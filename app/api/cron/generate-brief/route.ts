@@ -442,8 +442,8 @@ export async function GET(request: Request) {
       date: todayDate,
     });
   } catch (err) {
+    console.error("FATAL:", err instanceof Error ? err.message : String(err), err instanceof Error ? err.stack : "");
     console.error("generate-brief fatal error:", err);
-    console.error("Error stack:", err instanceof Error ? err.stack : String(err));
     return NextResponse.json(
       { error: "Internal server error", details: String(err) },
       { status: 500 }
