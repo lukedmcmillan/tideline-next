@@ -147,6 +147,55 @@ const SOURCES: Source[] = [
       "https://cites.org/eng/cop/index.php",
     ],
   },
+  {
+    name: "WCPFC",
+    domain: "wcpfc.int",
+    defaultOrg: "Western and Central Pacific Fisheries Commission",
+    defaultType: "regulation",
+    is_primary_source: true,
+    urls: [
+      "https://cmm.wcpfc.int/",
+      "https://www.wcpfc.int/meetings",
+    ],
+  },
+  {
+    name: "ICCAT",
+    domain: "iccat.int",
+    defaultOrg: "International Commission for the Conservation of Atlantic Tunas",
+    defaultType: "regulation",
+    is_primary_source: true,
+    urls: [
+      "https://www.iccat.int/en/RecRes.asp",
+      "https://www.iccat.int/Documents/Recs/COMPENDIUM_ACTIVE_ENG.pdf",
+      "https://www.iccat.int/Documents/Commission/BasicTexts.pdf",
+      "https://www.iccat.int/Documents/SCRS/SpeciesIdenSheets_ENG.pdf",
+    ],
+  },
+  {
+    name: "IOTC",
+    domain: "iotc.org",
+    defaultOrg: "Indian Ocean Tuna Commission",
+    defaultType: "regulation",
+    is_primary_source: true,
+    urls: [
+      "https://www.iotc.org/cmms",
+      "https://www.iotc.org/sites/default/files/documents/compliance/cmm/IOTC_-_Compendium_of_ACTIVE_CMMs_01_January_2026.pdf",
+      "https://www.iotc.org/sites/default/files/documents/science/IOTC%20Glossary%20of%20terms%20SCIENCE.pdf",
+      "https://www.iotc.org/documents",
+    ],
+  },
+  {
+    name: "HELCOM",
+    domain: "helcom.fi",
+    defaultOrg: "Helsinki Commission",
+    defaultType: "regulation",
+    is_primary_source: true,
+    urls: [
+      "https://helcom.fi/baltic-sea-action-plan/",
+      "https://helcom.fi/helcom-at-work/recommendations/",
+      "https://helcom.fi/helcom-at-work/publications/",
+    ],
+  },
 ];
 
 const USER_AGENT = "Tideline Library Bot/1.0";
