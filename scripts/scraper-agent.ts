@@ -1,9 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Env vars loaded by dotenvx CLI wrapper or host environment
+let _supabase: any;
+function getSupabase() {
+  if (!_supabase) {
+    const { createClient } = require("@supabase/supabase-js");
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) { console.error("Missing SUPABASE env vars. Run via: npx @dotenvx/dotenvx run -f .env.local -- node --import tsx scripts/scraper-agent.ts"); process.exit(1); }
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
 interface Source {
   name: string;
@@ -244,14 +251,14 @@ function fileNameFromUrl(url: string): string {
 }
 
 async function isAlreadyQueued(fileUrl: string): Promise<boolean> {
-  const { data: q } = await supabase
+  const { data: q } = await getSupabase()
     .from("document_queue")
     .select("id")
     .eq("file_url", fileUrl)
     .limit(1);
   if (q && q.length > 0) return true;
 
-  const { data: d } = await supabase
+  const { data: d } = await getSupabase()
     .from("documents")
     .select("id")
     .eq("file_url", fileUrl)
@@ -263,7 +270,7 @@ async function queuePdf(pdfUrl: string, source: Source): Promise<boolean> {
   const exists = await isAlreadyQueued(pdfUrl);
   if (exists) return false;
 
-  const { error } = await supabase.from("document_queue").insert({
+  const { error } = await getSupabase().from("document_queue").insert({
     source_url: pdfUrl,
     source_domain: source.domain,
     file_url: pdfUrl,
@@ -314,7 +321,7 @@ async function scrapePage(
     const exists = await isAlreadyQueued(pdfUrl);
     if (exists) continue;
 
-    const { error } = await supabase.from("document_queue").insert({
+    const { error } = await getSupabase().from("document_queue").insert({
       source_url: url,
       source_domain: source.domain,
       file_url: pdfUrl,

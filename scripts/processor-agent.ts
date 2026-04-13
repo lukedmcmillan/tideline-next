@@ -1,16 +1,31 @@
-import { createClient } from "@supabase/supabase-js";
-import Anthropic from "@anthropic-ai/sdk";
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Env vars loaded by dotenvx CLI wrapper or host environment
+
 import { extractText } from "unpdf";
 import { randomUUID } from "crypto";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: any;
+function getSupabase() {
+  if (!_supabase) {
+    const { createClient } = require("@supabase/supabase-js");
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) { console.error("Missing SUPABASE env vars"); process.exit(1); }
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+let _anthropic: any;
+function getAnthropic() {
+  if (!_anthropic) {
+    const Anthropic = require("@anthropic-ai/sdk").default;
+    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+  }
+  return _anthropic;
+}
 
-const BATCH_LIMIT = 50;
+const BATCH_LIMIT = 200;
 const DELAY_MS = 2000;
 
 const VALID_DOCUMENT_TYPES = [
@@ -53,7 +68,7 @@ function sanitiseDate(raw: string | null | undefined): string | null {
 }
 
 async function haikuCall(system: string, userContent: string): Promise<string> {
-  const msg = await anthropic.messages.create({
+  const msg = await getAnthropic().messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
     system,
@@ -73,7 +88,7 @@ function parseJson(text: string): Record<string, unknown> | null {
 }
 
 async function markFailed(id: string, reason: string) {
-  await supabase
+  await getSupabase()
     .from("document_queue")
     .update({ status: "failed", error_message: reason })
     .eq("id", id);
@@ -195,7 +210,7 @@ Return only corrected JSON. No markdown.`,
   // STEP 6 — STORAGE
   const uuid = randomUUID();
   const storagePath = `library/${uuid}.pdf`;
-  const { error: uploadError } = await supabase.storage
+  const { error: uploadError } = await getSupabase().storage
     .from("tideline-documents")
     .upload(storagePath, Buffer.from(pdfBuffer), {
       contentType: "application/pdf",
@@ -207,7 +222,7 @@ Return only corrected JSON. No markdown.`,
   }
 
   // STEP 7 — INSERT
-  const { error: insertError } = await supabase.from("documents").insert({
+  const { error: insertError } = await getSupabase().from("documents").insert({
     title,
     source_organisation: sourceOrg,
     document_type: docType,
@@ -229,7 +244,7 @@ Return only corrected JSON. No markdown.`,
   }
 
   // STEP 8 — COMPLETE
-  await supabase
+  await getSupabase()
     .from("document_queue")
     .update({ status: "completed", processed_at: new Date().toISOString() })
     .eq("id", item.id);
@@ -237,10 +252,10 @@ Return only corrected JSON. No markdown.`,
   console.log(`  OK: "${title}" (${docType})`);
 }
 
-async function main() {
-  console.log("=== Tideline Library Processor Agent ===\n");
+const loopMode = process.argv.includes("--loop");
 
-  const { data: items, error } = await supabase
+async function processBatch(): Promise<number> {
+  const { data: items, error } = await getSupabase()
     .from("document_queue")
     .select("id, file_url, file_name, is_primary_source, source_domain")
     .eq("status", "pending")
@@ -249,18 +264,15 @@ async function main() {
 
   if (error) {
     console.error("Queue fetch error:", error.message);
-    return;
+    return 0;
   }
 
-  if (!items || items.length === 0) {
-    console.log("No pending items in queue.");
-    return;
-  }
+  if (!items || items.length === 0) return 0;
 
   console.log(`Found ${items.length} pending items\n`);
 
   for (let i = 0; i < items.length; i++) {
-    await supabase
+    await getSupabase()
       .from("document_queue")
       .update({ status: "processing" })
       .eq("id", items[i].id);
@@ -270,7 +282,32 @@ async function main() {
     if (i < items.length - 1) await sleep(DELAY_MS);
   }
 
-  console.log("\n=== Processing complete ===");
+  return items.length;
+}
+
+async function main() {
+  console.log("=== Tideline Library Processor Agent ===");
+  console.log(`Batch size: ${BATCH_LIMIT} | Loop mode: ${loopMode}\n`);
+
+  let totalProcessed = 0;
+  let batchNum = 0;
+
+  do {
+    batchNum++;
+    if (batchNum > 1) console.log(`\n--- Batch ${batchNum} ---\n`);
+
+    const count = await processBatch();
+    totalProcessed += count;
+
+    if (count === 0) {
+      console.log("No pending items in queue.");
+      break;
+    }
+
+    console.log(`\nBatch ${batchNum} done (${count} items, ${totalProcessed} total)`);
+  } while (loopMode);
+
+  console.log(`\n=== Processing complete. ${totalProcessed} items processed. ===`);
 }
 
 main().catch(console.error);
