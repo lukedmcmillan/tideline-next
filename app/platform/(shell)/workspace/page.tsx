@@ -1538,12 +1538,17 @@ function WorkspaceContent() {
         if (cancelled) return;
         setTitle(projectName);
         const createRes = await fetch("/api/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ project_name: projectName, title: "Untitled document" }) });
-        if (createRes.ok) {
-          const created = await createRes.json();
-          if (created.id) { setDocId(created.id); setDocContent(null); setReady(true); return; }
+        console.log("[workspace] Document creation response status:", createRes.status);
+        const createData = await createRes.json();
+        console.log("[workspace] Document creation response:", JSON.stringify(createData));
+        if (!createRes.ok) {
+          console.error("[workspace] Document creation failed:", createData);
+          setDocId("local"); setDocContent(null); setReady(true); return;
         }
+        if (createData.id) { setDocId(createData.id); setDocContent(null); setReady(true); return; }
         setDocId("local"); setDocContent(null); setReady(true);
-      } catch {
+      } catch (err) {
+        console.error("[workspace] Document creation error:", err);
         if (!cancelled) { setDocId("local"); setDocContent(null); setReady(true); }
       }
     }
