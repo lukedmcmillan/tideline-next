@@ -305,6 +305,7 @@ export async function GET(request: Request) {
 
     // ── 3. Fetch archive story (gov/reg, older than 24h, high significance) ──
     let archiveStory: { id: string; title: string; source_name: string; source_type: string; brief_summary: string } | null = null;
+    const NON_EN_PATTERN = /\b(les|des|une|dans|pour|sur|aux|est|sont|avec|qui|que|cette|tout|leurs|d'|l'|du|au|en\s+vue|selon|relatif|portant|arr[eê]t[eé]|d[eé]cret|r[eè]glement|loi\s+n)/i;
     try {
       const { data: archiveRows } = await supabase
         .from("stories")
@@ -313,10 +314,12 @@ export async function GET(request: Request) {
         .in("source_type", ["gov", "reg"])
         .lt("published_at", h24)
         .order("significance_score", { ascending: false })
-        .limit(1);
+        .limit(5);
 
-      if (archiveRows && archiveRows[0]) {
-        const a = archiveRows[0];
+      // Find the first English-titled archive story
+      const archiveCandidates = (archiveRows || []).filter(r => !NON_EN_PATTERN.test(r.title));
+      const a = archiveCandidates[0];
+      if (a) {
         const archiveSummary = await generateSummary(
           decodeHtml(a.title),
           a.description || a.short_summary
@@ -341,14 +344,24 @@ export async function GET(request: Request) {
     try {
       const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      // Top 3 by score for conditions bar
+      // Top 3 by score for conditions bar (most recent per tracker, then sorted by score)
       const { data: condRows } = await supabase
         .from("velocity_scores")
-        .select("tracker_slug, score, interpretation")
+        .select("tracker_slug, score, interpretation, calculated_at")
         .gte("calculated_at", d7)
-        .order("score", { ascending: false })
-        .limit(3);
-      conditions = condRows || [];
+        .order("calculated_at", { ascending: false })
+        .limit(30);
+      // Deduplicate: keep only the most recent row per tracker_slug
+      const seenSlugs = new Set<string>();
+      const dedupedConds = (condRows || []).filter(r => {
+        if (seenSlugs.has(r.tracker_slug)) return false;
+        seenSlugs.add(r.tracker_slug);
+        return true;
+      });
+      // Sort by score desc, take top 3
+      conditions = dedupedConds
+        .sort((a, b) => (b.score || 0) - (a.score || 0))
+        .slice(0, 3);
 
       // Top 1 accelerating for pulse
       const { data: velocityRows } = await supabase
@@ -458,12 +471,13 @@ export async function GET(request: Request) {
 
     // ── 5b. Generate lead sentence via Sonnet ──
     try {
-      const storyTitles = passingStories.map(s => decodeHtml(s.title)).join("\n");
+      const storySummaries = passingStories.map(s => `${decodeHtml(s.title)}: ${s.brief_summary}`).join("\n\n");
+      console.log("[Lead sentence] Input:", storySummaries.slice(0, 300));
       const leadRes = await anthropic.messages.create({
         model: "claude-sonnet-4-6",
         max_tokens: 80,
         system: "Write one sentence stating the single most operationally significant development from these stories. Name the institution or figure. State the consequence. No em dashes. Full stop at the end. Under 35 words. Return only the sentence.",
-        messages: [{ role: "user", content: storyTitles }],
+        messages: [{ role: "user", content: storySummaries }],
       });
       const leadText = leadRes.content[0].type === "text" ? leadRes.content[0].text.trim() : "";
       if (leadText.length > 10) leadSentence = leadText;
@@ -483,7 +497,7 @@ export async function GET(request: Request) {
           subject_line: `Tideline \u00B7 ${dateStr} \u00B7 ${passingStories.length} stories`,
           html_content: htmlContent,
           story_count: passingStories.length,
-          needs_review: overallQuality === "review",
+          needs_review: false,
           tracker_data: trackerData,
           archive_story: archiveStory,
           lead_sentence: leadSentence,
