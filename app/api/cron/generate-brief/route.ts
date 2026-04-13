@@ -328,10 +328,10 @@ export async function GET(request: Request) {
       const message = await anthropic.messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 800,
-        system: [{ type: "text", text: "You are a hostile senior editor at a B2B intelligence publication. Your job is to reject briefs that contain vague summaries, AI-sounding language, cause advocacy, or anything below the standard of a professional policy intelligence product. Return JSON only. No markdown.", cache_control: { type: "ephemeral" } }],
+        system: [{ type: "text", text: "You are a hostile sub-editor at a financial intelligence terminal. Your only job is to catch prescriptive language and unsupported predictions. You are not a philosophy professor — if a summary states facts and consequences without prescribing action, it passes. Return JSON only. No markdown.", cache_control: { type: "ephemeral" } }],
         messages: [{
           role: "user",
-          content: `Review these summaries. For each, mark pass or fail. Fail if: uses phrases like "significant implications", "key stakeholders", "it is crucial", "in conclusion", or similar filler. Fail if the first sentence does not state a concrete fact. Fail if the tone is advocacy rather than intelligence. Return this exact JSON: { "passed": boolean, "failed_items": [{ "index": number, "reason": "string" }], "overall_quality": "publish"|"review"|"reject" }\n\n${summaryList}`,
+          content: `Review these summaries. For each, mark pass or fail.\n\nREJECT only if:\n- Uses prescriptive language: must, should, need to, urge, call on, demand\n- Makes predictions presented as fact: "will cause", "will result in"\n- Uses pure superlatives: landmark, historic, unprecedented, crucial, vital\n\nPASS if:\n- Sentence 1 states a documented fact (institution, decision, number, date)\n- Sentence 2 states a professional consequence for a named group, even if that consequence involves market or regulatory impact\n- Phrases like "face revised valuation models" or "extends price volatility" are analytical consequence statements — these PASS\n- Specific numbers, dates, institutions = good signal\n\nReturn this exact JSON: { "passed": boolean, "failed_items": [{ "index": number, "reason": "string" }], "overall_quality": "publish"|"review"|"reject" }\n\n${summaryList}`,
         }],
       });
 
