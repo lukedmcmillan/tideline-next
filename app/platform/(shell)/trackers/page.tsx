@@ -228,7 +228,7 @@ export default function TrackersPage() {
               const diff = order[a.mom] - order[b.mom];
               return diff !== 0 ? diff : b.score - a.score;
             }).map(t => (
-              <Card key={t.slug} t={t} anim={anim} feat={false} onClick={() => router.push(`/tracker/${t.slug}`)} live={liveScores[t.slug]} />
+              <Card key={t.slug} t={t} anim={anim} feat={false} onClick={() => router.push(`/platform/tracker/${t.slug}`)} live={liveScores[t.slug]} />
             ))}
           </div>
         </div>

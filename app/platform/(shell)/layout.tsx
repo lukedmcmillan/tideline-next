@@ -166,7 +166,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
   const active = (h: string) => {
     if (h === "/platform") return path === "/platform";
     if (h === "/platform/feed") return path === "/platform/feed";
-    if (h === "/platform/trackers") return path?.startsWith("/platform/trackers") || false;
+    if (h === "/platform/trackers") return path?.startsWith("/platform/tracker") || false;
     if (h === "/platform/projects") return path?.startsWith("/platform/projects") || path?.startsWith("/platform/workspace") || false;
     return path?.startsWith(h) || false;
   };
@@ -528,7 +528,7 @@ function RightPanel() {
   const isProjects = path?.startsWith("/platform/projects") || false;
 
   if (path === "/platform") return null;
-  if (path?.startsWith("/platform/trackers")) return null;
+  if (path?.startsWith("/platform/tracker")) return null;
   if (isCalendar) return <CalendarRightPanel />;
   if (isWorkspace) return null;
   if (isProjects) return null;
@@ -832,7 +832,7 @@ function MobileTabBar() {
   const path = usePathname();
   const tabs = [
     { label: "Feed", href: "/platform/feed", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="8" height="8" rx="1.5"/><rect x="12" y="2" width="8" height="8" rx="1.5"/><rect x="2" y="12" width="8" height="8" rx="1.5"/><rect x="12" y="12" width="8" height="8" rx="1.5"/></svg> },
-    { label: "Trackers", href: "/tracker/bbnj", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><path d="M11 7v4l3 2"/></svg> },
+    { label: "Trackers", href: "/platform/trackers", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="7"/><path d="M11 7v4l3 2"/></svg> },
     { label: "Saved", href: "/platform/library", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 3h12v16l-6-4-6 4V3z"/></svg> },
     { label: "Account", href: "/platform/workspace", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="8" r="3.5"/><path d="M4 19c0-3.5 3-6 7-6s7 2.5 7 6"/></svg> },
   ];

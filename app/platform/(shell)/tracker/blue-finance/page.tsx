@@ -205,12 +205,12 @@ export default function BlueFinanceTracker() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
-            <a href="/tracker/isa" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Deep-Sea Mining</a>
-            <a href="/tracker/iuu" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Illegal Fishing</a>
-            <a href="/tracker/30x30" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Marine Protected Areas</a>
-            <a href="/tracker/blue-finance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Ocean Finance</a>
-            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
+            <a href="/platform/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
+            <a href="/platform/tracker/isa" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Deep-Sea Mining</a>
+            <a href="/platform/tracker/iuu" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Illegal Fishing</a>
+            <a href="/platform/tracker/30x30" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Marine Protected Areas</a>
+            <a href="/platform/tracker/blue-finance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Ocean Finance</a>
+            <a href="/platform/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
           </div>
         </div>
       </div>

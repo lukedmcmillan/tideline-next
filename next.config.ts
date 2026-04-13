@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
     "/api/lp-briefing/pdf": ["./node_modules/pdfkit/js/data/**/*"],
     "app/api/lp-briefing/pdf/route": ["./node_modules/pdfkit/js/data/**/*"],
   },
+  async redirects() {
+    return [
+      'isa','bbnj','iuu','30x30','blue-finance',
+      'plastics','imo-shipping','wto-fisheries',
+      'offshore-wind','cites-marine','governance',
+    ].map(slug => ({
+      source: `/tracker/${slug}`,
+      destination: `/platform/tracker/${slug}`,
+      permanent: true,
+    }));
+  },
 };
 
 export default nextConfig;

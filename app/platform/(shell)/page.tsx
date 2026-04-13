@@ -227,7 +227,7 @@ export default function DashboardPage() {
               <div className="dash-card">
                 <div className="dash-card-header">
                   <span className="dash-card-title">Tracker Velocity</span>
-                  <a className="dash-card-link" href="/tracker/bbnj">All trackers {"\u2192"}</a>
+                  <a className="dash-card-link" href="/platform/trackers">All trackers {"\u2192"}</a>
                 </div>
                 <div className="dash-card-body">
                   {trackers.map((t, i) => {

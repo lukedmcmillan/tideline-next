@@ -657,8 +657,8 @@ export default function BBNJTracker() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/tracker/bbnj" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>High Seas Treaty</a>
-            <a href="/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
+            <a href="/platform/tracker/bbnj" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>High Seas Treaty</a>
+            <a href="/platform/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
           </div>
         </div>
       </div>
