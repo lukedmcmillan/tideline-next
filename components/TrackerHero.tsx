@@ -71,7 +71,7 @@ export default function TrackerHero({
       .catch(() => {});
   }, [slug]);
 
-  const band = alertBand(liveScore, slug);
+  const band = alertBand(liveScore ?? score ?? null, slug);
   const daysUntil = nextDate ? Math.ceil((new Date(nextDate).getTime() - Date.now()) / 86400000) : null;
   const dateFmt = nextDate
     ? new Date(nextDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
