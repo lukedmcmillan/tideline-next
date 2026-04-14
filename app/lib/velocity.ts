@@ -15,8 +15,8 @@ const TRACKER_TOPICS: Record<string, string[]> = {
   "30x30": ["mpa", "30x30"],
   "blue-finance": ["blue-finance", "esg"],
   plastics: ["plastics", "pollution"],
-  "imo-shipping": ["shipping", "imo", "mepc", "cii", "ghg", "fueleu"],
-  "offshore-wind": ["offshore-wind", "wind", "msp", "boem", "seabed-leasing"],
+  "imo-shipping": ["shipping"],
+  "offshore-wind": ["offshore-wind"],
   "cites-marine": ["cites", "sharks", "shark", "rays", "guitarfish"],
   "wto-fisheries": ["wto-fisheries", "fisheries-subsidies", "subsidies"],
 };
@@ -35,7 +35,13 @@ const INSTITUTIONAL_MULTIPLIER: Record<string, number> = {
 };
 
 const DECISION_PATTERN =
-  /ratif|adopt|enforc|sanction|decision|resolution|agreement|signed|implement|deadline/i;
+  /ratif|adopt|enforc|sanction|decision|resolution|agreement|signed|implement|deadline|entry into force|enters into force|in force|final text|mandate|conclude|binding|approved|adopted|enacted|compliance|effective/i;
+
+// Title keywords to broaden story matching beyond topic tags
+const TITLE_KEYWORDS: Record<string, RegExp> = {
+  "imo-shipping": /\b(imo|mepc|marpol|cii|fueleu|ghg|shipping emissions|decarbonisation|net zero shipping|carbon intensity|eu ets shipping|green shipping)\b/i,
+  "offshore-wind": /\b(offshore wind|wind energy|boem|crown estate|marine spatial|seabed leasing|wind farm)\b/i,
+};
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -49,25 +55,63 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const d60 = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Current 30d stories
-  const { data: currentStories } = await supabase
+  const titlePattern = TITLE_KEYWORDS[trackerSlug];
+
+  // Current 30d stories (by topic tag)
+  const { data: topicStories } = await supabase
     .from("stories")
     .select("id, title, published_at")
     .in("topic", topics)
     .gte("published_at", d30)
     .order("published_at", { ascending: false });
 
-  const currentCount = currentStories?.length ?? 0;
+  // Also fetch by title keywords if available (broader net)
+  let titleStories: { id: string; title: string; published_at: string }[] = [];
+  if (titlePattern) {
+    const { data: allRecent } = await supabase
+      .from("stories")
+      .select("id, title, published_at")
+      .gte("published_at", d30)
+      .order("published_at", { ascending: false })
+      .limit(500);
+    titleStories = (allRecent || []).filter(s => titlePattern.test(s.title));
+  }
+
+  // Merge and deduplicate
+  const seenIds = new Set<string>();
+  const currentStories = [...(topicStories || []), ...titleStories].filter(s => {
+    if (seenIds.has(s.id)) return false;
+    seenIds.add(s.id);
+    return true;
+  });
+  const currentCount = currentStories.length;
 
   // Previous 30d stories (30-60 days ago)
-  const { data: prevStories } = await supabase
+  const { data: prevTopicStories } = await supabase
     .from("stories")
-    .select("id")
+    .select("id, title")
     .in("topic", topics)
     .gte("published_at", d60)
     .lt("published_at", d30);
 
-  const prevCount = prevStories?.length ?? 0;
+  let prevTitleStories: { id: string; title: string }[] = [];
+  if (titlePattern) {
+    const { data: allPrev } = await supabase
+      .from("stories")
+      .select("id, title")
+      .gte("published_at", d60)
+      .lt("published_at", d30)
+      .limit(500);
+    prevTitleStories = (allPrev || []).filter(s => titlePattern.test(s.title));
+  }
+
+  const prevIds = new Set<string>();
+  const prevAll = [...(prevTopicStories || []), ...prevTitleStories].filter(s => {
+    if (prevIds.has(s.id)) return false;
+    prevIds.add(s.id);
+    return true;
+  });
+  const prevCount = prevAll.length;
 
   // Component A: Story Volume Trend (40%)
   const growth = (currentCount - prevCount) / Math.max(prevCount, 1);
@@ -81,16 +125,10 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
     scoreB = Math.max(2, parseFloat((10 * Math.exp(-0.05 * daysSince)).toFixed(1)));
   }
 
-  // Component C: Decision Signals (25%)
-  const { data: decisionStories } = await supabase
-    .from("stories")
-    .select("title")
-    .in("topic", topics)
-    .gte("published_at", d30);
-
-  const matchedDecisions = decisionStories?.filter(
+  // Component C: Decision Signals (25%) — use already-fetched current stories
+  const matchedDecisions = currentStories.filter(
     (s) => DECISION_PATTERN.test(s.title)
-  ) ?? [];
+  );
 
   const classifications = await Promise.all(
     matchedDecisions.map(async (s) => {
