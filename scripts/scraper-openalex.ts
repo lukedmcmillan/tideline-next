@@ -221,7 +221,7 @@ async function main() {
   console.log(`Date window: ${fromDate} to ${toDate}\n`);
 
   // Query 1: By concept IDs
-  const conceptFilter = CONCEPT_IDS.map(id => id.replace("C", "")).join("|");
+  const conceptFilter = CONCEPT_IDS.map(id => `https://openalex.org/${id}`).join("|");
   const conceptUrl = `${BASE}?filter=concepts.id:${conceptFilter},open_access.oa_status:gold|green,from_publication_date:${fromDate},to_publication_date:${toDate},language:en&sort=publication_date:desc`;
 
   console.log("Query 1: By concept IDs");
@@ -230,7 +230,7 @@ async function main() {
 
   // Query 2: By keywords
   const keywordQuery = KEYWORDS.map(k => `"${k}"`).join(" OR ");
-  const keywordUrl = `${BASE}?search=${encodeURIComponent(keywordQuery)}&filter=open_access.oa_status:gold|green,from_publication_date:${fromDate},to_publication_date:${toDate},language:en&sort=publication_date:desc`;
+  const keywordUrl = `${BASE}?filter=title_and_abstract.search:${encodeURIComponent(keywordQuery)},open_access.oa_status:gold|green,from_publication_date:${fromDate},to_publication_date:${toDate},language:en&sort=publication_date:desc`;
 
   console.log("Query 2: By keywords");
   const { papers: keywordPapers, totalNC: ncKeywords } = await fetchAllPages(keywordUrl, "keywords");
