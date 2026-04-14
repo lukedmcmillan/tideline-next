@@ -1636,6 +1636,14 @@ function WorkspaceContent() {
 
   useEffect(() => { return () => { if (saveTimer.current) clearTimeout(saveTimer.current); }; }, []);
 
+  useEffect(() => {
+    if (!editor || !docContent) return;
+    const notes = (docContent as { notes?: unknown }).notes || docContent;
+    if (notes && typeof notes === "object") {
+      editor.commands.setContent(notes as object, false);
+    }
+  }, [docContent, editor]);
+
   const saveTitle = (val: string) => {
     if (isLocal || !docId) return;
     const t = val.trim() || "Untitled document";
