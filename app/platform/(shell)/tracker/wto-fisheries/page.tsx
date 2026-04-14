@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#1a2f4a";
@@ -68,14 +69,21 @@ export default function WTOFisheriesTracker() {
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>{TITLE}</h1>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 640, lineHeight: 1.7 }}>{DESCRIPTION}</p>
-        </div>
-      </div>
+      <TrackerHero
+        slug="wto-fisheries"
+        title="WTO Fisheries Subsidies"
+        insight="The first multilateral agreement to directly target a sector's environmental impact entered into force in September 2025. The compliance deadline is approaching."
+        stage={4}
+        stageName="Implementation"
+        stageDesc="Agreement in force Sep 2025. 91 members bound. Fish Two negotiations stalled, no chair, no timeline, four-year sunset clause running."
+        stageSource="WTO, Sep 2025"
+        traj="Stalling"
+        trajDesc="Fish Two has no chair and no agreed timeline. Sunset clause running. Compliance deadline approaching with no enforcement mechanism."
+        trajSource="WTO Fisheries Committee, Feb 2026"
+        nextEvent="Compliance deadline"
+        nextDate="2026-09-15"
+        nextLocation="Geneva"
+      />
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="wto-fisheries" />

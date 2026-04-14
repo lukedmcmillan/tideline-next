@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 import { Chart, registerables } from "chart.js";
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
@@ -649,33 +650,21 @@ export default function BBNJTracker() {
         }
       `}</style>
 
-      {/* Header */}
-      <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}`, padding: "0 20px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", height: 48, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="/" style={{ fontSize: 18, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
-            <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/platform/tracker/bbnj" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>High Seas Treaty</a>
-            <a href="/platform/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 14, fontFamily: SANS }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>
-            High Seas Treaty
-          </h1>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: SANS, maxWidth: 600, lineHeight: 1.7 }}>
-            Tracking BBNJ Agreement ratification, implementation, and the first Conference of Parties.
-          </p>
-        </div>
-      </div>
+      <TrackerHero
+        slug="bbnj"
+        title="High Seas Treaty"
+        insight="The BBNJ Agreement entered into force in January 2026, the first treaty to govern the high seas in human history."
+        stage={4}
+        stageName="Implementation"
+        stageDesc="Agreement in force. 83 parties. PrepCom established. First Conference of Parties scheduled for 2027."
+        stageSource="UN BBNJ Secretariat, Jan 2026"
+        traj="Advancing"
+        trajDesc="Ratification momentum continues post-entry into force. PrepCom building institutional architecture."
+        trajSource="UN BBNJ PrepCom III, 2026"
+        nextEvent="BBNJ COP1"
+        nextDate="2027-01-01"
+        nextLocation="TBC"
+      />
 
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#1a2f4a";
@@ -49,14 +50,21 @@ export default function IMOShippingTracker() {
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>{TITLE}</h1>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 640, lineHeight: 1.7 }}>{DESCRIPTION}</p>
-        </div>
-      </div>
+      <TrackerHero
+        slug="imo-shipping"
+        title="IMO Shipping Emissions"
+        insight="Five thousand companies are directly affected by MEPC decisions. MEPC 84 convenes in 13 days and will set implementing measures for the Net-Zero by 2050 framework."
+        stage={3}
+        stageName="Active Regulation"
+        stageDesc="Net-Zero Framework adopted MEPC 83. EU ETS Phase 1 complete. FuelEU Maritime in force. CII rating enforcement live."
+        stageSource="IMO MEPC 83, Dec 2023"
+        traj="Accelerating"
+        trajDesc="MEPC 84 in 13 days. Implementing measures for GHG strategy on agenda. EU ETS Phase 2 reporting underway."
+        trajSource="IMO MEPC calendar, Apr 2026"
+        nextEvent="MEPC 84"
+        nextDate="2026-04-27"
+        nextLocation="London"
+      />
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="imo-shipping" />

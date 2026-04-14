@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const HERO_BG = "#1a2f4a";
@@ -217,17 +218,21 @@ export default function PlasticsTreatyTracker() {
         }
       `}</style>
 
-      {/* Hero */}
-      <div style={{ background: HERO_BG, padding: "48px 20px 24px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontFamily: F, fontSize: 11, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL_LIGHT, marginBottom: 14 }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 24, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>Global Plastics Treaty</h1>
-          <p style={{ fontFamily: F, fontSize: 13, color: "#a8bfd4", maxWidth: 640, lineHeight: 1.7 }}>
-            Tracking negotiations toward an international legally binding instrument on plastic pollution, including in the marine environment {"\u2014"} the most active multilateral environmental process of 2026.
-          </p>
-          <StatusBlock />
-        </div>
-      </div>
+      <TrackerHero
+        slug="plastics"
+        title="Plastics Treaty"
+        insight="INC-5 Busan produced the highest raw regulatory signal in this entire dataset, 9.33 out of 10. The treaty still failed. The score correctly said do not act."
+        stage={2}
+        stageName="Negotiation Deadlocked"
+        stageDesc="INC-5.3 elected new chair Feb 2026. No substantive negotiations. Petrostate bloc maintaining procedural blockage."
+        stageSource="UNEP INC-5.3, Feb 2026"
+        traj="Stalling"
+        trajDesc="New chair signalling fresh momentum but no session date confirmed. Saudi-led bloc continues to block production cap language."
+        trajSource="CIEL analysis, Feb 2026"
+        nextEvent="INC-6"
+        nextDate={null}
+        nextLocation="Date unconfirmed"
+      />
 
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>

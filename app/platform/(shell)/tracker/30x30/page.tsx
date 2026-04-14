@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#0a1628";
@@ -172,16 +173,21 @@ export default function ThirtyByThirtyTracker() {
         }
       `}</style>
 
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>Marine Protected Areas</h1>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 640, lineHeight: 1.7 }}>
-            Tracking global progress toward protecting 30% of the ocean by 2030 {"\u2014"} the Kunming-Montreal Global Biodiversity Framework Target 3.
-          </p>
-        </div>
-      </div>
+      <TrackerHero
+        slug="30x30"
+        title="Marine Protected Areas"
+        insight="Ocean protection crossed 10% in April 2026, the biggest annual jump in a decade. The 30% target by 2030 requires tripling current coverage in four years."
+        stage={2}
+        stageName="Framework Implementation"
+        stageDesc="Kunming-Montreal GBF Target 3 adopted. BBNJ framework now operational for high seas MPAs. Domestic designation momentum building."
+        stageSource="CBD COP15, Dec 2022"
+        traj="Advancing"
+        trajDesc="Coverage at 10.1% globally. Chile mega-MPA (360,000 km2) designated March 2026."
+        trajSource="WCPA/IUCN, Apr 2026"
+        nextEvent="CBD COP17"
+        nextDate="2026-10-15"
+        nextLocation="Armenia"
+      />
 
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>

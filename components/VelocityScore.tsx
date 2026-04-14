@@ -14,30 +14,47 @@ const THRESHOLDS: Record<string, number> = {
   isa: 6.5, bbnj: 7.0, iuu: 6.0, "30x30": 7.5, "blue-finance": 7.0,
   plastics: 5.0, "imo-shipping": 5.0, "wto-fisheries": 5.0, "offshore-wind": 3.5, "cites-marine": 5.0,
 };
+
+const INST_TYPES: Record<string, { type: number; name: string; multiplier: number }> = {
+  "isa": { type: 2, name: "Mixed architecture", multiplier: 0.75 },
+  "bbnj": { type: 3, name: "Consensus-dependent", multiplier: 0.46 },
+  "iuu": { type: 2, name: "Mixed architecture", multiplier: 0.85 },
+  "30x30": { type: 1, name: "Unilateral", multiplier: 0.85 },
+  "blue-finance": { type: 6, name: "Voluntary standard-setting", multiplier: 0.80 },
+  "plastics": { type: 3, name: "Consensus-dependent", multiplier: 0.46 },
+  "imo-shipping": { type: 2, name: "Mixed architecture", multiplier: 0.75 },
+  "wto-fisheries": { type: 5, name: "Ratification milestone", multiplier: 0.75 },
+  "offshore-wind": { type: 1, name: "Unilateral", multiplier: 0.85 },
+  "cites-marine": { type: 2, name: "Mixed architecture", multiplier: 0.75 },
+};
+
 function fdt(iso: string) { const d = new Date(iso); return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
 
 interface Latest { score: number; score_volume: number | null; score_recency: number | null; score_signals: number | null; momentum_direction: "accelerating" | "stable" | "decelerating"; interpretation: string }
 interface Pt { score: number; score_volume: number | null; score_recency: number | null; score_signals: number | null; calculated_at: string; interpretation?: string }
 
-function Arrow({ dir, c }: { dir: string; c: string }) {
-  if (dir === "accelerating") return <svg width="8" height="7" viewBox="0 0 8 7" style={{ marginRight: 3 }}><polygon points="4,0 8,7 0,7" fill={c} /></svg>;
-  if (dir === "decelerating") return <svg width="8" height="7" viewBox="0 0 8 7" style={{ marginRight: 3 }}><polygon points="4,7 8,0 0,0" fill={c} /></svg>;
-  return <svg width="7" height="8" viewBox="0 0 7 8" style={{ marginRight: 3 }}><polygon points="0,0 7,4 0,8" fill={c} /></svg>;
+function momBadge(dir: string) {
+  if (dir === "accelerating") return { bg: "#E8F7F2", color: "#1D9E75" };
+  if (dir === "decelerating") return { bg: "#FDEAEA", color: "#E24B4A" };
+  return { bg: "#FEF3E2", color: "#EF9F27" };
 }
 
-function Sub({ label, value }: { label: string; value: number | null }) {
-  const has = value != null;
-  const c = has ? col(value) : M;
+function Sub({ label, value, isSignals }: { label: string; value: number | null; isSignals?: boolean }) {
+  const has = value != null && value > 0;
+  const c = has ? col(value!) : M;
   return (
-    <div style={{ padding: "10px 20px" }}>
+    <div style={{ padding: "14px 20px" }}>
       <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: M, marginBottom: 4 }}>{label}</div>
       {has ? (
         <>
-          <div style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: c, marginBottom: 5 }}>{value}<span style={{ fontSize: 10, fontWeight: 400, color: M }}>/10</span></div>
-          <div style={{ height: 2, background: TK, borderRadius: 1 }}><div style={{ height: 2, width: `${(value / 10) * 100}%`, background: c, borderRadius: 1 }} /></div>
+          <div style={{ fontFamily: F, fontSize: 20, fontWeight: 600, color: c, marginBottom: 6 }}>{value}<span style={{ fontSize: 10, fontWeight: 400, color: M }}>/10</span></div>
+          <div style={{ height: 2, background: TK, borderRadius: 99 }}><div style={{ height: 2, width: `${((value ?? 0) / 10) * 100}%`, background: c, borderRadius: 99 }} /></div>
         </>
       ) : (
-        <div style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: M }}>{"\u2014"}</div>
+        <>
+          <div style={{ fontFamily: F, fontSize: 12, fontWeight: 400, color: "#C5C5C5" }}>{"\u2014"}</div>
+          {isSignals && <div style={{ fontFamily: F, fontSize: 10, color: M, marginTop: 4 }}>No signals detected</div>}
+        </>
       )}
     </div>
   );
@@ -121,7 +138,6 @@ export default function VelocityScore({ slug }: { slug: string }) {
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).Chart) {
-      // Load annotation plugin if not already loaded
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (!(window as any).chartjsPluginAnnotation) {
         const sa = document.createElement("script");
@@ -142,53 +158,77 @@ export default function VelocityScore({ slug }: { slug: string }) {
     document.head.appendChild(s);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return () => { if (chartRef.current) (chartRef.current as any).destroy(); };
-  }, [hist, data]);
+  }, [hist, data, slug]);
 
   if (loading) return <Skeleton />;
   if (!data) return null;
 
   const c = col(data.score);
+  const mb = momBadge(data.momentum_direction);
+  const inst = INST_TYPES[slug];
 
   return (
     <>
       <div ref={wrapRef} style={{ fontFamily: F, background: "#fff", border: `0.5px solid ${B}`, borderRadius: 8, overflow: "hidden", marginBottom: 24 }}>
 
-        {/* 1. Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px 0" }}>
-          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M }}>Pulse</div>
-          <button onClick={() => setModal(true)} style={{ fontFamily: F, fontSize: 10, color: M, background: "#fff", border: `0.5px solid ${B}`, borderRadius: 99, padding: "2px 9px", cursor: "pointer" }}>{"\u24D8"} How this is calculated</button>
+        {/* Header bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "14px 20px", borderBottom: `0.5px solid ${B}` }}>
+          <div>
+            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: M }}>PULSE SCORE</div>
+            {data.interpretation && (
+              <div style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.5, marginTop: 4 }}>{data.interpretation}</div>
+            )}
+          </div>
+          <a
+            href="/methodology"
+            onClick={(e) => { e.preventDefault(); setModal(true); }}
+            style={{ fontFamily: F, fontSize: 10, color: M, border: `0.5px solid ${B}`, borderRadius: 99, padding: "3px 10px", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}
+          >
+            How this is calculated
+          </a>
         </div>
 
-        {/* 2. Score */}
-        <div style={{ display: "flex", alignItems: "baseline", gap: 5, padding: "6px 20px", marginBottom: 5 }}>
-          <span style={{ fontFamily: F, fontSize: 34, fontWeight: 600, color: c, lineHeight: 1 }}>{data.score}</span>
-          <span style={{ fontFamily: F, fontSize: 13, color: M, marginRight: 8 }}>/10</span>
-          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: c, display: "inline-flex", alignItems: "center" }}>
-            <Arrow dir={data.momentum_direction} c={c} />
-            {data.momentum_direction.charAt(0).toUpperCase() + data.momentum_direction.slice(1)}
-          </span>
+        {/* Score section */}
+        <div style={{ padding: "16px 20px 12px", borderBottom: `0.5px solid ${B}` }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontFamily: F, fontSize: 40, fontWeight: 700, color: c, lineHeight: 1 }}>{data.score}</span>
+            <span style={{ fontFamily: F, fontSize: 16, color: M }}>/10</span>
+            <span
+              style={{
+                fontFamily: F,
+                fontSize: 11,
+                fontWeight: 600,
+                padding: "3px 8px",
+                borderRadius: 99,
+                background: mb.bg,
+                color: mb.color,
+              }}
+            >
+              {data.momentum_direction.charAt(0).toUpperCase() + data.momentum_direction.slice(1)}
+            </span>
+          </div>
+          <div style={{ height: 3, background: TK, borderRadius: 99, marginTop: 10 }}>
+            <div style={{ height: 3, width: `${(data.score / 10) * 100}%`, background: c, borderRadius: 99 }} />
+          </div>
         </div>
 
-        {/* 3. Progress */}
-        <div style={{ margin: "0 20px 12px", height: 2, background: TK, borderRadius: 1 }}>
-          <div style={{ height: 2, width: `${(data.score / 10) * 100}%`, background: c, borderRadius: 1 }} />
-        </div>
-
-        {/* 4. Sub-scores */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: `0.5px solid ${B}`, borderBottom: `0.5px solid ${B}` }}>
+        {/* Sub-scores */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: `0.5px solid ${B}` }}>
           <Sub label="Volume trend" value={data.score_volume} />
-          <div style={{ borderLeft: `0.5px solid ${B}`, borderRight: `0.5px solid ${B}` }}><Sub label="Recency" value={data.score_recency} /></div>
-          <Sub label="Decision signals" value={data.score_signals} />
+          <div style={{ borderLeft: `0.5px solid ${B}`, borderRight: `0.5px solid ${B}` }}>
+            <Sub label="Recency" value={data.score_recency} />
+          </div>
+          <Sub label="Decision signals" value={data.score_signals} isSignals />
         </div>
 
-        {/* 5. Chart */}
+        {/* Chart */}
         {hist.length >= 2 && (
           <div style={{ padding: "12px 20px 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M }}>10-week trend</div>
+              <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M }}>10-WEEK TREND</div>
               <div style={{ fontFamily: F, fontSize: 10, color: M }}>Hover for weekly detail</div>
             </div>
-            <div style={{ height: 90, position: "relative" }} onMouseLeave={() => setTip(null)}>
+            <div style={{ height: 80, position: "relative" }} onMouseLeave={() => setTip(null)}>
               <canvas ref={canvasRef} />
               {tip && (
                 <div style={{ position: "absolute", left: tip.x, top: tip.y, fontFamily: F, width: 220, padding: "8px 10px", background: "#fff", border: `0.5px solid ${B}`, borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", zIndex: 10, pointerEvents: "none" }}>
@@ -208,31 +248,35 @@ export default function VelocityScore({ slug }: { slug: string }) {
           </div>
         )}
 
-        {/* 6. Interpretation */}
-        {data.interpretation && (
-          <div style={{ fontFamily: F, padding: "10px 20px", borderTop: `0.5px solid ${B}`, fontSize: 12, color: T, lineHeight: 1.6 }}>{data.interpretation}</div>
+        {/* Institutional type footer */}
+        {inst && (
+          <div style={{ padding: "10px 20px", borderTop: `0.5px solid ${B}`, background: "#FAFAFA" }}>
+            <div style={{ fontFamily: F, fontSize: 11, color: M }}>
+              Type {inst.type} {"\u00B7"} {inst.name} {"\u00B7"} Risk multiplier {inst.multiplier}x
+            </div>
+          </div>
         )}
       </div>
 
-      {/* 7. Methodology modal */}
+      {/* Methodology modal */}
       {modal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ fontFamily: F, background: "#fff", borderRadius: 8, padding: 24, maxWidth: 480, width: "90vw", position: "relative", zIndex: 51, maxHeight: "80vh", overflowY: "auto" }}>
             <button onClick={() => setModal(false)} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", fontSize: 14, color: M, cursor: "pointer" }}>{"\u2715"}</button>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginBottom: 12 }}>Pulse Score {"\u2014"} Methodology</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "0 0 0" }}>The Pulse score measures how much is happening in this domain right now {"\u2014"} the volume, recency and weight of verified intelligence indexed by Tideline this week.</p>
+            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginBottom: 12 }}>Pulse Score Methodology</div>
+            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "0 0 0" }}>The Pulse score measures how much is happening in this domain right now: the volume, recency and weight of verified intelligence indexed by Tideline this week.</p>
             <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 16 }}>The equation</div>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#202124", background: "#F8F9FA", padding: "8px 12px", borderRadius: 4, margin: "6px 0" }}>Score = (Volume trend {"\u00D7"} 0.4) + (Recency {"\u00D7"} 0.35) + (Decision signals {"\u00D7"} 0.25)</div>
             <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>Volume trend (40%)</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Compares verified news, reports and regulatory developments indexed in the last 30 days against the prior 30-day period. Rising volume indicates increased institutional attention {"\u2014"} a leading indicator of regulatory movement.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Compares verified news, reports and regulatory developments indexed in the last 30 days against the prior 30-day period. Rising volume indicates increased institutional attention, a leading indicator of regulatory movement.</p>
             <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>Recency (35%)</div>
             <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Measures days elapsed since the most recent indexed development, using exponential decay. Momentum that goes quiet scores lower regardless of historical activity.</p>
             <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>Decision signals (25%)</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Identifies intelligence containing language associated with concrete regulatory action {"\u2014"} ratification, adoption, enforcement, sanctions, signed agreements, implementation, deadlines {"\u2014"} then classifies each as positive (+2) or negative ({"\u2212"}1) using AI.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Identifies intelligence containing language associated with concrete regulatory action: ratification, adoption, enforcement, sanctions, signed agreements, implementation, deadlines. Classifies each as positive (+2) or negative ({"\u2212"}1) using AI.</p>
             <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>What it means</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}><strong>Above 7, accelerating</strong> {"\u2014"} high activity. Decisions are being made. Act now.</p>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>4 to 7, stable</strong> {"\u2014"} moderate activity. Monitor weekly.</p>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>Below 4, decelerating</strong> {"\u2014"} quiet period. Pressure is off for now.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}><strong>Above 7, accelerating</strong>: high activity. Decisions are being made. Act now.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>4 to 7, stable</strong>: moderate activity. Monitor weekly.</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>Below 4, decelerating</strong>: quiet period. Pressure is off for now.</p>
             <div style={{ fontFamily: F, fontSize: 10, color: M, marginTop: 16, paddingTop: 12, borderTop: `0.5px solid ${B}` }}>No editorial judgement applied. All underlying intelligence is accessible on the platform. Recalculated every Monday.</div>
           </div>
         </div>

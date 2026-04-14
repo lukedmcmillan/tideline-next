@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const NAVY = "#1a2f4a";
@@ -1052,19 +1053,21 @@ export default function ISATracker() {
         }
       `}</style>
 
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 24px 48px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ ...eyebrowStyle(TEAL), marginBottom: 14 }}>Live intelligence tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 700, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 14px" }}>
-            Deep-Sea Mining
-          </h1>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.65)", maxWidth: 720, lineHeight: 1.7, margin: 0 }}>
-            Monitored via the International Seabed Authority (ISA), covering licensing, mining code negotiations, and environmental safeguards under UNCLOS Part XI.
-          </p>
-          <StatusBlock status={trackerStatus} loading={statusLoading} missing={statusMissing} />
-        </div>
-      </div>
+      <TrackerHero
+        slug="isa"
+        title="Deep-Sea Mining"
+        insight="No commercial seabed mining licence has ever been issued. The Mining Code has been under negotiation for eleven years."
+        stage={2}
+        stageName="Consultation"
+        stageDesc="Exploitation regulations under active Council negotiation. Draft text remains unresolved on financial model and environmental standards."
+        stageSource="ISBA/31/C/3, 9 Feb 2026"
+        traj="Stalling"
+        trajDesc="Third consecutive session without code adoption. Coalition of 27 states blocking on environmental grounds."
+        trajSource="ISA Council 29th Session, 29 Mar 2026"
+        nextEvent="ISA Council 31st Session Part 2"
+        nextDate="2026-07-14"
+        nextLocation="Kingston, Jamaica"
+      />
 
       {/* Body */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>

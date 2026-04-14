@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 const NAVY = "#0a1628";
 const BLUE = "#1d6fa4";
@@ -197,37 +198,21 @@ export default function BlueFinanceTracker() {
         }
       `}</style>
 
-      {/* Header */}
-      <div style={{ background: NAVY, borderBottom: `3px solid ${BLUE}`, padding: "0 20px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", height: 48, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="/" style={{ fontSize: 18, fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", textDecoration: "none" }}>TIDELINE</a>
-            <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <a href="/platform/feed" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Feed</a>
-            <a href="/platform/tracker/bbnj" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>High Seas Treaty</a>
-            <a href="/platform/tracker/isa" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Deep-Sea Mining</a>
-            <a href="/platform/tracker/iuu" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Illegal Fishing</a>
-            <a href="/platform/tracker/30x30" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Marine Protected Areas</a>
-            <a href="/platform/tracker/blue-finance" style={{ color: WHITE, fontSize: 13, fontFamily: SANS, fontWeight: 600, textDecoration: "none" }}>Ocean Finance</a>
-            <a href="/platform/tracker/governance" style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: SANS, textDecoration: "none" }}>Ocean Governance</a>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEAL, marginBottom: 14, fontFamily: SANS }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 700, color: WHITE, fontFamily: SERIF, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>
-            Ocean Finance
-          </h1>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontFamily: SANS, maxWidth: 600, lineHeight: 1.7 }}>
-            Blue bonds, sustainable ocean investment, and biodiversity finance flows.
-          </p>
-        </div>
-      </div>
+      <TrackerHero
+        slug="blue-finance"
+        title="Blue Finance and TNFD"
+        insight="733 organisations representing $9 trillion in market capitalisation have adopted TNFD reporting. The ISSB is now building a mandatory nature disclosure standard."
+        stage={3}
+        stageName="Standard Adoption"
+        stageDesc="TNFD v1.0 live with 733 adopters. ISSB moving to standard-setting on nature disclosure. EU CSRD alignment confirmed."
+        stageSource="TNFD, ISSB Feb 2026"
+        traj="Advancing"
+        trajDesc="ISSB voted to skip discussion paper and move directly to exposure draft. Mandatory nature disclosure framework approaching."
+        trajSource="ISSB meeting, Feb 2026"
+        nextEvent="ISSB exposure draft"
+        nextDate="2026-10-01"
+        nextLocation="London"
+      />
 
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>

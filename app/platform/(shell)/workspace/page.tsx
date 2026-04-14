@@ -1640,7 +1640,7 @@ function WorkspaceContent() {
     if (!editor || !docContent) return;
     const notes = (docContent as { notes?: unknown }).notes || docContent;
     if (notes && typeof notes === "object") {
-      editor.commands.setContent(notes as object, false);
+      editor.commands.setContent(notes as Parameters<typeof editor.commands.setContent>[0]);
     }
   }, [docContent, editor]);
 

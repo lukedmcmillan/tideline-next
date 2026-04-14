@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
 import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
+import TrackerHero from "@/components/TrackerHero";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const NAVY = "#1a2f4a";
@@ -49,14 +50,21 @@ export default function CITESMarineTracker() {
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
-      {/* Hero */}
-      <div style={{ background: NAVY, padding: "48px 20px 52px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase", color: TEAL, marginBottom: 14 }}>Live Intelligence Tracker</div>
-          <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: WHITE, letterSpacing: "-0.02em", lineHeight: 1.15, margin: "0 0 12px" }}>{TITLE}</h1>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 640, lineHeight: 1.7 }}>{DESCRIPTION}</p>
-        </div>
-      </div>
+      <TrackerHero
+        slug="cites-marine"
+        title="CITES Marine Species"
+        insight="An estimated 20 million blue sharks were traded annually before the CoP20 listing. Trade controls activated in March 2026. Implementation compliance is now the live issue."
+        stage={4}
+        stageName="Implementation"
+        stageDesc="CoP20 listings adopted Nov 2025. Blue shark and mako permits required Mar 2026. TRAFFIC monitoring compliance gaps in Asian markets."
+        stageSource="CITES CoP20, Nov 2025"
+        traj="Implementing"
+        trajDesc="Trade controls active. TRAFFIC reporting early compliance gaps in Hong Kong and mainland China."
+        trajSource="TRAFFIC monitoring, Mar 2026"
+        nextEvent="CITES trade database review"
+        nextDate="2026-06-01"
+        nextLocation="Geneva"
+      />
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="cites-marine" />
