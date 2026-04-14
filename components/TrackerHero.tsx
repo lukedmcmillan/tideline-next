@@ -33,10 +33,10 @@ function alertBand(score: number | null | undefined, slug?: string) {
   const highT = isWind ? 5.5 : 7.0;
   const elevT = isWind ? 3.5 : 5.0;
   const watchT = isWind ? 2.0 : 3.0;
-  if (score >= highT) return { label: "HIGH", bg: "rgba(29,158,117,0.2)", color: TEAL, tip: "HIGH \u2014 conditions strongly present.\nPrepare immediately. Typical window 2\u20134 weeks." };
-  if (score >= elevT) return { label: "ELEVATED", bg: "rgba(239,159,39,0.2)", color: AMBER, tip: "ELEVATED \u2014 conditions present.\nHeightened vigilance warranted.\nTypical window 4\u20138 weeks." };
-  if (score >= watchT) return { label: "WATCH", bg: "rgba(255,255,255,0.1)", color: MUTED, tip: "WATCH \u2014 some activity present.\nNo immediate action required." };
-  return { label: "QUIET", bg: "rgba(255,255,255,0.06)", color: DIM, tip: "QUIET \u2014 low observable activity.\nDomain appears dormant." };
+  if (score >= highT) return { label: "HIGH ALERT", bg: "rgba(29,158,117,0.2)", color: TEAL, sub: "Prepare now \u00B7 2\u20134 weeks" };
+  if (score >= elevT) return { label: "ELEVATED CONDITIONS", bg: "rgba(239,159,39,0.2)", color: AMBER, sub: "Monitor closely \u00B7 4\u20138 weeks" };
+  if (score >= watchT) return { label: "WATCH", bg: "rgba(255,255,255,0.1)", color: MUTED, sub: "Routine monitoring" };
+  return { label: "QUIET", bg: "rgba(255,255,255,0.06)", color: DIM, sub: "Low activity" };
 }
 
 function trajColor(traj: string) {
@@ -115,23 +115,26 @@ export default function TrackerHero({
             LIVE INTELLIGENCE TRACKER
           </div>
           {liveScore !== null && band && (
-            <div
-              title={band.tip}
-              style={{
-                fontFamily: F,
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".08em",
-                textTransform: "uppercase",
-                padding: "3px 10px",
-                borderRadius: 4,
-                background: band.bg,
-                color: band.color,
-                border: `1px solid ${band.color}`,
-                cursor: "help",
-              }}
-            >
-              {band.label}<span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>?</span>
+            <div style={{ textAlign: "right" }}>
+              <div
+                style={{
+                  fontFamily: F,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: ".08em",
+                  textTransform: "uppercase",
+                  padding: "3px 10px",
+                  borderRadius: 4,
+                  background: band.bg,
+                  color: band.color,
+                  border: `1px solid ${band.color}`,
+                }}
+              >
+                {band.label}
+              </div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
+                {band.sub}
+              </div>
             </div>
           )}
         </div>
