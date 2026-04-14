@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 
 const NAVY = "#0a1628";
@@ -231,6 +232,7 @@ export default function BlueFinanceTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="blue-finance" />
+        <TrackerHistory slug="blue-finance" />
         <TrackerMethodology slug="blue-finance" />
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>

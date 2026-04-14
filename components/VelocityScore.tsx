@@ -9,6 +9,11 @@ const B = "#DADCE0";
 const TK = "#E8EAED";
 
 function col(s: number) { return s < 4 ? "#E24B4A" : s <= 7 ? "#EF9F27" : "#1D9E75"; }
+
+const THRESHOLDS: Record<string, number> = {
+  isa: 6.5, bbnj: 7.0, iuu: 6.0, "30x30": 7.5, "blue-finance": 7.0,
+  plastics: 5.0, "imo-shipping": 5.0, "wto-fisheries": 5.0, "offshore-wind": 3.5, "cites-marine": 5.0,
+};
 function fdt(iso: string) { const d = new Date(iso); return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
 
 interface Latest { score: number; score_volume: number | null; score_recency: number | null; score_signals: number | null; momentum_direction: "accelerating" | "stable" | "decelerating"; interpretation: string }
@@ -77,12 +82,24 @@ export default function VelocityScore({ slug }: { slug: string }) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (chartRef.current) (chartRef.current as any).destroy();
       const pc = hist.map(h => col(h.score));
+      const thr = THRESHOLDS[slug] ?? 5.0;
       chartRef.current = new C(canvasRef.current, {
         type: "line",
         data: { labels: hist.map(h => fdt(h.calculated_at)), datasets: [{ data: hist.map(h => h.score), borderColor: col(data.score), borderWidth: 1.5, pointBackgroundColor: pc, pointBorderColor: pc, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, fill: false }] },
         options: {
           responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
-          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          plugins: {
+            legend: { display: false }, tooltip: { enabled: false },
+            annotation: {
+              annotations: {
+                threshold: {
+                  type: "line", yMin: thr, yMax: thr,
+                  borderColor: "rgba(239,159,39,0.5)", borderWidth: 1, borderDash: [4, 4],
+                  label: { display: true, content: "Alert threshold", position: "end", font: { size: 8 }, color: "#9AA0A6", backgroundColor: "transparent" },
+                },
+              },
+            },
+          },
           scales: {
             y: { min: 0, max: 10, ticks: { stepSize: 2, font: { size: 9, family: F }, color: M, padding: 3 }, grid: { color: "rgba(232,234,237,0.9)", drawTicks: false }, border: { display: false } },
             x: { display: false },
@@ -103,10 +120,25 @@ export default function VelocityScore({ slug }: { slug: string }) {
       });
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).Chart) { go(); return; }
+    if ((window as any).Chart) {
+      // Load annotation plugin if not already loaded
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!(window as any).chartjsPluginAnnotation) {
+        const sa = document.createElement("script");
+        sa.src = "https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js";
+        sa.onload = go;
+        document.head.appendChild(sa);
+      } else { go(); }
+      return;
+    }
     const s = document.createElement("script");
     s.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js";
-    s.onload = go;
+    s.onload = () => {
+      const sa = document.createElement("script");
+      sa.src = "https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js";
+      sa.onload = go;
+      document.head.appendChild(sa);
+    };
     document.head.appendChild(s);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return () => { if (chartRef.current) (chartRef.current as any).destroy(); };

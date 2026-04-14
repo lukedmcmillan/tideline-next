@@ -43,8 +43,21 @@ const TITLE_KEYWORDS: Record<string, RegExp> = {
   "offshore-wind": /\b(offshore wind|wind energy|boem|crown estate|marine spatial|seabed leasing|wind farm)\b/i,
 };
 
+// Topics excluded from broad title-keyword scan (irrelevant to governance trackers)
+const EXCLUDED_TOPICS = ["science", "health", "technology", "sports", "entertainment"];
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+function deduplicateByTitle<T extends { title: string }>(stories: T[]): T[] {
+  const seen = new Set<string>();
+  return stories.filter(s => {
+    const key = s.title?.toLowerCase().trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
@@ -60,30 +73,34 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   // Current 30d stories (by topic tag)
   const { data: topicStories } = await supabase
     .from("stories")
-    .select("id, title, published_at")
+    .select("id, title, published_at, short_summary")
     .in("topic", topics)
     .gte("published_at", d30)
     .order("published_at", { ascending: false });
 
-  // Also fetch by title keywords if available (broader net)
-  let titleStories: { id: string; title: string; published_at: string }[] = [];
+  // Also fetch by title keywords if available (broader net, excluding irrelevant topics)
+  let titleStories: { id: string; title: string; published_at: string; short_summary: string | null }[] = [];
   if (titlePattern) {
     const { data: allRecent } = await supabase
       .from("stories")
-      .select("id, title, published_at")
+      .select("id, title, published_at, short_summary, topic")
       .gte("published_at", d30)
+      .not("topic", "is", null)
       .order("published_at", { ascending: false })
       .limit(500);
-    titleStories = (allRecent || []).filter(s => titlePattern.test(s.title));
+    titleStories = (allRecent || [])
+      .filter(s => !EXCLUDED_TOPICS.includes(s.topic || ""))
+      .filter(s => titlePattern.test(s.title));
   }
 
-  // Merge and deduplicate
+  // Merge, deduplicate by ID then by title
   const seenIds = new Set<string>();
-  const currentStories = [...(topicStories || []), ...titleStories].filter(s => {
+  const mergedStories = [...(topicStories || []), ...titleStories].filter(s => {
     if (seenIds.has(s.id)) return false;
     seenIds.add(s.id);
     return true;
   });
+  const currentStories = deduplicateByTitle(mergedStories);
   const currentCount = currentStories.length;
 
   // Previous 30d stories (30-60 days ago)
@@ -98,19 +115,23 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   if (titlePattern) {
     const { data: allPrev } = await supabase
       .from("stories")
-      .select("id, title")
+      .select("id, title, topic")
       .gte("published_at", d60)
       .lt("published_at", d30)
+      .not("topic", "is", null)
       .limit(500);
-    prevTitleStories = (allPrev || []).filter(s => titlePattern.test(s.title));
+    prevTitleStories = (allPrev || [])
+      .filter(s => !EXCLUDED_TOPICS.includes(s.topic || ""))
+      .filter(s => titlePattern.test(s.title));
   }
 
   const prevIds = new Set<string>();
-  const prevAll = [...(prevTopicStories || []), ...prevTitleStories].filter(s => {
+  const prevMerged = [...(prevTopicStories || []), ...prevTitleStories].filter(s => {
     if (prevIds.has(s.id)) return false;
     prevIds.add(s.id);
     return true;
   });
+  const prevAll = deduplicateByTitle(prevMerged);
   const prevCount = prevAll.length;
 
   // Component A: Story Volume Trend (40%)
@@ -125,9 +146,9 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
     scoreB = Math.max(2, parseFloat((10 * Math.exp(-0.05 * daysSince)).toFixed(1)));
   }
 
-  // Component C: Decision Signals (25%) — use already-fetched current stories
+  // Component C: Decision Signals (25%) — scan title AND short_summary
   const matchedDecisions = currentStories.filter(
-    (s) => DECISION_PATTERN.test(s.title)
+    (s) => DECISION_PATTERN.test(s.title) || DECISION_PATTERN.test(s.short_summary || "")
   );
 
   const classifications = await Promise.all(

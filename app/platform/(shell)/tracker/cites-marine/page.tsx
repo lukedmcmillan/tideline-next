@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 
 const F = "'DM Sans',system-ui,sans-serif";
@@ -59,6 +60,7 @@ export default function CITESMarineTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="cites-marine" />
+        <TrackerHistory slug="cites-marine" />
         <TrackerMethodology slug="cites-marine" />
 
         {/* Status Blocks */}

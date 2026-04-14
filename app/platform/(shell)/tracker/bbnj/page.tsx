@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import VelocityScore from "@/components/VelocityScore";
+import TrackerHistory from "@/components/TrackerHistory";
 import TrackerMethodology, { TrackerDisclosure } from "@/components/TrackerMethodology";
 import { Chart, registerables } from "chart.js";
 import * as d3 from "d3";
@@ -679,6 +680,7 @@ export default function BBNJTracker() {
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 80px" }}>
         <VelocityScore slug="bbnj" />
+        <TrackerHistory slug="bbnj" />
         <TrackerMethodology slug="bbnj" />
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
