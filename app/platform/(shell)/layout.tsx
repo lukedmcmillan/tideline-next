@@ -194,6 +194,9 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
         })}
       </div>
 
+      {/* Methodology link */}
+      <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "12px 14px", fontFamily: F, fontSize: 10, color: "#9AA0A6", textDecoration: "none" }}>Pulse Score Methodology</a>
+
       {/* Footer: streak + queries */}
       <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,.08)", padding: 16 }}>
         <div style={{ background: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14, marginBottom: 10 }}>
