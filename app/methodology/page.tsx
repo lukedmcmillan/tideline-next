@@ -90,7 +90,7 @@ export default function MethodologyPage() {
         {/* ── SECTION 1 ── */}
         <h2 style={sectionHeading}>What it is, and what it is not</h2>
         <p style={bodyText}>
-          The Pulse Score is a structured monitoring index. It measures the intensity of observable public regulatory activity across ten ocean governance domains and produces a numerical output on a 0 to 10 scale, updated every Monday.
+          The Pulse Score is a structured monitoring index. It measures the intensity of observable public regulatory activity across ten ocean governance domains and produces a numerical output on a 0 to 10 scale, updated every four days.
         </p>
         <p style={bodyText}>
           It answers one question: are the conditions for a significant governance event currently present in this domain?

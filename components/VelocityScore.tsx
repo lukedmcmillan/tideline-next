@@ -277,7 +277,7 @@ export default function VelocityScore({ slug }: { slug: string }) {
             <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}><strong>Above 7, accelerating</strong>: high activity. Decisions are being made. Act now.</p>
             <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>4 to 7, stable</strong>: moderate activity. Monitor weekly.</p>
             <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>Below 4, decelerating</strong>: quiet period. Pressure is off for now.</p>
-            <div style={{ fontFamily: F, fontSize: 10, color: M, marginTop: 16, paddingTop: 12, borderTop: `0.5px solid ${B}` }}>No editorial judgement applied. All underlying intelligence is accessible on the platform. Recalculated every Monday.</div>
+            <div style={{ fontFamily: F, fontSize: 10, color: M, marginTop: 16, paddingTop: 12, borderTop: `0.5px solid ${B}` }}>No editorial judgement applied. All underlying intelligence is accessible on the platform. Recalculated every four days.</div>
           </div>
         </div>
       )}

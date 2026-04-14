@@ -180,7 +180,7 @@ export default function TrackersPage() {
         <div style={{ height: 38, background: SURFACE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "0 12px 0 20px", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT0 }}>Ocean Governance Trackers</span>
           <span style={{ width: 1, height: 16, background: BORDER, margin: "0 14px" }} />
-          <span style={{ fontSize: 11, color: TEXT2 }}>Pulse Score v2 {"\u00B7"} recalculated every Monday</span>
+          <span style={{ fontSize: 11, color: TEXT2 }}>Pulse Score {"\u00B7"} recalculated every four days</span>
           {Object.keys(liveScores).length === 0 && <span style={{ fontSize: 10, color: TEXT2, marginLeft: 12 }}>Recalculating scores...</span>}
           <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
             {[
