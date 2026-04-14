@@ -12,7 +12,7 @@ const anthropic = new Anthropic({
 });
 
 const SUMMARY_SYSTEM_PROMPT =
-  'You are a senior analyst at a financial intelligence terminal. Write exactly two sentences as JSON.\n\nRules:\n- Sentence 1: Name the institution. State the specific decision, document, or finding. Include numbers, dates, or references where available.\n- Sentence 2: State the consequence for the most relevant professional group given this specific story. Choose the single most affected group from: maritime lawyers, ESG analysts, shipping compliance teams, ocean investors, NGO policy directors, fisheries regulators. Pick the ONE group most affected by this specific story. Do not default to ocean investors for every story. Name the group. State what specifically changes for them.\n- Never use: must, should, need to, crucial, important, landmark, historic, significant\n- Never prescribe action. Analyse consequence.\n- Only use numbers, statistics, and specific references that appear explicitly in the story title or description provided. If the source contains no specific figures, do not invent them. Write sentence 1 based only on what is stated in the input.\n- Model tone: FT Alphaville data note.\n\nReturn JSON only: {"sentence1": "...", "sentence2": "..."}';
+  'You are a senior analyst at a financial intelligence terminal. Write exactly two sentences as JSON.\n\nRules:\n- Sentence 1: Name the institution. State the specific decision, document, or finding. Include numbers, dates, or references where available.\n- Sentence 2: State the consequence for the most relevant professional group given this specific story. Choose the single most affected group from: maritime lawyers, ESG analysts, shipping compliance teams, ocean investors, NGO policy directors, fisheries regulators. Pick the ONE group most affected by this specific story. Do not default to ocean investors for every story. Name the group. State what specifically changes for them.\n- Never use: must, should, need to, crucial, important, landmark, historic, significant\n- Never prescribe action. Analyse consequence.\n- Only use numbers, statistics, and specific references that appear explicitly in the story title or description provided. If the source contains no specific figures, do not invent them. Write sentence 1 based only on what is stated in the input.\n- Model tone: FT Alphaville data note.\n\nReturn JSON only: {"sentence1": "...", "sentence2": "..."} Sentence 1 must not repeat or paraphrase the headline. The headline states what happened. Sentence 1 must add new information: a specific number, date, named institution, or direct quote. If the headline already states the fact, sentence 1 must state the context or background instead.';
 
 function decodeHtml(str: string): string {
   return str
@@ -125,105 +125,142 @@ function bandLabel(score: number): string {
   return "SLOW";
 }
 
+function pulseBand(score: number): { bg: string; color: string; label: string } {
+  if (score >= 7) return { bg: "#E8F7F2", color: "#1D9E75", label: "ELEVATED" };
+  if (score >= 4) return { bg: "#FEF3E2", color: "#EF9F27", label: "WATCH" };
+  return { bg: "#FDEAEA", color: "#E24B4A", label: "LOW" };
+}
+
 function compileHtml(
   stories: { id: string; title: string; source_name: string; source_type: string; topic: string; brief_summary: string }[],
   dateStr: string,
   trackerData: { tracker_slug: string; score: number; momentum_direction: string; interpretation: string } | null,
   archiveStory: { id: string; title: string; source_name: string; source_type: string; brief_summary: string } | null,
-  leadSentence: string | null,
   conditions: { tracker_slug: string; score: number; interpretation: string }[]
 ): string {
-  const F = "'DM Sans',sans-serif";
+  const F = "'DM Sans',Arial,sans-serif";
 
+  /* ── CONDITIONS BAR ── */
   const conditionsRows = conditions.slice(0, 3).map(c => {
     const col = condColor(c.score);
     const slug = c.tracker_slug.replace(/-/g, " ").replace(/_/g, " ").toUpperCase();
-    return `<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:4px;">
-      <span style="font-family:${F};font-size:9px;font-weight:600;color:${col.name};min-width:44px;flex-shrink:0;letter-spacing:0.1em;">${slug}</span>
-      <span style="font-family:${F};font-size:11px;color:${col.text};">${stripDashes(c.interpretation || "")}</span>
-    </div>`;
+    return `<tr>
+      <td style="font-family:${F};font-size:11px;font-weight:700;color:${col.name};letter-spacing:0.1em;text-transform:uppercase;padding:0 12px 4px 0;white-space:nowrap;vertical-align:top;">${slug}</td>
+      <td style="font-family:${F};font-size:13px;color:#3D4F63;padding:0 0 4px 0;line-height:1.5;">${stripDashes(c.interpretation || "")}</td>
+    </tr>`;
   }).join("");
 
+  const conditionsBar = conditions.length > 0
+    ? `<tr><td style="padding:14px 28px;border-bottom:1px solid #EAECEF;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="font-family:${F};font-size:10px;font-weight:500;color:#8BA0BC;letter-spacing:0.15em;text-transform:uppercase;padding-bottom:8px;">CONDITIONS THIS MORNING</td></tr>
+          <tr><td>
+            <table cellpadding="0" cellspacing="0">${conditionsRows}</table>
+          </td></tr>
+        </table>
+      </td></tr>`
+    : "";
+
+  /* ── STORY CARDS ── */
   const storyCards = stories.map((s, i) => {
     const title = decodeHtml(s.title);
     const summary = stripDashes(s.brief_summary || "");
     const isLast = i === stories.length - 1;
-    return `<div style="padding:16px 0;${isLast ? "" : "border-bottom:1px solid #F0F3F7;"}display:flex;gap:12px;">
-      <div style="width:2px;background:#1D9E75;flex-shrink:0;"></div>
-      <div style="flex:1;">
-        <a href="https://www.thetideline.co/platform/story/${s.id}" style="font-family:${F};font-size:13px;font-weight:600;color:#0B1628;text-decoration:none;line-height:1.4;display:block;margin-bottom:5px;">${title}</a>
-        <div style="font-family:${F};font-size:9px;font-weight:600;color:#8BA0BC;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px;">${s.source_name}</div>
-        ${summary ? `<p style="font-family:${F};font-size:12px;color:#5A7290;line-height:1.65;margin:0;">${summary}</p>` : ""}
-      </div>
-    </div>`;
+    const borderBottom = isLast ? "" : "border-bottom:1px solid #F0F3F7;";
+    return `<tr>
+      <td style="padding:16px 28px;${borderBottom}">
+        <table cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td width="3" style="background:#1D9E75;vertical-align:top;"></td>
+            <td style="padding-left:14px;">
+              <a href="https://www.thetideline.co/platform/story/${s.id}" style="font-family:${F};font-size:15px;font-weight:600;color:#0B1628;text-decoration:none;line-height:1.4;display:block;margin-bottom:5px;">${title}</a>
+              <div style="font-family:${F};font-size:10px;font-weight:500;color:#8BA0BC;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">${s.source_name}</div>
+              ${summary ? `<p style="font-family:${F};font-size:13px;color:#5A7290;line-height:1.7;margin:0;">${summary}</p>` : ""}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>`;
   }).join("");
 
+  /* ── PULSE ── */
   let pulseSection = "";
   if (trackerData) {
     const slugLabel = trackerData.tracker_slug.replace(/-/g, " ").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-    pulseSection = `<div style="background:#F8F9FA;padding:16px 28px;border-top:1px solid #EAECEF;">
-      <div style="font-family:${F};font-size:9px;font-weight:600;color:#8BA0BC;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;">PULSE</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-family:${F};font-size:11px;font-weight:500;color:#3D4F63;min-width:50px;">${slugLabel}</span>
-        <span style="font-family:${F};font-size:20px;font-weight:700;color:#1D9E75;">${trackerData.score}</span>
-        <span style="font-family:${F};font-size:9px;font-weight:600;color:#1D9E75;text-transform:uppercase;letter-spacing:0.14em;background:#E8F7F2;padding:2px 8px;border-radius:2px;">${bandLabel(trackerData.score)}</span>
-      </div>
-      <p style="font-family:${F};font-size:11px;color:#8BA0BC;margin:5px 0 0;line-height:1.5;">${stripDashes(trackerData.interpretation || "")}</p>
-    </div>`;
+    const band = pulseBand(trackerData.score);
+    pulseSection = `<tr><td style="background:#F8F9FA;padding:16px 28px;border-top:1px solid #EAECEF;">
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr><td style="font-family:${F};font-size:10px;font-weight:500;color:#8BA0BC;letter-spacing:0.15em;text-transform:uppercase;padding-bottom:10px;">PULSE</td></tr>
+        <tr><td>
+          <table cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font-family:${F};font-size:13px;font-weight:500;color:#3D4F63;padding-right:10px;vertical-align:middle;">${slugLabel}</td>
+              <td style="font-family:${F};font-size:22px;font-weight:700;color:#1D9E75;padding-right:10px;vertical-align:middle;">${trackerData.score}</td>
+              <td style="vertical-align:middle;"><span style="font-family:${F};font-size:10px;font-weight:600;color:${band.color};text-transform:uppercase;letter-spacing:0.14em;background:${band.bg};padding:2px 8px;border-radius:2px;">${band.label}</span></td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td style="font-family:${F};font-size:13px;color:#8BA0BC;line-height:1.5;padding-top:5px;">${stripDashes(trackerData.interpretation || "")}</td></tr>
+      </table>
+    </td></tr>`;
   }
 
+  /* ── ARCHIVE ── */
   let archiveSection = "";
   if (archiveStory) {
-    archiveSection = `<div style="background:#F8F9FA;padding:16px 28px;border-top:1px solid #EAECEF;">
-      <div style="font-family:${F};font-size:9px;font-weight:600;color:#8BA0BC;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;">FROM THE TIDELINE LIBRARY</div>
-      <a href="https://www.thetideline.co/platform/story/${archiveStory.id}" style="font-family:${F};font-size:13px;font-weight:600;color:#0B1628;text-decoration:none;line-height:1.4;display:block;margin-bottom:5px;">${decodeHtml(archiveStory.title)}</a>
-      <div style="font-family:${F};font-size:9px;font-weight:600;color:#8BA0BC;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:5px;">${archiveStory.source_name}</div>
-      ${archiveStory.brief_summary ? `<p style="font-family:${F};font-size:12px;color:#5A7290;line-height:1.6;margin:0;">${stripDashes(archiveStory.brief_summary)}</p>` : ""}
-    </div>`;
+    archiveSection = `<tr><td style="background:#F8F9FA;padding:16px 28px;border-top:1px solid #EAECEF;">
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr><td style="font-family:${F};font-size:10px;font-weight:500;color:#8BA0BC;letter-spacing:0.15em;text-transform:uppercase;padding-bottom:8px;">FROM THE TIDELINE LIBRARY</td></tr>
+        <tr><td>
+          <a href="https://www.thetideline.co/platform/story/${archiveStory.id}" style="font-family:${F};font-size:14px;font-weight:600;color:#0B1628;text-decoration:none;line-height:1.4;display:block;margin-bottom:5px;">${decodeHtml(archiveStory.title)}</a>
+          <div style="font-family:${F};font-size:10px;font-weight:500;color:#8BA0BC;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">${archiveStory.source_name}</div>
+          ${archiveStory.brief_summary ? `<p style="font-family:${F};font-size:13px;color:#5A7290;line-height:1.6;margin:0;">${stripDashes(archiveStory.brief_summary)}</p>` : ""}
+        </td></tr>
+      </table>
+    </td></tr>`;
   }
-
-  const leadSection = leadSentence
-    ? `<div style="background:#F8F9FA;padding:18px 28px 16px;border-bottom:1px solid #EAECEF;">
-        <p style="font-family:${F};font-size:14px;color:#0B1628;line-height:1.65;margin:0;">${stripDashes(leadSentence)}</p>
-      </div>`
-    : "";
-
-  const conditionsBar = conditions.length > 0
-    ? `<div style="background:#0D1E35;padding:12px 28px;">
-        <div style="font-family:${F};font-size:9px;font-weight:600;color:#4A6280;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;">CONDITIONS THIS MORNING</div>
-        ${conditionsRows}
-      </div>`
-    : "";
 
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F8F9FA;font-family:${F};">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F9FA;">
-    <tr><td align="center" style="padding:20px 12px;">
-      <div style="max-width:600px;width:100%;background:#ffffff;overflow:hidden;">
-        <div style="background:#0B1628;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-family:${F};font-size:16px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;">Tideline</div>
-            <div style="font-family:${F};font-size:9px;font-weight:500;color:#1D9E75;letter-spacing:0.2em;text-transform:uppercase;">OCEAN INTELLIGENCE</div>
-          </div>
-          <div style="font-family:${F};font-size:11px;color:#8BA0BC;">${dateStr}</div>
-        </div>
+<body style="margin:0;padding:0;background:#ffffff;font-family:${F};">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+    <tr><td align="center" style="padding:0;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        <!-- HEADER -->
+        <tr><td style="padding:20px 28px;border-bottom:1px solid #EAECEF;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="vertical-align:top;">
+                <div style="font-family:${F};font-size:18px;font-weight:700;color:#0B1628;letter-spacing:-0.02em;">Tideline</div>
+                <div style="font-family:${F};font-size:10px;font-weight:500;color:#1D9E75;letter-spacing:0.18em;text-transform:uppercase;margin-top:3px;">OCEAN INTELLIGENCE</div>
+              </td>
+              <td style="text-align:right;vertical-align:top;">
+                <span style="font-family:${F};font-size:12px;color:#8BA0BC;">${dateStr}</span>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
         ${conditionsBar}
-        ${leadSection}
-        <div style="padding:0 28px;">
-          ${storyCards}
-        </div>
+        <!-- STORIES -->
+        ${storyCards}
         ${pulseSection}
         ${archiveSection}
-        <div style="padding:14px 28px;border-top:1px solid #EAECEF;display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-family:${F};font-size:12px;color:#3D4F63;">Reply to ask a question about today's brief.</span>
-          <span>
-            <a href="https://www.thetideline.co/platform/feed" style="font-family:${F};font-size:11px;color:#8BA0BC;text-decoration:none;margin-right:12px;">Open feed</a>
-            <a href="https://www.thetideline.co/unsubscribe" style="font-family:${F};font-size:11px;color:#8BA0BC;text-decoration:none;">Unsubscribe</a>
-          </span>
-        </div>
-      </div>
+        <!-- FOOTER -->
+        <tr><td style="padding:16px 28px;border-top:1px solid #EAECEF;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font-family:${F};font-size:13px;color:#3D4F63;">Reply to ask a question about today's brief.</td>
+            </tr>
+            <tr>
+              <td style="padding-top:8px;">
+                <a href="https://www.thetideline.co/platform/feed" style="font-family:${F};font-size:12px;color:#8BA0BC;text-decoration:none;margin-right:14px;">Open feed</a>
+                <a href="https://www.thetideline.co/unsubscribe" style="font-family:${F};font-size:12px;color:#8BA0BC;text-decoration:none;">Unsubscribe</a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
     </td></tr>
   </table>
 </body>
@@ -379,8 +416,6 @@ export async function GET(request: Request) {
       console.error("[generate-brief] Velocity score fetch failed:", err);
     }
 
-    let leadSentence: string | null = null;
-
     // ── 5. Quality gate ──
     let qualityResult: { passed: boolean; failed_items: { index: number; reason: string }[]; overall_quality: string } | null = null;
 
@@ -469,24 +504,8 @@ export async function GET(request: Request) {
       });
     }
 
-    // ── 5b. Generate lead sentence via Sonnet ──
-    try {
-      const storySummaries = passingStories.map(s => `${decodeHtml(s.title)}: ${s.brief_summary}`).join("\n\n");
-      console.log("[Lead sentence] Input:", storySummaries.slice(0, 300));
-      const leadRes = await anthropic.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: 80,
-        system: "Write one sentence stating the single most operationally significant development from these stories. Name the institution or figure. State the consequence. No em dashes. Full stop at the end. Under 35 words. Return only the sentence.",
-        messages: [{ role: "user", content: storySummaries }],
-      });
-      const leadText = leadRes.content[0].type === "text" ? leadRes.content[0].text.trim() : "";
-      if (leadText.length > 10) leadSentence = leadText;
-    } catch (err) {
-      console.error("[generate-brief] Lead sentence generation failed:", err);
-    }
-
     // ── 6. Compile HTML with passing stories only ──
-    const htmlContent = compileHtml(passingStories, dateStr, trackerData, archiveStory, leadSentence, conditions);
+    const htmlContent = compileHtml(passingStories, dateStr, trackerData, archiveStory, conditions);
 
     // ── 7. Upsert into brief_buffer ──
     const { error: upsertError } = await supabase
@@ -500,7 +519,6 @@ export async function GET(request: Request) {
           needs_review: false,
           tracker_data: trackerData,
           archive_story: archiveStory,
-          lead_sentence: leadSentence,
           conditions,
         },
         { onConflict: "date" }

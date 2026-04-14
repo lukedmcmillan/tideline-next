@@ -21,32 +21,45 @@ function fmtDate(d: Date): string {
 }
 
 function fallbackHtml(dateStr: string): string {
+  const F = "'DM Sans',Arial,sans-serif";
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f8f9fa;font-family:'DM Sans',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;">
-    <tr><td align="center" style="padding:24px 16px;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border:1px solid #dadce0;border-radius:12px;overflow:hidden;">
-        <tr>
-          <td style="background:#0a1628;padding:20px 32px;">
-            <span style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;">Tideline</span>
-            <span style="font-size:10px;font-weight:500;color:rgba(255,255,255,0.5);letter-spacing:0.04em;text-transform:uppercase;margin-left:10px;">Ocean Intelligence</span>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:40px 32px;">
-            <p style="font-size:15px;color:#202124;line-height:1.7;margin:0 0 16px;">The Tideline brief will arrive shortly. A technical issue delayed today's delivery.</p>
-            <p style="font-size:13px;color:#5f6368;line-height:1.6;margin:0 0 24px;">Your feed is still live and updated. Open Tideline to see the latest stories.</p>
-            <a href="https://www.thetideline.co/platform/feed" style="display:inline-block;padding:10px 22px;background:#0a1628;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;border-radius:6px;">Open your feed</a>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:16px 32px;background:#f8f9fa;border-top:1px solid #e8eaed;">
-            <p style="font-size:11px;color:#9aa0a6;margin:0;line-height:1.5;">Tideline. Ocean intelligence for professionals.<br/>
-            <a href="https://www.thetideline.co" style="color:#9aa0a6;">thetideline.co</a></p>
-          </td>
-        </tr>
+<body style="margin:0;padding:0;background:#ffffff;font-family:${F};">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">
+    <tr><td align="center" style="padding:0;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        <tr><td style="padding:20px 28px;border-bottom:1px solid #EAECEF;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="vertical-align:top;">
+                <div style="font-family:${F};font-size:18px;font-weight:700;color:#0B1628;letter-spacing:-0.02em;">Tideline</div>
+                <div style="font-family:${F};font-size:10px;font-weight:500;color:#1D9E75;letter-spacing:0.18em;text-transform:uppercase;margin-top:3px;">OCEAN INTELLIGENCE</div>
+              </td>
+              <td style="text-align:right;vertical-align:top;">
+                <span style="font-family:${F};font-size:12px;color:#8BA0BC;">${dateStr}</span>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:40px 28px;">
+          <p style="font-family:${F};font-size:15px;color:#0B1628;line-height:1.7;margin:0 0 16px;">The Tideline brief will arrive shortly. A technical issue delayed today's delivery.</p>
+          <p style="font-family:${F};font-size:13px;color:#5A7290;line-height:1.6;margin:0 0 24px;">Your feed is still live and updated. Open Tideline to see the latest stories.</p>
+          <a href="https://www.thetideline.co/platform/feed" style="display:inline-block;padding:10px 22px;background:#0B1628;color:#ffffff;font-family:${F};font-size:13px;font-weight:600;text-decoration:none;border-radius:4px;">Open your feed</a>
+        </td></tr>
+        <tr><td style="padding:16px 28px;border-top:1px solid #EAECEF;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font-family:${F};font-size:13px;color:#3D4F63;">Reply to ask a question about today's brief.</td>
+            </tr>
+            <tr>
+              <td style="padding-top:8px;">
+                <a href="https://www.thetideline.co/platform/feed" style="font-family:${F};font-size:12px;color:#8BA0BC;text-decoration:none;margin-right:14px;">Open feed</a>
+                <a href="https://www.thetideline.co/unsubscribe" style="font-family:${F};font-size:12px;color:#8BA0BC;text-decoration:none;">Unsubscribe</a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
       </table>
     </td></tr>
   </table>
@@ -58,7 +71,7 @@ async function generateSubjectLine(htmlContent: string): Promise<string | null> 
   try {
     // Extract story titles from the HTML to give Sonnet context
     const titleMatches = htmlContent.match(
-      /style="font-size:15px;font-weight:600;color:#202124[^"]*"[^>]*>([^<]+)</g
+      /style="font-[^"]*font-size:15px;font-weight:600;color:#0B1628[^"]*"[^>]*>([^<]+)/g
     );
     const titles = titleMatches
       ? titleMatches.map((m) => m.replace(/.*>/, "")).slice(0, 5)
@@ -69,7 +82,7 @@ async function generateSubjectLine(htmlContent: string): Promise<string | null> 
     const res = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 60,
-      system: "You write email subject lines for a professional ocean intelligence brief. Write a subject line under 9 words. State the single most consequential development. No 'Tideline ·' prefix. No quotes. Just the subject line.",
+      system: "Write a subject line under 8 words using the single most newsworthy headline from today's stories. State the news. No Tideline prefix. No date. Just the news.",
       messages: [{
         role: "user",
         content: `Today's top stories:\n${titles.map((t, i) => `${i + 1}. ${t}`).join("\n")}\n\nWrite the subject line.`,
@@ -194,6 +207,31 @@ export async function GET(request: Request) {
         storyCount = yesterdayBrief.story_count || 0;
         trackerSlug = yesterdayBrief.tracker_data?.tracker_slug || null;
       }
+    }
+
+    // ── 1b. Tracker rotation by day of week ──
+    const TRACKER_ROTATION: Record<number, string> = {
+      0: "isa",           // Sunday
+      1: "bbnj",          // Monday
+      2: "imo-shipping",  // Tuesday
+      3: "30x30",         // Wednesday
+      4: "blue-finance",  // Thursday
+      5: "iuu",           // Friday
+      6: "wto-fisheries", // Saturday
+    };
+
+    const dayOfWeek = new Date().getDay();
+    const todayTracker = TRACKER_ROTATION[dayOfWeek];
+
+    const { data: pulseData } = await supabase
+      .from("velocity_scores")
+      .select("tracker_slug, score, momentum_direction, interpretation")
+      .eq("tracker_slug", todayTracker)
+      .order("calculated_at", { ascending: false })
+      .limit(1);
+
+    if (pulseData && pulseData[0]) {
+      trackerSlug = pulseData[0].tracker_slug;
     }
 
     // ── 2. Generate AI subject line via Sonnet (only for today's brief) ──
