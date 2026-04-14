@@ -67,7 +67,11 @@ export default function TrackerHero({
   useEffect(() => {
     fetch(`/api/velocity/${slug}`)
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.score != null) setLiveScore(data.score); })
+      .then(data => {
+        console.log("velocity response:", data);
+        const s = data?.latest?.score ?? data?.score;
+        if (s != null) setLiveScore(s);
+      })
       .catch(() => {});
   }, [slug]);
 
