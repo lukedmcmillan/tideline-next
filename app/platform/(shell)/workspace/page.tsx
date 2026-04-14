@@ -717,6 +717,10 @@ function AskTidelinePanel({ onPasteToNotes, onSourcesFound }: { onPasteToNotes: 
           {error && <div style={{ fontFamily: F, fontSize: 12, color: "#D93025", marginBottom: 8 }}>{error}</div>}
           {answer && (
             <>
+              <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}`)} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer", marginBottom: 10 }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
+                Paste into notes
+              </button>
               <div style={{ borderLeft: `3px solid ${TEAL}`, paddingLeft: 16, fontFamily: F, fontWeight: 400, lineHeight: 1.75, color: T1, fontSize: 13, marginBottom: 12, whiteSpace: "pre-wrap" }}>{answer}</div>
               {sources.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
@@ -734,7 +738,7 @@ function AskTidelinePanel({ onPasteToNotes, onSourcesFound }: { onPasteToNotes: 
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}` + (sources && sources.length > 0 ? `\n\n**Sources**\n` + sources.map((s, i) => `${i + 1}. ${s.title} — ${s.source_organisation || ""} (${s.published_date || "n/d"})`).join("\n") : ""))} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
+                <button onClick={() => onPasteToNotes(`Q: ${query}\n\n${answer}`)} style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: FUI, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
                   Paste into notes
                 </button>
@@ -1243,7 +1247,11 @@ function FloatingAskPanel({ onClose, insertIntoNotes, onSourcesFound }: { onClos
       {error && <div style={{ marginTop: 10, fontFamily: F, fontSize: 12, color: "#D93025" }}>{error}</div>}
       {answer && (
         <>
-          <div style={{ marginTop: 14, borderLeft: `3px solid ${TEAL}`, paddingLeft: 14, fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{answer}</div>
+          <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}`); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer", marginBottom: 10 }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
+            Paste into notes
+          </button>
+          <div style={{ borderLeft: `3px solid ${TEAL}`, paddingLeft: 14, fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{answer}</div>
           {sources.length > 0 && (
             <div style={{ marginTop: 12 }}>
               <div style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: T4, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sources ({sources.length})</div>
@@ -1259,7 +1267,7 @@ function FloatingAskPanel({ onClose, insertIntoNotes, onSourcesFound }: { onClos
               ))}
             </div>
           )}
-          <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}` + (sources && sources.length > 0 ? `\n\n**Sources**\n` + sources.map((s, i) => `${i + 1}. ${s.title} — ${s.source_organisation || ""} (${s.published_date || "n/d"})`).join("\n") : "")); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
+          <button onClick={() => { insertIntoNotes(`Q: ${query}\n\n${answer}`); onClose(); }} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, background: WHITE, border: `1px solid ${TEAL}`, borderRadius: 6, cursor: "pointer" }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="3" y="2" width="6" height="8" rx="1"/><path d="M5 1h2"/></svg>
             Paste into notes
           </button>
