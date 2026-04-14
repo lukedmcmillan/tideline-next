@@ -48,6 +48,20 @@ const SOURCES: Source[] = [
       "https://www.un.org/depts/los/clcs_new/clcs_home.htm",
       "https://www.un.org/depts/los/LEGISLATIONANDTREATIES/index.htm",
       "https://www.un.org/depts/los/reference_files/status2010.pdf",
+      "https://www.un.org/depts/los/convention_agreements/texts/unclos/unclos_e.pdf",
+      "https://www.un.org/depts/los/convention_agreements/texts/fish_stocks_agreement/CONF164_37.pdf",
+    ],
+  },
+  {
+    name: "BBNJ High Seas Treaty",
+    domain: "un.org",
+    defaultOrg: "United Nations",
+    defaultType: "treaty",
+    is_primary_source: true,
+    urls: [
+      "https://documents.un.org/doc/undoc/gen/n23/130/32/pdf/n2313032.pdf",
+      "https://www.un.org/depts/los/bbnj/bbnj_intersessional_2022.pdf",
+      "https://www.un.org/bbnj",
     ],
   },
   {

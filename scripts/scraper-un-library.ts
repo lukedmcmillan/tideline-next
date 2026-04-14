@@ -11,7 +11,7 @@ const USER_AGENT = "Tideline Library Bot/1.0";
 const MAX_PAGES = 50; // ~200 records/page = ~10,000 records scanned
 
 // Hard ocean terms — at least one must appear in subjects or title
-const HARD_OCEAN = /ocean|marine|sea\b|seas\b|maritime|fisheries|seabed|coral|unclos|bbnj|aquaculture|coastal/i;
+const HARD_OCEAN = /ocean|marine|sea\b|seas\b|maritime|fisheries|seabed|coral|unclos|bbnj|aquaculture|coastal|A\/CONF\.232|high seas|areas beyond national jurisdiction|biological diversity beyond/i;
 // Exclusion subjects — skip records about these topics
 const EXCLUDE_SUBJECTS = /decolonization|colonial|apartheid|sanctions|terrorism|yugoslavia|libya\b|iraq\b/i;
 // Procedural filename patterns to skip (unless title is ocean-relevant)
