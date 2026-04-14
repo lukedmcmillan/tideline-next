@@ -122,6 +122,11 @@ export default function MethodologyPage() {
   Base Score x Institutional Risk Multiplier`}
         </div>
 
+        {/* Plain English */}
+        <div style={{ background: "#F0FDF4", borderLeft: `3px solid ${TEAL}`, borderRadius: 4, padding: "16px 20px", marginBottom: 32, fontSize: 15, color: NAVY, lineHeight: 1.6, fontFamily: F }}>
+          In plain English: the score asks three questions about each domain every week. Is more being written about it than last month? How recently? Does the language signal a decision is coming? Each question gets a score out of 10. They are combined with different weights. Then adjusted down for institutions where political deadlock is structurally likely.
+        </div>
+
         {/* Volume Trend */}
         <p style={componentLabel}>VOLUME TREND, 40%</p>
         <p style={bodyText}>
@@ -131,7 +136,13 @@ export default function MethodologyPage() {
         {/* Recency */}
         <p style={componentLabel}>RECENCY, 35%</p>
         <p style={bodyText}>
-          Measures time elapsed since the most recent significant document, using a continuous exponential decay function: Score = 10 x e^(-0.05 x days). A document published today scores 10.0. A document 14 days old scores 5.0. A document 30 days old scores 2.2. The exponential function eliminates the artificial step-changes of categorical scoring. A document published one day apart should not produce a disproportionate score change.
+          Measures how recently something significant was published in this domain. Recent activity scores higher. A domain that went quiet six weeks ago scores much lower than one with documents published this week.
+        </p>
+        <p style={bodyText}>
+          The decay is gradual and continuous, not a cliff edge. A document published 14 days ago scores 5.0. One published 30 days ago scores 2.2. One published today scores 10.0.
+        </p>
+        <p style={{ fontFamily: MONO, fontSize: 13, color: SEC, margin: "0 0 16px" }}>
+          Technical formula: Score = 10 x e^(-0.05 x days)
         </p>
 
         {/* Decision Signals */}
@@ -144,6 +155,9 @@ export default function MethodologyPage() {
         <p style={componentLabel}>INSTITUTIONAL RISK MULTIPLIER</p>
         <p style={bodyText}>
           Adjusts the Base Score based on the decision-making architecture of the governance body. Grounded in George Tsebelis&apos;s veto player theory (Veto Players: How Political Institutions Work, Princeton University Press, 2002, 4,000+ academic citations), which establishes that policy change requires agreement among all actors with veto authority. The fewer veto players and the closer their positions, the higher the probability of a governance outcome.
+        </p>
+        <p style={{ fontFamily: F, fontSize: 15, color: BODY, lineHeight: 1.75, margin: "0 0 16px" }}>
+          The core idea: some governance bodies can act quickly (one country decides, done). Others require every country in the room to agree, and one country can veto the whole thing. The multiplier adjusts the score to reflect this. The more veto players, the lower the multiplier, the lower the adjusted score.
         </p>
         <p style={bodyText}>
           Six institutional types, derived from historical true positive rates across the validation dataset:
