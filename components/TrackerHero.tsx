@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 const NAVY = "#0B1628";
 const TEAL = "#1D9E75";
 const AMBER = "#EF9F27";
@@ -25,11 +27,16 @@ interface TrackerHeroProps {
   score?: number | null;
 }
 
-function alertBand(score: number | null | undefined) {
-  if (score == null || score === 0) return { label: "QUIET", bg: "rgba(255,255,255,0.06)", color: MUTED };
-  if (score > 7) return { label: "HIGH", bg: "rgba(29,158,117,0.12)", color: TEAL };
-  if (score >= 4) return { label: "ELEVATED", bg: "rgba(239,159,39,0.12)", color: AMBER };
-  return { label: "WATCH", bg: "rgba(255,255,255,0.08)", color: MUTED };
+function alertBand(score: number | null | undefined, slug?: string) {
+  if (score == null) return null;
+  const isWind = slug === "offshore-wind";
+  const highT = isWind ? 5.5 : 7.0;
+  const elevT = isWind ? 3.5 : 5.0;
+  const watchT = isWind ? 2.0 : 3.0;
+  if (score >= highT) return { label: "HIGH", bg: "rgba(29,158,117,0.2)", color: TEAL };
+  if (score >= elevT) return { label: "ELEVATED", bg: "rgba(239,159,39,0.2)", color: AMBER };
+  if (score >= watchT) return { label: "WATCH", bg: "rgba(255,255,255,0.1)", color: MUTED };
+  return { label: "QUIET", bg: "rgba(255,255,255,0.06)", color: DIM };
 }
 
 function trajColor(traj: string) {
@@ -55,8 +62,16 @@ export default function TrackerHero({
   nextLocation,
   score,
 }: TrackerHeroProps) {
-  void slug;
-  const band = alertBand(score);
+  const [liveScore, setLiveScore] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/velocity/${slug}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.score != null) setLiveScore(data.score); })
+      .catch(() => {});
+  }, [slug]);
+
+  const band = alertBand(liveScore, slug);
   const daysUntil = nextDate ? Math.ceil((new Date(nextDate).getTime() - Date.now()) / 86400000) : null;
   const dateFmt = nextDate
     ? new Date(nextDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
@@ -94,20 +109,22 @@ export default function TrackerHero({
           <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.14em", color: TEAL }}>
             LIVE INTELLIGENCE TRACKER
           </div>
-          <div
-            style={{
-              fontFamily: F,
-              fontSize: 10,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              padding: "4px 12px",
-              borderRadius: 99,
-              background: band.bg,
-              color: band.color,
-            }}
-          >
-            {band.label}
-          </div>
+          {band && (
+            <div
+              style={{
+                fontFamily: F,
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                padding: "4px 12px",
+                borderRadius: 99,
+                background: band.bg,
+                color: band.color,
+              }}
+            >
+              {band.label}
+            </div>
+          )}
         </div>
 
         {/* Row 2: title */}
