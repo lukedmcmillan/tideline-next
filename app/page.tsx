@@ -711,7 +711,8 @@ export default function LandingPage() {
           <div className="footer-links">
             <a href="#" className="footer-link">Privacy</a>
             <a href="#" className="footer-link">Terms</a>
-            <a href="#" className="footer-link">Source methodology</a>
+            <a href="/legal/content-policy" className="footer-link">Content Policy</a>
+            <a href="/methodology" className="footer-link">Source methodology</a>
             <a href="#" className="footer-link">Contact</a>
           </div>
           <span className="footer-copy">{"\u00A9"} 2026 Tideline</span>
