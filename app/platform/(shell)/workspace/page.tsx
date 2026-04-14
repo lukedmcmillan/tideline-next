@@ -1380,6 +1380,7 @@ function WorkspaceContent() {
   const [exportOpen, setExportOpen] = useState(false);
   const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
   const [askLibrarySources, setAskLibrarySources] = useState<AskSource[]>([]);
+  const [sourcesExpanded, setSourcesExpanded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [draftExists, setDraftExists] = useState(false);
   const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null);
@@ -1804,6 +1805,51 @@ function WorkspaceContent() {
             {/* Tiptap notes editor */}
             <EditorContent editor={editor} />
 
+            {/* Collapsible sources from Ask Tideline */}
+            {askLibrarySources.length > 0 && (
+              <div style={{ marginTop: 16, borderTop: "1px solid #E8EAED", paddingTop: 12 }}>
+                <button
+                  onClick={() => setSourcesExpanded(!sourcesExpanded)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: F }}
+                >
+                  <span style={{ background: TEAL, color: "#fff", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontFamily: M, fontWeight: 600 }}>
+                    {askLibrarySources.length} {askLibrarySources.length === 1 ? "source" : "sources"}
+                  </span>
+                  <span style={{ fontSize: 12, color: T3, fontFamily: M }}>
+                    {sourcesExpanded ? "\u25B2 hide" : "\u25BC show"}
+                  </span>
+                </button>
+                {sourcesExpanded && (
+                  <ol style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: T2, fontFamily: F, lineHeight: 1.8 }}>
+                    {askLibrarySources.map((s, i) => (
+                      <li key={i}>
+                        <a
+                          href="#"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            if (s.document_id) {
+                              const res = await fetch(`/api/library/signed-url?id=${s.document_id}`);
+                              const d = await res.json();
+                              if (d.url) window.open(d.url, "_blank");
+                            }
+                          }}
+                          style={{ color: TEAL, textDecoration: "none", cursor: s.document_id ? "pointer" : "default" }}
+                        >
+                          {s.title}
+                        </a>
+                        {s.source_organisation && (
+                          <span style={{ color: T4 }}>{" "}&mdash; {s.source_organisation}</span>
+                        )}
+                        {s.published_date && (
+                          <span style={{ color: T4 }}>{" "}({s.published_date.slice(0, 4)})</span>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
+
             {/* Keyboard shortcuts hint bar (Feature 3) */}
             <div style={{ marginTop: 16, padding: "8px 0", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", borderTop: "1px solid #F3F4F6" }}>
               {[
@@ -1907,7 +1953,7 @@ function WorkspaceContent() {
       <RightSidebar stories={projectStories} docs={projectDocs} />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
-      {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} onSourcesFound={setAskLibrarySources} />}
+      {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} onSourcesFound={(src) => { const unique = src.filter((s, i, arr) => arr.findIndex(x => x.document_id === s.document_id) === i); setAskLibrarySources(unique); }} />}
       {dockPanel === "draft" && <FloatingDraftPanel onClose={() => setDockPanel("none")} sourceCount={sourceCount + askLibrarySources.length} insertIntoNotes={insertIntoNotes} projectId={projectId} projectName={activeProject} notesText={editor?.getText() || ""} sources={[...projectStories.map(s => ({ name: s.title, summary: s.short_summary || undefined })), ...askLibrarySources.map(s => ({ name: s.title, summary: `${s.source_organisation || ""} (${s.published_date || "n/d"})` }))]} onToast={setToast} />}
 
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUploaded={handleUploaded} />
