@@ -260,24 +260,47 @@ export default function VelocityScore({ slug }: { slug: string }) {
 
       {/* Methodology modal */}
       {modal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ fontFamily: F, background: "#fff", borderRadius: 8, padding: 24, maxWidth: 480, width: "90vw", position: "relative", zIndex: 51, maxHeight: "80vh", overflowY: "auto" }}>
-            <button onClick={() => setModal(false)} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", fontSize: 14, color: M, cursor: "pointer" }}>{"\u2715"}</button>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginBottom: 12 }}>Pulse Score Methodology</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "0 0 0" }}>The Pulse score measures how much is happening in this domain right now: the volume, recency and weight of verified intelligence indexed by Tideline this week.</p>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 16 }}>The equation</div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#202124", background: "#F8F9FA", padding: "8px 12px", borderRadius: 4, margin: "6px 0" }}>Score = (Volume trend {"\u00D7"} 0.4) + (Recency {"\u00D7"} 0.35) + (Decision signals {"\u00D7"} 0.25)</div>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>Volume trend (40%)</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Compares verified news, reports and regulatory developments indexed in the last 30 days against the prior 30-day period. Rising volume indicates increased institutional attention, a leading indicator of regulatory movement.</p>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>Recency (35%)</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Measures days elapsed since the most recent indexed development, using exponential decay. Momentum that goes quiet scores lower regardless of historical activity.</p>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>Decision signals (25%)</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}>Identifies intelligence containing language associated with concrete regulatory action: ratification, adoption, enforcement, sanctions, signed agreements, implementation, deadlines. Classifies each as positive (+2) or negative ({"\u2212"}1) using AI.</p>
-            <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: M, marginTop: 14 }}>What it means</div>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "4px 0 0" }}><strong>Above 7, accelerating</strong>: high activity. Decisions are being made. Act now.</p>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>4 to 7, stable</strong>: moderate activity. Monitor weekly.</p>
-            <p style={{ fontFamily: F, fontSize: 12, color: T, lineHeight: 1.6, margin: "2px 0 0" }}><strong>Below 4, decelerating</strong>: quiet period. Pressure is off for now.</p>
-            <div style={{ fontFamily: F, fontSize: 10, color: M, marginTop: 16, paddingTop: 12, borderTop: `0.5px solid ${B}` }}>No editorial judgement applied. All underlying intelligence is accessible on the platform. Recalculated every four days.</div>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }} onClick={() => setModal(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ fontFamily: F, background: "#fff", border: `0.5px solid ${B}`, borderRadius: 8, padding: "24px 28px", maxWidth: 480, width: "90vw", maxHeight: "80vh", overflowY: "auto" }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 15, fontWeight: 600, color: "#202124" }}>How the Pulse Score is calculated</span>
+              <button onClick={() => setModal(false)} style={{ fontSize: 18, color: M, cursor: "pointer", border: "none", background: "transparent", padding: "0 4px" }}>{"\u00D7"}</button>
+            </div>
+            <div style={{ borderTop: `0.5px solid ${B}`, marginTop: 12, marginBottom: 16 }} />
+
+            {/* What it is */}
+            <p style={{ fontSize: 13, color: T, lineHeight: 1.6, margin: 0 }}>The Pulse Score measures the intensity of observable public regulatory activity in this domain. It is a conditions indicator {"\u2014"} not a prediction. Elevated score means the window for a significant governance event is open. It does not mean an outcome will occur.</p>
+
+            {/* The equation */}
+            <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: M, marginTop: 16, marginBottom: 8, display: "block" }}>THE EQUATION</span>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#202124", background: "#F8F9FA", borderRadius: 6, padding: "12px 16px", lineHeight: 1.8, whiteSpace: "pre" }}>{"BASE SCORE =\n  (Volume Trend    \u00D7 0.40) +\n  (Recency         \u00D7 0.35) +\n  (Decision Signals \u00D7 0.25)\n\nADJUSTED SCORE =\n  Base Score \u00D7 Institutional Risk Multiplier"}</div>
+
+            {/* Three signals */}
+            <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: M, marginTop: 16, marginBottom: 10, display: "block" }}>THE THREE SIGNALS</span>
+            <div style={{ borderLeft: "2px solid #E8EAED", paddingLeft: 12, marginBottom: 10, fontSize: 12, color: T, lineHeight: 1.5 }}>
+              <strong style={{ color: "#202124" }}>Volume Trend (40%)</strong> {"\u2014"} is more being written about this domain than last month? Compares document volume in the past 30 days against the prior 30.
+            </div>
+            <div style={{ borderLeft: "2px solid #E8EAED", paddingLeft: 12, marginBottom: 10, fontSize: 12, color: T, lineHeight: 1.5 }}>
+              <strong style={{ color: "#202124" }}>Recency (35%)</strong> {"\u2014"} how recently was the last significant document published? Uses exponential decay {"\u2014"} a document 14 days old scores 5.0/10, 30 days old scores 2.2/10.
+            </div>
+            <div style={{ borderLeft: "2px solid #E8EAED", paddingLeft: 12, marginBottom: 10, fontSize: 12, color: T, lineHeight: 1.5 }}>
+              <strong style={{ color: "#202124" }}>Decision Signals (25%)</strong> {"\u2014"} does recent language signal a concrete decision is approaching? Scans for: adopt, ratif, enforce, deadline, agreement, binding, implement, mandate, entry into force.
+            </div>
+
+            {/* Multiplier note */}
+            <div style={{ marginTop: 16, background: "#FEF9EC", borderRadius: 6, padding: "12px 14px", fontSize: 12, color: T, lineHeight: 1.6 }}>
+              <strong style={{ color: "#202124" }}>Institutional Risk Multiplier</strong> {"\u2014"} the score is adjusted based on whether the governance body can act unilaterally (multiplier 0.85) or requires full consensus with structural veto players (multiplier 0.46). This is why BBNJ and Plastics scores run structurally lower than equivalent activity in IMO or CITES.
+            </div>
+
+            {/* Failure modes */}
+            <p style={{ marginTop: 14, fontSize: 12, color: M, lineHeight: 1.5, fontStyle: "italic" }}>The score cannot detect surprise unilateral actions, confidential commercial transactions, or informal negotiating dynamics. Elevated score = conditions present. Not elevated score does not mean nothing will happen.</p>
+
+            {/* Footer */}
+            <div style={{ borderTop: `0.5px solid ${B}`, marginTop: 20, marginBottom: 0, paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: M }}>Updated every four days {"\u00B7"} Pulse Score</span>
+              <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, color: "#1D9E75", textDecoration: "none" }}>Read full methodology {"\u2192"}</a>
+            </div>
           </div>
         </div>
       )}
