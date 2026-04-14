@@ -118,13 +118,13 @@ export async function POST(req: NextRequest) {
   const [docChunksResult, primaryChunksResult] = await Promise.all([
     supabase.rpc("match_document_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: 0.72,
-      match_count: 12,
+      match_threshold: 0.65,
+      match_count: 15,
     }),
     supabase.rpc("match_primary_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: 0.68,
-      match_count: 8,
+      match_threshold: 0.62,
+      match_count: 10,
     }),
   ]);
 
