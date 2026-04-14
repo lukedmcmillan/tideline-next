@@ -109,17 +109,19 @@ export default function TrackerHero({
           <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.14em", color: TEAL }}>
             LIVE INTELLIGENCE TRACKER
           </div>
-          {band && (
+          {liveScore !== null && band && (
             <div
               style={{
                 fontFamily: F,
                 fontSize: 10,
                 fontWeight: 700,
+                letterSpacing: ".08em",
                 textTransform: "uppercase",
-                padding: "4px 12px",
-                borderRadius: 99,
+                padding: "3px 10px",
+                borderRadius: 4,
                 background: band.bg,
                 color: band.color,
+                border: `1px solid ${band.color}`,
               }}
             >
               {band.label}
