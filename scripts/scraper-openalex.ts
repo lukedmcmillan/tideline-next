@@ -21,7 +21,7 @@ const CONCEPT_IDS = [
 const KEYWORDS = [
   "BBNJ", "high seas treaty", "MARPOL", "IMO emissions", "IUU fishing",
   "30x30", "blue carbon", "marine biodiversity", "UNFSA", "deep-sea mining",
-  "ISA", "seabed mining", "ocean acidification", "coral bleaching",
+  "International Seabed Authority", "seabed mining", "ocean acidification", "coral bleaching",
   "offshore wind", "blue finance", "TNFD", "debt-for-nature",
 ];
 
