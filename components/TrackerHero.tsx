@@ -33,10 +33,10 @@ function alertBand(score: number | null | undefined, slug?: string) {
   const highT = isWind ? 5.5 : 7.0;
   const elevT = isWind ? 3.5 : 5.0;
   const watchT = isWind ? 2.0 : 3.0;
-  if (score >= highT) return { label: "HIGH", bg: "rgba(29,158,117,0.2)", color: TEAL };
-  if (score >= elevT) return { label: "ELEVATED", bg: "rgba(239,159,39,0.2)", color: AMBER };
-  if (score >= watchT) return { label: "WATCH", bg: "rgba(255,255,255,0.1)", color: MUTED };
-  return { label: "QUIET", bg: "rgba(255,255,255,0.06)", color: DIM };
+  if (score >= highT) return { label: "HIGH", bg: "rgba(29,158,117,0.2)", color: TEAL, tip: "HIGH \u2014 conditions strongly present.\nPrepare immediately. Typical window 2\u20134 weeks." };
+  if (score >= elevT) return { label: "ELEVATED", bg: "rgba(239,159,39,0.2)", color: AMBER, tip: "ELEVATED \u2014 conditions present.\nHeightened vigilance warranted.\nTypical window 4\u20138 weeks." };
+  if (score >= watchT) return { label: "WATCH", bg: "rgba(255,255,255,0.1)", color: MUTED, tip: "WATCH \u2014 some activity present.\nNo immediate action required." };
+  return { label: "QUIET", bg: "rgba(255,255,255,0.06)", color: DIM, tip: "QUIET \u2014 low observable activity.\nDomain appears dormant." };
 }
 
 function trajColor(traj: string) {
@@ -106,6 +106,7 @@ export default function TrackerHero({
   };
 
   return (
+    <>
     <div style={{ background: NAVY, padding: "40px 0" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px" }}>
         {/* Row 1: eyebrow + alert pill */}
@@ -115,6 +116,7 @@ export default function TrackerHero({
           </div>
           {liveScore !== null && band && (
             <div
+              title={band.tip}
               style={{
                 fontFamily: F,
                 fontSize: 10,
@@ -126,9 +128,10 @@ export default function TrackerHero({
                 background: band.bg,
                 color: band.color,
                 border: `1px solid ${band.color}`,
+                cursor: "help",
               }}
             >
-              {band.label}
+              {band.label}<span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>?</span>
             </div>
           )}
         </div>
@@ -226,5 +229,16 @@ export default function TrackerHero({
         </div>
       </div>
     </div>
+    {/* Status bar: alert + momentum summary */}
+    {band && (
+      <div style={{ padding: "10px 48px", background: "#F8F9FA", borderBottom: "0.5px solid #DADCE0", display: "flex", alignItems: "center", gap: 6, fontFamily: F, fontSize: 12 }}>
+        <span style={{ color: "#5F6368" }}>Alert status:</span>
+        <span style={{ color: band.color, fontWeight: 600 }}>{band.label}</span>
+        <span style={{ color: "#9AA0A6", margin: "0 4px" }}>{"\u00B7"}</span>
+        <span style={{ color: "#5F6368" }}>Momentum:</span>
+        <span style={{ color: trajColor(traj), fontWeight: 600 }}>{traj}</span>
+      </div>
+    )}
+    </>
   );
 }
