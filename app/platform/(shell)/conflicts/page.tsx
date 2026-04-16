@@ -745,6 +745,9 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
       borderBottom: `1px solid ${BORDER}`,
       fontFamily: F,
     }}>
+      <div style={{ background: "red", height: 40, width: "100%" }}>
+        SCORING EXPLAINER IS HERE
+      </div>
       <style>{`
         @media (max-width: 900px) {
           .scoring-grid { grid-template-columns: 1fr !important; }
