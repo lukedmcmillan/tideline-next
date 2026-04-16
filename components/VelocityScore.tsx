@@ -1,12 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import AlertToggle from "@/components/AlertToggle";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const M = "#9AA0A6";
 const T = "#5F6368";
 const B = "#DADCE0";
 const TK = "#E8EAED";
+
+// Maps the short slug used by tracker pages (e.g. "isa") to the full slug
+// used in user_alert_preferences (e.g. "isa-deep-sea-mining"). Trackers not
+// listed here don't get an alert toggle.
+const ALERT_SLUG: Record<string, string> = {
+  "isa": "isa-deep-sea-mining",
+  "bbnj": "bbnj-high-seas-treaty",
+  "iuu": "iuu-fishing",
+  "30x30": "30x30-mpa",
+  "blue-finance": "blue-finance-tnfd",
+  "imo-shipping": "imo-shipping-emissions",
+  "wto-fisheries": "wto-fisheries-subsidies",
+  "offshore-wind": "offshore-wind",
+  "cites-marine": "cites-marine",
+  "plastics": "plastics-treaty",
+};
 
 function col(s: number) { return s < 4 ? "#E24B4A" : s <= 7 ? "#EF9F27" : "#1D9E75"; }
 
@@ -257,6 +274,9 @@ export default function VelocityScore({ slug }: { slug: string }) {
           </div>
         )}
       </div>
+
+      {/* Band-crossing alert toggle (renders nothing for unauthenticated users) */}
+      {ALERT_SLUG[slug] && <AlertToggle trackerSlug={ALERT_SLUG[slug]} />}
 
       {/* Methodology modal */}
       {modal && (

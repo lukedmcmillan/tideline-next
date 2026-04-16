@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed:events": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-tracker-events.ts",
+    "seed:alerts": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-alert-preferences.ts",
     "backfill:multipliers": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-multipliers.ts"
   },
   "dependencies": {
