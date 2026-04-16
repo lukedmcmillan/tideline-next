@@ -741,7 +741,7 @@ const CASES: { label: string; headline: string; body: string; tags: string[] }[]
 function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
   return (
     <div style={{
-      background: WHITE,
+      background: "#F1F3F4",
       borderBottom: `1px solid ${BORDER}`,
       fontFamily: F,
     }}>
@@ -764,9 +764,9 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
           cursor: "pointer",
           padding: "12px 28px",
           fontFamily: F,
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: 500,
-          color: T2,
+          color: T3,
         }}
       >
         <span>How are conflicts scored?</span>
@@ -902,7 +902,7 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
               <div
                 key={c.label}
                 style={{
-                  background: "#0D1E35",
+                  background: WHITE,
                   borderLeft: `3px solid ${TEAL}`,
                   padding: "14px 16px",
                   borderRadius: "0 6px 6px 0",
@@ -923,7 +923,7 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
                 <div style={{
                   fontSize: 14,
                   fontWeight: 700,
-                  color: WHITE,
+                  color: T1,
                   lineHeight: 1.35,
                   marginBottom: 8,
                   fontFamily: F,
@@ -932,7 +932,7 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
                 </div>
                 <div style={{
                   fontSize: 12.5,
-                  color: "#B8C2CC",
+                  color: T2,
                   lineHeight: 1.6,
                   marginBottom: 10,
                   fontFamily: F,
@@ -946,8 +946,8 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
                       style={{
                         fontSize: 10.5,
                         fontWeight: 500,
-                        color: "#B8C2CC",
-                        border: `1px solid rgba(184, 194, 204, 0.35)`,
+                        color: T2,
+                        border: `1px solid ${BORDER}`,
                         padding: "2px 8px",
                         borderRadius: 999,
                         fontFamily: F,
