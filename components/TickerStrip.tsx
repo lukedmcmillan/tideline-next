@@ -1,3 +1,6 @@
+// TEMPORARILY DISABLED in page.tsx. Re-enable by re-adding
+// <TickerStrip /> to the dashboard. Route at
+// /api/dashboard/ticker remains live. See commit for removal context.
 "use client";
 
 import { useEffect, useState } from "react";

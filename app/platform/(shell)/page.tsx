@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import TickerStrip from "@/components/TickerStrip";
 import OvernightReveal from "@/components/OvernightReveal";
 import HeroSignal from "@/components/HeroSignal";
 import Sparkline from "@/components/Sparkline";
@@ -111,8 +110,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ background: BG, minHeight: "100%", color: TEXT, fontFamily: SANS }}>
-      {/* Ticker Strip (dashboard-only) */}
-      <TickerStrip />
+      {/* Ticker Strip removed: revisit if needed */}
 
       {/* Overnight Reveal */}
       <OvernightReveal />

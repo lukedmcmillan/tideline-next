@@ -1,3 +1,6 @@
+// NOTE: endpoint is live but currently has no consumers.
+// TickerStrip was disabled on dashboard pending content
+// direction. Safe to call, safe to ignore.
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { DOMAIN_NAMES } from "@/app/lib/tracker-metadata";
