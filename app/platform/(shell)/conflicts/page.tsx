@@ -63,6 +63,23 @@ function titleCase(s: string): string {
   return s.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
+const TRACKER_DISPLAY: Record<string, string> = {
+  isa: "ISA Deep Sea Mining",
+  bbnj: "BBNJ High Seas Treaty",
+  iuu: "IUU Fishing Enforcement",
+  "30x30": "30x30 Marine Protected Areas",
+  "blue-finance": "Blue Finance & ESG",
+  plastics: "Plastics Treaty",
+  "imo-shipping": "IMO Shipping Emissions",
+  "wto-fisheries": "WTO Fisheries Subsidies",
+  "offshore-wind": "Offshore Wind",
+  "cites-marine": "CITES Marine Species",
+};
+
+function trackerLabel(slug: string): string {
+  return TRACKER_DISPLAY[slug] || titleCase(slug);
+}
+
 interface Divergence {
   id: string;
   tracker_tag: string;
@@ -453,7 +470,7 @@ function ConflictCard({
           padding: "4px 10px",
           borderRadius: 999,
         }}>
-          {titleCase(d.tracker_tag)}
+          {trackerLabel(d.tracker_tag)}
         </span>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 12, color: T3, fontFamily: M }}>{timeAgo(d.detected_at)}</span>
@@ -745,9 +762,6 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
       borderBottom: `1px solid ${BORDER}`,
       fontFamily: F,
     }}>
-      <div style={{ background: "red", height: 40, width: "100%" }}>
-        SCORING EXPLAINER IS HERE
-      </div>
       <style>{`
         @media (max-width: 900px) {
           .scoring-grid { grid-template-columns: 1fr !important; }
