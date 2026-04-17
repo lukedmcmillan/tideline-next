@@ -14,9 +14,11 @@ async function getUserId(req: NextRequest): Promise<string | null> {
   return data?.id || null;
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
-  const { name } = await params;
-  const projectName = decodeURIComponent(name);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Note: this route accepts a URL-encoded project NAME as the [id] segment (legacy lookup by name).
+  // Nested /draft and /draft/compile routes accept a project UUID.
+  const { id } = await params;
+  const projectName = decodeURIComponent(id);
   const userId = await getUserId(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
