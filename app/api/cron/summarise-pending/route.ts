@@ -119,6 +119,65 @@ async function fetchArticleText(url: string): Promise<string | null> {
   } catch { return null }
 }
 
+async function scoreControversy(story: {
+  id: string;
+  title: string;
+  source_name: string;
+  short_summary: string;
+}): Promise<{ score: number; label: string; reason: string }> {
+  try {
+    const msg = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: [{
+        type: 'text',
+        text: `You score the controversy level of ocean governance stories. Return JSON only. No markdown.
+
+Assess two dimensions:
+
+controversy_domain_score: 0-10. Is the underlying governance topic actively disputed among authoritative actors?
+High (8-10): ISA exploitation regulations, deep sea mining moratorium, IUU enforcement methodology, MSC certification credibility, BBNJ implementation disputes
+Medium (4-7): IMO emissions targets, 30x30 designation progress, WTO fisheries subsidies
+Low (0-3): Settled science, routine regulatory updates, administrative announcements
+
+controversy_framing_score: 0-10. Does this specific story present competing positions or signal active dispute?
+High (8-10): Story explicitly references disagreement, legal challenge, conflicting data, or competing conclusions
+Medium (4-7): Story presents one position but notes opposition exists
+Low (0-3): Single settled view, no indication of dispute
+
+controversy_reason: one sentence explaining the score. Plain English, no jargon, no em dashes. Address the reader as "you" if relevant.
+
+Return: {"controversy_domain_score": number, "controversy_framing_score": number, "controversy_reason": "string"}`,
+        cache_control: { type: 'ephemeral' },
+      }],
+      messages: [{
+        role: 'user',
+        content: `Title: "${story.title}"\nSource: ${story.source_name}\n\nSummary: ${story.short_summary}`,
+      }],
+    })
+
+    const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
+    const domain = Math.max(0, Math.min(10, Math.round((parsed.controversy_domain_score || 0) * 10) / 10))
+    const framing = Math.max(0, Math.min(10, Math.round((parsed.controversy_framing_score || 0) * 10) / 10))
+    const composite = Math.round((domain * 0.60 + framing * 0.40) * 10) / 10
+
+    let label = 'SETTLED'
+    if (composite >= 8.0) label = 'DISPUTED'
+    else if (composite >= 6.0) label = 'CONTESTED'
+    else if (composite >= 3.0) label = 'DEVELOPING'
+
+    return {
+      score: composite,
+      label,
+      reason: String(parsed.controversy_reason || '').slice(0, 500),
+    }
+  } catch (err) {
+    console.error('[summarise-pending] controversy score error:', err)
+    return { score: 0, label: 'SETTLED', reason: '' }
+  }
+}
+
 async function summariseStory(story: {
   id: string;
   title: string;
@@ -263,6 +322,14 @@ export async function GET(request: Request) {
       if (status === 'live') liveCount++
       else pendingReviewCount++
 
+      // Controversy scoring (non-blocking: failure does not prevent story publication)
+      const controversy = await scoreControversy({
+        id: story.id,
+        title: story.title,
+        source_name: story.source_name,
+        short_summary,
+      })
+
       await supabase
         .from('stories')
         .update({
@@ -271,6 +338,9 @@ export async function GET(request: Request) {
           confidence_score: score,
           confidence_flags: flags,
           status,
+          controversy_score: controversy.score,
+          controversy_label: controversy.label,
+          controversy_reason: controversy.reason,
         })
         .eq('id', story.id)
       summarised++

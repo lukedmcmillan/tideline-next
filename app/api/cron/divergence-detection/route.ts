@@ -1,3 +1,5 @@
+// DEPRECATED: replaced by controversy scoring at ingest.
+// See CONTROVERSY-SCORE-SPEC.md. Retained for manual use only.
 import { NextResponse } from "next/server";
 import { runDivergenceDetection } from "@/app/lib/divergence";
 
