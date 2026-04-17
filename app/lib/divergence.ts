@@ -81,6 +81,7 @@ export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[
   const pairs: StoryPair[] = [];
   const MAX_PAIRS_PER_TOPIC = 10;
   const MS_72H = 72 * 60 * 60 * 1000;
+  let keywordSkips = 0;
 
   for (const [topic, group] of Object.entries(byTopic)) {
     if (group.length < 2) continue;
@@ -99,6 +100,13 @@ export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[
         const diff = Math.abs(new Date(a.published_at).getTime() - new Date(b.published_at).getTime());
         if (diff > MS_72H) continue;
 
+        // Shared keyword filter: headlines must share at least one significant word
+        if (!sharesKeyword(a.title, b.title)) {
+          keywordSkips++;
+          console.log(`[divergence:filter] SKIP - no shared keywords: ${a.title.slice(0, 60)} / ${b.title.slice(0, 60)}`);
+          continue;
+        }
+
         // Canonical ordering: a.id < b.id
         const [storyA, storyB] = a.id < b.id ? [a, b] : [b, a];
         pairs.push({ storyA, storyB, tracker_tag });
@@ -107,7 +115,7 @@ export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[
     }
   }
 
-  console.log(`[divergence] Found ${pairs.length} candidate pairs from ${stories.length} stories`);
+  console.log(`[divergence] Found ${pairs.length} candidate pairs from ${stories.length} stories (${keywordSkips} filtered by keyword check)`);
   return pairs;
 }
 
@@ -117,6 +125,13 @@ export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[
  */
 export async function scoreDivergence(storyA: Story, storyB: Story): Promise<DivergenceScore | null> {
   const systemPrompt = `You are a source divergence analyst for an ocean governance intelligence platform. You compare two stories about the same event and measure how much they disagree.
+
+FIRST: Are these two stories covering the same specific event, decision, vote, announcement, or development? They must share the same named subject (same treaty, same institution, same regulatory decision, same named body of water or jurisdiction).
+
+If they are NOT covering the same specific event, return:
+{"factual": 0, "conclusion": 0, "framing": 0, "authority": 0, "composite": 0, "source_a_claim": "not applicable", "source_b_claim": "not applicable", "headline": "unrelated stories", "why_it_matters": "not applicable"}
+
+Only proceed to score the four dimensions if they ARE covering the same specific event.
 
 When you write the why_it_matters field, follow these rules:
 - Write for an intelligent reader who is competent in their field but does not know the specific ocean governance terminology
@@ -297,4 +312,32 @@ export async function runDivergenceDetection(sinceHours = 24): Promise<{
 function clamp(v: unknown): number {
   const n = typeof v === "number" ? v : 0;
   return Math.max(0, Math.min(10, Math.round(n * 10) / 10));
+}
+
+const STOP_WORDS = new Set([
+  "about", "their", "which", "would", "could", "after", "before",
+  "during", "under", "where", "there", "these", "those", "with",
+  "from", "that", "this", "have", "been", "will", "more", "also",
+  "than", "other", "being", "every", "first", "should", "still",
+  "while", "through", "between", "against", "ocean", "marine",
+  "global", "world", "report", "says", "could", "major", "according",
+]);
+
+function significantWords(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(w => w.length >= 5 && !STOP_WORDS.has(w))
+  );
+}
+
+function sharesKeyword(titleA: string, titleB: string): boolean {
+  const wordsA = significantWords(titleA);
+  const wordsB = significantWords(titleB);
+  for (const w of wordsA) {
+    if (wordsB.has(w)) return true;
+  }
+  return false;
 }
