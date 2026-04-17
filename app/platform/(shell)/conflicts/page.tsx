@@ -781,7 +781,8 @@ function ScoringModal({ onClose }: { onClose: () => void }) {
         {/* Footer */}
         <div style={{ borderTop: `0.5px solid ${B}`, marginTop: 20, paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 11, color: T3 }}>Tideline does not adjudicate. Professional judgement is required.</span>
-          <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, color: TEAL, textDecoration: "none" }}>Full methodology {"\u2192"}</a>
+          {/* TODO: build /methodology#conflict-scoring section for dedicated conflict scoring methodology */}
+          <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, color: TEAL, textDecoration: "none" }}>Pulse Score methodology {"\u2192"}</a>
         </div>
       </div>
     </div>
