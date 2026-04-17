@@ -15,8 +15,25 @@
 - Ruflo V3 installed (98 agents, 15-agent swarm) ✓
 - Claude Skills installed ✓
 
+- Cron refactor: 4 shared modules extracted (sources, html, jina, confidence), 2 auth fixes, ~350 lines removed ✓
+- Conflict tracker with Pulse Score methodology ✓
+- Dashboard redesigned as 2x3 card grid ✓
+- Dashboard v2 Sprint 1 (wow layer) COMPLETE and shipped ✓
+  - 17 new files: types, events seed, 6 API routes, 9 components (Sparkline, TickerStrip, OvernightReveal, HeroSignal + 5 subtypes)
+  - 2 files modified: layout.tsx (sidebar logo + datetime + readiness placeholder), page.tsx (full dark-mode rewrite)
+  - page.old.tsx gitignored as backup, delete at end of Sprint 3
+- Threshold alerts end-to-end: seed script, AlertToggle, preferences API, cron route, alert_sends table ✓
+
+## Dashboard Sprint 2 carry-forward
+1. Wire /api/dashboard/readiness to real data (need new schema: docs_read, tracker_dashboard_visits_last_7d)
+2. Wire /api/dashboard/proof-of-work to real data
+3. Wire /api/dashboard/upcoming-30d cells to velocity_scores weekday averages
+4. Hero Signal headline accent: implement with structured headline fields, not colon heuristic
+5. Build ReadinessWidget component (replaces sidebar placeholder)
+6. Build CalendarHeatmap component
+
 ## What's next
-1. Nav link to /platform/lp-briefing in platform nav
+1. Brief-reply webhook (reply-to-brief → AI answer)
 2. Corporate Stripe pricing tier
 3. Prompt caching on all API calls
 4. ESG/NGO/journalist briefing_type PDF variants
@@ -25,7 +42,6 @@
 
 ## Known issues / debt
 - Firecrawl MCP not connecting on Windows — use Jina fallback
-- Debug logs still in /api/lp-portfolios/route.ts — remove before next push
 - community-documents POST bug fix pending push
 - Next.js middleware.ts deprecated — migrate to proxy convention
 - Stripe corporate tier not wired up — upgrade CTA goes nowhere
