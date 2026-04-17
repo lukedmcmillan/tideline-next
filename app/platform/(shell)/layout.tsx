@@ -147,15 +147,16 @@ function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, 
   const [hTip, setHTip] = useState<string | null>(null);
 
   const nav: { ic: React.ReactNode; label: string; href: string; badge?: string; badgeColor?: string }[] = [
-    { ic: <IcOverview />, label: "Overview", href: "/platform" },
-    { ic: <IcFeed />, label: "Feed", href: "/platform/feed" },
+    { ic: <IcOverview />, label: "Dashboard", href: "/platform" },
+    { ic: <IcFeed />, label: "News Feed", href: "/platform/feed" },
+    { ic: <IcWork />, label: "My Workspace", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcTrackers />, label: "Trackers", href: "/platform/trackers" },
     { ic: <IcConflicts />, label: "Conflicts", href: "/platform/conflicts", badge: conflictCount && conflictCount > 0 ? String(conflictCount) : undefined, badgeColor: AMBER },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library" },
-    { ic: <IcWork />, label: "Projects", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
-    ...(tier === "corporate" ? [{ ic: <IcBrief />, label: "Briefings", href: "/platform/lp-briefing" }] : []),
+    // TODO: show for blue finance tier only
+    // ...(tier === "corporate" ? [{ ic: <IcBrief />, label: "Briefings", href: "/platform/lp-briefing" }] : []),
     { ic: <IcDir />, label: "Directory", href: "/platform/directory" },
   ];
 

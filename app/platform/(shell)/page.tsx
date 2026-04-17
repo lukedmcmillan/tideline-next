@@ -85,7 +85,8 @@ export default function DashboardPage() {
       fetch("/api/dashboard").then(r => r.ok ? r.json() : {}),
       fetch("/api/stories?limit=3").then(r => r.ok ? r.json() : { stories: [] }),
       fetch("/api/conflicts").then(r => r.ok ? r.json() : { divergences: [] }),
-    ]).then(([dash, storiesData, conflictsData]: [Record<string, unknown>, Record<string, unknown>, Record<string, unknown>]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ]).then(([dash, storiesData, conflictsData]: any[]) => {
       setVelocityScores((dash.velocityScores as VScore[]) || []);
       setSignal((dash.signal as Signal) || null);
       setStories(((storiesData.stories as Story[]) || []).slice(0, 3));
