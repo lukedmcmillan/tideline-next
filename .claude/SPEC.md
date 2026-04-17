@@ -23,6 +23,7 @@
   - 2 files modified: layout.tsx (sidebar logo + datetime + readiness placeholder), page.tsx (full dark-mode rewrite)
   - page.old.tsx gitignored as backup, delete at end of Sprint 3
 - Threshold alerts end-to-end: seed script, AlertToggle, preferences API, cron route, alert_sends table ✓
+- Ticker v2: /api/dashboard/ticker returns MixedTickerItem[] with 5 types (headline, score_delta, countdown, new_divergence, doc_ingestion). Interleaved round-robin with per-bucket caps. 2-minute revalidate. /api/trackers/ticker deleted. ✓
 
 ## Dashboard Sprint 2 carry-forward
 1. Wire /api/dashboard/readiness to real data (need new schema: docs_read, tracker_dashboard_visits_last_7d)
