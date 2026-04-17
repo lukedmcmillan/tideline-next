@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import "./dashboard.css";
+import { useState, useEffect } from "react";
 
-// Helpers
+const F = "'DM Sans', system-ui, sans-serif";
+const M = "'DM Mono', monospace";
+const TEAL = "#1D9E75";
+const AMBER = "#EF9F27";
+const T1 = "#202124";
+const T2 = "#5F6368";
+const T3 = "#9AA0A6";
+const BORDER = "#DADCE0";
+const BG = "#F8F9FA";
+const WHITE = "#FFFFFF";
+
 function relTime(d: string): string {
   const ms = Date.now() - new Date(d).getTime();
   const mins = Math.floor(ms / 60000);
@@ -15,370 +24,253 @@ function relTime(d: string): string {
   return `${days}d ago`;
 }
 
-function decodeHtml(html: string): string {
-  return html.replace(/&#039;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-}
-
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 function fmtDate(): string {
   const d = new Date();
-  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mm = String(d.getMinutes()).padStart(2,"0");
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} · ${hh}:${mm}`;
+  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
-interface Story { id: string; title: string; source_name: string; topic: string; source_type?: string; published_at: string; short_summary: string | null; is_pro?: boolean; }
-interface TrackerData { name: string; slug?: string; score?: number; trend?: string; color?: string; }
-interface Project { name: string; count: number; project_type?: string; }
+function scoreColor(s: number): string {
+  if (s >= 7) return TEAL;
+  if (s >= 4) return AMBER;
+  return T3;
+}
 
-const TRACKER_COLORS: Record<string, string> = {
-  bbnj: "#1D9E75", iuu: "#1D9E75", isa: "#EF9F27", dsm: "#EF9F27",
-  "deep-sea-mining": "#EF9F27", plastics: "#5F6368", "30x30": "#E24B4A",
-  "blue-finance": "#1D9E75",
+function bandLabel(s: number): { label: string; bg: string; color: string } {
+  if (s >= 7) return { label: "ELEVATED", bg: "#E8F7F2", color: TEAL };
+  if (s >= 4) return { label: "WATCH", bg: "#FEF3E2", color: AMBER };
+  return { label: "LOW", bg: BG, color: T3 };
+}
+
+function trendArrow(dir: string): { char: string; color: string } {
+  if (dir === "accelerating") return { char: "\u2191", color: TEAL };
+  if (dir === "decelerating") return { char: "\u2193", color: "#E24B4A" };
+  return { char: "\u2192", color: T3 };
+}
+
+const SLUG_NAMES: Record<string, string> = {
+  isa: "ISA Deep Sea Mining", bbnj: "BBNJ High Seas Treaty", iuu: "IUU Fishing",
+  "30x30": "30x30 MPAs", "blue-finance": "Blue Finance", plastics: "Plastics Treaty",
+  "imo-shipping": "IMO Shipping", "offshore-wind": "Offshore Wind",
+  "cites-marine": "CITES Marine", "wto-fisheries": "WTO Fisheries",
 };
 
-function trackerColor(name: string): string {
-  const lower = name.toLowerCase();
-  for (const [key, color] of Object.entries(TRACKER_COLORS)) {
-    if (lower.includes(key)) return color;
-  }
-  return "#1D9E75";
+function slugName(s: string): string { return SLUG_NAMES[s] || s; }
+
+function actionVerdict(score: number, tag: string): string {
+  if (score >= 8) return "Seek legal advice";
+  const esg = new Set(["isa", "bbnj", "blue-finance", "tnfd"]);
+  const comp = new Set(["imo-shipping", "iuu"]);
+  if (score >= 6 && esg.has(tag)) return "Review TNFD position";
+  if (score >= 6 && comp.has(tag)) return "Flag for compliance review";
+  return "Monitor";
 }
 
-function scoreColor(score: number): string {
-  if (score >= 7) return "#1D9E75";
-  if (score >= 4) return "#EF9F27";
-  return "#E24B4A";
-}
+interface VScore { tracker_slug: string; score: number; momentum_direction: string }
+interface Story { id: string; title: string; source_name: string; topic: string; published_at: string; short_summary: string | null }
+interface Divergence { id: string; tracker_tag: string; score: number; headline?: string; why_it_matters: string; detected_at: string }
+interface Signal { signal_text: string; meaning_text: string; signal_date: string }
 
-function trendArrow(trend?: string): { char: string; color: string } {
-  if (trend === "accelerating" || trend === "up") return { char: "\u2191", color: "#1D9E75" };
-  if (trend === "decelerating" || trend === "down") return { char: "\u2193", color: "#E24B4A" };
-  return { char: "\u2192", color: "#9AA0A6" };
-}
-
-const NAME_TO_SLUG: Record<string, string> = {
-  "high seas treaty": "bbnj",
-  "deep-sea mining": "isa",
-  "illegal fishing": "iuu",
-  "marine protected areas": "30x30",
-  "ocean finance": "blue-finance",
-};
-
-function trackerSlug(name: string): string {
-  return NAME_TO_SLUG[name.toLowerCase()] || name.toLowerCase().replace(/\s+/g, "-");
-}
-
-function topicTagClass(topic: string): string {
-  const t = topic?.toLowerCase() || "";
-  if (t.includes("iuu") || t.includes("fishing")) return "amber";
-  if (t.includes("breaking")) return "breaking";
-  return "teal";
-}
+const LBL: React.CSSProperties = { fontFamily: M, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: T3, marginBottom: 8 };
+const CARD: React.CSSProperties = { background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "16px 18px", display: "flex", flexDirection: "column", overflow: "hidden" };
 
 export default function DashboardPage() {
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [streakDays, setStreakDays] = useState(1);
+  const [velocityScores, setVelocityScores] = useState<VScore[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
-  const [trackers, setTrackers] = useState<TrackerData[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [docCount, setDocCount] = useState(0);
-  const [feedCount, setFeedCount] = useState(0);
-  const [sinceVisible, setSinceVisible] = useState(true);
-  const [signal, setSignal] = useState<{ signal_text: string; meaning_text: string; meeting_note?: string | null; authored_by: string; signal_date: string } | null>(null);
-  const [velocityScores, setVelocityScores] = useState<{ tracker_slug: string; score: number; momentum_direction: string }[]>([]);
+  const [divergences, setDivergences] = useState<Divergence[]>([]);
+  const [signal, setSignal] = useState<Signal | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [liveSecs, setLiveSecs] = useState(0);
-  const liveRef = useRef(0);
 
-  // Live counter
-  useEffect(() => {
-    const id = setInterval(() => {
-      liveRef.current += 1;
-      setLiveSecs(liveRef.current);
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Fetch data
   useEffect(() => {
     Promise.all([
-      fetch("/api/subscription-status").then(r => r.ok ? r.json() : {}),
-      fetch("/api/stories?limit=8").then(r => r.ok ? r.json() : { stories: [] }),
-      fetch("/api/sidebar-data").then(r => r.ok ? r.json() : {}),
-      fetch("/api/projects").then(r => r.ok ? r.json() : { projects: [] }),
       fetch("/api/dashboard").then(r => r.ok ? r.json() : {}),
-    ]).then(([status, storiesData, sidebar, projData, dashData]: [any, any, any, any, any]) => {
-      const em = status.email || "";
-      setEmail(em);
-      const derived = em.split("@")[0]?.split(".")[0]?.replace(/^\w/, (c: string) => c.toUpperCase()) || "";
-      setFirstName(derived || "Luke");
-      setStreakDays(status.streak_days || 1);
-      setStories(storiesData.stories || []);
-      if (sidebar.trackers) setTrackers(sidebar.trackers);
-      if (typeof sidebar.urgent_count === "number") setFeedCount(sidebar.urgent_count);
-      setProjects(projData.projects || []);
-      setSignal(dashData.signal || {
-        signal_text: "No signal entered for today yet.",
-        meaning_text: "Add today\u2019s signal in the Supabase dashboard.",
-        authored_by: "Tideline",
-        signal_date: new Date().toISOString().split("T")[0],
-      });
-      if (dashData.velocityScores) setVelocityScores(dashData.velocityScores);
+      fetch("/api/stories?limit=3").then(r => r.ok ? r.json() : { stories: [] }),
+      fetch("/api/conflicts").then(r => r.ok ? r.json() : { divergences: [] }),
+    ]).then(([dash, storiesData, conflictsData]: [Record<string, unknown>, Record<string, unknown>, Record<string, unknown>]) => {
+      setVelocityScores((dash.velocityScores as VScore[]) || []);
+      setSignal((dash.signal as Signal) || null);
+      setStories(((storiesData.stories as Story[]) || []).slice(0, 3));
+      setDivergences(((conflictsData.divergences as Divergence[]) || []).slice(0, 3));
       setLoaded(true);
     }).catch(() => setLoaded(true));
 
-    // Update last seen
     fetch("/api/user/update-last-seen", { method: "POST" }).catch(() => {});
   }, []);
 
-  const tickerStories = stories.slice(0, 8);
-  const sinceStories = stories.slice(0, 3);
-  const latestStories = stories.slice(0, 3);
+  const sorted = [...velocityScores].sort((a, b) => b.score - a.score);
+  const top = sorted[0] || null;
+  const watchCount = velocityScores.filter(v => v.score >= 4).length;
 
-  const liveText = liveSecs < 60
-    ? `Updated ${liveSecs}s ago`
-    : `Updated ${Math.floor(liveSecs / 60)}m ${liveSecs % 60}s ago`;
+  if (!loaded) {
+    return (
+      <div style={{ background: BG, minHeight: "100%", fontFamily: F, padding: "12px 20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr", gap: 10 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ ...CARD, height: 220, animation: "dashPulse 1.2s ease-in-out infinite" }}>
+              <style>{`@keyframes dashPulse{0%,100%{opacity:.4}50%{opacity:1}}`}</style>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      {/* Ticker */}
-      <div className="dash-ticker">
-        <div className="dash-ticker-label">
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", animation: "pulse 2s ease infinite" }} />
-          LIVE
+    <div style={{ background: BG, minHeight: "100%", fontFamily: F }}>
+      {/* Topbar */}
+      <div style={{ background: WHITE, borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 500, color: T1 }}>Dashboard</div>
+          <div style={{ fontSize: 11, color: T3, marginTop: 1 }}>{fmtDate()}</div>
         </div>
-        <div className="dash-ticker-track">
-          <div className="dash-ticker-inner">
-            {tickerStories.map((s, i) => (
-              <span key={s.id}>
-                {i > 0 && <span className="dash-ticker-sep"> {"\u00B7"} </span>}
-                <span className="dash-ticker-item">{decodeHtml(s.title)} {"\u00B7"} {relTime(s.published_at)}</span>
-              </span>
-            ))}
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: M, fontSize: 10, fontWeight: 600, color: TEAL, letterSpacing: ".08em" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, display: "inline-block" }} />
+          LIVE
         </div>
       </div>
 
-      {/* Content */}
-      <div className="dash-content">
-        {!loaded ? (
-          <>
-            <div className="dash-skel animate-1" style={{ height: 100 }} />
-            <div className="dash-skel animate-2" style={{ height: 80 }} />
-            <div className="dash-grid-3 animate-3">
-              <div className="dash-skel" style={{ height: 280 }} />
-              <div className="dash-skel" style={{ height: 280 }} />
-              <div className="dash-skel" style={{ height: 280 }} />
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Top row: Since Last Visit + Signal of the Day */}
-            <div className="dash-top-row animate-1">
-              {sinceVisible && sinceStories.length > 0 && (
-                <div className="dash-since">
-                  <div className="dash-since-label">Since your last visit {"\u00B7"} {sinceStories[0] ? relTime(sinceStories[0].published_at) : ""}</div>
-                  <button className="dash-since-dismiss" onClick={() => { setSinceVisible(false); fetch("/api/user/update-last-seen", { method: "POST" }).catch(() => {}); }}>Mark read {"\u00D7"}</button>
-                  <div className="dash-since-items">
-                    {sinceStories.map(s => (
-                      <div key={s.id} className="dash-since-item">
-                        <span className="dash-since-bullet" />
-                        <div>
-                          <div className="dash-since-text">{decodeHtml(s.title)}</div>
-                          <div className="dash-since-time">{relTime(s.published_at)}</div>
-                        </div>
-                      </div>
-                    ))}
+      {/* Grid */}
+      <div style={{ padding: "12px 20px", display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr", gap: 10 }}>
+
+        {/* Card 1: Highest Pulse Score */}
+        <div style={{ ...CARD, borderTop: `3px solid ${TEAL}` }}>
+          <div style={LBL}>HIGHEST PULSE SCORE NOW</div>
+          {top ? (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span style={{ fontFamily: M, fontSize: 42, fontWeight: 700, color: TEAL, lineHeight: 1 }}>{top.score.toFixed(1)}</span>
+                <span style={{ fontFamily: M, fontSize: 14, color: T3 }}>/10</span>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T1, marginTop: 6 }}>{slugName(top.tracker_slug)}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                {(() => { const a = trendArrow(top.momentum_direction); return <span style={{ fontFamily: M, fontSize: 12, color: a.color }}>{a.char} {top.momentum_direction}</span>; })()}
+              </div>
+            </>
+          ) : <Empty />}
+        </div>
+
+        {/* Card 2: Your Exposure Today */}
+        <div style={CARD}>
+          <div style={LBL}>YOUR EXPOSURE TODAY</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+            <span style={{ fontFamily: M, fontSize: 32, fontWeight: 700, color: TEAL, lineHeight: 1 }}>{watchCount}</span>
+            <span style={{ fontFamily: M, fontSize: 14, color: T3 }}>of {velocityScores.length}</span>
+          </div>
+          <div style={{ fontSize: 11, color: T2, marginBottom: 10 }}>domains in WATCH or above</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, overflow: "hidden" }}>
+            {sorted.slice(0, 6).map(v => {
+              const b = bandLabel(v.score);
+              return (
+                <div key={v.tracker_slug} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontFamily: F, fontSize: 11, color: T2, width: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>{slugName(v.tracker_slug)}</span>
+                  <div style={{ flex: 1, height: 4, background: "#E8EAED", borderRadius: 2 }}>
+                    <div style={{ height: 4, width: `${(v.score / 10) * 100}%`, background: b.color, borderRadius: 2 }} />
                   </div>
+                  <span style={{ fontFamily: M, fontSize: 9, fontWeight: 600, color: b.color, background: b.bg, padding: "1px 5px", borderRadius: 999, flexShrink: 0 }}>{b.label}</span>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Card 3: Since Your Last Visit */}
+        <div style={CARD}>
+          <div style={LBL}>SINCE YOUR LAST VISIT <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>{"\u00B7"} today</span></div>
+          {stories.length > 0 ? stories.map(s => {
+            const dotColor = ["isa", "30x30", "mpa"].some(t => s.topic?.includes(t)) ? TEAL : AMBER;
+            return (
+              <div key={s.id} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: dotColor, marginTop: 5, flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
+                  <a href={`/platform/story/${s.id}`} style={{ fontFamily: F, fontSize: 12.5, fontWeight: 500, color: T1, textDecoration: "none", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{s.title}</a>
+                  <div style={{ fontFamily: M, fontSize: 10, color: T3, marginTop: 2 }}>{relTime(s.published_at)} {"\u00B7"} {s.topic}</div>
+                </div>
+              </div>
+            );
+          }) : <Empty />}
+        </div>
+
+        {/* Card 4: Tracker Velocity */}
+        <div style={CARD}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={LBL as Record<string, unknown>}>TRACKER VELOCITY</div>
+            <a href="/platform/trackers" style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none" }}>All trackers {"\u2192"}</a>
+          </div>
+          {sorted.length > 0 ? sorted.slice(0, 5).map(v => {
+            const a = trendArrow(v.momentum_direction);
+            return (
+              <div key={v.tracker_slug} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontFamily: F, fontSize: 12, color: T1, width: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>{slugName(v.tracker_slug)}</span>
+                <div style={{ width: 60, height: 4, background: "#E8EAED", borderRadius: 2, flexShrink: 0 }}>
+                  <div style={{ height: 4, width: `${(v.score / 10) * 100}%`, background: scoreColor(v.score), borderRadius: 2 }} />
+                </div>
+                <span style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: scoreColor(v.score), width: 28, textAlign: "right", flexShrink: 0 }}>{v.score.toFixed(1)}</span>
+                <span style={{ fontFamily: M, fontSize: 11, color: a.color, flexShrink: 0 }}>{a.char}</span>
+              </div>
+            );
+          }) : <Empty />}
+        </div>
+
+        {/* Card 5: Active Conflicts */}
+        <div style={CARD}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={LBL as Record<string, unknown>}>ACTIVE CONFLICTS</div>
+            <a href="/platform/conflicts" style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none" }}>All {"\u2192"}</a>
+          </div>
+          {divergences.length > 0 ? divergences.slice(0, 3).map(d => {
+            const av = actionVerdict(d.score, d.tracker_tag);
+            return (
+              <div key={d.id} style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <span style={{ fontFamily: M, fontSize: 13, fontWeight: 700, color: d.score >= 6 ? AMBER : T3, flexShrink: 0, marginTop: 1 }}>{d.score.toFixed(1)}</span>
+                  <span style={{ fontFamily: F, fontSize: 12.5, color: T1, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{d.headline || d.tracker_tag}</span>
+                </div>
+                <span style={{ fontFamily: M, fontSize: 9, fontWeight: 600, color: "#0F6E56", background: "#E1F5EE", padding: "2px 6px", borderRadius: 999, marginTop: 4, display: "inline-block" }}>{av}</span>
+              </div>
+            );
+          }) : <Empty />}
+        </div>
+
+        {/* Card 6: Most Watched + Signal */}
+        <div style={CARD}>
+          {/* Top: Most Watched */}
+          <div style={LBL}>MOST WATCHED</div>
+          {/* TODO: wire to real tracking data — subscriber counts are placeholders */}
+          {sorted.slice(0, 4).map((v, i) => {
+            const counts = [94, 49, 44, 24];
+            return (
+              <div key={v.tracker_slug} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontFamily: M, fontSize: 10, color: T3, width: 14, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ fontFamily: F, fontSize: 12, color: T1, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{slugName(v.tracker_slug)}</span>
+                <span style={{ fontFamily: M, fontSize: 10, color: T3, flexShrink: 0 }}>{counts[i] ?? 0}</span>
+              </div>
+            );
+          })}
+
+          {/* Divider */}
+          <div style={{ borderTop: `1px solid ${BORDER}`, margin: "10px 0 8px" }} />
+
+          {/* Bottom: Signal of the Day */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={LBL as Record<string, unknown>}>SIGNAL OF THE DAY</div>
+            <span style={{ fontFamily: M, fontSize: 9, color: T3 }}>{new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+          </div>
+          {/* TODO: wire to signals table when it exists */}
+          {signal?.signal_text ? (
+            <div style={{ borderLeft: `2px solid ${TEAL}`, paddingLeft: 10 }}>
+              <div style={{ fontFamily: F, fontSize: 12, color: T1, lineHeight: 1.5 }}>{signal.signal_text}</div>
+              {signal.meaning_text && (
+                <div style={{ fontFamily: F, fontSize: 11, color: T2, lineHeight: 1.5, marginTop: 4 }}>{signal.meaning_text}</div>
               )}
-              {signal && (
-                <div className="dash-signal">
-                  <div className="dash-signal-header">
-                    <span className="dash-signal-badge">Signal of the day</span>
-                    <span className="dash-signal-meta">{signal.authored_by} {"\u00B7"} {signal.signal_date}</span>
-                  </div>
-                  <div className="dash-signal-text">{signal.signal_text}</div>
-                  <div className="dash-signal-meaning"><strong style={{ fontWeight: 500, color: "#3C4043" }}>What this means: </strong>{signal.meaning_text}</div>
-                </div>
-              )}
             </div>
-
-            {/* Meeting note */}
-            {signal?.meeting_note && (
-              <div className="dash-meeting animate-3">
-                <div className="dash-meeting-label">If you{"\u2019"}re in a meeting today</div>
-                <div className="dash-meeting-body">{signal.meeting_note}</div>
-              </div>
-            )}
-
-            {/* 3-column grid */}
-            <div className="dash-grid-3 animate-3">
-              <div className="dash-card">
-                <div className="dash-card-header">
-                  <span className="dash-card-title">Tracker Velocity</span>
-                  <a className="dash-card-link" href="/platform/trackers">All trackers {"\u2192"}</a>
-                </div>
-                <div className="dash-card-body">
-                  {trackers.map((t, i) => {
-                    const c = trackerColor(t.name);
-                    const slug = trackerSlug(t.name);
-                    const vs = velocityScores.find(v => v.tracker_slug === slug);
-                    const score = vs?.score ?? 0;
-                    const arrow = trendArrow(vs?.momentum_direction);
-                    return (
-                      <div key={t.name} className="dash-vrow">
-                        <span className="dash-vrow-dot" style={{ background: c }} />
-                        <span className="dash-vrow-name">{t.name}</span>
-                        <div className="dash-vrow-bar">
-                          <div className="dash-vrow-fill" style={{ "--w": `${score * 10}%`, background: c, animationDelay: `${i * 0.1}s` } as React.CSSProperties} />
-                        </div>
-                        <span className="dash-vrow-score" style={{ color: scoreColor(score) }}>{score.toFixed(1)}</span>
-                        <span className="dash-vrow-arrow" style={{ color: arrow.color }}>{arrow.char}</span>
-                      </div>
-                    );
-                  })}
-                  <div className="dash-card-footer">Updated Mon 07:00 {"\u00B7"} Next update Mon 07:00</div>
-                </div>
-              </div>
-
-              <div className="dash-card">
-                <div className="dash-card-header">
-                  <span className="dash-card-title">Next 72 Hours</span>
-                  <a className="dash-card-link" href="/platform/calendar">Calendar {"\u2192"}</a>
-                </div>
-                <div className="dash-card-body">
-                  <div className="dash-prep">
-                    <div className="dash-prep-label">Meeting prep</div>
-                    <div className="dash-prep-text">No upcoming governance events in the next 72 hours.</div>
-                    <div className="dash-prep-meta">Check the calendar for the full schedule.</div>
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "#5F6368", textAlign: "center", padding: "12px 0" }}>
-                    Events will appear here when governance meetings are within 72 hours.
-                  </div>
-                </div>
-              </div>
-
-              <div className="dash-card">
-                <div className="dash-card-header">
-                  <span className="dash-card-title">Most Watched This Week</span>
-                </div>
-                <div className="dash-card-body">
-                  <div className="dash-watched-intro">What other Tideline subscribers are tracking right now</div>
-                  {trackers.slice(0, 4).map((t, i) => (
-                    <div key={t.name} className="dash-watched-row">
-                      <span className="dash-watched-rank">{String(i + 1).padStart(2, "0")}</span>
-                      <span className="dash-watched-name">{t.name}</span>
-                      <div className="dash-watched-bar">
-                        <div className="dash-watched-fill" style={{ width: `${100 - i * 20}%` }} />
-                      </div>
-                      <span className="dash-watched-count">{Math.floor(Math.random() * 80 + 20)}</span>
-                    </div>
-                  ))}
-                  <div className="dash-stat-grid">
-                    <div className="dash-stat-box">
-                      <div className="dash-stat-num">{stories.length > 0 ? stories.length * 12 : 0}</div>
-                      <div className="dash-stat-label">Stories 7d</div>
-                    </div>
-                    <div className="dash-stat-box">
-                      <div className="dash-stat-num">82%</div>
-                      <div className="dash-stat-label">Brief opens</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 2-column grid */}
-            <div className="dash-grid-2 animate-5">
-              <div className="dash-card">
-                <div className="dash-card-header">
-                  <span className="dash-card-title">Latest Stories</span>
-                  <a className="dash-card-link" href="/platform/feed">All stories {"\u2192"}</a>
-                </div>
-                <div className="dash-card-body">
-                  {latestStories.map(s => (
-                    <div key={s.id} className="dash-story">
-                      <div className="dash-story-meta">
-                        <span className={`dash-story-tag ${topicTagClass(s.topic)}`}>{s.topic}</span>
-                        <span className="dash-story-time">{relTime(s.published_at)}</span>
-                      </div>
-                      <a className="dash-story-title" href={`/platform/story/${s.id}`}>{decodeHtml(s.title)}</a>
-                      {s.short_summary && (
-                        <div className="dash-story-meaning">
-                          <strong style={{ fontWeight: 500, color: "#3C4043" }}>What this means: </strong>
-                          {s.short_summary}
-                        </div>
-                      )}
-                      <div className="dash-story-source">{s.source_name}</div>
-                    </div>
-                  ))}
-                  {latestStories.length === 0 && (
-                    <div style={{ fontSize: 12, color: "#9AA0A6", textAlign: "center", padding: 20 }}>No stories yet today.</div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div className="dash-card">
-                  <div className="dash-card-header">
-                    <span className="dash-card-title">Workspace</span>
-                    <a className="dash-card-link" href="/platform/workspace">Open {"\u2192"}</a>
-                  </div>
-                  <div className="dash-card-body">
-                    {projects.slice(0, 3).map((p, i) => (
-                      <a key={p.name} className="dash-ws-item" href={`/platform/projects/${encodeURIComponent(p.name)}`}>
-                        <div className="dash-ws-icon">
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={i === 0 ? "#1D9E75" : "#9AA0A6"} strokeWidth="1.3"><path d="M3 2h8v11H3z" strokeLinejoin="round"/><path d="M5 5h4M5 7h4M5 9h2"/></svg>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="dash-ws-title">{p.name}</div>
-                          <div className="dash-ws-meta">{p.count} sources</div>
-                        </div>
-                        <span className={`dash-ws-status ${i === 0 ? "active" : "draft"}`}>{i === 0 ? "Active" : "Draft"}</span>
-                      </a>
-                    ))}
-                    {projects.length === 0 && (
-                      <div style={{ fontSize: 12, color: "#9AA0A6", textAlign: "center", padding: 16 }}>No projects yet. Create one from the workspace.</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="dash-card">
-                  <div className="dash-card-header">
-                    <span className="dash-card-title">Library</span>
-                    <a className="dash-card-link" href="/platform/library">Browse {"\u2192"}</a>
-                  </div>
-                  <div className="dash-card-body">
-                    <div className="dash-lib-inner">
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#1D9E75" strokeWidth="1.5"><path d="M3 2h12v15l-6-4-6 4V2z"/></svg>
-                      <div>
-                        <div className="dash-lib-count">2,400+ primary source documents</div>
-                        <div className="dash-lib-orgs">ISA {"\u00B7"} IMO {"\u00B7"} BBNJ {"\u00B7"} FAO {"\u00B7"} OSPAR</div>
-                      </div>
-                    </div>
-                    <div className="dash-lib-body">Search treaty text, regulatory publications, and governing body records in plain language. Every answer cited. Every source traceable.</div>
-                    <div className="dash-lib-footer">
-                      <a className="dash-lib-link" href="/platform/library">Search library {"\u2192"}</a>
-                      <a className="dash-lib-upload" href="/platform/library">Upload PDF</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+          ) : (
+            <div style={{ fontFamily: F, fontSize: 12, color: T3 }}>No signal for today yet.</div>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+function Empty() {
+  return <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: "#9AA0A6", padding: "8px 0" }}>No data yet</div>;
 }
