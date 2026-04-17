@@ -1,3 +1,4 @@
+// cache-bust: 2026-04-16
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
@@ -42,8 +43,8 @@ Use commas, full stops, or restructure sentences. No em dashes anywhere in the o
 9. OUTPUT FORMAT
 Plain prose with paragraph breaks. Use # and ## markdown headings for structure if the format calls for it. No closing summary or call to action unless the notes contain one. Do not invent a headline — use the project name as the working title only.`;
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
-  const { name: id } = await params;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { notes, sources, format, tone, projectName } = await req.json();
 
   const sourceBlock = Array.isArray(sources) && sources.length > 0
