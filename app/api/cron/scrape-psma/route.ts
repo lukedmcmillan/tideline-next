@@ -8,7 +8,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const res = await fetch("https://www.fao.org/port-state-measures/background/parties-psma/en/", {
       headers: { "User-Agent": "Tideline/1.0 (ocean intelligence)" },

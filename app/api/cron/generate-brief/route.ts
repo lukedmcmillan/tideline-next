@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
+import { decodeHtml } from "@/app/lib/html";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,23 +14,6 @@ const anthropic = new Anthropic({
 
 const SUMMARY_SYSTEM_PROMPT =
   'You are a senior analyst at a financial intelligence terminal. Write exactly two sentences as JSON.\n\nRules:\n- Sentence 1: Name the institution. State the specific decision, document, or finding. Include numbers, dates, or references where available.\n- Sentence 2: State the consequence for the most relevant professional group given this specific story. Choose the single most affected group from: maritime lawyers, ESG analysts, shipping compliance teams, ocean investors, NGO policy directors, fisheries regulators. Pick the ONE group most affected by this specific story. Do not default to ocean investors for every story. Name the group. State what specifically changes for them.\n- Never use: must, should, need to, crucial, important, landmark, historic, significant\n- Never prescribe action. Analyse consequence.\n- Only use numbers, statistics, and specific references that appear explicitly in the story title or description provided. If the source contains no specific figures, do not invent them. Write sentence 1 based only on what is stated in the input.\n- Model tone: FT Alphaville data note.\n\nReturn JSON only: {"sentence1": "...", "sentence2": "..."} Sentence 1 must not repeat or paraphrase the headline. The headline states what happened. Sentence 1 must add new information: a specific number, date, named institution, or direct quote. If the headline already states the fact, sentence 1 must state the context or background instead.';
-
-function decodeHtml(str: string): string {
-  return str
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&#8217;/g, "\u2019")
-    .replace(/&#8216;/g, "\u2018")
-    .replace(/&#8220;/g, "\u201C")
-    .replace(/&#8221;/g, "\u201D")
-    .replace(/&#8211;/g, "-")
-    .replace(/&#8212;/g, "\u2014")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)));
-}
 
 const SOURCE_COLORS: Record<string, { bg: string; color: string }> = {
   gov: { bg: "#dbeafe", color: "#1e40af" },
@@ -83,7 +67,7 @@ async function generateSummary(
     const res = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 200,
-      system: SUMMARY_SYSTEM_PROMPT,
+      system: [{ type: "text", text: SUMMARY_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: `Respond with JSON only. Story: Title: ${title}\n\nDescription: ${description}` }],
     });
     const rawText = res.content[0].type === "text" ? res.content[0].text.trim() : "";
@@ -268,10 +252,6 @@ function compileHtml(
 }
 
 export async function GET(request: Request) {
-  console.log("CRON_SECRET env:", process.env.CRON_SECRET ?
-    "SET — " + process.env.CRON_SECRET.slice(0, 4) + "..." : "NOT SET");
-  console.log("Auth header received:", request.headers.get("authorization"));
-
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

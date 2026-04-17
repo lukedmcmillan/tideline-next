@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import crypto from "crypto";
+import { fetchViaJina } from "@/app/lib/jina";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,24 +35,6 @@ interface ScrapeResult {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function fetchViaJina(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(`https://r.jina.ai/${url}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.JINA_API_KEY}`,
-        Accept: "text/plain",
-        "X-Return-Format": "markdown",
-        "X-Timeout": "15",
-      },
-      signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok) return null;
-    return await res.text();
-  } catch {
-    return null;
-  }
-}
 
 function makeSourceId(body: string, title: string, date: string): string {
   return crypto.createHash("sha256").update(`${body}:${title}:${date}`).digest("hex").slice(0, 20);
@@ -273,9 +256,12 @@ Return JSON only:
 
 // ─── Process scraped events ───────────────────────────────────────────────────
 
+const CLASSIFY_CAP_PER_RUN = 20;
+
 async function processEvents(
   bodyAbbreviation: string,
-  events: ScrapedEvent[]
+  events: ScrapedEvent[],
+  classifyCounter: { count: number }
 ): Promise<ScrapeResult> {
   let newEvents = 0;
   let updatedEvents = 0;
@@ -330,7 +316,10 @@ async function processEvents(
 
       if (!error && inserted) {
         newEvents++;
-        await classifySignificance(event, inserted.id, body.name);
+        if (classifyCounter.count < CLASSIFY_CAP_PER_RUN) {
+          classifyCounter.count++;
+          await classifySignificance(event, inserted.id, body.name);
+        }
       }
     }
   }
@@ -350,6 +339,8 @@ export async function GET(request: Request) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const classifyCounter = { count: 0 };
 
   const startTime = Date.now();
 
@@ -372,7 +363,7 @@ export async function GET(request: Request) {
   for (const scraper of scrapers) {
     try {
       const events = await scraper.fn();
-      const result = await processEvents(scraper.name, events);
+      const result = await processEvents(scraper.name, events, classifyCounter);
       results.push(result);
 
       await supabase.from("scrape_runs").insert({

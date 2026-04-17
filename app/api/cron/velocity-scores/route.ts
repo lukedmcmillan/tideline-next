@@ -5,7 +5,12 @@ export const maxDuration = 60;
 
 const TRACKER_SLUGS = ["isa", "bbnj", "iuu", "30x30", "blue-finance", "plastics", "imo-shipping", "offshore-wind", "cites-marine", "wto-fisheries"];
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const results = [];
   for (const slug of TRACKER_SLUGS) {
     try {
