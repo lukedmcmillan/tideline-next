@@ -94,6 +94,13 @@ export interface CalendarEvent {
   days_until: number;
 }
 
+export type MixedTickerItem =
+  | { type: "headline"; title: string; source_name: string; time_ago: string }
+  | { type: "score_delta"; name: string; score: number; delta: number }
+  | { type: "countdown"; event_name: string; days: number }
+  | { type: "new_divergence"; source_a: string; source_b: string; score: number }
+  | { type: "doc_ingestion"; count: number; source: string; time_ago: string };
+
 export interface Upcoming30dData {
   cells: CalendarCell[];
   events: CalendarEvent[];
