@@ -115,7 +115,7 @@ export default function ConflictsPage() {
   const [lastChecked] = useState<Date>(new Date());
   const [toast, setToast] = useState<string | null>(null);
   const [attachFor, setAttachFor] = useState<Divergence | null>(null);
-  const [scoringExpanded, setScoringExpanded] = useState(false);
+  const [scoringModal, setScoringModal] = useState(false);
 
   useEffect(() => {
     fetch("/api/conflicts")
@@ -201,15 +201,21 @@ export default function ConflictsPage() {
           <div style={{ fontSize: 22, fontWeight: 700, color: T1, letterSpacing: "-0.01em" }}>Source Conflicts</div>
           <div style={{ fontSize: 12, color: T3, marginTop: 2 }}>Pulse Score · checked every 4 hours</div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button onClick={() => setFilter("all")} style={pillStyle(filter === "all")}>All</button>
           <button onClick={() => setFilter("high")} style={pillStyle(filter === "high")}>High only</button>
           <button onClick={() => setFilter("mine")} style={pillStyle(filter === "mine")}>My trackers</button>
+          <a
+            href="/methodology"
+            onClick={(e) => { e.preventDefault(); setScoringModal(true); }}
+            style={{ fontFamily: F, fontSize: 10, color: T3, border: `0.5px solid ${BORDER}`, borderRadius: 99, padding: "3px 10px", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0, marginLeft: 4 }}
+          >
+            How this is calculated
+          </a>
         </div>
       </div>
 
-      {/* How scores work */}
-      <ScoringExplainer expanded={scoringExpanded} onToggle={() => setScoringExpanded(v => !v)} />
+      {scoringModal && <ScoringModal onClose={() => setScoringModal(false)} />}
 
       {/* Status bar */}
       <div style={{
@@ -721,267 +727,61 @@ function SourceColumn({
   );
 }
 
-const SCORE_ROWS: { label: string; weight: string; desc: string; rationale: string }[] = [
-  { label: "Factual divergence", weight: "40%", desc: "Do the sources state different facts as true?", rationale: "Factual disagreements require primary source verification to resolve. A professional acting on the wrong fact faces direct legal or compliance exposure." },
-  { label: "Conclusion divergence", weight: "30%", desc: "Do they draw different implications from the same event?", rationale: "Different implications from the same event drive different professional responses. Two readers drawing opposite conclusions about a vote will take materially different actions." },
-  { label: "Framing divergence", weight: "20%", desc: "Same facts, materially different emphasis?", rationale: "Framing differences are common and often reflect editorial perspective. They carry more weight when sources with opposing interests systematically frame the same event differently." },
-  { label: "Source authority", weight: "10%", desc: "Is one a primary source and one a secondary?", rationale: "Authority is a tiebreaker, not a determinant. A government body can mischaracterise its own decision. An NGO may have superior access to negotiating text." },
-];
+function ScoringModal({ onClose }: { onClose: () => void }) {
+  const B = BORDER;
+  const signals: { label: string; weight: string; body: string }[] = [
+    { label: "Factual divergence", weight: "40%", body: "Do the sources state different facts as true? Weighted highest because a factual disagreement requires primary source verification. A professional acting on the wrong fact faces direct legal or compliance exposure." },
+    { label: "Conclusion divergence", weight: "30%", body: "Do they draw different implications from the same event? Different conclusions drive different professional responses. Two readers drawing opposite conclusions about a vote will take materially different actions." },
+    { label: "Framing divergence", weight: "20%", body: "Same facts, materially different emphasis? Weighted lower because framing differences are common. They carry more weight when sources with opposing interests frame the same event systematically differently." },
+    { label: "Source authority", weight: "10%", body: "Is one a primary source and one secondary? A tiebreaker, not a determinant. A government body can mischaracterise its own decision. An NGO may have superior access to negotiating text." },
+  ];
 
-const BAND_ROWS: { label: string; range: string; dotColor: string | null; desc: string }[] = [
-  { label: "HIGH", range: "8.0 – 10", dotColor: "#E24B4A", desc: "Large enough to affect a legal or compliance position" },
-  { label: "MEDIUM", range: "5.0 – 7.9", dotColor: "#EF9F27", desc: "Material but may resolve as more information emerges" },
-  { label: "LOW", range: "below 5.0", dotColor: null, desc: "Noise filtered before reaching you" },
-];
-
-const CASES: { label: string; headline: string; body: string; tags: string[] }[] = [
-  {
-    label: "ISA · 2019",
-    headline: "Who controls the exploitation timeline?",
-    body: "The ISA Secretariat indicated draft exploitation regulations were on track for 2020 adoption. A coalition of sponsoring states and the Deep Sea Conservation Coalition disputed both the timeline and the legal sufficiency of the draft. The gap persisted for four years. Contractors who treated the Secretariat position as settled overstated regulatory readiness in investor disclosures.",
-    tags: ["Blue finance", "ESG reporting", "Maritime law"],
-  },
-  {
-    label: "BBNJ · 2023",
-    headline: "Was the High Seas Treaty actually agreed?",
-    body: "On 4 March 2023, multiple press outlets reported the BBNJ agreement as finalised. The actual text remained in legal scrub for five months before formal adoption in June. ESG analysts citing the March date as a trigger for high-seas area-based management obligations were premature by one reporting cycle.",
-    tags: ["Shipping compliance", "Blue bonds", "Conservation NGOs"],
-  },
-  {
-    label: "IUU · 2022",
-    headline: "Port state measures: headline improvement, regional deterioration",
-    body: "FAO global IUU statistics showed a 15% reduction in flagged vessels. Simultaneously, three regional fisheries bodies reported increases in West African and Southeast Asian waters attributable to flag-of-convenience reclassification. Supply chain ESG assessments using only the FAO headline figure understated sourcing risk in affected regions by a material margin.",
-    tags: ["Seafood supply chain", "ESG due diligence", "Port state control"],
-  },
-];
-
-function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
   return (
-    <div style={{
-      background: "#F1F3F4",
-      borderBottom: `1px solid ${BORDER}`,
-      fontFamily: F,
-    }}>
-      <style>{`
-        @media (max-width: 900px) {
-          .scoring-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ fontFamily: F, background: "#fff", border: `0.5px solid ${B}`, borderRadius: 8, padding: "24px 28px", maxWidth: 480, width: "90vw", maxHeight: "80vh", overflowY: "auto" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 15, fontWeight: 600, color: T1 }}>How conflict scores are calculated</span>
+          <button onClick={onClose} style={{ fontSize: 18, color: T3, cursor: "pointer", border: "none", background: "transparent", padding: "0 4px" }}>{"\u00D7"}</button>
+        </div>
+        <div style={{ borderTop: `0.5px solid ${B}`, marginTop: 12, marginBottom: 16 }} />
 
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={expanded}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          padding: "12px 28px",
-          fontFamily: F,
-          fontSize: 12,
-          fontWeight: 500,
-          color: T3,
-        }}
-      >
-        <span>How are conflicts scored?</span>
-        <span
-          aria-hidden="true"
-          style={{
-            display: "inline-block",
-            transition: "transform 200ms ease",
-            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-            fontSize: 11,
-            lineHeight: 1,
-            color: T3,
-          }}
-        >
-          ▾
-        </span>
-      </button>
+        {/* Intro */}
+        <p style={{ fontSize: 13, color: T2, lineHeight: 1.6, margin: 0 }}>The conflict score measures how far apart two sources are on the same story. It is not a verdict on which source is correct. A score of 7.8 means the gap is large enough to affect a professional decision.</p>
 
-      <div
-        style={{
-          maxHeight: expanded ? 2000 : 0,
-          overflow: "hidden",
-          transition: "max-height 400ms ease",
-        }}
-      >
-        <div
-          className="scoring-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 32,
-            padding: "4px 28px 24px",
-          }}
-        >
-          {/* LEFT PANEL */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T1, fontFamily: F, letterSpacing: "-0.01em" }}>
-              The scoring model
-            </div>
+        {/* The equation */}
+        <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: T3, marginTop: 16, marginBottom: 8, display: "block" }}>THE EQUATION</span>
+        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: T1, background: "#F8F9FA", borderRadius: 6, padding: "12px 16px", lineHeight: 1.8, whiteSpace: "pre" }}>{"CONFLICT SCORE =\n  (Factual divergence    \u00D7 0.40) +\n  (Conclusion divergence \u00D7 0.30) +\n  (Framing divergence    \u00D7 0.20) +\n  (Source authority       \u00D7 0.10)"}</div>
 
-            <div style={{ fontSize: 12, color: T3, fontFamily: F, lineHeight: 1.5, marginBottom: 4 }}>
-              Facts outweigh conclusions. Conclusions outweigh framing. Framing outweighs authority. This mirrors how a professional triages a conflict.
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {SCORE_ROWS.map(r => (
-                <div key={r.label}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 600, color: T1, fontFamily: F }}>{r.label}</span>
-                    <span style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      fontFamily: F,
-                      color: WHITE,
-                      background: TEAL,
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      letterSpacing: ".02em",
-                    }}>
-                      {r.weight}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 12.5, color: T2, fontFamily: F, lineHeight: 1.5 }}>{r.desc}</div>
-                  <div style={{ fontSize: 12, color: T3, fontFamily: F, lineHeight: 1.5, marginTop: 4 }}>{r.rationale}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{
-              paddingTop: 14,
-              borderTop: `1px solid ${BORDER}`,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}>
-              {BAND_ROWS.map(b => (
-                <div
-                  key={b.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    fontFamily: F,
-                    fontSize: 12,
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      background: b.dotColor || "transparent",
-                      border: b.dotColor ? "none" : `1px solid ${T3}`,
-                      display: "inline-block",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ fontWeight: 700, color: T1, width: 70, flexShrink: 0 }}>{b.label}</span>
-                  <span style={{ color: T2, width: 86, flexShrink: 0 }}>{b.range}</span>
-                  {b.label === "LOW" ? (
-                    <span style={{
-                      color: T3,
-                      fontSize: 11,
-                      fontWeight: 500,
-                      width: 92,
-                      flexShrink: 0,
-                      textTransform: "lowercase",
-                      letterSpacing: ".02em",
-                    }}>
-                      not surfaced
-                    </span>
-                  ) : (
-                    <span style={{ width: 92, flexShrink: 0 }} />
-                  )}
-                  <span style={{ color: T2, flex: 1 }}>{b.desc}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{
-              fontFamily: M,
-              fontSize: 11,
-              color: T3,
-              lineHeight: 1.55,
-            }}>
-              The score measures distance between sources, not which source is correct. Tideline does not adjudicate. Professional judgement is required.
-            </div>
+        {/* The four signals */}
+        <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: T3, marginTop: 16, marginBottom: 10, display: "block" }}>THE FOUR SIGNALS</span>
+        {signals.map(s => (
+          <div key={s.label} style={{ borderLeft: "2px solid #E8EAED", paddingLeft: 12, marginBottom: 10, fontSize: 12, color: T2, lineHeight: 1.5 }}>
+            <strong style={{ color: T1 }}>{s.label}</strong>{" "}
+            <span style={{ fontSize: 11, fontWeight: 600, color: WHITE, background: TEAL, padding: "1px 6px", borderRadius: 999, letterSpacing: ".02em" }}>{s.weight}</span>
+            <span style={{ display: "block", marginTop: 4 }}>{s.body}</span>
           </div>
+        ))}
 
-          {/* RIGHT PANEL */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T1, fontFamily: F, letterSpacing: "-0.01em" }}>
-              Why source conflict matters: three historical cases
-            </div>
-
-            {CASES.map(c => (
-              <div
-                key={c.label}
-                style={{
-                  background: WHITE,
-                  borderLeft: `3px solid ${TEAL}`,
-                  padding: "14px 16px",
-                  borderRadius: "0 6px 6px 0",
-                  fontFamily: F,
-                }}
-              >
-                <div style={{
-                  fontFamily: M,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: ".12em",
-                  color: TEAL,
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                }}>
-                  {c.label}
-                </div>
-                <div style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: T1,
-                  lineHeight: 1.35,
-                  marginBottom: 8,
-                  fontFamily: F,
-                }}>
-                  &ldquo;{c.headline}&rdquo;
-                </div>
-                <div style={{
-                  fontSize: 12.5,
-                  color: T2,
-                  lineHeight: 1.6,
-                  marginBottom: 10,
-                  fontFamily: F,
-                }}>
-                  {c.body}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {c.tags.map(t => (
-                    <span
-                      key={t}
-                      style={{
-                        fontSize: 10.5,
-                        fontWeight: 500,
-                        color: T2,
-                        border: `1px solid ${BORDER}`,
-                        padding: "2px 8px",
-                        borderRadius: 999,
-                        fontFamily: F,
-                      }}
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+        {/* Score bands */}
+        <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: T3, marginTop: 10, marginBottom: 8, display: "block" }}>SCORE BANDS</span>
+        {([
+          { label: "HIGH", range: "8.0+", dot: "#E24B4A", desc: "Large enough to affect a legal or compliance position" },
+          { label: "MEDIUM", range: "5.0 \u2013 7.9", dot: "#EF9F27", desc: "Material but may resolve as more information emerges" },
+          { label: "LOW", range: "below 5.0", dot: null, desc: "Not surfaced" },
+        ] as const).map(b => (
+          <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, marginBottom: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: b.dot || "transparent", border: b.dot ? "none" : `1px solid ${T3}`, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, color: T1, width: 60 }}>{b.label}</span>
+            <span style={{ color: T2, width: 80 }}>{b.range}</span>
+            <span style={{ color: T2, flex: 1 }}>{b.desc}</span>
           </div>
+        ))}
+
+        {/* Footer */}
+        <div style={{ borderTop: `0.5px solid ${B}`, marginTop: 20, paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: T3 }}>Tideline does not adjudicate. Professional judgement is required.</span>
+          <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, color: TEAL, textDecoration: "none" }}>Full methodology {"\u2192"}</a>
         </div>
       </div>
     </div>
