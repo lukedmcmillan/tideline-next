@@ -16,8 +16,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const hoursParam = url.searchParams.get("hours");
   const parsedHours = hoursParam ? parseInt(hoursParam, 10) : NaN;
-  // TODO: revert default to 24 after first run completes
-  const defaultHours = 168;
+  const defaultHours = 72;
   const sinceHours = (!isNaN(parsedHours) && parsedHours > 0 && parsedHours <= 720) ? parsedHours : defaultHours;
 
   // ?debug=true enables per-pair score logging

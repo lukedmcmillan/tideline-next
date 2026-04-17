@@ -56,11 +56,16 @@ const TOPIC_TO_TRACKER: Record<string, string> = {
 export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[]> {
   const cutoff = new Date(Date.now() - sinceHours * 60 * 60 * 1000).toISOString();
 
+  const BLOCKED_SOURCES = ["PLOS ONE Marine", "Phys.org Ocean"];
+  const ACTIVE_TOPICS = ["governance", "dsm", "bluefinance", "climate", "iuu", "mpa", "fisheries", "shipping", "science"];
+
   const { data: stories, error } = await supabase
     .from("stories")
     .select("id, title, source_name, source_type, topic, published_at, short_summary")
     .eq("status", "live")
     .not("short_summary", "is", null)
+    .not("source_name", "in", `(${BLOCKED_SOURCES.map(s => `"${s}"`).join(",")})`)
+    .in("topic", ACTIVE_TOPICS)
     .gte("published_at", cutoff)
     .order("published_at", { ascending: false })
     .limit(200);
