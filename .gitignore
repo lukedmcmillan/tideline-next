@@ -46,3 +46,6 @@ next-env.d.ts
 
 # obsidian vault (separate repo)
 /tideline-brain
+
+# temporary dashboard backup (delete after Sprint 3)
+app/platform/(shell)/page.old.tsx

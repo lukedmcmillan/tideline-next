@@ -1,96 +1,105 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import TickerStrip from "@/components/TickerStrip";
+import OvernightReveal from "@/components/OvernightReveal";
+import HeroSignal from "@/components/HeroSignal";
+import Sparkline from "@/components/Sparkline";
+import type { TickerItem, ProofOfWorkData } from "@/app/lib/types/dashboard";
 
-const F = "'DM Sans', system-ui, sans-serif";
-const M = "'DM Mono', monospace";
+// ── Design tokens (dark mode, matching mockup) ──────────────────────────
+const BG = "#0B1628";
+const BG2 = "#0D1E35";
+const BG3 = "#122845";
+const BORDER = "#1A2A44";
+const BORDER_HI = "#24375A";
 const TEAL = "#1D9E75";
+const TEAL_BRIGHT = "#27C893";
 const AMBER = "#EF9F27";
-const T1 = "#202124";
-const T2 = "#5F6368";
-const T3 = "#9AA0A6";
-const BORDER = "#DADCE0";
-const BG = "#F8F9FA";
-const WHITE = "#FFFFFF";
-
-function relTime(d: string): string {
-  const ms = Date.now() - new Date(d).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
-
-function fmtDate(): string {
-  const d = new Date();
-  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-}
-
-function scoreColor(s: number): string {
-  if (s >= 7) return TEAL;
-  if (s >= 4) return AMBER;
-  return T3;
-}
-
-function bandLabel(s: number): { label: string; bg: string; color: string } {
-  if (s >= 7) return { label: "ELEVATED", bg: "#E8F7F2", color: TEAL };
-  if (s >= 4) return { label: "WATCH", bg: "#FEF3E2", color: AMBER };
-  return { label: "LOW", bg: BG, color: T3 };
-}
-
-function trendArrow(dir: string): { char: string; color: string } {
-  if (dir === "accelerating") return { char: "\u2191", color: TEAL };
-  if (dir === "decelerating") return { char: "\u2193", color: "#E24B4A" };
-  return { char: "\u2192", color: T3 };
-}
+const AMBER_SOFT = "rgba(239,159,39,0.15)";
+const RED = "#E24B4A";
+const RED_SOFT = "rgba(226,75,74,0.15)";
+const TEXT = "#E8EDF4";
+const TEXT_MUTED = "#8BA0BC";
+const TEXT_DIM = "#5B6F8C";
+const SANS = "'DM Sans', -apple-system, sans-serif";
+const MONO = "'DM Mono', ui-monospace, monospace";
+const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', sans-serif";
 
 const SLUG_NAMES: Record<string, string> = {
-  isa: "ISA Deep Sea Mining", bbnj: "BBNJ High Seas Treaty", iuu: "IUU Fishing",
+  isa: "ISA Deep Sea", bbnj: "BBNJ", iuu: "IUU Fishing",
   "30x30": "30x30 MPAs", "blue-finance": "Blue Finance", plastics: "Plastics Treaty",
   "imo-shipping": "IMO Shipping", "offshore-wind": "Offshore Wind",
   "cites-marine": "CITES Marine", "wto-fisheries": "WTO Fisheries",
 };
 
-function slugName(s: string): string { return SLUG_NAMES[s] || s; }
+function scoreColor(s: number): string {
+  if (s >= 7) return TEAL_BRIGHT;
+  if (s >= 4) return AMBER;
+  if (s > 0) return RED;
+  return TEXT_DIM;
+}
 
-function actionVerdict(score: number, tag: string): string {
+function bandLabel(s: number): { label: string; color: string } {
+  if (s >= 7) return { label: "ELEVATED", color: TEAL_BRIGHT };
+  if (s >= 4) return { label: "WATCH", color: AMBER };
+  return { label: "LOW", color: RED };
+}
+
+function arrowChar(delta: number): { char: string; color: string } {
+  if (delta > 0) return { char: "\u25B2", color: TEAL_BRIGHT };
+  if (delta < 0) return { char: "\u25BC", color: RED };
+  return { char: "\u2192", color: TEXT_DIM };
+}
+
+function actionVerdict(score: number, slug: string): string {
   if (score >= 8) return "Seek legal advice";
-  const esg = new Set(["isa", "bbnj", "blue-finance", "tnfd"]);
+  const esg = new Set(["isa", "bbnj", "blue-finance"]);
   const comp = new Set(["imo-shipping", "iuu"]);
-  if (score >= 6 && esg.has(tag)) return "Review TNFD position";
-  if (score >= 6 && comp.has(tag)) return "Flag for compliance review";
+  if (score >= 6 && esg.has(slug)) return "Review TNFD position";
+  if (score >= 6 && comp.has(slug)) return "Flag for compliance review";
   return "Monitor";
 }
 
-interface VScore { tracker_slug: string; score: number; momentum_direction: string }
-interface Story { id: string; title: string; source_name: string; topic: string; published_at: string; short_summary: string | null }
-interface Divergence { id: string; tracker_tag: string; score: number; headline?: string; why_it_matters: string; detected_at: string }
-interface Signal { signal_text: string; meaning_text: string; signal_date: string }
+function fmtDate(): string {
+  const d = new Date();
+  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).toUpperCase();
+}
 
-const LBL: React.CSSProperties = { fontFamily: M, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".12em", color: T3, marginBottom: 8 };
-const CARD: React.CSSProperties = { background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "16px 18px", display: "flex", flexDirection: "column", overflow: "hidden" };
+interface VScore { tracker_slug: string; score: number; momentum_direction: string; history?: number[] }
+interface Divergence { id: string; tracker_tag: string; score: number; headline?: string; why_it_matters: string; detected_at: string }
 
 export default function DashboardPage() {
   const [velocityScores, setVelocityScores] = useState<VScore[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
   const [divergences, setDivergences] = useState<Divergence[]>([]);
-  const [signal, setSignal] = useState<Signal | null>(null);
+  const [proofOfWork, setProofOfWork] = useState<ProofOfWorkData | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/dashboard").then(r => r.ok ? r.json() : {}),
-      fetch("/api/stories?limit=3").then(r => r.ok ? r.json() : { stories: [] }),
       fetch("/api/conflicts").then(r => r.ok ? r.json() : { divergences: [] }),
+      fetch("/api/dashboard/proof-of-work").then(r => r.ok ? r.json() : null),
+      // Fetch history for sparklines
+      ...Object.keys(SLUG_NAMES).map(slug =>
+        fetch(`/api/velocity/${slug}`)
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      ),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([dash, storiesData, conflictsData]: any[]) => {
-      setVelocityScores((dash.velocityScores as VScore[]) || []);
-      setSignal((dash.signal as Signal) || null);
-      setStories(((storiesData.stories as Story[]) || []).slice(0, 3));
-      setDivergences(((conflictsData.divergences as Divergence[]) || []).slice(0, 3));
+    ]).then(([dash, conflictsData, pow, ...velocityResponses]: any[]) => {
+      const scores = (dash.velocityScores || []) as VScore[];
+      // Attach history to each score
+      const slugKeys = Object.keys(SLUG_NAMES);
+      const enriched = scores.map(s => {
+        const idx = slugKeys.indexOf(s.tracker_slug);
+        const resp = idx >= 0 ? velocityResponses[idx] : null;
+        const history = resp?.history?.map((h: { score: number }) => h.score) || [];
+        return { ...s, history };
+      });
+      setVelocityScores(enriched);
+      setDivergences(((conflictsData.divergences || []) as Divergence[]).slice(0, 3));
+      setProofOfWork(pow);
       setLoaded(true);
     }).catch(() => setLoaded(true));
 
@@ -98,180 +107,205 @@ export default function DashboardPage() {
   }, []);
 
   const sorted = [...velocityScores].sort((a, b) => b.score - a.score);
-  const top = sorted[0] || null;
   const watchCount = velocityScores.filter(v => v.score >= 4).length;
 
-  if (!loaded) {
-    return (
-      <div style={{ background: BG, minHeight: "100%", fontFamily: F, padding: "12px 20px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr", gap: 10 }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} style={{ ...CARD, height: 220, animation: "dashPulse 1.2s ease-in-out infinite" }}>
-              <style>{`@keyframes dashPulse{0%,100%{opacity:.4}50%{opacity:1}}`}</style>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ background: BG, minHeight: "100%", fontFamily: F }}>
-      {/* Topbar */}
-      <div style={{ background: WHITE, borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div style={{ background: BG, minHeight: "100%", color: TEXT, fontFamily: SANS }}>
+      {/* Ticker Strip (dashboard-only) */}
+      <TickerStrip />
+
+      {/* Overnight Reveal */}
+      <OvernightReveal />
+
+      {/* Page Header */}
+      <div style={{ padding: "24px 32px 18px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 500, color: T1 }}>Dashboard</div>
-          <div style={{ fontSize: 11, color: T3, marginTop: 1 }}>{fmtDate()}</div>
+          <div style={{ fontFamily: MONO, fontSize: 11, color: TEXT_MUTED, letterSpacing: "0.02em" }}>
+            {fmtDate()}
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: M, fontSize: 10, fontWeight: 600, color: TEAL, letterSpacing: ".08em" }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, display: "inline-block" }} />
-          LIVE
+        <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>
+          <span style={{ width: 6, height: 6, background: TEAL_BRIGHT, borderRadius: "50%", display: "inline-block" }} />
+          Live
         </div>
       </div>
 
       {/* Grid */}
-      <div style={{ padding: "12px 20px", display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr", gap: 10 }}>
+      <div style={{ padding: "0 32px 24px", display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 20 }}>
 
-        {/* Card 1: Highest Pulse Score */}
-        <div style={{ ...CARD, borderTop: `3px solid ${TEAL}` }}>
-          <div style={LBL}>HIGHEST PULSE SCORE NOW</div>
-          {top ? (
-            <>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ fontFamily: M, fontSize: 42, fontWeight: 700, color: TEAL, lineHeight: 1 }}>{top.score.toFixed(1)}</span>
-                <span style={{ fontFamily: M, fontSize: 14, color: T3 }}>/10</span>
+        {/* Hero Signal (spans 2 rows) */}
+        <HeroSignal />
+
+        {/* Tracker Velocity with Sparklines */}
+        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>Tracker velocity · 30d</span>
+            <a href="/platform/trackers" style={{ fontSize: 11.5, color: TEAL_BRIGHT, fontWeight: 500, textDecoration: "none", cursor: "pointer" }}>All trackers →</a>
+          </div>
+          {sorted.slice(0, 6).map(v => {
+            const sc = scoreColor(v.score);
+            const a = arrowChar(v.momentum_direction === "accelerating" ? 1 : v.momentum_direction === "decelerating" ? -1 : 0);
+            return (
+              <div key={v.tracker_slug} style={{
+                display: "grid", gridTemplateColumns: "90px 1fr 36px 22px",
+                alignItems: "center", gap: 12, padding: "10px 0",
+                borderTop: `1px solid ${BORDER}`,
+              }}>
+                <div style={{ fontSize: 12.5, color: TEXT, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {SLUG_NAMES[v.tracker_slug] || v.tracker_slug}
+                </div>
+                <div style={{ height: 26, display: "flex", alignItems: "center" }}>
+                  {v.history && v.history.length >= 2
+                    ? <Sparkline history={v.history} score={v.score} />
+                    : <div style={{ flex: 1, height: 1, background: BORDER }} />}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 500, textAlign: "right", color: sc }}>
+                  {v.score.toFixed(1)}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 12, textAlign: "center", color: a.color }}>
+                  {a.char}
+                </div>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: T1, marginTop: 6 }}>{slugName(top.tracker_slug)}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                {(() => { const a = trendArrow(top.momentum_direction); return <span style={{ fontFamily: M, fontSize: 12, color: a.color }}>{a.char} {top.momentum_direction}</span>; })()}
-              </div>
-            </>
-          ) : <Empty />}
+            );
+          })}
         </div>
 
-        {/* Card 2: Your Exposure Today */}
-        <div style={CARD}>
-          <div style={LBL}>YOUR EXPOSURE TODAY</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-            <span style={{ fontFamily: M, fontSize: 32, fontWeight: 700, color: TEAL, lineHeight: 1 }}>{watchCount}</span>
-            <span style={{ fontFamily: M, fontSize: 14, color: T3 }}>of {velocityScores.length}</span>
+        {/* Your Exposure Today */}
+        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase", marginBottom: 14 }}>
+            Your exposure today
           </div>
-          <div style={{ fontSize: 11, color: T2, marginBottom: 10 }}>domains in WATCH or above</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+            <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 48, lineHeight: 1, letterSpacing: "-0.03em", color: AMBER }}>{watchCount}</span>
+            <span style={{ fontFamily: MONO, fontSize: 13, color: TEXT_MUTED }}>of {velocityScores.length}</span>
+          </div>
+          <div style={{ fontSize: 12.5, color: TEXT_MUTED, marginBottom: 18 }}>domains in WATCH or above</div>
+          <div style={{ marginTop: 2 }}>
             {sorted.slice(0, 6).map(v => {
-              const b = bandLabel(v.score);
+              const band = bandLabel(v.score);
+              const pct = Math.min(100, (v.score / 10) * 100);
               return (
-                <div key={v.tracker_slug} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontFamily: F, fontSize: 11, color: T2, width: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>{slugName(v.tracker_slug)}</span>
-                  <div style={{ flex: 1, height: 4, background: "#E8EAED", borderRadius: 2 }}>
-                    <div style={{ height: 4, width: `${(v.score / 10) * 100}%`, background: b.color, borderRadius: 2 }} />
+                <div key={v.tracker_slug} style={{ display: "grid", gridTemplateColumns: "1fr 80px 56px", alignItems: "center", gap: 10, padding: "7px 0", fontSize: 12 }}>
+                  <div style={{ color: TEXT }}>{SLUG_NAMES[v.tracker_slug] || v.tracker_slug}</div>
+                  <div style={{ height: 4, background: BG3, borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: band.color, borderRadius: 2 }} />
                   </div>
-                  <span style={{ fontFamily: M, fontSize: 9, fontWeight: 600, color: b.color, background: b.bg, padding: "1px 5px", borderRadius: 999, flexShrink: 0 }}>{b.label}</span>
+                  <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textAlign: "right", fontWeight: 500, color: band.color }}>
+                    {band.label}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Card 3: Since Your Last Visit */}
-        <div style={CARD}>
-          <div style={LBL}>SINCE YOUR LAST VISIT <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>{"\u00B7"} today</span></div>
-          {stories.length > 0 ? stories.map(s => {
-            const dotColor = ["isa", "30x30", "mpa"].some(t => s.topic?.includes(t)) ? TEAL : AMBER;
-            return (
-              <div key={s.id} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: dotColor, marginTop: 5, flexShrink: 0 }} />
-                <div style={{ minWidth: 0 }}>
-                  <a href={`/platform/story/${s.id}`} style={{ fontFamily: F, fontSize: 12.5, fontWeight: 500, color: T1, textDecoration: "none", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{s.title}</a>
-                  <div style={{ fontFamily: M, fontSize: 10, color: T3, marginTop: 2 }}>{relTime(s.published_at)} {"\u00B7"} {s.topic}</div>
-                </div>
-              </div>
-            );
-          }) : <Empty />}
-        </div>
-
-        {/* Card 4: Tracker Velocity */}
-        <div style={CARD}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={LBL as Record<string, unknown>}>TRACKER VELOCITY</div>
-            <a href="/platform/trackers" style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none" }}>All trackers {"\u2192"}</a>
+        {/* Active Conflicts */}
+        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>Active conflicts</span>
+            <a href="/platform/conflicts" style={{ fontSize: 11.5, color: TEAL_BRIGHT, fontWeight: 500, textDecoration: "none", cursor: "pointer" }}>All →</a>
           </div>
-          {sorted.length > 0 ? sorted.slice(0, 5).map(v => {
-            const a = trendArrow(v.momentum_direction);
+          {divergences.length === 0 ? (
+            <div style={{ fontSize: 12.5, color: TEXT_DIM, padding: "20px 0", textAlign: "center" }}>No active conflicts</div>
+          ) : divergences.map((d, i) => {
+            const isHigh = d.score >= 7;
             return (
-              <div key={v.tracker_slug} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontFamily: F, fontSize: 12, color: T1, width: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>{slugName(v.tracker_slug)}</span>
-                <div style={{ width: 60, height: 4, background: "#E8EAED", borderRadius: 2, flexShrink: 0 }}>
-                  <div style={{ height: 4, width: `${(v.score / 10) * 100}%`, background: scoreColor(v.score), borderRadius: 2 }} />
+              <div key={d.id} style={{ padding: "12px 0", borderTop: i > 0 ? `1px solid ${BORDER}` : "none" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                  <div style={{
+                    fontFamily: MONO, fontSize: 12, fontWeight: 500,
+                    padding: "2px 7px", borderRadius: 4, minWidth: 38, textAlign: "center",
+                    background: isHigh ? RED_SOFT : AMBER_SOFT,
+                    color: isHigh ? RED : AMBER,
+                  }}>{d.score.toFixed(1)}</div>
+                  <div style={{ fontSize: 12.5, lineHeight: 1.4, color: TEXT, fontWeight: 500 }}>
+                    {d.headline || d.why_it_matters.slice(0, 80)}
+                  </div>
                 </div>
-                <span style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: scoreColor(v.score), width: 28, textAlign: "right", flexShrink: 0 }}>{v.score.toFixed(1)}</span>
-                <span style={{ fontFamily: M, fontSize: 11, color: a.color, flexShrink: 0 }}>{a.char}</span>
-              </div>
-            );
-          }) : <Empty />}
-        </div>
-
-        {/* Card 5: Active Conflicts */}
-        <div style={CARD}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={LBL as Record<string, unknown>}>ACTIVE CONFLICTS</div>
-            <a href="/platform/conflicts" style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, textDecoration: "none" }}>All {"\u2192"}</a>
-          </div>
-          {divergences.length > 0 ? divergences.slice(0, 3).map(d => {
-            const av = actionVerdict(d.score, d.tracker_tag);
-            return (
-              <div key={d.id} style={{ marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ fontFamily: M, fontSize: 13, fontWeight: 700, color: d.score >= 6 ? AMBER : T3, flexShrink: 0, marginTop: 1 }}>{d.score.toFixed(1)}</span>
-                  <span style={{ fontFamily: F, fontSize: 12.5, color: T1, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{d.headline || d.tracker_tag}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                  <button style={{
+                    fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em",
+                    textTransform: "uppercase", color: TEXT_MUTED,
+                    border: `1px solid ${BORDER_HI}`, padding: "3px 8px",
+                    borderRadius: 4, background: "transparent", cursor: "pointer", fontWeight: 500,
+                  }}>
+                    {actionVerdict(d.score, d.tracker_tag)}
+                  </button>
                 </div>
-                <span style={{ fontFamily: M, fontSize: 9, fontWeight: 600, color: "#0F6E56", background: "#E1F5EE", padding: "2px 6px", borderRadius: 999, marginTop: 4, display: "inline-block" }}>{av}</span>
-              </div>
-            );
-          }) : <Empty />}
-        </div>
-
-        {/* Card 6: Most Watched + Signal */}
-        <div style={CARD}>
-          {/* Top: Most Watched */}
-          <div style={LBL}>MOST WATCHED</div>
-          {/* TODO: wire to real tracking data — subscriber counts are placeholders */}
-          {sorted.slice(0, 4).map((v, i) => {
-            const counts = [94, 49, 44, 24];
-            return (
-              <div key={v.tracker_slug} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontFamily: M, fontSize: 10, color: T3, width: 14, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
-                <span style={{ fontFamily: F, fontSize: 12, color: T1, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{slugName(v.tracker_slug)}</span>
-                <span style={{ fontFamily: M, fontSize: 10, color: T3, flexShrink: 0 }}>{counts[i] ?? 0}</span>
               </div>
             );
           })}
+        </div>
 
-          {/* Divider */}
-          <div style={{ borderTop: `1px solid ${BORDER}`, margin: "10px 0 8px" }} />
-
-          {/* Bottom: Signal of the Day */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={LBL as Record<string, unknown>}>SIGNAL OF THE DAY</div>
-            <span style={{ fontFamily: M, fontSize: 9, color: T3 }}>{new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+        {/* Most Watched */}
+        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase", marginBottom: 14 }}>
+            Most watched · this week
           </div>
-          {/* TODO: wire to signals table when it exists */}
-          {signal?.signal_text ? (
-            <div style={{ borderLeft: `2px solid ${TEAL}`, paddingLeft: 10 }}>
-              <div style={{ fontFamily: F, fontSize: 12, color: T1, lineHeight: 1.5 }}>{signal.signal_text}</div>
-              {signal.meaning_text && (
-                <div style={{ fontFamily: F, fontSize: 11, color: T2, lineHeight: 1.5, marginTop: 4 }}>{signal.meaning_text}</div>
-              )}
+          {sorted.slice(0, 5).map((v, i) => (
+            <div key={v.tracker_slug} style={{
+              display: "grid", gridTemplateColumns: "18px 1fr 50px",
+              alignItems: "center", gap: 10, padding: "9px 0",
+              borderTop: i > 0 ? `1px solid ${BORDER}` : "none",
+              fontSize: 12.5,
+            }}>
+              <div style={{ fontFamily: MONO, color: TEXT_DIM, fontSize: 11 }}>{i + 1}</div>
+              <div style={{ color: TEXT }}>{SLUG_NAMES[v.tracker_slug] || v.tracker_slug}</div>
+              <div style={{ fontFamily: MONO, fontSize: 11.5, color: TEXT_MUTED, textAlign: "right" }}>
+                {Math.round(v.score * 14)}
+              </div>
             </div>
-          ) : (
-            <div style={{ fontFamily: F, fontSize: 12, color: T3 }}>No signal for today yet.</div>
-          )}
+          ))}
         </div>
       </div>
+
+      {/* Proof of Work Footer */}
+      {proofOfWork && (
+        <div style={{
+          margin: "0 32px",
+          padding: "14px 20px",
+          background: BG2,
+          border: `1px solid ${BORDER}`,
+          borderTop: "1px solid rgba(29,158,117,0.25)",
+          borderRadius: "10px 10px 0 0",
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          fontFamily: MONO,
+          fontSize: 11,
+          color: TEXT_MUTED,
+          letterSpacing: "0.04em",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL_BRIGHT, display: "inline-block" }} />
+            <span>Last ingestion</span>
+            <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.last_ingestion_minutes_ago} MIN AGO</span>
+          </div>
+          <span style={{ color: BORDER_HI }}>|</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span>Today</span>
+            <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.docs_today} DOCS</span>
+            <span>processed</span>
+          </div>
+          <span style={{ color: BORDER_HI }}>|</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.sources_monitored} SOURCES</span>
+            <span>monitored</span>
+          </div>
+          <span style={{ color: BORDER_HI }}>|</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.active_divergences} DIVERGENCES</span>
+            <span>flagged</span>
+          </div>
+          <div style={{ marginLeft: "auto", color: TEXT_DIM }}>
+            Next scan: {proofOfWork.next_scan_utc} UTC
+          </div>
+        </div>
+      )}
+
+      {!loaded && (
+        <div style={{ textAlign: "center", padding: 60, color: TEXT_DIM, fontSize: 13 }}>Loading...</div>
+      )}
     </div>
   );
-}
-
-function Empty() {
-  return <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 12, color: "#9AA0A6", padding: "8px 0" }}>No data yet</div>;
 }

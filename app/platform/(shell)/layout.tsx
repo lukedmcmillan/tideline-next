@@ -132,6 +132,30 @@ function trackerColor(t: TrackerData): string {
   return RED;
 }
 
+// ── Sidebar Datetime ──────────────────────────────────────────────────────
+function SidebarDatetime() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+  const dayName = now.toLocaleDateString("en-GB", { weekday: "long" });
+  const fullDate = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const clock = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tzShort = now.toLocaleTimeString("en-GB", { timeZoneName: "short" }).split(" ").pop() || "UTC";
+  return (
+    <div style={{ borderTop: "1px solid #1A2A44", borderBottom: "1px solid #1A2A44", padding: "14px 24px", margin: "0 0 4px" }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", fontWeight: 700, fontSize: 16, color: "#E8EDF4", letterSpacing: "-0.01em" }}>{dayName}</div>
+      <div style={{ fontFamily: F, fontSize: 12, color: "#8BA0BC", marginTop: 2 }}>{fullDate}</div>
+      <div style={{ marginTop: 6, display: "flex", alignItems: "baseline", gap: 6 }}>
+        <span style={{ fontFamily: M, fontSize: 13, color: "#27C893", fontWeight: 500 }}>{clock}</span>
+        <span style={{ fontFamily: M, fontSize: 10, color: "#5B6F8C" }}>{tzShort}</span>
+      </div>
+    </div>
+  );
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────
 function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, recentStories, onShortcuts, tier }: {
   onNav?: () => void;
@@ -151,7 +175,7 @@ function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, 
     { ic: <IcFeed />, label: "News Feed", href: "/platform/feed" },
     { ic: <IcWork />, label: "My Workspace", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcTrackers />, label: "Trackers", href: "/platform/trackers" },
-    { ic: <IcConflicts />, label: "Conflicts", href: "/platform/conflicts", badge: conflictCount && conflictCount > 0 ? String(conflictCount) : undefined, badgeColor: AMBER },
+    { ic: <IcConflicts />, label: "Conflicts", href: "/platform/conflicts", badge: conflictCount && conflictCount > 0 ? String(conflictCount) : undefined, badgeColor: RED },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library" },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
@@ -177,6 +201,21 @@ function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, 
 
   return (
     <div style={{ width: 256, background: NAVY, display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
+      {/* Logo */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px 22px", paddingLeft: 24 }}>
+        <div style={{
+          width: 28, height: 28, background: TEAL, borderRadius: 6,
+          display: "grid", placeItems: "center",
+          color: NAVY, fontWeight: 800, fontSize: 16,
+          fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif",
+        }}>T</div>
+        <div>
+          <div style={{ fontFamily: F, fontWeight: 700, fontSize: 16, color: "#E8EDF4", letterSpacing: "-0.02em" }}>Tideline</div>
+          <div style={{ fontFamily: M, fontSize: 9, letterSpacing: "0.14em", color: "#8BA0BC", textTransform: "uppercase", marginTop: 1 }}>Ocean Intelligence</div>
+        </div>
+      </div>
+      {/* Datetime block */}
+      <SidebarDatetime />
       {/* Nav */}
       <div style={{ padding: "8px 0 0" }}>
         {nav.map(n => {
@@ -201,38 +240,25 @@ function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, 
       {/* Methodology link */}
       <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "12px 14px", fontFamily: F, fontSize: 10, color: "#9AA0A6", textDecoration: "none" }}>Pulse Score Methodology</a>
 
-      {/* Footer: streak + queries */}
-      <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,.08)", padding: 16 }}>
-        <div style={{ background: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14, marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
-            <span style={{ fontSize: 32, fontWeight: 500, color: "#fff", lineHeight: 1, letterSpacing: "-.03em" }}>12</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,.5)" }}>day streak</span>
+      {/* Footer: readiness placeholder (Sprint 2 wires to real data) */}
+      <div style={{ marginTop: "auto", padding: 14 }}>
+        <div style={{
+          padding: 14,
+          background: "linear-gradient(135deg, rgba(13,30,53,1), rgba(29,158,117,0.05))",
+          border: "1px solid rgba(255,255,255,.08)",
+          borderRadius: 10,
+        }}>
+          <div style={{ fontFamily: M, fontSize: 9.5, letterSpacing: "0.14em", color: "rgba(255,255,255,.5)", textTransform: "uppercase", marginBottom: 8 }}>Readiness</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 2 }}>MEPC 84</div>
+          <div style={{ fontFamily: M, fontSize: 10.5, color: "rgba(255,255,255,.5)", marginBottom: 10 }}>16 days away</div>
+          <div style={{ height: 4, background: "rgba(255,255,255,.08)", borderRadius: 2, overflow: "hidden", marginBottom: 6 }}>
+            <div style={{ height: "100%", width: "64%", background: `linear-gradient(90deg, ${TEAL}, #27C893)`, borderRadius: 2 }} />
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)", marginBottom: 10 }}>Since 14 March</div>
-          <div style={{ display: "flex", gap: 5 }}>
-            {[...Array(7)].map((_, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i === 6 ? TEAL : i < 6 ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.12)" }} />)}
+          <div style={{ display: "flex", justifyContent: "space-between", fontFamily: M, fontSize: 10.5 }}>
+            <span style={{ color: "#27C893", fontWeight: 600 }}>64%</span>
+            <span style={{ color: "rgba(255,255,255,.35)" }}>prep complete</span>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "flex", gap: 3 }}>
-            {[...Array(10)].map((_, i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i < 7 ? "rgba(255,255,255,.4)" : i === 7 ? AMBER : "rgba(255,255,255,.12)" }} />)}
-          </div>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>8 queries today</span>
-        </div>
-        {onShortcuts && (
-          <button
-            onClick={onShortcuts}
-            style={{
-              width: 28, height: 28, borderRadius: "50%",
-              background: "transparent", border: "1px solid rgba(255,255,255,.15)",
-              fontFamily: M, fontSize: 13, color: "rgba(255,255,255,.4)",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              marginTop: 8,
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = TEAL; (e.currentTarget as HTMLElement).style.color = TEAL; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,.15)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.4)"; }}
-          >?</button>
-        )}
       </div>
     </div>
   );

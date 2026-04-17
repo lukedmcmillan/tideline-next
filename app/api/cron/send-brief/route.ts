@@ -80,7 +80,7 @@ async function generateSubjectLine(htmlContent: string): Promise<string | null> 
     if (titles.length === 0) return null;
 
     const res = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 60,
       system: "Write a subject line under 8 words using the single most newsworthy headline from today's stories. State the news. No Tideline prefix. No date. Just the news.",
       messages: [{
@@ -149,7 +149,7 @@ async function sendEmail(
       },
       body: JSON.stringify({
         from: "Tideline <luke@thetideline.co>",
-        reply_to: "luke@thetideline.co",
+        reply_to: "brief-replies@thetideline.co",
         to,
         subject,
         html,
