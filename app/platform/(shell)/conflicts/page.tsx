@@ -444,6 +444,13 @@ function ConflictCard({
   const dateB = d.source_b_date || d.detected_at;
   const hasUrls = Boolean(d.source_a_url || d.source_b_url);
 
+  const esgTags = new Set(["isa", "bbnj", "blue-finance", "tnfd"]);
+  const complianceTags = new Set(["imo-shipping", "iuu"]);
+  let actionVerdict = "Monitor. No immediate action required.";
+  if (d.score >= 8) actionVerdict = "Seek legal advice before acting on either source.";
+  else if (d.score >= 6 && esgTags.has(d.tracker_tag)) actionVerdict = "Review TNFD/ESG disclosure position before next reporting cycle.";
+  else if (d.score >= 6 && complianceTags.has(d.tracker_tag)) actionVerdict = "Flag for compliance review.";
+
   return (
     <div style={{
       background: WHITE,
@@ -453,8 +460,43 @@ function ConflictCard({
       display: "flex",
       flexDirection: "column",
       gap: 16,
+      position: "relative",
     }}>
-      {/* 1. Meta row */}
+      {/* Dismiss (top-right x) */}
+      <button
+        type="button"
+        onClick={onDismiss}
+        disabled={dismissing}
+        title="Not relevant"
+        aria-label="Dismiss conflict"
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          fontSize: 16,
+          color: T3,
+          background: "transparent",
+          border: "none",
+          cursor: dismissing ? "default" : "pointer",
+          padding: "0 4px",
+          lineHeight: 1,
+        }}
+      >
+        {"\u00D7"}
+      </button>
+
+      {/* 1. Headline first */}
+      <h2 style={{
+        fontSize: 20,
+        fontWeight: 700,
+        color: T1,
+        margin: 0,
+        lineHeight: 1.3,
+        letterSpacing: "-0.02em",
+        paddingRight: 24,
+      }}>{headline}</h2>
+
+      {/* 2. Meta row */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{
           fontSize: 11,
@@ -482,7 +524,7 @@ function ConflictCard({
         <span style={{ fontSize: 12, color: T3, fontFamily: M }}>{timeAgo(d.detected_at)}</span>
       </div>
 
-      {/* 2. Divergence bar row */}
+      {/* 3. Divergence bar row */}
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <span style={{
           fontFamily: M,
@@ -517,18 +559,10 @@ function ConflictCard({
         }}>{d.score.toFixed(1)} / 10</span>
       </div>
 
-      {/* 3. Headline */}
-      <h2 style={{
-        fontSize: 20,
-        fontWeight: 700,
-        color: T1,
-        margin: 0,
-        lineHeight: 1.3,
-        letterSpacing: "-0.01em",
-      }}>{headline}</h2>
-
-      {/* 4. Source grid with vs pip */}
+      {/* 4. Source grid with red VS divider */}
       <div style={{ position: "relative" }}>
+        {/* Red vertical divider */}
+        <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "#E24B4A", transform: "translateX(-0.5px)" }} />
         <div style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -539,7 +573,7 @@ function ConflictCard({
             type={d.source_a_type}
             claim={d.source_a_claim}
             date={dateA}
-            rightBorder
+            rightBorder={false}
           />
           <SourceColumn
             name={d.source_b_name}
@@ -548,25 +582,20 @@ function ConflictCard({
             date={dateB}
           />
         </div>
-        {/* vs pip centred on divider */}
+        {/* VS label centred on red divider */}
         <div style={{
           position: "absolute",
           left: "50%",
           top: "50%",
           transform: "translate(-50%, -50%)",
-          width: 28,
-          height: 28,
-          borderRadius: "50%",
-          background: WHITE,
-          border: `1px solid ${BORDER}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          fontFamily: M,
           fontSize: 11,
-          fontWeight: 600,
-          color: T2,
-          fontFamily: F,
-        }}>vs</div>
+          fontWeight: 700,
+          color: "#E24B4A",
+          background: WHITE,
+          padding: "2px 6px",
+          lineHeight: 1,
+        }}>VS</div>
       </div>
 
       {/* 5. Insight row */}
@@ -584,7 +613,12 @@ function ConflictCard({
         <span style={{ color: T2 }}>{d.why_it_matters}</span>
       </div>
 
-      {/* 6. Footer */}
+      {/* 6. Action verdict */}
+      <div style={{ fontFamily: M, fontSize: 11, color: T2, marginTop: -8 }}>
+        <span style={{ color: TEAL, fontWeight: 700 }}>ACTION:</span>{" "}{actionVerdict}
+      </div>
+
+      {/* 7. Footer */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
         <button
           type="button"
@@ -621,23 +655,6 @@ function ConflictCard({
         >
           View sources
         </button>
-        <span style={{ flex: 1 }} />
-        <button
-          onClick={onDismiss}
-          disabled={dismissing}
-          style={{
-            fontSize: 13,
-            fontWeight: 500,
-            fontFamily: F,
-            color: T3,
-            background: "transparent",
-            border: "none",
-            padding: "8px 4px",
-            cursor: dismissing ? "default" : "pointer",
-          }}
-        >
-          {dismissing ? "Dismissing…" : "Dismiss"}
-        </button>
       </div>
     </div>
   );
@@ -665,7 +682,6 @@ function SourceColumn({
       style={{
         minWidth: 0,
         padding: rightBorder ? "4px 28px 4px 0" : "4px 0 4px 28px",
-        borderRight: rightBorder ? `1px solid ${BORDER}` : "none",
         display: "flex",
         flexDirection: "column",
         gap: 10,
@@ -707,14 +723,17 @@ function SourceColumn({
       </div>
 
       {/* claim */}
-      <p style={{
-        fontSize: 13,
-        color: T1,
-        lineHeight: 1.55,
-        margin: 0,
-        wordBreak: "break-word",
-        whiteSpace: "normal",
-      }}>{claim}</p>
+      <div style={{ display: "flex", gap: 4 }}>
+        <span style={{ fontSize: 24, lineHeight: 1, color: TEAL, opacity: 0.4, fontFamily: F, flexShrink: 0 }}>{"\u201C"}</span>
+        <p style={{
+          fontSize: 13,
+          color: T1,
+          lineHeight: 1.55,
+          margin: 0,
+          wordBreak: "break-word",
+          whiteSpace: "normal",
+        }}>{claim}</p>
+      </div>
 
       {/* date */}
       <span style={{
