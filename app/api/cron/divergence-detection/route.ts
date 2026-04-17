@@ -20,13 +20,21 @@ export async function GET(request: Request) {
   const defaultHours = 168;
   const sinceHours = (!isNaN(parsedHours) && parsedHours > 0 && parsedHours <= 720) ? parsedHours : defaultHours;
 
+  // ?debug=true enables per-pair score logging
+  if (url.searchParams.get("debug") === "true") {
+    process.env.DIVERGENCE_DEBUG = "true";
+  }
+
   try {
     const result = await runDivergenceDetection(sinceHours);
+    delete process.env.DIVERGENCE_DEBUG;
     return NextResponse.json({
       ...result,
+      sinceHours,
       durationMs: Date.now() - start,
     });
   } catch (err) {
+    delete process.env.DIVERGENCE_DEBUG;
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[divergence-detection] Fatal error:", msg);
     return NextResponse.json(

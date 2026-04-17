@@ -246,10 +246,32 @@ export async function runDivergenceDetection(sinceHours = 24): Promise<{
   let skipped = 0;
   let errors = 0;
 
+  const debug = process.env.DIVERGENCE_DEBUG === "true";
+  const debugLog: { tracker: string; sourceA: string; sourceB: string; headlineA: string; headlineB: string; factual: number; conclusion: number; framing: number; authority: number; composite: number; passed: boolean }[] = [];
+
   for (const pair of pairs) {
     processed++;
     try {
       const score = await scoreDivergence(pair.storyA, pair.storyB);
+
+      if (debug) {
+        const entry = {
+          tracker: pair.tracker_tag,
+          sourceA: pair.storyA.source_name,
+          sourceB: pair.storyB.source_name,
+          headlineA: pair.storyA.title.slice(0, 60),
+          headlineB: pair.storyB.title.slice(0, 60),
+          factual: score?.factual ?? 0,
+          conclusion: score?.conclusion ?? 0,
+          framing: score?.framing ?? 0,
+          authority: score?.authority ?? 0,
+          composite: score?.composite ?? 0,
+          passed: (score?.composite ?? 0) >= 5.0,
+        };
+        debugLog.push(entry);
+        console.log(`[divergence:debug] ${entry.tracker} | ${entry.sourceA} vs ${entry.sourceB} | F:${entry.factual} C:${entry.conclusion} Fr:${entry.framing} A:${entry.authority} = ${entry.composite} | ${entry.passed ? "PASS" : "SKIP"}`);
+      }
+
       if (!score) {
         skipped++;
         continue;
@@ -262,6 +284,10 @@ export async function runDivergenceDetection(sinceHours = 24): Promise<{
       errors++;
       console.error("[divergence] Pair error:", err);
     }
+  }
+
+  if (debug) {
+    console.log("[divergence:debug] Full score distribution:", JSON.stringify(debugLog.map(d => ({ t: d.tracker, c: d.composite, p: d.passed }))));
   }
 
   console.log(`[divergence] Done. Processed: ${processed}, Inserted: ${inserted}, Skipped: ${skipped}, Errors: ${errors}`);
