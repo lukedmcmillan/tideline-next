@@ -721,11 +721,11 @@ function SourceColumn({
   );
 }
 
-const SCORE_ROWS: { label: string; weight: string; desc: string }[] = [
-  { label: "Factual divergence", weight: "40%", desc: "Do the sources state different facts as true?" },
-  { label: "Conclusion divergence", weight: "30%", desc: "Do they draw different implications from the same event?" },
-  { label: "Framing divergence", weight: "20%", desc: "Same facts, materially different emphasis?" },
-  { label: "Source authority", weight: "10%", desc: "Is one a primary source and one a secondary?" },
+const SCORE_ROWS: { label: string; weight: string; desc: string; rationale: string }[] = [
+  { label: "Factual divergence", weight: "40%", desc: "Do the sources state different facts as true?", rationale: "Factual disagreements require primary source verification to resolve. A professional acting on the wrong fact faces direct legal or compliance exposure." },
+  { label: "Conclusion divergence", weight: "30%", desc: "Do they draw different implications from the same event?", rationale: "Different implications from the same event drive different professional responses. Two readers drawing opposite conclusions about a vote will take materially different actions." },
+  { label: "Framing divergence", weight: "20%", desc: "Same facts, materially different emphasis?", rationale: "Framing differences are common and often reflect editorial perspective. They carry more weight when sources with opposing interests systematically frame the same event differently." },
+  { label: "Source authority", weight: "10%", desc: "Is one a primary source and one a secondary?", rationale: "Authority is a tiebreaker, not a determinant. A government body can mischaracterise its own decision. An NGO may have superior access to negotiating text." },
 ];
 
 const BAND_ROWS: { label: string; range: string; dotColor: string | null; desc: string }[] = [
@@ -824,6 +824,10 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
               The scoring model
             </div>
 
+            <div style={{ fontSize: 12, color: T3, fontFamily: F, lineHeight: 1.5, marginBottom: 4 }}>
+              Facts outweigh conclusions. Conclusions outweigh framing. Framing outweighs authority. This mirrors how a professional triages a conflict.
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {SCORE_ROWS.map(r => (
                 <div key={r.label}>
@@ -843,6 +847,7 @@ function ScoringExplainer({ expanded, onToggle }: { expanded: boolean; onToggle:
                     </span>
                   </div>
                   <div style={{ fontSize: 12.5, color: T2, fontFamily: F, lineHeight: 1.5 }}>{r.desc}</div>
+                  <div style={{ fontSize: 12, color: T3, fontFamily: F, lineHeight: 1.5, marginTop: 4 }}>{r.rationale}</div>
                 </div>
               ))}
             </div>
