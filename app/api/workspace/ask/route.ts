@@ -204,17 +204,26 @@ export async function POST(req: NextRequest) {
     .join("\n\n---\n\n");
 
   // 6. Call Claude Sonnet
-  const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Question: ${question}\n\n--- SOURCE DOCUMENTS ---\n\n${contextBlock}`,
-      },
-    ],
-  });
+  let msg;
+  try {
+    msg = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [
+        {
+          role: "user",
+          content: `Question: ${question}\n\n--- SOURCE DOCUMENTS ---\n\n${contextBlock}`,
+        },
+      ],
+    });
+  } catch (err) {
+    console.error("[workspace/ask] Anthropic error:", err);
+    return NextResponse.json(
+      { error: "Failed to generate answer from Claude" },
+      { status: 500 }
+    );
+  }
 
   const answer =
     msg.content[0].type === "text" ? msg.content[0].text : "No answer generated.";
