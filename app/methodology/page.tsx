@@ -375,6 +375,52 @@ export default function MethodologyPage() {
           </p>
         </div>
 
+        {/* ── CONFLICT SCORING ── */}
+        <h2 id="conflict-scoring" style={sectionHeading}>Conflict Scoring Methodology</h2>
+        <p style={bodyText}>
+          The conflict score measures how far apart two sources are on the same story. It is not a verdict on which source is correct. A score of 7.8 means the gap is large enough to affect a professional decision. Tideline does not adjudicate. Professional judgement is required.
+        </p>
+
+        <div style={{ fontFamily: F, fontSize: 12, fontWeight: 600, textTransform: "uppercase", color: NAVY, marginBottom: 12, letterSpacing: "0.03em" }}>THE EQUATION</div>
+        <div style={formulaBlock}>{"CONFLICT SCORE =\n  (Factual divergence    \u00D7 0.40) +\n  (Conclusion divergence \u00D7 0.30) +\n  (Framing divergence    \u00D7 0.20) +\n  (Source authority       \u00D7 0.10)"}</div>
+
+        <div style={{ fontFamily: F, fontSize: 12, fontWeight: 600, textTransform: "uppercase", color: NAVY, marginBottom: 12, marginTop: 32, letterSpacing: "0.03em" }}>THE FOUR SIGNALS</div>
+
+        {([
+          ["Factual divergence", "40%", "Do the sources state different facts as true? Weighted highest because a factual disagreement requires primary source verification. A professional acting on the wrong fact faces direct legal or compliance exposure."],
+          ["Conclusion divergence", "30%", "Do they draw different implications from the same event? Different conclusions drive different professional responses. Two readers drawing opposite conclusions about a vote will take materially different actions."],
+          ["Framing divergence", "20%", "Same facts, materially different emphasis? Weighted lower because framing differences are common. They carry more weight when sources with opposing interests frame the same event systematically differently."],
+          ["Source authority", "10%", "Is one a primary source and one secondary? A tiebreaker, not a determinant. A government body can mischaracterise its own decision. An NGO may have superior access to negotiating text."],
+        ] as const).map(([label, weight, text]) => (
+          <div key={label} style={{ borderLeft: `2px solid ${BORDER}`, paddingLeft: 16, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={componentLabel}>{label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: "#FFFFFF", background: TEAL, padding: "1px 7px", borderRadius: 99 }}>{weight}</span>
+            </div>
+            <p style={{ fontFamily: F, fontSize: 14, color: BODY, lineHeight: 1.65, margin: 0 }}>{text}</p>
+          </div>
+        ))}
+
+        <div style={{ fontFamily: F, fontSize: 12, fontWeight: 600, textTransform: "uppercase", color: NAVY, marginBottom: 12, marginTop: 32, letterSpacing: "0.03em" }}>SCORE BANDS</div>
+        <table cellPadding={0} cellSpacing={0} style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
+          <thead>
+            <tr>
+              <th style={th}>Band</th>
+              <th style={th}>Range</th>
+              <th style={th}>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style={td}>HIGH</td><td style={tdMono}>8.0+</td><td style={td}>Large enough to affect a legal or compliance position</td></tr>
+            <tr><td style={td}>MEDIUM</td><td style={tdMono}>5.0 {"\u2013"} 7.9</td><td style={td}>Material but may resolve as more information emerges</td></tr>
+            <tr><td style={td}>LOW</td><td style={tdMono}>below 5.0</td><td style={td}>Not surfaced to subscribers</td></tr>
+          </tbody>
+        </table>
+
+        <p style={{ fontFamily: F, fontSize: 13, color: SEC, lineHeight: 1.65, marginBottom: 32 }}>
+          The score measures distance between sources, not which source is correct. Facts outweigh conclusions. Conclusions outweigh framing. Framing outweighs authority. This mirrors how a professional triages a conflict.
+        </p>
+
         {/* ── SECTION 8 ── */}
         <h2 style={sectionHeading}>Academic foundations</h2>
         <p style={bodyText}>
