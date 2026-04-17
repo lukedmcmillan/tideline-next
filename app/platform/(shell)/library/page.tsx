@@ -159,6 +159,13 @@ export default function LibraryPage() {
           marginBottom: 20,
         }}>
           {loading ? "..." : `${totalCount} curated documents`}
+          <span style={{ margin: "0 10px", color: BORDER }}>|</span>
+          <a
+            href="/platform/library/submit"
+            style={{ fontFamily: F, fontSize: 13, color: TEAL, textDecoration: "none", fontWeight: 500 }}
+          >
+            Submit a document
+          </a>
         </div>
 
         {/* Search */}
