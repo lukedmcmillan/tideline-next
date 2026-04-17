@@ -1,16 +1,114 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { DOMAIN_NAMES } from "@/app/lib/tracker-metadata";
 import type { OvernightData } from "@/app/lib/types/dashboard";
 
-// Sprint 1: mocked response. Wire to real data in Sprint 2.
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
+
+const SLUGS = Object.keys(DOMAIN_NAMES);
+
 export async function GET() {
+  const now = new Date();
+  // "Overnight" = since 6pm yesterday (or midnight, whichever gives a reasonable window)
+  const sixPmYesterday = new Date(now);
+  sixPmYesterday.setDate(sixPmYesterday.getDate() - 1);
+  sixPmYesterday.setHours(18, 0, 0, 0);
+  const since = sixPmYesterday.toISOString();
+  const hours = Math.round((now.getTime() - sixPmYesterday.getTime()) / 3600000);
+
+  // Doc count + source count from stories ingested overnight
+  const { data: overnightStories } = await supabase
+    .from("stories")
+    .select("source_name")
+    .gte("published_at", since);
+
+  const docCount = overnightStories?.length ?? 0;
+  const sourceNames = new Set((overnightStories || []).map(s => s.source_name));
+  const sourceCount = sourceNames.size;
+
+  // Top mover: biggest abs(delta) in velocity_scores
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  let topMoverLine = "No significant score movements";
+  let bestDelta = 0;
+  for (const slug of SLUGS) {
+    const { data: latest } = await supabase
+      .from("velocity_scores")
+      .select("score, momentum_direction")
+      .eq("tracker_slug", slug)
+      .order("calculated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { data: prior } = await supabase
+      .from("velocity_scores")
+      .select("score")
+      .eq("tracker_slug", slug)
+      .lte("calculated_at", sevenDaysAgo)
+      .order("calculated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!latest || !prior) continue;
+    const delta = Math.round((latest.score - prior.score) * 10) / 10;
+    if (Math.abs(delta) > Math.abs(bestDelta)) {
+      bestDelta = delta;
+      const dir = latest.momentum_direction === "accelerating" ? "accelerating"
+        : latest.momentum_direction === "decelerating" ? "decelerating" : "stable";
+      topMoverLine = `${DOMAIN_NAMES[slug]} moved ${prior.score.toFixed(1)} \u2192 ${latest.score.toFixed(1)} (${dir})`;
+    }
+  }
+
+  // Divergence count in last 24h
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: recentDivs } = await supabase
+    .from("divergences")
+    .select("id, detected_at")
+    .is("dismissed_at", null)
+    .gte("detected_at", oneDayAgo);
+
+  const divCount = recentDivs?.length ?? 0;
+  const divergenceLine = divCount === 0
+    ? "No new divergences detected"
+    : divCount === 1
+      ? "One new divergence detected"
+      : `${divCount} new divergences detected`;
+
+  // Nearest governance event
+  const { data: nextEvent } = await supabase
+    .from("governance_events")
+    .select("title, starts_at")
+    .gte("starts_at", now.toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  let countdownLine = "No upcoming governance events on the calendar";
+  if (nextEvent) {
+    const daysUntil = Math.ceil((new Date(nextEvent.starts_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    countdownLine = `${nextEvent.title} is now ${daysUntil} days away`;
+  }
+
+  // Readiness pct: proxy based on tracker visits. Real calculation needs Sprint 2 schema.
+  // For now derive from: (active divergences resolved / total) as a rough proxy, clamped 40-90.
+  const { data: allDivs } = await supabase
+    .from("divergences")
+    .select("id, dismissed_at")
+    .limit(100);
+  const total = allDivs?.length ?? 1;
+  const resolved = (allDivs || []).filter(d => d.dismissed_at).length;
+  const readinessPct = Math.min(90, Math.max(40, Math.round((resolved / Math.max(total, 1)) * 100)));
+
   const data: OvernightData = {
-    hours: 14,
-    doc_count: 347,
-    source_count: 89,
-    top_mover_line: "ISA moved 6.4 \u2192 6.8 (accelerating)",
-    divergence_line: "Two new divergences detected. One Council document landed at 3:14am",
-    countdown_line: "MEPC 84 is now 16 days away",
-    readiness_pct: 64,
+    hours,
+    doc_count: docCount,
+    source_count: sourceCount,
+    top_mover_line: topMoverLine,
+    divergence_line: divergenceLine,
+    countdown_line: countdownLine,
+    readiness_pct: readinessPct,
   };
 
   return NextResponse.json(data);

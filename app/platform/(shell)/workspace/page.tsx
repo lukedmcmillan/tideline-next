@@ -412,6 +412,7 @@ function IntelligencePanel({ editor, topics, projectId }: {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AskResult | null>(null);
+  const [error, setError] = useState("");
   const [placeholder] = useState(() => getPlaceholder(topics));
 
   // Fetch entries when projectId changes
@@ -467,12 +468,20 @@ function IntelligencePanel({ editor, topics, projectId }: {
 
   const submit = async () => {
     if (!query.trim() || loading) return;
-    setLoading(true); setResult(null);
+    setLoading(true); setResult(null); setError("");
     try {
       const r = await fetch("/api/workspace/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: query.trim() }) });
       const d = await r.json();
-      if (d.answer) setResult(d);
-    } catch {}
+      if (!r.ok) {
+        setError(d.error || "Ask Tideline couldn't connect \u2014 try again");
+      } else if (d.answer) {
+        setResult(d);
+      } else {
+        setError("Ask Tideline couldn't connect \u2014 try again");
+      }
+    } catch {
+      setError("Ask Tideline couldn't connect \u2014 try again");
+    }
     setLoading(false);
   };
 
@@ -568,6 +577,11 @@ function IntelligencePanel({ editor, topics, projectId }: {
               {"\u2713"} Add to notes
             </button>
           </div>
+        )}
+
+        {/* Ask error */}
+        {error && (
+          <div style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginTop: 12, fontFamily: F, fontSize: 12, color: "#D93025", lineHeight: 1.5 }}>{error}</div>
         )}
       </div>
 
@@ -947,7 +961,7 @@ function SourcesTabContent({ stories, docs }: { stories: SourceStory[]; docs: { 
   );
 }
 
-function IntelTabContent({ entries = [] }: { entries?: { id: string; text: string; sources: string[]; tier: string; time: string }[] }) {
+function IntelTabContent({ entries = [], onDraft }: { entries?: { id: string; text: string; sources: string[]; tier: string; time: string }[]; onDraft?: () => void }) {
   const [verified, setVerified] = useState<Set<string>>(new Set());
 
   const toggleVerify = (id: string) => {
@@ -1010,7 +1024,7 @@ function IntelTabContent({ entries = [] }: { entries?: { id: string; text: strin
         <div style={{ fontFamily: F, fontSize: 11, color: T3, marginBottom: 8 }}>
           {verified.size === 0 ? "Verify the entries above, then draft when ready." : verified.size === entries.length ? "All entries verified. Ready to draft." : `${verified.size} of ${entries.length} verified. Draft when you're satisfied.`}
         </div>
-        <span style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: TEAL, cursor: "pointer" }}>Draft from notes</span>
+        <span onClick={onDraft} style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: TEAL, cursor: "pointer" }}>Draft from notes</span>
       </div>
     </div>
   );
@@ -1117,7 +1131,7 @@ function LiveTabContent() {
   );
 }
 
-function RightSidebar({ stories, docs }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[] }) {
+function RightSidebar({ stories, docs, onDraft }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; onDraft?: () => void }) {
   const [tab, setTab] = useState<"sources" | "intel" | "people" | "live">("sources");
   const tabs = [
     { id: "sources" as const, label: "Sources", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="9" height="9" rx="1"/><path d="M4 5h5M4 7h5M4 9h3"/></svg> },
@@ -1147,7 +1161,7 @@ function RightSidebar({ stories, docs }: { stories: SourceStory[]; docs: { id: s
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {tab === "sources" && <SourcesTabContent stories={stories} docs={docs} />}
-        {tab === "intel" && <IntelTabContent />}
+        {tab === "intel" && <IntelTabContent onDraft={onDraft} />}
         {tab === "people" && <PeopleTabContent />}
         {tab === "live" && <LiveTabContent />}
       </div>
@@ -1323,6 +1337,7 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, 
       if (!res.ok) throw new Error("compile failed");
       router.push(`/platform/projects/${projectId}/draft`);
     } catch {
+      onToast("Draft failed \u2014 please try again");
       setLoading(false);
     }
   };
@@ -1958,7 +1973,7 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <RightSidebar stories={projectStories} docs={projectDocs} />
+      <RightSidebar stories={projectStories} docs={projectDocs} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
       {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} onSourcesFound={(src) => { const unique = src.filter((s, i, arr) => arr.findIndex(x => x.document_id === s.document_id) === i); setAskLibrarySources(unique); }} />}

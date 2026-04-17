@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import FontFamily from "@tiptap/extension-font-family";
+import Link from "@tiptap/extension-link";
+import { Table } from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
 
 const TEAL = "#1D9E75";
 const NAVY = "#0F1117";
@@ -21,6 +34,8 @@ const SUSPECT_PHRASES = [
   "various stakeholders",
   "it should be noted",
 ];
+
+const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48];
 
 type SaveState = "idle" | "saving" | "saved";
 
@@ -62,14 +77,105 @@ export default function DraftEditorPage() {
   const [wordCount, setWordCount] = useState(0);
   const [exportOpen, setExportOpen] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [fontSize, setFontSize] = useState(11);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [colorOpen, setColorOpen] = useState(false);
 
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contentLoaded = useRef(false);
   const today = useMemo(() => new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }), []);
+
+  const updateDerived = useCallback((editorInstance: ReturnType<typeof useEditor>) => {
+    if (!editorInstance) return;
+    const text = editorInstance.getText();
+    setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
+
+    const found: string[] = [];
+    const lower = text.toLowerCase();
+    for (const p of SUSPECT_PHRASES) if (lower.includes(p)) found.push(p);
+    setWarnings(found);
+
+    const json = editorInstance.getJSON();
+    const headings: { id: string; level: number; text: string }[] = [];
+    let idx = 0;
+    function walk(node: { type?: string; attrs?: Record<string, unknown>; content?: unknown[] }) {
+      if (node.type === "heading") {
+        const level = (node.attrs?.level as number) || 1;
+        const textContent = (node.content || [])
+          .map((c: unknown) => {
+            const n = c as { text?: string };
+            return n.text || "";
+          })
+          .join("");
+        headings.push({ id: `s-${idx++}`, level, text: textContent });
+      }
+      if (node.content) {
+        for (const child of node.content) walk(child as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] });
+      }
+    }
+    walk(json as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] });
+    setOutline(headings);
+  }, []);
+
+  const saveContent = useCallback(async (editorInstance: ReturnType<typeof useEditor>) => {
+    if (!editorInstance) return;
+    setSaveState("saving");
+    try {
+      await fetch(`/api/projects/${projectId}/draft`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          content: editorInstance.getText(),
+          format,
+          tone,
+        }),
+      });
+      setSaveState("saved");
+    } catch {
+      setSaveState("idle");
+    }
+  }, [projectId, title, format, tone]);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      FontFamily,
+      Link.configure({
+        openOnClick: false,
+      }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+    ],
+    editorProps: {
+      attributes: {
+        class: "tl-draft-body",
+        style: `font-family: ${F}; font-size: 14.5px; line-height: 1.85; color: #202124; min-height: 500px; outline: none;`,
+      },
+    },
+    onUpdate: ({ editor: ed }) => {
+      if (!contentLoaded.current) return;
+      updateDerived(ed);
+      setSaveState("saving");
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => saveContent(ed), 800);
+    },
+  });
 
   // Load draft
   useEffect(() => {
+    if (!editor) return;
     (async () => {
       try {
         const res = await fetch(`/api/projects/${projectId}/draft`);
@@ -79,58 +185,29 @@ export default function DraftEditorPage() {
           if (d.title) { setTitle(d.title); setProjectName(d.title); }
           if (d.format) setFormat(d.format);
           if (d.tone) setTone(d.tone);
-          if (bodyRef.current) {
-            bodyRef.current.innerHTML = htmlFromMarkdown(d.content || "");
-            updateDerived();
-          }
+          const html = htmlFromMarkdown(d.content || "");
+          editor.commands.setContent(html);
+          contentLoaded.current = true;
+          updateDerived(editor);
+        } else {
+          contentLoaded.current = true;
         }
-      } catch {}
+      } catch {
+        contentLoaded.current = true;
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [editor, projectId]);
 
-  const updateDerived = () => {
-    const el = bodyRef.current;
-    if (!el) return;
-    const text = el.innerText || "";
-    setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0);
-
-    const found: string[] = [];
-    const lower = text.toLowerCase();
-    for (const p of SUSPECT_PHRASES) if (lower.includes(p)) found.push(p);
-    setWarnings(found);
-
-    const headings = Array.from(el.querySelectorAll("h1,h2")).map((h, i) => {
-      if (!h.id) h.id = `s-${i}`;
-      return { id: h.id, level: h.tagName === "H1" ? 1 : 2, text: h.textContent || "" };
-    });
-    setOutline(headings);
-  };
-
-  const save = async () => {
-    setSaveState("saving");
-    try {
-      await fetch(`/api/projects/${projectId}/draft`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          content: bodyRef.current?.innerText || "",
-          format,
-          tone,
-        }),
-      });
-      setSaveState("saved");
-    } catch {
-      setSaveState("idle");
-    }
-  };
+  const saveTitleAndContent = useCallback(() => {
+    if (editor) saveContent(editor);
+  }, [editor, saveContent]);
 
   const regenerate = async () => {
-    if (regenerating) return;
+    if (regenerating || !editor) return;
     setRegenerating(true);
     try {
-      const notes = bodyRef.current?.innerText || "";
+      const notes = editor.getText();
       const res = await fetch(`/api/projects/${projectId}/draft/compile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,10 +222,8 @@ export default function DraftEditorPage() {
       if (!res.ok) throw new Error("compile failed");
       const json = await res.json();
       const newContent: string = json?.draft?.content || "";
-      if (bodyRef.current) {
-        bodyRef.current.innerHTML = htmlFromMarkdown(newContent);
-        updateDerived();
-      }
+      editor.commands.setContent(htmlFromMarkdown(newContent));
+      updateDerived(editor);
     } catch {
       // swallow
     } finally {
@@ -156,14 +231,59 @@ export default function DraftEditorPage() {
     }
   };
 
-  const onBodyInput = () => {
-    updateDerived();
-    setSaveState("saving");
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(save, 800);
-  };
+  // Close menus on outside click
+  useEffect(() => {
+    const handler = () => { setOpenMenu(null); setColorOpen(false); };
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, []);
 
   const visibleWarnings = warnings.filter(w => !dismissedWarnings.includes(w));
+
+  // Current heading level for paragraph style selector
+  const currentHeading = editor?.isActive("heading", { level: 1 }) ? "Heading 1"
+    : editor?.isActive("heading", { level: 2 }) ? "Heading 2"
+    : editor?.isActive("heading", { level: 3 }) ? "Heading 3"
+    : "Normal text";
+
+  const currentFont = (editor?.getAttributes("textStyle")?.fontFamily as string) || "Inter";
+
+  // Active button style helper
+  const tbBtnActive = (active: boolean): React.CSSProperties => ({
+    ...tbBtn,
+    background: active ? "#E8F0FE" : "transparent",
+    color: active ? "#1A73E8" : T1,
+  });
+
+  // Menu dropdown items
+  const menus: Record<string, { label: string; action: () => void; shortcut?: string }[]> = {
+    File: [
+      { label: "New document", action: () => { if (editor) { editor.commands.clearContent(); setTitle("Untitled draft"); } } },
+      { label: "Save", action: saveTitleAndContent, shortcut: "Ctrl+S" },
+      { label: "Export", action: () => setExportOpen(true) },
+    ],
+    Edit: [
+      { label: "Undo", action: () => editor?.chain().focus().undo().run(), shortcut: "Ctrl+Z" },
+      { label: "Redo", action: () => editor?.chain().focus().redo().run(), shortcut: "Ctrl+Y" },
+      { label: "Select all", action: () => editor?.chain().focus().selectAll().run(), shortcut: "Ctrl+A" },
+    ],
+    View: [
+      { label: "Focus mode", action: () => {} },
+    ],
+    Insert: [
+      { label: "Link", action: () => { const u = prompt("Link URL"); if (u && editor) editor.chain().focus().setLink({ href: u }).run(); } },
+      { label: "Table (3x3)", action: () => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+      { label: "Horizontal rule", action: () => editor?.chain().focus().setHorizontalRule().run() },
+    ],
+    Format: [
+      { label: "Clear formatting", action: () => editor?.chain().focus().clearNodes().unsetAllMarks().run() },
+    ],
+    Tools: [
+      { label: "Word count", action: () => alert(`${wordCount} words`) },
+    ],
+  };
+
+  const TEXT_COLORS = ["#000000", "#434343", "#666666", "#999999", "#D93025", "#E37400", "#F9AB00", "#188038", "#1A73E8", "#8430CE"];
 
   return (
     <div style={{ fontFamily: F, height: "100vh", display: "flex", flexDirection: "column", background: "#F0F0F0" }}>
@@ -172,9 +292,9 @@ export default function DraftEditorPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
           <div style={{ width: 28, height: 28, background: TEAL, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>T</div>
           <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <input value={title} onChange={e => setTitle(e.target.value)} onBlur={save} style={{ background: "transparent", border: "none", outline: "none", color: "#fff", fontFamily: F, fontSize: 17, padding: 0 }} />
+            <input value={title} onChange={e => setTitle(e.target.value)} onBlur={saveTitleAndContent} style={{ background: "transparent", border: "none", outline: "none", color: "#fff", fontFamily: F, fontSize: 17, padding: 0 }} />
             <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-              Projects › {projectName || "Project"} › <span style={{ color: TEAL }}>Draft</span>
+              Projects &rsaquo; {projectName || "Project"} &rsaquo; <span style={{ color: TEAL }}>Draft</span>
             </div>
           </div>
         </div>
@@ -195,9 +315,32 @@ export default function DraftEditorPage() {
       </div>
 
       {/* MENU BAR */}
-      <div style={{ height: 36, background: "#fff", borderBottom: `1px solid ${BD}`, display: "flex", alignItems: "center", padding: "0 8px", flexShrink: 0 }}>
+      <div style={{ height: 36, background: "#fff", borderBottom: `1px solid ${BD}`, display: "flex", alignItems: "center", padding: "0 8px", flexShrink: 0, position: "relative" }}>
         {["File", "Edit", "View", "Insert", "Format", "Tools"].map(item => (
-          <span key={item} style={{ padding: "0 10px", fontFamily: F, fontSize: 13, color: T1, cursor: "pointer", height: "100%", display: "inline-flex", alignItems: "center" }}>{item}</span>
+          <div key={item} style={{ position: "relative" }}>
+            <span
+              onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === item ? null : item); }}
+              style={{ padding: "0 10px", fontFamily: F, fontSize: 13, color: T1, cursor: "pointer", height: 36, display: "inline-flex", alignItems: "center", background: openMenu === item ? "#E8EAED" : "transparent", borderRadius: 2 }}
+            >
+              {item}
+            </span>
+            {openMenu === item && menus[item] && (
+              <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: 34, left: 0, background: "#fff", border: `1px solid ${BD}`, borderRadius: 4, boxShadow: "0 2px 8px rgba(0,0,0,.15)", minWidth: 200, zIndex: 100, padding: "4px 0" }}>
+                {menus[item].map(m => (
+                  <div
+                    key={m.label}
+                    onClick={() => { m.action(); setOpenMenu(null); }}
+                    style={{ padding: "8px 16px", fontFamily: F, fontSize: 13, color: T1, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#F1F3F4")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <span>{m.label}</span>
+                    {m.shortcut && <span style={{ fontSize: 11, color: T4, marginLeft: 24 }}>{m.shortcut}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
         <div style={{ flex: 1 }} />
         {visibleWarnings.length > 0 && (
@@ -214,32 +357,150 @@ export default function DraftEditorPage() {
 
       {/* FORMATTING TOOLBAR */}
       <div style={{ height: 40, background: "#fff", borderBottom: `1px solid ${BD}`, display: "flex", alignItems: "center", padding: "0 12px", gap: 8, flexShrink: 0 }}>
-        <button title="Undo" onClick={() => document.execCommand("undo")} style={tbBtn}><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 6h6a3 3 0 010 6H6"/><path d="M5 4L3 6l2 2"/></svg></button>
-        <button title="Redo" onClick={() => document.execCommand("redo")} style={tbBtn}><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 6H5a3 3 0 000 6h3"/><path d="M9 4l2 2-2 2"/></svg></button>
+        {/* Undo / Redo */}
+        <button title="Undo" onClick={() => editor?.chain().focus().undo().run()} style={tbBtn}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 6h6a3 3 0 010 6H6"/><path d="M5 4L3 6l2 2"/></svg>
+        </button>
+        <button title="Redo" onClick={() => editor?.chain().focus().redo().run()} style={tbBtn}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 6H5a3 3 0 000 6h3"/><path d="M9 4l2 2-2 2"/></svg>
+        </button>
         <Sep />
-        <select defaultValue="Normal text" style={tbSelect}>
-          <option>Normal text</option><option>Title</option><option>Heading 1</option><option>Heading 2</option><option>Heading 3</option>
+
+        {/* Paragraph style */}
+        <select
+          value={currentHeading}
+          onChange={e => {
+            const val = e.target.value;
+            if (val === "Normal text") editor?.chain().focus().setParagraph().run();
+            else if (val === "Heading 1") editor?.chain().focus().toggleHeading({ level: 1 }).run();
+            else if (val === "Heading 2") editor?.chain().focus().toggleHeading({ level: 2 }).run();
+            else if (val === "Heading 3") editor?.chain().focus().toggleHeading({ level: 3 }).run();
+          }}
+          style={tbSelect}
+        >
+          <option>Normal text</option>
+          <option>Heading 1</option>
+          <option>Heading 2</option>
+          <option>Heading 3</option>
         </select>
         <Sep />
-        <select defaultValue="Inter" style={tbSelect}><option>Inter</option><option>Georgia</option><option>DM Mono</option></select>
+
+        {/* Font family */}
+        <select
+          value={currentFont}
+          onChange={e => editor?.chain().focus().setFontFamily(e.target.value).run()}
+          style={tbSelect}
+        >
+          <option value="Inter">Inter</option>
+          <option value="Georgia">Georgia</option>
+          <option value="DM Mono">DM Mono</option>
+        </select>
         <Sep />
+
+        {/* Font size */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <button style={tbBtn}>−</button>
-          <input defaultValue={11} style={{ width: 32, height: 24, textAlign: "center", border: `1px solid ${BD}`, borderRadius: 3, fontFamily: F, fontSize: 12 }} />
-          <button style={tbBtn}>+</button>
+          <button
+            onClick={() => {
+              const idx = FONT_SIZES.indexOf(fontSize);
+              const next = FONT_SIZES[Math.max(0, idx - 1)] || FONT_SIZES[0];
+              setFontSize(next);
+              editor?.chain().focus().setMark("textStyle", { fontSize: `${next}px` }).run();
+            }}
+            style={tbBtn}
+          >
+            &minus;
+          </button>
+          <select
+            value={fontSize}
+            onChange={e => {
+              const s = parseInt(e.target.value);
+              setFontSize(s);
+              editor?.chain().focus().setMark("textStyle", { fontSize: `${s}px` }).run();
+            }}
+            style={{ width: 44, height: 24, textAlign: "center", border: `1px solid ${BD}`, borderRadius: 3, fontFamily: F, fontSize: 12 }}
+          >
+            {FONT_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <button
+            onClick={() => {
+              const idx = FONT_SIZES.indexOf(fontSize);
+              const next = FONT_SIZES[Math.min(FONT_SIZES.length - 1, idx + 1)] || FONT_SIZES[FONT_SIZES.length - 1];
+              setFontSize(next);
+              editor?.chain().focus().setMark("textStyle", { fontSize: `${next}px` }).run();
+            }}
+            style={tbBtn}
+          >
+            +
+          </button>
         </div>
         <Sep />
-        <button onClick={() => document.execCommand("bold")} style={tbBtn}><b>B</b></button>
-        <button onClick={() => document.execCommand("italic")} style={tbBtn}><i>I</i></button>
-        <button onClick={() => document.execCommand("underline")} style={tbBtn}><u>U</u></button>
+
+        {/* Bold / Italic / Underline / Strike */}
+        <button onClick={() => editor?.chain().focus().toggleBold().run()} style={tbBtnActive(editor?.isActive("bold") || false)}><b>B</b></button>
+        <button onClick={() => editor?.chain().focus().toggleItalic().run()} style={tbBtnActive(editor?.isActive("italic") || false)}><i>I</i></button>
+        <button onClick={() => editor?.chain().focus().toggleUnderline().run()} style={tbBtnActive(editor?.isActive("underline") || false)}><u>U</u></button>
+        <button onClick={() => editor?.chain().focus().toggleStrike().run()} style={tbBtnActive(editor?.isActive("strike") || false)}><s>S</s></button>
         <Sep />
-        <button style={tbBtn}>A</button>
-        <button style={tbBtn}>H</button>
+
+        {/* Text colour */}
+        <div style={{ position: "relative" }}>
+          <button onClick={e => { e.stopPropagation(); setColorOpen(!colorOpen); }} style={tbBtn}>
+            <span style={{ borderBottom: `3px solid ${(editor?.getAttributes("textStyle")?.color as string) || "#000"}` }}>A</span>
+          </button>
+          {colorOpen && (
+            <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: 32, left: 0, background: "#fff", border: `1px solid ${BD}`, borderRadius: 4, boxShadow: "0 2px 8px rgba(0,0,0,.15)", padding: 8, zIndex: 100, display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+              {TEXT_COLORS.map(c => (
+                <div
+                  key={c}
+                  onClick={() => { editor?.chain().focus().setColor(c).run(); setColorOpen(false); }}
+                  style={{ width: 22, height: 22, background: c, borderRadius: 3, cursor: "pointer", border: "1px solid rgba(0,0,0,0.1)" }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Highlight */}
+        <button onClick={() => editor?.chain().focus().toggleHighlight({ color: "#FBBC04" }).run()} style={tbBtnActive(editor?.isActive("highlight") || false)}>
+          <span style={{ background: editor?.isActive("highlight") ? "#FBBC04" : "#FBBC04", padding: "0 2px", borderRadius: 2 }}>H</span>
+        </button>
         <Sep />
-        <button onClick={() => { const u = prompt("Link URL"); if (u) document.execCommand("createLink", false, u); }} style={tbBtn}>🔗</button>
+
+        {/* Link */}
+        <button
+          onClick={() => {
+            if (editor?.isActive("link")) {
+              editor.chain().focus().unsetLink().run();
+            } else {
+              const u = prompt("Link URL");
+              if (u) editor?.chain().focus().setLink({ href: u }).run();
+            }
+          }}
+          style={tbBtnActive(editor?.isActive("link") || false)}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8l2-2"/><path d="M4.5 9.5a2.12 2.12 0 010-3l2-2a2.12 2.12 0 013 3"/><path d="M9.5 4.5a2.12 2.12 0 010 3l-2 2a2.12 2.12 0 01-3-3"/></svg>
+        </button>
         <Sep />
-        <button onClick={() => document.execCommand("justifyLeft")} style={tbBtn}>≡</button>
-        <button onClick={() => document.execCommand("justifyCenter")} style={tbBtn}>≣</button>
+
+        {/* Alignment */}
+        <button onClick={() => editor?.chain().focus().setTextAlign("left").run()} style={tbBtnActive(editor?.isActive({ textAlign: "left" }) || false)} title="Align left">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h10M2 6h6M2 9h8M2 12h4"/></svg>
+        </button>
+        <button onClick={() => editor?.chain().focus().setTextAlign("center").run()} style={tbBtnActive(editor?.isActive({ textAlign: "center" }) || false)} title="Align center">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h10M4 6h6M3 9h8M5 12h4"/></svg>
+        </button>
+        <button onClick={() => editor?.chain().focus().setTextAlign("right").run()} style={tbBtnActive(editor?.isActive({ textAlign: "right" }) || false)} title="Align right">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h10M8 6h4M6 9h6M10 12h2"/></svg>
+        </button>
+        <Sep />
+
+        {/* Lists */}
+        <button onClick={() => editor?.chain().focus().toggleBulletList().run()} style={tbBtnActive(editor?.isActive("bulletList") || false)} title="Bullet list">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="3" cy="4" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M6 4h6M6 7h6M6 10h6"/></svg>
+        </button>
+        <button onClick={() => editor?.chain().focus().toggleOrderedList().run()} style={tbBtnActive(editor?.isActive("orderedList") || false)} title="Numbered list">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><text x="2" y="5" fontSize="5" fill="currentColor" stroke="none" fontFamily="sans-serif">1</text><text x="2" y="8" fontSize="5" fill="currentColor" stroke="none" fontFamily="sans-serif">2</text><text x="2" y="11" fontSize="5" fill="currentColor" stroke="none" fontFamily="sans-serif">3</text><path d="M6 4h6M6 7h6M6 10h6"/></svg>
+        </button>
       </div>
 
       {/* RULER */}
@@ -266,7 +527,7 @@ export default function DraftEditorPage() {
           {outline.length === 0 ? (
             <div style={{ padding: "10px 16px", fontFamily: F, fontSize: 12, color: T4 }}>No headings yet</div>
           ) : outline.map(h => (
-            <div key={h.id} onClick={() => document.getElementById(h.id)?.scrollIntoView({ behavior: "smooth" })} style={{ padding: `6px 16px 6px ${16 + (h.level - 1) * 12}px`, fontFamily: F, fontSize: 13, color: T3, cursor: "pointer" }}>
+            <div key={h.id} style={{ padding: `6px 16px 6px ${16 + (h.level - 1) * 12}px`, fontFamily: F, fontSize: 13, color: T3, cursor: "pointer" }}>
               {h.text}
             </div>
           ))}
@@ -285,24 +546,28 @@ export default function DraftEditorPage() {
         {/* SCROLL AREA */}
         <div style={{ flex: 1, overflowY: "auto", background: "#F0F0F0", padding: "24px 0 80px" }}>
           <div style={{ background: "#fff", width: 816, margin: "0 auto", boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.08)", padding: "96px 96px 96px", minHeight: 1056 }}>
-            <div ref={titleRef} contentEditable suppressContentEditableWarning onBlur={save} style={{ fontFamily: F, fontSize: 26, fontWeight: 700, textAlign: "center", marginBottom: 6, color: T1, outline: "none" }}>
+            <div style={{ fontFamily: F, fontSize: 26, fontWeight: 700, textAlign: "center", marginBottom: 6, color: T1 }}>
               {title}
             </div>
             <div style={{ fontFamily: F, fontSize: 13, color: T4, textAlign: "center", marginBottom: 32, paddingBottom: 20, borderBottom: `1px solid ${BD}` }}>
-              {format} · Tideline Intelligence · {today}
+              {format} &middot; Tideline Intelligence &middot; {today}
             </div>
-            <div
-              ref={bodyRef}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={onBodyInput}
-              className="tl-draft-body"
-              style={{ fontFamily: F, fontSize: 14.5, lineHeight: 1.85, color: "#202124", minHeight: 500, outline: "none" }}
-            />
+            <EditorContent editor={editor} />
             <style>{`
               .tl-draft-body p { margin-bottom: 1.15em; }
               .tl-draft-body h1 { font-size: 20px; font-weight: 700; margin-top: 1.6em; margin-bottom: 0.7em; }
               .tl-draft-body h2 { font-size: 16px; font-weight: 600; margin-top: 1.3em; margin-bottom: 0.5em; }
+              .tl-draft-body h3 { font-size: 14px; font-weight: 600; margin-top: 1.2em; margin-bottom: 0.4em; }
+              .tl-draft-body ul, .tl-draft-body ol { padding-left: 24px; margin-bottom: 1em; }
+              .tl-draft-body li { margin-bottom: 0.3em; }
+              .tl-draft-body a { color: #1A73E8; text-decoration: underline; }
+              .tl-draft-body table { border-collapse: collapse; margin: 1em 0; width: 100%; }
+              .tl-draft-body th, .tl-draft-body td { border: 1px solid ${BD}; padding: 8px 12px; text-align: left; font-size: 13px; }
+              .tl-draft-body th { background: #F8F9FA; font-weight: 600; }
+              .tl-draft-body mark { background: #FBBC04; padding: 0 2px; border-radius: 2px; }
+              .tl-draft-body hr { border: none; border-top: 1px solid ${BD}; margin: 1.5em 0; }
+              .tiptap:focus { outline: none; }
+              .tiptap { min-height: 500px; }
             `}</style>
             <div style={{ marginTop: 64, paddingTop: 16, borderTop: `1px solid ${BD}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -319,7 +584,7 @@ export default function DraftEditorPage() {
       <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, height: 28, background: "#fff", borderTop: "1px solid #E0E0E0", display: "flex", alignItems: "center", padding: "0 16px", fontFamily: F, fontSize: 11, color: T3, gap: 16 }}>
         <span>{wordCount} words</span>
         <span>{saveState === "saving" ? "Saving..." : "Saved just now"}</span>
-        <span>{sources.length} sources · {format} · {tone}</span>
+        <span>{sources.length} sources &middot; {format} &middot; {tone}</span>
       </div>
 
       {/* EXPORT MODAL */}

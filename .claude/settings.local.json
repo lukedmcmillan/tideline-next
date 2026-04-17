@@ -106,7 +106,26 @@
       "WebFetch(domain:wwwcdn.imo.org)",
       "WebFetch(domain:tnfd.global)",
       "WebFetch(domain:iwc.int)",
-      "WebFetch(domain:www.oceanriskalliance.org)"
+      "WebFetch(domain:www.oceanriskalliance.org)",
+      "Bash(git mv:*)",
+      "Bash(npx eslint:*)",
+      "Bash(xxd)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git hash-object:*)",
+      "Bash(head -5 'app/platform/\\(shell\\)/conflicts/page.tsx')",
+      "Bash(tail -5 'app/platform/\\(shell\\)/conflicts/page.tsx')",
+      "Bash(Conflicts\" \\(fontSize 12, colour T3\\). Weight pills and teal label accents:*)",
+      "Bash(cat:*)",
+      "Bash(calculated\" outline button in the header row \\(matching tracker page:*)",
+      "Bash(git worktree:*)",
+      "Bash(gh search:*)",
+      "Bash(git branch:*)",
+      "Bash(uipro init:*)",
+      "Bash(methodology\" to \"Conflict scoring methodology\" pointing at:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git reset:*)",
+      "Bash(grep:*)"
     ]
   }
 }

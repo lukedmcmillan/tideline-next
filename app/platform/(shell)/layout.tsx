@@ -237,9 +237,6 @@ function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, 
         })}
       </div>
 
-      {/* Methodology link */}
-      <a href="/methodology" target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "12px 14px", fontFamily: F, fontSize: 10, color: "#9AA0A6", textDecoration: "none" }}>Pulse Score Methodology</a>
-
       {/* Footer: readiness placeholder (Sprint 2 wires to real data) */}
       <div style={{ marginTop: "auto", padding: 14 }}>
         <div style={{

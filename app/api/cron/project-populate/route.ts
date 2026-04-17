@@ -21,6 +21,9 @@ export async function GET(request: Request) {
   let projectsProcessed = 0;
   let entriesCreated = 0;
 
+  // Global hard cap: max story attachments across ALL projects in one run (cost control)
+  const GLOBAL_ENTRY_CAP = 30;
+
   try {
     // Fetch all projects with topic_tags
     const { data: projects, error: projError } = await supabase
@@ -43,6 +46,7 @@ export async function GET(request: Request) {
     const h48 = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
     for (const project of projects) {
+      if (entriesCreated >= GLOBAL_ENTRY_CAP) break;
       projectsProcessed++;
 
       try {
@@ -76,6 +80,7 @@ export async function GET(request: Request) {
 
         // Ask Claude to generate entry content for each new story
         for (const story of newStories.slice(0, 5)) {
+          if (entriesCreated >= GLOBAL_ENTRY_CAP) break;
           try {
             const message = await anthropic.messages.create({
               model: "claude-haiku-4-5-20251001",

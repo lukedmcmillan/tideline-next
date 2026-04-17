@@ -71,7 +71,7 @@ async function haikuCall(system: string, userContent: string): Promise<string> {
   const msg = await getAnthropic().messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
-    system,
+    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userContent }],
   });
   const block = msg.content[0];

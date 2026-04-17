@@ -26,6 +26,7 @@ export async function GET(request: Request) {
       .gte('published_at', h24)
       .eq('significance_score', 0)
       .not('short_summary', 'is', null)
+      .limit(50)
 
     if (error) {
       console.error('[Significance] Fetch error:', error)

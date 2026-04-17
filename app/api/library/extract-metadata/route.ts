@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
   const extractionResponse = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1024,
-    system: EXTRACTION_SYSTEM,
+    system: [{ type: "text", text: EXTRACTION_SYSTEM, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: `Extract metadata from this document:\n\n${text}` }],
   });
 
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
   const verificationResponse = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1024,
-    system: VERIFICATION_SYSTEM,
+    system: [{ type: "text", text: VERIFICATION_SYSTEM, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: `Extracted metadata: ${JSON.stringify(firstResult)}\n\nDocument text: ${text}` }],
   });
 

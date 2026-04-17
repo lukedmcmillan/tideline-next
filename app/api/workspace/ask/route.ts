@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { getEmailFromSession } from "@/app/lib/auth";
+import { expandQuery, scoreChunk, deduplicateChunks, extractKeywords } from "@/app/lib/query-expansion";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +11,7 @@ const supabase = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-async function embedQuestion(text: string): Promise<number[]> {
+async function embedText(text: string): Promise<number[]> {
   const res = await fetch("https://api.jina.ai/v1/embeddings", {
     method: "POST",
     headers: {
@@ -65,6 +66,32 @@ interface Source {
   published_date: string | null;
   file_url: string | null;
   chunk_text: string;
+  relevanceScore: number;
+}
+
+async function searchBothCorpora(
+  embeddingJson: string,
+  docThreshold: number,
+  primaryThreshold: number,
+  docCount: number,
+  primaryCount: number
+): Promise<{ docChunks: DocChunkMatch[]; primaryChunks: PrimaryChunkMatch[] }> {
+  const [docResult, primaryResult] = await Promise.all([
+    supabase.rpc("match_document_chunks", {
+      query_embedding: embeddingJson,
+      match_threshold: docThreshold,
+      match_count: docCount,
+    }),
+    supabase.rpc("match_primary_chunks", {
+      query_embedding: embeddingJson,
+      match_threshold: primaryThreshold,
+      match_count: primaryCount,
+    }),
+  ]);
+  return {
+    docChunks: docResult.data || [],
+    primaryChunks: primaryResult.data || [],
+  };
 }
 
 const SYSTEM_PROMPT = `You are Tideline, an ocean governance intelligence assistant with access to a curated library of primary source documents.
@@ -75,7 +102,15 @@ Rules:
 - Every factual claim must cite its source as [Source: title, organisation, date].
 - If fewer than 2 sources directly address the question, say: "The Tideline library has limited coverage on this topic. The most relevant document found is [title]. You may want to search the library directly for more."
 - Never speculate or add information beyond what the sources contain.
-- Be concise. Do not pad the answer.`;
+- Be concise. Do not pad the answer.
+
+For broad questions (like "issues with fishing regulations"), provide:
+1. Overview of key issues/themes found in the documents
+2. Specific examples with citations
+3. Timeline of developments where relevant
+4. Geographic or sectoral patterns if evident
+
+Always acknowledge the scope of your search. If documents cover only certain aspects of a broad topic, say so and suggest related terms the user could search for.`;
 
 export async function POST(req: NextRequest) {
   const email = await getEmailFromSession(req);
@@ -99,10 +134,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 1. Embed the question
-  let embedding: number[];
+  // 1. Expand query via Haiku (concepts + variations)
+  const expanded = await expandQuery(question);
+  console.log("[workspace/ask] Query expanded:", {
+    concepts: expanded.concepts.length,
+    variations: expanded.variations.length,
+    timeframe: expanded.timeframe,
+  });
+
+  // 2. Generate embeddings for original + concept string + variations
+  const textsToEmbed = [
+    question,
+    expanded.concepts.length > 0 ? expanded.concepts.join(" ") : null,
+    ...expanded.variations,
+  ].filter((t): t is string => !!t);
+
+  let embeddings: number[][];
   try {
-    embedding = await embedQuestion(question);
+    embeddings = await Promise.all(textsToEmbed.map((t) => embedText(t)));
   } catch (err) {
     console.error("[workspace/ask] Embedding error:", err);
     return NextResponse.json(
@@ -111,33 +160,71 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const embeddingJson = JSON.stringify(embedding);
-  console.log("[workspace/ask] Embedding generated, length:", embedding.length);
+  // 3. Multi-strategy parallel search
+  const searchPromises = embeddings.map((emb, i) => {
+    const embJson = JSON.stringify(emb);
+    if (i === 0) {
+      // Original query — tighter thresholds
+      return searchBothCorpora(embJson, 0.5, 0.45, 10, 8);
+    } else if (i === 1 && expanded.concepts.length > 0) {
+      // Concept string — medium thresholds
+      return searchBothCorpora(embJson, 0.35, 0.3, 8, 6);
+    } else {
+      // Variations — looser thresholds
+      return searchBothCorpora(embJson, 0.25, 0.2, 5, 4);
+    }
+  });
 
-  // 2. Parallel RPC calls: library document chunks + primary source chunks
-  const [docChunksResult, primaryChunksResult] = await Promise.all([
-    supabase.rpc("match_document_chunks", {
-      query_embedding: embeddingJson,
-      match_threshold: 0.65,
-      match_count: 15,
-    }),
-    supabase.rpc("match_primary_chunks", {
-      query_embedding: embeddingJson,
-      match_threshold: 0.62,
-      match_count: 10,
-    }),
-  ]);
+  const searchResults = await Promise.all(searchPromises);
 
-  const docChunks: DocChunkMatch[] = docChunksResult.data || [];
-  const primaryChunks: PrimaryChunkMatch[] = primaryChunksResult.data || [];
+  // Combine all results
+  const allDocChunks: DocChunkMatch[] = [];
+  const allPrimaryChunks: PrimaryChunkMatch[] = [];
+  for (const result of searchResults) {
+    allDocChunks.push(...result.docChunks);
+    allPrimaryChunks.push(...result.primaryChunks);
+  }
 
-  console.log("[workspace/ask] match_document_chunks:", docChunksResult.error ? `ERROR: ${JSON.stringify(docChunksResult.error)}` : `${docChunks.length} results`);
-  console.log("[workspace/ask] match_primary_chunks:", primaryChunksResult.error ? `ERROR: ${JSON.stringify(primaryChunksResult.error)}` : `${primaryChunks.length} results`);
-  if (docChunks.length > 0) console.log("[workspace/ask] Top doc chunk similarity:", docChunks[0].similarity);
-  if (primaryChunks.length > 0) console.log("[workspace/ask] Top primary chunk similarity:", primaryChunks[0].similarity);
+  const dedupedDocChunks = deduplicateChunks(allDocChunks);
+  const dedupedPrimaryChunks = deduplicateChunks(allPrimaryChunks);
 
-  // 3. Fetch document metadata for library chunks
-  const docIds = [...new Set(docChunks.map((c) => c.document_id))];
+  console.log("[workspace/ask] Search results:", {
+    strategies: searchResults.length,
+    rawDoc: allDocChunks.length,
+    rawPrimary: allPrimaryChunks.length,
+    dedupedDoc: dedupedDocChunks.length,
+    dedupedPrimary: dedupedPrimaryChunks.length,
+  });
+
+  // 4. Text search fallback if semantic search found nothing
+  let textSearchChunks: PrimaryChunkMatch[] = [];
+  if (dedupedDocChunks.length === 0 && dedupedPrimaryChunks.length === 0) {
+    const keywords = extractKeywords(question);
+    if (keywords.length > 0) {
+      console.log("[workspace/ask] Falling back to text search:", keywords);
+      const tsQuery = keywords.join(" | ");
+      const { data: textResults } = await supabase
+        .from("document_chunks")
+        .select("chunk_text, document_id")
+        .textSearch("chunk_text", tsQuery, { type: "websearch", config: "english" })
+        .limit(8);
+
+      if (textResults && textResults.length > 0) {
+        textSearchChunks = textResults.map((r) => ({
+          chunk_text: r.chunk_text,
+          issuing_body: null,
+          document_type: null,
+          date_issued: null,
+          source_url: null,
+          similarity: 0.15,
+        }));
+        console.log("[workspace/ask] Text search found:", textSearchChunks.length);
+      }
+    }
+  }
+
+  // 5. Fetch document metadata for library chunks
+  const docIds = [...new Set(dedupedDocChunks.map((c) => c.document_id))];
   let docMetaMap = new Map<string, DocumentMeta>();
 
   if (docIds.length > 0) {
@@ -151,15 +238,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 4. Build unified source list
+  // 6. Build unified source list with relevance scoring
   const sources: Source[] = [];
-  const seenChunks = new Set<string>();
 
-  for (const chunk of docChunks) {
-    const key = chunk.chunk_text.slice(0, 100);
-    if (seenChunks.has(key)) continue;
-    seenChunks.add(key);
-
+  for (const chunk of dedupedDocChunks) {
     const meta = docMetaMap.get(chunk.document_id);
     sources.push({
       document_id: chunk.document_id,
@@ -168,14 +250,14 @@ export async function POST(req: NextRequest) {
       published_date: meta?.published_date || null,
       file_url: meta?.file_url || null,
       chunk_text: chunk.chunk_text,
+      relevanceScore: scoreChunk(
+        { chunk_text: chunk.chunk_text, similarity: chunk.similarity, date_issued: meta?.published_date, issuing_body: meta?.source_organisation },
+        question
+      ),
     });
   }
 
-  for (const chunk of primaryChunks) {
-    const key = chunk.chunk_text.slice(0, 100);
-    if (seenChunks.has(key)) continue;
-    seenChunks.add(key);
-
+  for (const chunk of [...dedupedPrimaryChunks, ...textSearchChunks]) {
     sources.push({
       document_id: null,
       title: chunk.issuing_body || "Primary source",
@@ -183,12 +265,17 @@ export async function POST(req: NextRequest) {
       published_date: chunk.date_issued || null,
       file_url: chunk.source_url || null,
       chunk_text: chunk.chunk_text,
+      relevanceScore: scoreChunk(chunk, question),
     });
   }
 
-  // 5. Build context for Claude
-  console.log("[workspace/ask] Total sources for Claude:", sources.length, "(doc:", docChunks.length, "primary:", primaryChunks.length, ")");
-  if (sources.length === 0) {
+  // Sort by relevance score and take top 12
+  sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
+  const topSources = sources.slice(0, 12);
+
+  console.log("[workspace/ask] Final sources:", topSources.length, "top score:", topSources[0]?.relevanceScore?.toFixed(3));
+
+  if (topSources.length === 0) {
     return NextResponse.json({
       answer:
         "I could not find any relevant documents in the Tideline library to answer this question. Try rephrasing your query or broadening the topic.",
@@ -196,14 +283,15 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const contextBlock = sources
+  // 7. Build context for Claude
+  const contextBlock = topSources
     .map(
       (s, i) =>
         `[Document ${i + 1}] ${s.title}${s.source_organisation ? ` — ${s.source_organisation}` : ""}${s.published_date ? ` (${s.published_date})` : ""}\n${s.chunk_text}`
     )
     .join("\n\n---\n\n");
 
-  // 6. Call Claude Sonnet
+  // 8. Call Claude Sonnet
   let msg;
   try {
     msg = await anthropic.messages.create({
@@ -228,8 +316,8 @@ export async function POST(req: NextRequest) {
   const answer =
     msg.content[0].type === "text" ? msg.content[0].text : "No answer generated.";
 
-  // 7. Return answer + sources (without chunk_text in response to save bandwidth)
-  const responseSources = sources.map((s) => ({
+  // 9. Return answer + sources
+  const responseSources = topSources.map((s) => ({
     document_id: s.document_id,
     title: s.title,
     source_organisation: s.source_organisation,
@@ -237,5 +325,14 @@ export async function POST(req: NextRequest) {
     file_url: s.file_url,
   }));
 
-  return NextResponse.json({ answer, sources: responseSources });
+  return NextResponse.json({
+    answer,
+    sources: responseSources,
+    meta: {
+      strategies_used: searchResults.length,
+      text_search_fallback: textSearchChunks.length > 0,
+      total_chunks_found: sources.length,
+      top_chunks_used: topSources.length,
+    },
+  });
 }

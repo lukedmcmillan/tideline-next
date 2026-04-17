@@ -69,6 +69,8 @@ Tideline — a professional ocean intelligence platform that curates and summari
 - `customer.subscription.deleted` — sets status to "cancelled"
 - `invoice.payment_failed` — sets status to "cancelled"
 
+Read .claude/skills/napkin/SKILL.md at session start.
+
 **Onboarding**: On first login, users with empty topics in `public.users` are redirected to `/onboarding` (31 topic cards, min 3 required, then timezone). The verify route handles this redirect server-side; the feed page has a client-side safety net via the `needsOnboarding` flag from `/api/subscription-status`.
 
 **Paywall**: Feed page shows a hard paywall overlay (blocking) for users with status `canceled`, `past_due`, or `none`. Trialing users with ≤5 days left see a soft banner. Active and trialing users get full access.
@@ -117,3 +119,7 @@ Key rules:
 - Buttons: 4px radius, teal primary, right-aligned actions
 - Never dark backgrounds in workspace content area
 - This style must be preserved across all future workspace changes
+
+## Session Wrap-Up (run at end of every session)
+
+/sc:implement "Update .claude/SPEC.md with: what was completed this session, any new known issues discovered, and what the next step is. Then update LESSONS.md with anything new learned, important insights or gotchas, and techniques that worked well. Keep both concise."
