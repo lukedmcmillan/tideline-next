@@ -57,7 +57,10 @@ export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[
   const cutoff = new Date(Date.now() - sinceHours * 60 * 60 * 1000).toISOString();
 
   const BLOCKED_SOURCES = ["PLOS ONE Marine", "Phys.org Ocean"];
-  const ACTIVE_TOPICS = ["governance", "dsm", "bluefinance", "climate", "iuu", "mpa", "fisheries", "shipping", "science"];
+  const ACTIVE_TOPICS = [
+    "governance", "dsm", "bluefinance", "climate", "iuu", "mpa", "fisheries", "shipping", "science",
+    "bbnj", "isa", "30x30", "blue-finance", "imo-shipping", "offshore-wind", "cites", "wto-subsidies", "plastics-treaty",
+  ];
 
   const { data: stories, error } = await supabase
     .from("stories")
@@ -90,7 +93,7 @@ export async function findCandidatePairs(sinceHours: number): Promise<StoryPair[
 
   for (const [topic, group] of Object.entries(byTopic)) {
     if (group.length < 2) continue;
-    const tracker_tag = TOPIC_TO_TRACKER[topic] || topic;
+    const tracker_tag = topic;
     let count = 0;
 
     for (let i = 0; i < group.length && count < MAX_PAIRS_PER_TOPIC; i++) {
