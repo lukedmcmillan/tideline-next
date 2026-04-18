@@ -33,13 +33,23 @@
 5. Build ReadinessWidget component (replaces sidebar placeholder)
 6. Build CalendarHeatmap component
 
+## Entity Tracking (Week 1)
+- Step 1: Schema migration applied and verified ✓ (20260418_entity_tracking_v2.sql)
+  - entities: +parent_entity_id, tracker_tag, description, metadata, embedding vector(1536)
+  - entity_mentions: +match_score, match_method, confidence, significance
+  - New tables: entity_aliases (trigram index), user_entities (FK public.users), entity_starter_sets (6 job types)
+  - pg_trgm extension enabled, ivfflat index on entity embeddings
+  - No RLS — matches existing pattern (alert_log, alert_sends, brief_sends, user_alert_preferences)
+- Step 2: NEXT — seed-entities.csv with 500 entities across 6 categories. Must UPSERT to enrich existing 496 rows (name + entity_type only), not INSERT (unique constraint).
+
 ## What's next
-1. Brief-reply webhook (reply-to-brief → AI answer)
-2. Corporate Stripe pricing tier
-3. Prompt caching on all API calls
-4. ESG/NGO/journalist briefing_type PDF variants
-5. Blue Economy market widget (opt-in, investor segment only)
-6. Mobile app (Expo shell strategy)
+1. Entity tracking Week 1 Steps 2-7
+2. Brief-reply webhook (reply-to-brief → AI answer)
+3. Corporate Stripe pricing tier
+4. Prompt caching on all API calls
+5. ESG/NGO/journalist briefing_type PDF variants
+6. Blue Economy market widget (opt-in, investor segment only)
+7. Mobile app (Expo shell strategy)
 
 ## Known issues / debt
 - Firecrawl MCP not connecting on Windows — use Jina fallback

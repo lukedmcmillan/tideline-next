@@ -2,42 +2,37 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Chart as ChartJS,
-  LineElement,
-  PointElement,
-  LinearScale,
-  CategoryScale,
-  Filler,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+import Sparkline from "@/components/Sparkline";
 
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Filler);
-
-/* ── Tokens ────────────────────────────────────────────────── */
-const BG = "#F8F9FA";
-const SURFACE = "#FFFFFF";
-const BORDER = "#DADCE0";
-const BORDER2 = "#E8EAED";
-const TEXT0 = "#202124";
-const TEXT1 = "#5F6368";
-const TEXT2 = "#9AA0A6";
+/* ── Tokens (dark, matches dashboard-v2) ──────────────────── */
+const BG = "#0B1628";
+const SURFACE = "#0D1E35";
+const SURFACE_HI = "#122845";
+const BORDER = "#1A2A44";
+const BORDER2 = "#24375A";
+const TEXT0 = "#E8EDF4";
+const TEXT1 = "#8BA0BC";
+const TEXT2 = "#5B6F8C";
 const TEAL = "#1D9E75";
-const TEAL_BG = "rgba(29,158,117,.08)";
-const TEAL_BD = "rgba(29,158,117,.2)";
+const TEAL_BRIGHT = "#27C893";
 const AMBER = "#EF9F27";
-const AMBER_BG = "rgba(239,159,39,.08)";
-const AMBER_BD = "rgba(239,159,39,.2)";
 const RED = "#E24B4A";
-const RED_BG = "rgba(226,75,74,.07)";
-const RED_BD = "rgba(226,75,74,.18)";
 const F = "'DM Sans', system-ui, sans-serif";
+const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
 const M = "'DM Mono', monospace";
 
-function sc(v: number) { return v < 4 ? RED : v <= 7 ? AMBER : TEAL; }
+function sc(v: number) { return v >= 7 ? TEAL_BRIGHT : v >= 4 ? AMBER : RED; }
 function daysUntil(ds: string) { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(ds); d.setHours(0,0,0,0); return Math.ceil((d.getTime()-t.getTime())/(864e5)); }
-function dayColor(d: number|null, fb: string) { if (d===null) return RED; if (d<=0) return RED; if (d<=90) return AMBER; return fb; }
+function dayColor(d: number|null) { if (d===null) return RED; if (d<=0) return RED; if (d<=90) return AMBER; return TEAL_BRIGHT; }
 function dayLabel(d: number|null) { if (d===null) return "TBC"; if (d<=0) return "TODAY"; return String(d); }
+
+/* ── Trajectory colour ────────────────────────────────────── */
+function trajColor(traj: string) {
+  const t = traj.toLowerCase();
+  if (t.includes("accel") || t.includes("advancing") || t.includes("implementing")) return TEAL_BRIGHT;
+  if (t.includes("stall") || t.includes("stable")) return AMBER;
+  return RED;
+}
 
 /* ── Data ──────────────────────────────────────────────────── */
 const _mepc = daysUntil("2026-04-27"), _wto = daysUntil("2026-09-15"), _cbd = daysUntil("2026-10-15"), _isa2 = daysUntil("2026-07-01");
@@ -56,33 +51,19 @@ const TRACKERS = [
 ];
 
 const CDS = [
-  { d: dayLabel(_mepc), ev: "MEPC 84", sub: "IMO Net-Zero vote \u00B7 London", c: dayColor(_mepc, AMBER), bd: _mepc <= 30 ? AMBER_BD : BORDER, bg: _mepc <= 30 ? AMBER_BG : SURFACE },
-  { d: dayLabel(_wto), ev: "WTO Compliance", sub: "Fisheries subsidies deadline", c: dayColor(_wto, TEAL), bd: BORDER, bg: SURFACE },
-  { d: dayLabel(_cbd), ev: "CBD COP17", sub: "30x30 implementation review", c: dayColor(_cbd, TEAL), bd: BORDER, bg: SURFACE },
-  { d: dayLabel(_isa2), ev: "ISA Council II", sub: "NORI contract, Mining Code", c: dayColor(_isa2, TEXT1), bd: BORDER, bg: SURFACE },
-  { d: "TBC", ev: "INC-6", sub: "Plastics treaty, date unset", c: RED, bd: BORDER, bg: SURFACE },
+  { d: dayLabel(_mepc), ev: "MEPC 84", sub: "IMO Net-Zero vote \u00B7 London", c: dayColor(_mepc) },
+  { d: dayLabel(_wto), ev: "WTO Compliance", sub: "Fisheries subsidies deadline", c: dayColor(_wto) },
+  { d: dayLabel(_cbd), ev: "CBD COP17", sub: "30x30 implementation review", c: dayColor(_cbd) },
+  { d: dayLabel(_isa2), ev: "ISA Council II", sub: "NORI contract, Mining Code", c: dayColor(_isa2) },
+  { d: "TBC", ev: "INC-6", sub: "Plastics treaty, date unset", c: RED },
 ];
 
-/* ── Momentum Badge ───────────────────────────────────────── */
+/* ── Momentum Badge (outline only) ────────────────────────── */
 function Mom({ m }: { m: "up" | "flat" | "dn" }) {
-  const x = m === "up" ? { c: TEAL, bg: TEAL_BG, bd: TEAL_BD, t: "\u25B2 Accel" }
-    : m === "dn" ? { c: RED, bg: RED_BG, bd: RED_BD, t: "\u25BC Decel" }
-    : { c: AMBER, bg: AMBER_BG, bd: AMBER_BD, t: "\u2192 Stable" };
-  return <span style={{ fontSize: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", padding: "1px 5px", borderRadius: 3, color: x.c, background: x.bg, border: `1px solid ${x.bd}`, alignSelf: "flex-end", marginBottom: 2 }}>{x.t}</span>;
-}
-
-/* ── Sparkline ────────────────────────────────────────────── */
-function Spark({ h, s }: { h: number[]; s: number }) {
-  const c = sc(s);
-  const pr = h.map((_, i) => i === h.length - 1 ? 3 : 0);
-  return (
-    <div style={{ flex: 1, minHeight: 40, position: "relative" }}>
-      <Line
-        data={{ labels: h.map((_, i) => i), datasets: [{ data: h, borderColor: c, borderWidth: 1.5, pointRadius: pr, pointBackgroundColor: c, fill: true, backgroundColor: c + "18", tension: 0.4 }] }}
-        options={{ maintainAspectRatio: false, responsive: true, scales: { x: { display: false }, y: { display: false, min: 0, max: 10 } }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }}
-      />
-    </div>
-  );
+  const x = m === "up" ? { c: TEAL_BRIGHT, t: "\u25B2 Accel" }
+    : m === "dn" ? { c: RED, t: "\u25BC Decel" }
+    : { c: TEXT1, t: "\u2192 Stable" };
+  return <span style={{ fontSize: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", padding: "1px 5px", borderRadius: 3, color: x.c, background: "transparent", border: `1px solid ${x.c}`, alignSelf: "flex-end", marginBottom: 2 }}>{x.t}</span>;
 }
 
 /* ── Tracker Card ─────────────────────────────────────────── */
@@ -99,41 +80,43 @@ function Card({ t, anim, onClick, live }: {
 
   return (
     <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? "#F8FAF9" : SURFACE, border: `0.5px solid ${hov ? TEAL : BORDER}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "background 0.15s, border-color 0.15s" }}>
+      style={{ background: hov ? SURFACE_HI : SURFACE, border: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "background 0.15s, border-color 0.15s" }}>
       {/* open hint */}
-      <span style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: TEXT2, opacity: hov ? 1 : 0, pointerEvents: "none", transition: "opacity 0.12s", zIndex: 2 }}>Open {"\u2197"}</span>
+      <span style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: TEXT1, opacity: hov ? 1 : 0, pointerEvents: "none", transition: "opacity 0.12s", zIndex: 2 }}>Open {"\u2197"}</span>
       {/* accent */}
       <div style={{ height: 3, background: c, flexShrink: 0 }} />
       {/* body */}
       <div style={{ flex: 1, padding: "6px 9px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT2, marginBottom: 2 }}>{t.domain}</div>
+        <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT1, marginBottom: 2 }}>{t.domain}</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 3 }}>
           <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
           <span style={{ fontSize: 10, color: TEXT2, marginRight: 6 }}>/10</span>
           <Mom m={t.mom} />
         </div>
-        <div style={{ height: 2, background: BORDER2, borderRadius: 1, marginBottom: 4 }}>
+        <div style={{ height: 2, background: BORDER, borderRadius: 1, marginBottom: 4 }}>
           <div style={{ height: 2, borderRadius: 1, background: c, width: anim ? `${score * 10}%` : "0%", transition: "width 0.9s cubic-bezier(.4,0,.2,1)" }} />
         </div>
         {/* sub-scores */}
-        <div style={{ display: "flex", border: `0.5px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 4, flexShrink: 0 }}>
-          {([["Vol", sv], ["Rec", sr], ["Sig", ss]] as [string, number][]).map(([lbl, val], i) => (
-            <div key={lbl} style={{ padding: "2px 4px", flex: 1, borderRight: i < 2 ? `0.5px solid ${BORDER}` : "none" }}>
-              <div style={{ fontSize: 7, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".08em", color: TEXT2, marginBottom: 1 }}>{lbl}</div>
+        <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 4, flexShrink: 0 }}>
+          {([["VOL", sv], ["REC", sr], ["SIG", ss]] as [string, number][]).map(([lbl, val], i) => (
+            <div key={lbl} style={{ padding: "3px 4px", flex: 1, borderRight: i < 2 ? `1px solid ${BORDER}` : "none" }}>
+              <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.14em", color: TEXT1, fontFamily: M, marginBottom: 1 }}>{lbl}</div>
               {val === 0 ? (
-                <div style={{ fontSize: 9, fontWeight: 600, color: "#C5C5C5" }}>&ndash;</div>
+                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: TEXT2 }}>&ndash;</div>
               ) : (
-                <div style={{ fontSize: 9, fontWeight: 600, color: sc(val) }}>{val.toFixed(1)}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: TEXT0 }}>{val.toFixed(1)}</div>
               )}
             </div>
           ))}
         </div>
-        <Spark h={t.history} s={score} />
+        <div style={{ flex: 1, minHeight: 26 }}>
+          <Sparkline history={t.history} score={score} />
+        </div>
       </div>
       {/* footer */}
-      <div style={{ padding: "3px 8px", borderTop: `0.5px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: BG }}>
-        <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", color: c }}>{t.traj}</span>
-        <span style={{ fontSize: 9, color: t.nextHot ? c : TEXT2 }}>{t.next}</span>
+      <div style={{ padding: "3px 8px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: BG }}>
+        <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", fontFamily: M, color: trajColor(t.traj) }}>{t.traj}</span>
+        <span style={{ fontSize: 10, fontFamily: M, color: TEXT1 }}>{t.next}</span>
       </div>
     </div>
   );
@@ -161,21 +144,21 @@ export default function TrackersPage() {
     });
   }, []);
 
-  /* ── Sort cards by score descending (Change 5) ── */
+  /* ── Sort cards by score descending ── */
   const sorted = [...TRACKERS].sort((a, b) => {
     const scoreA = liveScores[a.slug]?.score ?? a.score;
     const scoreB = liveScores[b.slug]?.score ?? b.score;
     return scoreB - scoreA;
   });
 
-  /* ── Ticker uses live scores and corrected names (Change 10) ── */
+  /* ── Ticker uses live scores ── */
   const TICKER: { l: string; v: number | null; s?: string }[] = TRACKERS.map(t => ({
     l: t.domain,
     v: liveScores[t.slug]?.score ?? t.score,
   }));
   const tkDupe = [...TICKER, ...TICKER];
 
-  /* ── Alert banner logic (Change 3) ── */
+  /* ── Alert banner logic ── */
   const alerts = TRACKERS.map(t => {
     const score = liveScores[t.slug]?.score ?? t.score;
     if (!("nextDate" in t) || !t.nextDate) return null;
@@ -191,48 +174,55 @@ export default function TrackersPage() {
     <>
       <style>{`
         @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @keyframes alertPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
       `}</style>
       <div style={{ background: BG, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: F }}>
 
-        {/* S1: topbar (Change 1: new title, Change 2: no alert chips) */}
+        {/* S1: topbar */}
         <div style={{ height: 38, background: SURFACE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "0 12px 0 20px", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT0 }}>Live Signal Trackers</span>
-          <span style={{ width: 1, height: 16, background: BORDER, margin: "0 14px" }} />
-          <span style={{ fontSize: 11, color: TEXT2 }}>Pulse Score {"\u00B7"} recalculated every four days</span>
+          <span style={{ width: 1, height: 16, background: BORDER2, margin: "0 14px" }} />
+          <span style={{ fontSize: 11, color: TEXT1 }}>Pulse Score {"\u00B7"} recalculated every four days</span>
           {Object.keys(liveScores).length === 0 && <span style={{ fontSize: 10, color: TEXT2, marginLeft: 12 }}>Recalculating scores...</span>}
         </div>
 
-        {/* S1.5: alert banner (Change 3) */}
+        {/* S1.5: hero alert banner */}
         {urgentAlert && (
-          <div style={{ background: "#0B1628", borderBottom: "1px solid #1E3050", padding: "10px 16px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+          <div style={{ background: `linear-gradient(135deg, ${SURFACE} 0%, ${BG} 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: AMBER, flexShrink: 0, animation: "alertPulse 1.5s ease-in-out infinite" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 1, flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#FFFFFF" }}>
-                {urgentAlert.nextEvent} {"\u00B7"} {urgentAlert.days} days
-              </span>
-              <span style={{ fontSize: 11, color: "#8BA0BC" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 15, fontWeight: 800, fontFamily: DISPLAY, color: TEXT0 }}>
+                  {urgentAlert.nextEvent} <span style={{ color: TEAL_BRIGHT }}>{"\u00B7"} {urgentAlert.days}d</span>
+                </span>
+                <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: urgentAlert.liveScore >= 7 ? RED : AMBER, background: urgentAlert.liveScore >= 7 ? "rgba(226,75,74,0.15)" : "rgba(239,159,39,0.15)", border: `1px solid ${urgentAlert.liveScore >= 7 ? "rgba(226,75,74,0.3)" : "rgba(239,159,39,0.3)"}`, padding: "1px 6px", borderRadius: 3 }}>
+                  {urgentAlert.liveScore >= 7 ? "HIGH" : "ELEVATED"}
+                </span>
+                <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: TEXT1, border: `1px solid ${BORDER2}`, padding: "1px 6px", borderRadius: 3 }}>
+                  {urgentAlert.domain}
+                </span>
+              </div>
+              <span style={{ fontSize: 11, color: TEXT1 }}>
                 {urgentAlert.domain} score elevated, preparation window open now
               </span>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: AMBER, background: "rgba(239,159,39,.15)", border: "1px solid rgba(239,159,39,.3)", padding: "2px 8px", borderRadius: 4, flexShrink: 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: M, color: AMBER, background: "rgba(239,159,39,0.15)", border: "1px solid rgba(239,159,39,0.3)", padding: "2px 8px", borderRadius: 4, flexShrink: 0 }}>
               {urgentAlert.liveScore.toFixed(1)} {"\u25B2"}
             </span>
             <button
               onClick={() => router.push(`/platform/tracker/${urgentAlert.slug}`)}
-              style={{ fontSize: 10, fontWeight: 600, color: TEAL, background: "rgba(29,158,117,.15)", border: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
+              style={{ fontSize: 10, fontWeight: 600, color: "#0A1628", background: TEAL_BRIGHT, border: "none", padding: "5px 12px", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
             >
               Open tracker {"\u2192"}
             </button>
           </div>
         )}
 
-        {/* S2: ticker (Change 10: dynamic from liveScores) */}
+        {/* S2: ticker */}
         <div style={{ height: 24, flexShrink: 0, borderBottom: `1px solid ${BORDER}`, background: SURFACE, overflow: "hidden", display: "flex", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", animation: "scrollLeft 45s linear infinite" }}>
             {tkDupe.map((it, i) => (
-              <span key={i} style={{ fontSize: 10, fontFamily: M, color: TEXT2, padding: "0 18px", borderRight: `1px solid ${BORDER2}` }}>
+              <span key={i} style={{ fontSize: 10, fontFamily: M, color: TEXT1, padding: "0 18px", borderRight: `1px solid ${BORDER}` }}>
                 {it.l} {it.v !== null ? <span style={{ fontWeight: 600, color: sc(it.v) }}>{it.v.toFixed(1)}</span> : <span style={{ color: TEXT2 }}>{it.s}</span>}
               </span>
             ))}
@@ -243,17 +233,17 @@ export default function TrackersPage() {
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "6px 14px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
           {/* countdowns */}
           <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
-            {CDS.map(cd => (
-              <div key={cd.ev} style={{ flex: 1, background: cd.bg, border: `0.5px solid ${cd.bd}`, borderRadius: 6, padding: "4px 10px", display: "flex", alignItems: "center", gap: 10 }}>
-                <div><span style={{ fontSize: 18, fontWeight: 700, color: cd.c, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
+            {CDS.map((cd, i) => (
+              <div key={cd.ev} style={{ flex: 1, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", display: "flex", alignItems: "center", gap: 10, borderRight: i < CDS.length - 1 ? `1px solid ${BORDER}` : undefined }}>
+                <div><span style={{ fontSize: 18, fontWeight: 700, fontFamily: M, color: AMBER, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, fontFamily: M, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", color: TEXT0 }}>{cd.ev}</span>
-                  <span style={{ fontSize: 9, color: TEXT2, marginTop: 1 }}>{cd.sub}</span>
+                  <span style={{ fontSize: 9, color: TEXT1, marginTop: 1 }}>{cd.sub}</span>
                 </div>
               </div>
             ))}
           </div>
-          {/* grid: 5 columns, 6px gap, sorted by score desc (Change 4 + 5) */}
+          {/* grid: 5 columns, 6px gap, sorted by score desc */}
           <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridAutoRows: "1fr", gap: 6 }}>
             {sorted.map(t => (
               <Card key={t.slug} t={t} anim={anim} onClick={() => router.push(`/platform/tracker/${t.slug}`)} live={liveScores[t.slug]} />
