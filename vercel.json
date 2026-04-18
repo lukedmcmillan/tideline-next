@@ -9,6 +9,10 @@
     "app/api/**/*.ts": {
       "memory": 512,
       "maxDuration": 60
+    },
+    "app/api/cron/embed-documents/route.ts": {
+      "memory": 1024,
+      "maxDuration": 300
     }
   },
   "crons": [
@@ -29,6 +33,7 @@
     {"path": "/api/cron/monitor-sources", "schedule": "0 7 * * 1"},
     {"path": "/api/cron/velocity-scores", "schedule": "0 6 */4 * *"},
     {"path": "/api/cron/generate-connections", "schedule": "0 7 * * *"},
-    {"path": "/api/cron/threshold-alerts", "schedule": "0 8 * * *"}
+    {"path": "/api/cron/threshold-alerts", "schedule": "0 8 * * *"},
+    {"path": "/api/cron/embed-documents", "schedule": "0 3 * * *"}
   ]
 }

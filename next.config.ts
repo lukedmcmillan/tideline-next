@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   // the AFM files are missing, giving ENOENT on Vercel. Marking pdfkit as an
   // external server package keeps it in node_modules, and Vercel's node tracer
   // follows the require and bundles the js/data directory automatically.
-  serverExternalPackages: ["pdfkit"],
+  serverExternalPackages: ["pdfkit", "unpdf"],
   // Belt and braces: explicitly include the AFM data directory in the function trace.
   outputFileTracingIncludes: {
     "/api/lp-briefing/pdf": ["./node_modules/pdfkit/js/data/**/*"],
