@@ -20,11 +20,11 @@ export async function GET(req: NextRequest) {
   // Check if user needs onboarding
   const { data: user } = await supabase
     .from("users")
-    .select("topics, sector, is_admin, tier")
+    .select("topics, sector, job_type, is_admin, tier, onboarded_at")
     .eq("email", email)
     .single();
 
-  const needsOnboarding = !user?.topics || (Array.isArray(user.topics) && user.topics.length === 0);
+  const needsOnboarding = !user?.onboarded_at;
 
   let trialDaysRemaining: number | null = null;
   if (result.status === "trialing" && result.trialEnd) {

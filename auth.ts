@@ -170,14 +170,14 @@ export const authOptions = {
         try {
           const { data: u } = await supabase
             .from('users')
-            .select('subscription_status, trial_ends_at, tier, onboarding_completed, role')
+            .select('subscription_status, trial_ends_at, tier, onboarding_completed, onboarded_at, role')
             .eq('email', token.email)
             .single()
           if (u) {
             token.subscription_status = u.subscription_status ?? 'trial'
             token.trial_ends_at = u.trial_ends_at ?? null
             token.tier = u.tier ?? 'free'
-            token.onboarding_completed = u.onboarding_completed ?? false
+            token.onboarding_completed = !!u.onboarded_at || u.onboarding_completed || false
             token.role = u.role ?? null
           } else {
             // User not in public.users yet. Set safe defaults so middleware never sees undefined.

@@ -40,7 +40,19 @@
   - New tables: entity_aliases (trigram index), user_entities (FK public.users), entity_starter_sets (6 job types)
   - pg_trgm extension enabled, ivfflat index on entity embeddings
   - No RLS — matches existing pattern (alert_log, alert_sends, brief_sends, user_alert_preferences)
+- Step 4: Onboarding v2 migration and fuzzy match RPCs ✓ (20260419_onboarding_v2.sql)
+  - users: +job_type, +brief_time (default 07:00), +onboarded_at (timestamptz)
+  - entities: +created_by (FK users.id) for user-generated entity audit
+  - New table: morning_brief_queue (user_id, scheduled_for, status, sent_at)
+  - Fuzzy match RPCs: match_entities_by_name, match_entities_by_alias (pg_trgm, threshold 0.4)
+  - Both RPCs tested against live data. Mowi returns 0.57 similarity on exact match.
+  - Backfill verified: hotmail account onboarded_at set; gmail account correctly left NULL
+  - Onboarding UI scaffolded (4-step dark theme: job type > entities > brief time > confirm)
+  - Awaiting seed CSV load before deploy
 - Step 2: NEXT — seed-entities.csv with 500 entities across 6 categories. Must UPSERT to enrich existing 496 rows (name + entity_type only), not INSERT (unique constraint).
+  - Continue seed research in parallel chat
+- Step 3: Seed loader script — BLOCKED on Step 2 completion
+- Step 5: Entity matching function — BLOCKED on Step 2 completion
 
 ## What's next
 1. Entity tracking Week 1 Steps 2-7

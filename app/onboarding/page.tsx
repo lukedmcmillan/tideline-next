@@ -1,175 +1,172 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Header from "@/components/Header";
+import { useState, useEffect, useRef } from "react";
 
+/* ── Design tokens (matches platform shell) ──────────────── */
+const BG = "#0B1628";
+const SURFACE = "#0D1E35";
+const SURFACE_HI = "#122845";
+const BORDER = "#1A2A44";
+const BORDER2 = "#24375A";
+const TEXT0 = "#E8EDF4";
+const TEXT1 = "#8BA0BC";
+const TEXT2 = "#5B6F8C";
 const TEAL = "#1D9E75";
-const TEAL_PALE = "#E6F4F1";
+const TEAL_DIM = "rgba(29,158,117,0.12)";
 const TEAL_HOVER = "#178a65";
-const INK = "#202124";
-const SECONDARY = "#5F6368";
-const TERTIARY = "#9AA0A6";
-const BORDER = "#E8EAED";
-const SURFACE = "#F8F9FA";
-const WHITE = "#ffffff";
-const SANS = "'DM Sans', sans-serif";
-const MONO = "'DM Mono', monospace";
+const RED = "#E24B4A";
+const F = "'DM Sans', system-ui, sans-serif";
+const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
+const M = "'DM Mono', monospace";
 
-const SECTORS = [
-  "NGO & conservation",
-  "Policy & regulation",
-  "Finance & investment",
-  "Legal & compliance",
-  "Shipping & maritime",
-  "Energy & offshore",
-  "ESG & sustainability",
-  "Science & research",
-  "Government & public sector",
-  "Media & journalism",
+const JOB_TYPES = [
+  { value: "marine_lawyer", label: "Marine Lawyer" },
+  { value: "esg_analyst", label: "ESG Analyst" },
+  { value: "blue_finance", label: "Blue Finance" },
+  { value: "shipping_compliance", label: "Shipping Compliance" },
+  { value: "ngo_campaigner", label: "NGO Campaigner" },
+  { value: "generalist", label: "Generalist" },
+] as const;
+
+const BRIEF_TIMES = [
+  "05:00", "05:30", "06:00", "06:30", "07:00", "07:30",
+  "08:00", "08:30", "09:00", "09:30", "10:00",
 ];
 
-const TOPICS = [
-  { id: "coral-reefs", label: "Coral Reefs" },
-  { id: "sharks-rays", label: "Sharks & Rays" },
-  { id: "whales-dolphins", label: "Whales & Dolphins" },
-  { id: "sea-turtles", label: "Sea Turtles" },
-  { id: "seabirds", label: "Seabirds" },
-  { id: "marine-mammals", label: "Marine Mammals" },
-  { id: "polar-oceans", label: "Polar Oceans" },
-  { id: "deep-sea", label: "Deep Sea" },
-  { id: "fisheries", label: "Fisheries" },
-  { id: "aquaculture", label: "Aquaculture" },
-  { id: "iuu-fishing", label: "IUU Fishing" },
-  { id: "ocean-governance", label: "Ocean Governance" },
-  { id: "bbnj-high-seas", label: "BBNJ & High Seas" },
-  { id: "mpa", label: "Marine Protected Areas" },
-  { id: "climate-ocean", label: "Climate & Ocean" },
-  { id: "acidification", label: "Ocean Acidification" },
-  { id: "plastic-pollution", label: "Plastic Pollution" },
-  { id: "marine-pollution", label: "Marine Pollution" },
-  { id: "shipping-decarbonisation", label: "Shipping Decarbonisation" },
-  { id: "deep-sea-mining", label: "Deep-Sea Mining" },
-  { id: "blue-finance", label: "Blue Finance" },
-  { id: "esg-ocean", label: "ESG & Ocean" },
-  { id: "ocean-science", label: "Ocean Science" },
-  { id: "technology", label: "Technology" },
-  { id: "biodiversity", label: "Biodiversity" },
-  { id: "arctic", label: "Arctic" },
-  { id: "antarctic", label: "Antarctic" },
-  { id: "unoc", label: "UN Ocean Conference" },
-  { id: "imo-regulation", label: "IMO Regulation" },
-  { id: "rfmo", label: "RFMOs" },
-  { id: "ocean-investors", label: "Ocean Investors" },
-];
+interface StarterEntity {
+  id: string;
+  name: string;
+  entity_type: string;
+  mention_count: number;
+  tracker_tags: string[];
+  display_order: number;
+}
 
-const TIMEZONES = [
-  {
-    region: "Europe",
-    zones: [
-      { value: "Europe/London", label: "London (GMT/BST)" },
-      { value: "Europe/Paris", label: "Paris / Berlin / Rome (CET)" },
-      { value: "Europe/Athens", label: "Athens / Helsinki (EET)" },
-      { value: "Europe/Lisbon", label: "Lisbon (WET)" },
-      { value: "Europe/Oslo", label: "Oslo / Stockholm (CET)" },
-    ],
-  },
-  {
-    region: "Americas",
-    zones: [
-      { value: "America/New_York", label: "New York (ET)" },
-      { value: "America/Chicago", label: "Chicago (CT)" },
-      { value: "America/Denver", label: "Denver (MT)" },
-      { value: "America/Los_Angeles", label: "Los Angeles (PT)" },
-      { value: "America/Toronto", label: "Toronto (ET)" },
-      { value: "America/Sao_Paulo", label: "São Paulo (BRT)" },
-      { value: "America/Mexico_City", label: "Mexico City (CST)" },
-    ],
-  },
-  {
-    region: "Asia-Pacific",
-    zones: [
-      { value: "Asia/Tokyo", label: "Tokyo (JST)" },
-      { value: "Asia/Shanghai", label: "Shanghai / Beijing (CST)" },
-      { value: "Asia/Singapore", label: "Singapore (SGT)" },
-      { value: "Asia/Kolkata", label: "Mumbai / Delhi (IST)" },
-      { value: "Asia/Dubai", label: "Dubai (GST)" },
-      { value: "Asia/Jakarta", label: "Jakarta (WIB)" },
-      { value: "Australia/Sydney", label: "Sydney (AEST)" },
-      { value: "Pacific/Auckland", label: "Auckland (NZST)" },
-    ],
-  },
-  {
-    region: "Africa",
-    zones: [
-      { value: "Africa/Johannesburg", label: "Johannesburg (SAST)" },
-      { value: "Africa/Nairobi", label: "Nairobi (EAT)" },
-      { value: "Africa/Lagos", label: "Lagos (WAT)" },
-      { value: "Africa/Cairo", label: "Cairo (EET)" },
-      { value: "Africa/Casablanca", label: "Casablanca (WET)" },
-    ],
-  },
-  {
-    region: "Middle East",
-    zones: [
-      { value: "Asia/Riyadh", label: "Riyadh (AST)" },
-      { value: "Asia/Tehran", label: "Tehran (IRST)" },
-      { value: "Asia/Jerusalem", label: "Jerusalem (IST)" },
-      { value: "Asia/Beirut", label: "Beirut (EET)" },
-    ],
-  },
-];
+interface FuzzyMatch {
+  id: string;
+  name: string;
+  entity_type: string;
+  similarity: number;
+}
 
-const STEPS = ["sector", "topics", "timezone", "shortcut"] as const;
+type Step = "job_type" | "entities" | "brief_time" | "confirm";
+const STEPS: Step[] = ["job_type", "entities", "brief_time", "confirm"];
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<"sector" | "topics" | "timezone" | "shortcut">("sector");
-  const [sector, setSector] = useState<string | null>(null);
-  const [sectorSaving, setSectorSaving] = useState(false);
-  const [selectedTopics, setSelectedTopics] = useState(new Set<string>());
-  const [timezone, setTimezone] = useState("Europe/London");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [step, setStep] = useState<Step>("job_type");
+  const [jobType, setJobType] = useState<string | null>(null);
   const [checkingSkip, setCheckingSkip] = useState(true);
 
-  // Redirect if onboarding already done, skip sector if already set
+  // Step 2: entities
+  const [starterEntities, setStarterEntities] = useState<StarterEntity[]>([]);
+  const [selectedEntityIds, setSelectedEntityIds] = useState(new Set<string>());
+  const [loadingEntities, setLoadingEntities] = useState(false);
+
+  // Custom entity input
+  const [customInput, setCustomInput] = useState("");
+  const [fuzzyMatches, setFuzzyMatches] = useState<FuzzyMatch[]>([]);
+  const [fuzzyLoading, setFuzzyLoading] = useState(false);
+  const [customEntityIds, setCustomEntityIds] = useState(new Set<string>());
+  const [customEntityNames, setCustomEntityNames] = useState<Map<string, string>>(new Map());
+  const fuzzyTimeout = useRef<ReturnType<typeof setTimeout>>(null);
+
+  // Step 3: brief time
+  const [briefTime, setBriefTime] = useState("07:00");
+  const [timezone, setTimezone] = useState("Europe/London");
+
+  // Submission
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Detect timezone on mount, check if onboarding already done
   useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) setTimezone(tz);
+    } catch {}
+
     fetch("/api/subscription-status")
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         if (!d.needsOnboarding) {
           window.location.href = "/platform/feed";
-          return;
-        }
-        if (d.sector) {
-          setSector(d.sector);
-          setStep("topics");
         }
       })
       .catch(() => {})
       .finally(() => setCheckingSkip(false));
   }, []);
 
-  const handleSectorContinue = async () => {
-    if (!sector) return;
-    setSectorSaving(true);
-    try {
-      await fetch("/api/user/sector", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sector }),
-      });
-    } catch {}
-    setSectorSaving(false);
-    setStep("topics");
-  };
+  // Load starter entities when job type is selected
+  useEffect(() => {
+    if (!jobType) return;
+    setLoadingEntities(true);
+    fetch(`/api/onboarding/starter-set?job_type=${jobType}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.entities) {
+          setStarterEntities(d.entities);
+          // Pre-select all
+          setSelectedEntityIds(new Set(d.entities.map((e: StarterEntity) => e.id)));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingEntities(false));
+  }, [jobType]);
 
-  const toggleTopic = (id: string) => {
-    setSelectedTopics((prev) => {
+  // Fuzzy search debounce
+  useEffect(() => {
+    if (fuzzyTimeout.current) clearTimeout(fuzzyTimeout.current);
+    if (customInput.trim().length < 2) {
+      setFuzzyMatches([]);
+      return;
+    }
+    setFuzzyLoading(true);
+    fuzzyTimeout.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/onboarding/entity-match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: customInput.trim() }),
+        });
+        const data = await res.json();
+        setFuzzyMatches(data.matches || []);
+      } catch {
+        setFuzzyMatches([]);
+      }
+      setFuzzyLoading(false);
+    }, 400);
+    return () => { if (fuzzyTimeout.current) clearTimeout(fuzzyTimeout.current); };
+  }, [customInput]);
+
+  const toggleEntity = (id: string) => {
+    setSelectedEntityIds((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
+
+  const addFuzzyMatch = (match: FuzzyMatch) => {
+    setCustomEntityIds((prev) => new Set(prev).add(match.id));
+    setCustomEntityNames((prev) => new Map(prev).set(match.id, match.name));
+    setCustomInput("");
+    setFuzzyMatches([]);
+  };
+
+  const removeCustomEntity = (id: string) => {
+    setCustomEntityIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setCustomEntityNames((prev) => {
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const totalSelected = selectedEntityIds.size + customEntityIds.size;
 
   const handleFinish = async () => {
     setError("");
@@ -179,7 +176,10 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topics: Array.from(selectedTopics),
+          job_type: jobType,
+          entity_ids: Array.from(selectedEntityIds),
+          custom_entity_ids: Array.from(customEntityIds),
+          brief_time: briefTime,
           timezone,
         }),
       });
@@ -189,14 +189,6 @@ export default function OnboardingPage() {
         setSubmitting(false);
         return;
       }
-      // Show shortcut tip if not already shown
-      try {
-        if (typeof localStorage !== "undefined" && !localStorage.getItem("tideline_shortcut_shown")) {
-          setStep("shortcut");
-          setSubmitting(false);
-          return;
-        }
-      } catch {}
       window.location.href = "/platform/feed";
     } catch {
       setError("Something went wrong. Please try again.");
@@ -206,319 +198,504 @@ export default function OnboardingPage() {
 
   const stepIndex = STEPS.indexOf(step);
 
+  const entityTypeLabel = (t: string) => {
+    const m: Record<string, string> = {
+      organisation: "ORG",
+      individual: "PERSON",
+      instrument: "INSTRUMENT",
+      vessel: "VESSEL",
+      company: "COMPANY",
+      person: "PERSON",
+      regulator: "REGULATOR",
+      issue: "ISSUE",
+    };
+    return m[t] || t?.toUpperCase() || "";
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: SURFACE, fontFamily: SANS }}>
-      <Header showNav={false} />
+    <div style={{ minHeight: "100vh", background: BG, fontFamily: F }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .ob-sector-card:hover { border-color: #BDC1C6 !important; }
-        .ob-sector-card.selected:hover { border-color: ${TEAL} !important; }
-        .ob-topic-chip:hover { border-color: #BDC1C6 !important; }
-        .ob-topic-chip.selected:hover { border-color: ${TEAL} !important; }
-        .ob-btn:hover:not(:disabled) { background: ${TEAL_HOVER} !important; }
-        .ob-select:focus { border-color: ${TEAL} !important; outline: none; }
-        @media (max-width: 480px) {
-          .ob-card { border: none !important; border-radius: 0 !important; padding: 24px 20px !important; }
-          .ob-sector-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (min-width: 481px) {
-          .ob-sector-grid { grid-template-columns: 1fr 1fr; }
+        .ob2-job:hover { border-color: ${BORDER2} !important; }
+        .ob2-job.selected:hover { border-color: ${TEAL} !important; }
+        .ob2-entity:hover { border-color: ${BORDER2} !important; }
+        .ob2-entity.selected:hover { border-color: ${TEAL} !important; }
+        .ob2-btn:hover:not(:disabled) { background: ${TEAL_HOVER} !important; }
+        .ob2-fuzzy:hover { background: ${SURFACE_HI} !important; }
+        .ob2-back:hover { color: ${TEXT0} !important; }
+        .ob2-time:hover { border-color: ${BORDER2} !important; }
+        .ob2-time.selected:hover { border-color: ${TEAL} !important; }
+        .ob2-remove:hover { color: ${RED} !important; }
+        @media (max-width: 560px) {
+          .ob2-panel { margin: 0 !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; min-height: 100vh; }
+          .ob2-job-grid { grid-template-columns: 1fr !important; }
+          .ob2-entity-grid { grid-template-columns: 1fr !important; }
+          .ob2-time-grid { grid-template-columns: repeat(3, 1fr) !important; }
         }
       `}</style>
 
+      {/* Header bar */}
+      <div style={{ padding: "20px 32px", borderBottom: `1px solid ${BORDER}` }}>
+        <span style={{ fontFamily: DISPLAY, fontSize: 18, fontWeight: 800, color: TEXT0, letterSpacing: "-0.02em" }}>Tideline</span>
+        <span style={{ fontFamily: M, fontSize: 10, fontWeight: 500, color: TEAL, letterSpacing: "0.18em", textTransform: "uppercase", marginLeft: 10 }}>OCEAN INTELLIGENCE</span>
+      </div>
+
       <div
-        className="ob-card"
+        className="ob2-panel"
         style={{
-          maxWidth: 480,
-          margin: "48px auto 32px",
-          background: WHITE,
+          maxWidth: 560,
+          margin: "40px auto",
+          background: SURFACE,
           border: `1px solid ${BORDER}`,
           borderRadius: 12,
-          padding: 32,
+          padding: "36px 32px",
         }}
       >
         {checkingSkip ? (
-          <div style={{ fontSize: 13, color: TERTIARY, padding: "40px 0", textAlign: "center" }}>Loading...</div>
+          <div style={{ fontSize: 13, color: TEXT2, padding: "40px 0", textAlign: "center" }}>Loading...</div>
         ) : (
-        <>
-          {/* Progress dots */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 32 }}>
-            {STEPS.map((s, i) => (
-              <div
-                key={s}
-                style={{
-                  width: i <= stepIndex ? 10 : 8,
-                  height: i <= stepIndex ? 10 : 8,
-                  borderRadius: i <= stepIndex ? 5 : 4,
-                  background: i <= stepIndex ? TEAL : BORDER,
-                  transition: "width 0.2s, background 0.2s",
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Step 1: Sector */}
-          {step === "sector" && (
-            <div>
-              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: INK, margin: "0 0 6px" }}>
-                What best describes your work?
-              </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 28px" }}>
-                This helps Tideline personalise your experience.
-              </p>
-
-              <div className="ob-sector-grid" style={{ display: "grid", gap: 10, marginBottom: 24 }}>
-                {SECTORS.map(s => {
-                  const sel = sector === s;
-                  return (
-                    <div
-                      key={s}
-                      className={`ob-sector-card${sel ? " selected" : ""}`}
-                      onClick={() => setSector(s)}
-                      style={{
-                        padding: "14px 16px",
-                        cursor: "pointer",
-                        background: sel ? TEAL_PALE : WHITE,
-                        border: sel ? `2px solid ${TEAL}` : `1px solid ${BORDER}`,
-                        borderRadius: 8,
-                        fontFamily: SANS,
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: sel ? TEAL : INK,
-                        transition: "border-color 0.15s, background 0.15s",
-                      }}
-                    >
-                      {s}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                className="ob-btn"
-                onClick={handleSectorContinue}
-                disabled={!sector || sectorSaving}
-                style={{
-                  width: "100%",
-                  height: 44,
-                  background: sector && !sectorSaving ? TEAL : BORDER,
-                  border: "none",
-                  color: sector && !sectorSaving ? WHITE : TERTIARY,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  fontFamily: SANS,
-                  cursor: sector && !sectorSaving ? "pointer" : "not-allowed",
-                  borderRadius: 6,
-                }}
-              >
-                {sectorSaving ? "Saving..." : "Continue"}
-              </button>
+          <>
+            {/* Progress dots */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 36 }}>
+              {STEPS.map((s, i) => (
+                <div
+                  key={s}
+                  style={{
+                    width: i <= stepIndex ? 10 : 8,
+                    height: i <= stepIndex ? 10 : 8,
+                    borderRadius: "50%",
+                    background: i <= stepIndex ? TEAL : BORDER,
+                    transition: "all 0.2s",
+                  }}
+                />
+              ))}
             </div>
-          )}
 
-          {/* Step 2: Topics */}
-          {step === "topics" && (
-            <div>
-              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: INK, margin: "0 0 6px" }}>
-                What do you need to track?
-              </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 28px" }}>
-                Pick at least 3 topics. These shape your live feed. You can change them anytime.
-              </p>
+            {/* ── Step 1: Job type ──────────────────────────── */}
+            {step === "job_type" && (
+              <div>
+                <h1 style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: TEXT0, margin: "0 0 8px" }}>
+                  What best describes your work?
+                </h1>
+                <p style={{ fontFamily: F, fontSize: 14, color: TEXT1, margin: "0 0 28px" }}>
+                  Tideline uses this to recommend entities you should track.
+                </p>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
-                {TOPICS.map((t) => {
-                  const sel = selectedTopics.has(t.id);
-                  return (
-                    <button
-                      key={t.id}
-                      className={`ob-topic-chip${sel ? " selected" : ""}`}
-                      onClick={() => toggleTopic(t.id)}
-                      style={{
-                        padding: "6px 14px",
-                        border: sel ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`,
-                        background: sel ? TEAL_PALE : WHITE,
-                        color: sel ? TEAL : SECONDARY,
-                        cursor: "pointer",
-                        fontSize: 13,
-                        fontWeight: sel ? 500 : 400,
-                        borderRadius: 20,
-                        fontFamily: SANS,
-                        transition: "border-color 0.15s",
-                      }}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
+                <div className="ob2-job-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
+                  {JOB_TYPES.map((jt) => {
+                    const sel = jobType === jt.value;
+                    return (
+                      <div
+                        key={jt.value}
+                        className={`ob2-job${sel ? " selected" : ""}`}
+                        onClick={() => setJobType(jt.value)}
+                        style={{
+                          padding: "16px 18px",
+                          cursor: "pointer",
+                          background: sel ? TEAL_DIM : "transparent",
+                          border: `1px solid ${sel ? TEAL : BORDER}`,
+                          borderRadius: 8,
+                          fontFamily: F,
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: sel ? TEAL : TEXT0,
+                          transition: "border-color 0.15s, background 0.15s",
+                        }}
+                      >
+                        {jt.label}
+                      </div>
+                    );
+                  })}
+                </div>
 
-              <div style={{ fontFamily: MONO, fontSize: 11, color: TERTIARY, marginBottom: 24 }}>
-                {selectedTopics.size} selected · minimum 3
-              </div>
-
-              <button
-                className="ob-btn"
-                onClick={() => setStep("timezone")}
-                disabled={selectedTopics.size < 3}
-                style={{
-                  width: "100%",
-                  height: 44,
-                  background: selectedTopics.size >= 3 ? TEAL : BORDER,
-                  border: "none",
-                  color: selectedTopics.size >= 3 ? WHITE : TERTIARY,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  cursor: selectedTopics.size < 3 ? "not-allowed" : "pointer",
-                  borderRadius: 6,
-                  fontFamily: SANS,
-                }}
-              >
-                {selectedTopics.size < 3
-                  ? `Select at least 3 topics (${selectedTopics.size} selected)`
-                  : `Continue: ${selectedTopics.size} topic${selectedTopics.size !== 1 ? "s" : ""} selected`}
-              </button>
-
-              <button
-                onClick={() => setStep("sector")}
-                style={{ background: "none", border: "none", color: TERTIARY, fontSize: 13, cursor: "pointer", fontFamily: SANS, marginTop: 16, padding: 0, display: "block" }}
-              >
-                {"\u2190"} Back
-              </button>
-            </div>
-          )}
-
-          {/* Step 3: Timezone */}
-          {step === "timezone" && (
-            <div>
-              <h1 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: INK, margin: "0 0 6px" }}>
-                What timezone are you in?
-              </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 0 28px" }}>
-                Tideline uses your timezone for deadline alerts and regulatory calendar sync.
-              </p>
-
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: "block", fontFamily: SANS, fontSize: 13, fontWeight: 500, color: SECONDARY, marginBottom: 6 }}>
-                  Your timezone
-                </label>
-                <select
-                  className="ob-select"
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
+                <button
+                  className="ob2-btn"
+                  onClick={() => setStep("entities")}
+                  disabled={!jobType}
                   style={{
                     width: "100%",
                     height: 44,
-                    padding: "0 12px",
-                    border: `1px solid ${BORDER}`,
-                    borderRadius: 6,
+                    background: jobType ? TEAL : BORDER,
+                    border: "none",
+                    color: jobType ? "#fff" : TEXT2,
                     fontSize: 14,
-                    fontFamily: SANS,
-                    background: WHITE,
-                    color: INK,
+                    fontWeight: 500,
+                    fontFamily: F,
+                    cursor: jobType ? "pointer" : "not-allowed",
+                    borderRadius: 6,
                   }}
                 >
-                  {TIMEZONES.map((group) => (
-                    <optgroup key={group.region} label={group.region}>
-                      {group.zones.map((tz) => (
-                        <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  Continue
+                </button>
+              </div>
+            )}
+
+            {/* ── Step 2: Entity selection ──────────────────── */}
+            {step === "entities" && (
+              <div>
+                <h1 style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: TEXT0, margin: "0 0 8px" }}>
+                  What do you need to track?
+                </h1>
+                <p style={{ fontFamily: F, fontSize: 14, color: TEXT1, margin: "0 0 24px" }}>
+                  Recommended for your role. Untick anything you do not need. Minimum 3.
+                </p>
+
+                {loadingEntities ? (
+                  <div style={{ fontSize: 13, color: TEXT2, padding: "20px 0", textAlign: "center" }}>Loading entities...</div>
+                ) : (
+                  <div className="ob2-entity-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+                    {starterEntities.map((e) => {
+                      const sel = selectedEntityIds.has(e.id);
+                      return (
+                        <div
+                          key={e.id}
+                          className={`ob2-entity${sel ? " selected" : ""}`}
+                          onClick={() => toggleEntity(e.id)}
+                          style={{
+                            padding: "12px 14px",
+                            cursor: "pointer",
+                            background: sel ? TEAL_DIM : "transparent",
+                            border: `1px solid ${sel ? TEAL : BORDER}`,
+                            borderRadius: 8,
+                            transition: "border-color 0.15s, background 0.15s",
+                          }}
+                        >
+                          <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: sel ? TEAL : TEXT0, lineHeight: 1.3 }}>
+                            {e.name}
+                          </div>
+                          <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginTop: 4 }}>
+                            {entityTypeLabel(e.entity_type)}
+                            {e.mention_count > 0 && <span style={{ marginLeft: 8 }}>{e.mention_count} mentions</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Custom entities added */}
+                {customEntityIds.size > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>Added by you</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {Array.from(customEntityNames.entries()).map(([id, name]) => (
+                        <span
+                          key={id}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "5px 10px",
+                            border: `1px solid ${TEAL}`,
+                            borderRadius: 6,
+                            fontFamily: F,
+                            fontSize: 12,
+                            color: TEAL,
+                            background: TEAL_DIM,
+                          }}
+                        >
+                          {name}
+                          <span
+                            className="ob2-remove"
+                            onClick={() => removeCustomEntity(id)}
+                            style={{ cursor: "pointer", color: TEXT2, fontSize: 14, lineHeight: 1 }}
+                          >
+                            x
+                          </span>
+                        </span>
                       ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
+                    </div>
+                  </div>
+                )}
 
-              <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 6, marginBottom: 24 }}>
-                <div style={{ fontFamily: MONO, fontSize: 11, color: TERTIARY, marginBottom: 6 }}>Your selections</div>
-                <div style={{ fontSize: 13, color: INK, fontFamily: SANS, lineHeight: 1.6 }}>
-                  {selectedTopics.size} topic{selectedTopics.size !== 1 ? "s" : ""} selected
+                {/* Custom entity input */}
+                <div style={{ position: "relative", marginBottom: 16 }}>
+                  <input
+                    type="text"
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    placeholder="Search for an entity to add..."
+                    style={{
+                      width: "100%",
+                      height: 40,
+                      padding: "0 14px",
+                      background: "transparent",
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 6,
+                      fontFamily: F,
+                      fontSize: 13,
+                      color: TEXT0,
+                      outline: "none",
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = TEAL; }}
+                    onBlur={(e) => { e.target.style.borderColor = BORDER; }}
+                  />
+
+                  {/* Fuzzy match dropdown */}
+                  {(fuzzyMatches.length > 0 || (fuzzyLoading && customInput.trim().length >= 2)) && (
+                    <div style={{
+                      position: "absolute",
+                      top: 44,
+                      left: 0,
+                      right: 0,
+                      background: SURFACE,
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      zIndex: 10,
+                    }}>
+                      {fuzzyLoading && <div style={{ padding: "10px 14px", fontSize: 12, color: TEXT2 }}>Searching...</div>}
+                      {fuzzyMatches.map((m) => (
+                        <div
+                          key={m.id}
+                          className="ob2-fuzzy"
+                          onClick={() => addFuzzyMatch(m)}
+                          style={{
+                            padding: "10px 14px",
+                            cursor: "pointer",
+                            borderBottom: `1px solid ${BORDER}`,
+                          }}
+                        >
+                          <div style={{ fontFamily: F, fontSize: 13, color: TEXT0 }}>{m.name}</div>
+                          <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginTop: 2 }}>
+                            {entityTypeLabel(m.entity_type)} · {Math.round(m.similarity * 100)}% match
+                          </div>
+                        </div>
+                      ))}
+                      {fuzzyMatches.length > 0 && customInput.trim().length >= 2 && (
+                        <div
+                          className="ob2-fuzzy"
+                          style={{ padding: "10px 14px", cursor: "default", fontSize: 12, color: TEXT2, fontFamily: F }}
+                        >
+                          Not what you are looking for? Refine your search or continue without it.
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: TEAL, fontSize: 12, cursor: "pointer", fontFamily: SANS, padding: 0, marginTop: 4 }}>Edit topics</button>
+
+                <div style={{ fontFamily: M, fontSize: 11, color: TEXT2, marginBottom: 24 }}>
+                  {totalSelected} selected · minimum 3
+                </div>
+
+                <button
+                  className="ob2-btn"
+                  onClick={() => setStep("brief_time")}
+                  disabled={totalSelected < 3}
+                  style={{
+                    width: "100%",
+                    height: 44,
+                    background: totalSelected >= 3 ? TEAL : BORDER,
+                    border: "none",
+                    color: totalSelected >= 3 ? "#fff" : TEXT2,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: F,
+                    cursor: totalSelected < 3 ? "not-allowed" : "pointer",
+                    borderRadius: 6,
+                  }}
+                >
+                  {totalSelected < 3
+                    ? `Select at least 3 (${totalSelected} selected)`
+                    : `Continue with ${totalSelected} entities`}
+                </button>
+
+                <button
+                  className="ob2-back"
+                  onClick={() => setStep("job_type")}
+                  style={{ background: "none", border: "none", color: TEXT2, fontSize: 13, cursor: "pointer", fontFamily: F, marginTop: 16, padding: 0 }}
+                >
+                  Back
+                </button>
               </div>
+            )}
 
-              {error && <p style={{ fontSize: 13, color: "#ef4444", marginBottom: 16, fontFamily: SANS }}>{error}</p>}
+            {/* ── Step 3: Brief delivery time ──────────────── */}
+            {step === "brief_time" && (
+              <div>
+                <h1 style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: TEXT0, margin: "0 0 8px" }}>
+                  When should your brief arrive?
+                </h1>
+                <p style={{ fontFamily: F, fontSize: 14, color: TEXT1, margin: "0 0 28px" }}>
+                  Tideline delivers a morning intelligence brief to your inbox.
+                </p>
 
-              <button
-                className="ob-btn"
-                onClick={handleFinish}
-                disabled={submitting}
-                style={{
-                  width: "100%",
-                  height: 44,
-                  background: submitting ? BORDER : TEAL,
-                  border: "none",
-                  color: submitting ? TERTIARY : WHITE,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  cursor: submitting ? "not-allowed" : "pointer",
+                <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Delivery time
+                </div>
+                <div className="ob2-time-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 24 }}>
+                  {BRIEF_TIMES.map((t) => {
+                    const sel = briefTime === t;
+                    return (
+                      <div
+                        key={t}
+                        className={`ob2-time${sel ? " selected" : ""}`}
+                        onClick={() => setBriefTime(t)}
+                        style={{
+                          padding: "10px 0",
+                          textAlign: "center",
+                          cursor: "pointer",
+                          background: sel ? TEAL_DIM : "transparent",
+                          border: `1px solid ${sel ? TEAL : BORDER}`,
+                          borderRadius: 6,
+                          fontFamily: M,
+                          fontSize: 13,
+                          color: sel ? TEAL : TEXT1,
+                          transition: "border-color 0.15s",
+                        }}
+                      >
+                        {t}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Your timezone
+                </div>
+                <div style={{
+                  padding: "12px 16px",
+                  border: `1px solid ${BORDER}`,
                   borderRadius: 6,
-                  fontFamily: SANS,
-                }}
-              >
-                {submitting ? "Saving..." : "Open your feed"}
-              </button>
-
-              <button
-                onClick={() => setStep("topics")}
-                style={{ background: "none", border: "none", color: TERTIARY, fontSize: 13, cursor: "pointer", fontFamily: SANS, marginTop: 16, padding: 0, display: "block" }}
-              >
-                {"\u2190"} Back
-              </button>
-            </div>
-          )}
-
-          {/* Step 4: Shortcut tip */}
-          {step === "shortcut" && (
-            <div style={{ textAlign: "center" }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 16 }}>
-                <rect x="2" y="4" width="20" height="16" rx="2" stroke={TEAL} strokeWidth="1.5"/>
-                <path d="M6 12h2M10 12h4M18 12h-2M8 8h2M14 8h2M8 16h8" stroke={TEAL} strokeWidth="1.3" strokeLinecap="round"/>
-              </svg>
-              <h1 style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: INK, margin: "0 0 8px" }}>
-                One shortcut worth knowing
-              </h1>
-              <p style={{ fontFamily: SANS, fontSize: 14, fontWeight: 400, color: SECONDARY, margin: "0 auto 24px", maxWidth: 320 }}>
-                Press this anywhere on Tideline to instantly save a thought to your active project.
-              </p>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
-                {(typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent)
-                  ? ["Cmd", "Shift", "N"]
-                  : ["Ctrl", "Shift", "N"]
-                ).map((k, i) => (
-                  <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 13, color: INK, background: "#F1F3F4", border: `1px solid ${BORDER}`, padding: "4px 10px", borderRadius: 4 }}>{k}</span>
-                    {i < 2 && <span style={{ color: TERTIARY }}>+</span>}
+                  marginBottom: 28,
+                  fontFamily: F,
+                  fontSize: 14,
+                  color: TEXT0,
+                }}>
+                  {timezone.replace(/_/g, " ")}
+                  <span style={{ fontFamily: M, fontSize: 11, color: TEXT2, marginLeft: 8 }}>
+                    (auto-detected)
                   </span>
-                ))}
+                </div>
+
+                <button
+                  className="ob2-btn"
+                  onClick={() => setStep("confirm")}
+                  style={{
+                    width: "100%",
+                    height: 44,
+                    background: TEAL,
+                    border: "none",
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: F,
+                    cursor: "pointer",
+                    borderRadius: 6,
+                  }}
+                >
+                  Continue
+                </button>
+
+                <button
+                  className="ob2-back"
+                  onClick={() => setStep("entities")}
+                  style={{ background: "none", border: "none", color: TEXT2, fontSize: 13, cursor: "pointer", fontFamily: F, marginTop: 16, padding: 0 }}
+                >
+                  Back
+                </button>
               </div>
-              <p style={{ fontFamily: SANS, fontSize: 13, color: TERTIARY, margin: "0 0 28px" }}>
-                Works anywhere on the platform. Saves to your active project.
-              </p>
-              <button
-                className="ob-btn"
-                onClick={() => {
-                  try { localStorage.setItem("tideline_shortcut_shown", "true"); } catch {}
-                  window.location.href = "/platform/feed";
-                }}
-                style={{
-                  width: "100%",
-                  height: 44,
-                  background: TEAL,
-                  border: "none",
-                  color: WHITE,
-                  fontFamily: SANS,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  borderRadius: 6,
-                  cursor: "pointer",
-                }}
-              >
-                Got it, take me in
-              </button>
-            </div>
-          )}
-        </>
+            )}
+
+            {/* ── Step 4: Confirm ───────────────────────────── */}
+            {step === "confirm" && (
+              <div>
+                <h1 style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: TEXT0, margin: "0 0 8px" }}>
+                  Confirm your setup
+                </h1>
+                <p style={{ fontFamily: F, fontSize: 14, color: TEXT1, margin: "0 0 28px" }}>
+                  Your first brief arrives tomorrow at {briefTime} ({timezone.replace(/_/g, " ")}).
+                </p>
+
+                {/* Summary cards */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
+                  {/* Job type */}
+                  <div style={{ padding: "14px 18px", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                    <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Role</div>
+                    <div style={{ fontFamily: F, fontSize: 14, color: TEXT0 }}>
+                      {JOB_TYPES.find((j) => j.value === jobType)?.label}
+                    </div>
+                    <button
+                      className="ob2-back"
+                      onClick={() => setStep("job_type")}
+                      style={{ background: "none", border: "none", color: TEAL, fontSize: 12, cursor: "pointer", fontFamily: F, padding: 0, marginTop: 6 }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+
+                  {/* Entities */}
+                  <div style={{ padding: "14px 18px", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                    <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Tracking</div>
+                    <div style={{ fontFamily: F, fontSize: 14, color: TEXT0 }}>
+                      {totalSelected} {totalSelected === 1 ? "entity" : "entities"}
+                    </div>
+                    <div style={{ fontFamily: F, fontSize: 12, color: TEXT2, marginTop: 4, lineHeight: 1.5 }}>
+                      {starterEntities
+                        .filter((e) => selectedEntityIds.has(e.id))
+                        .slice(0, 5)
+                        .map((e) => e.name)
+                        .join(", ")}
+                      {totalSelected > 5 && ` +${totalSelected - 5} more`}
+                    </div>
+                    <button
+                      className="ob2-back"
+                      onClick={() => setStep("entities")}
+                      style={{ background: "none", border: "none", color: TEAL, fontSize: 12, cursor: "pointer", fontFamily: F, padding: 0, marginTop: 6 }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+
+                  {/* Brief time */}
+                  <div style={{ padding: "14px 18px", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                    <div style={{ fontFamily: M, fontSize: 10, color: TEXT2, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Morning brief</div>
+                    <div style={{ fontFamily: F, fontSize: 14, color: TEXT0 }}>
+                      {briefTime} · {timezone.replace(/_/g, " ")}
+                    </div>
+                    <button
+                      className="ob2-back"
+                      onClick={() => setStep("brief_time")}
+                      style={{ background: "none", border: "none", color: TEAL, fontSize: 12, cursor: "pointer", fontFamily: F, padding: 0, marginTop: 6 }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+
+                {error && <p style={{ fontSize: 13, color: RED, marginBottom: 16, fontFamily: F }}>{error}</p>}
+
+                <button
+                  className="ob2-btn"
+                  onClick={handleFinish}
+                  disabled={submitting}
+                  style={{
+                    width: "100%",
+                    height: 48,
+                    background: submitting ? BORDER : TEAL,
+                    border: "none",
+                    color: submitting ? TEXT2 : "#fff",
+                    fontSize: 15,
+                    fontWeight: 600,
+                    fontFamily: F,
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    borderRadius: 6,
+                  }}
+                >
+                  {submitting ? "Setting up..." : "Schedule my first brief"}
+                </button>
+
+                <button
+                  className="ob2-back"
+                  onClick={() => setStep("brief_time")}
+                  style={{ background: "none", border: "none", color: TEXT2, fontSize: 13, cursor: "pointer", fontFamily: F, marginTop: 16, padding: 0 }}
+                >
+                  Back
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
