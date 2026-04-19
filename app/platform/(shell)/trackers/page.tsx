@@ -26,11 +26,24 @@ function daysUntil(ds: string) { const t = new Date(); t.setHours(0,0,0,0); cons
 function dayColor(d: number|null) { if (d===null) return RED; if (d<=0) return RED; if (d<=90) return AMBER; return TEAL_BRIGHT; }
 function dayLabel(d: number|null) { if (d===null) return "TBC"; if (d<=0) return "TODAY"; return String(d); }
 
-/* ── Trajectory colour ────────────────────────────────────── */
+/* ── Trajectory colour + footer styling ───────────────────── */
 function trajColor(traj: string) {
   const t = traj.toLowerCase();
   if (t.includes("accel") || t.includes("advancing") || t.includes("implementing")) return TEAL_BRIGHT;
   if (t.includes("stall") || t.includes("stable")) return AMBER;
+  return RED;
+}
+
+function trajFooterStyle(traj: string) {
+  const c = trajColor(traj);
+  const rgb = c === TEAL_BRIGHT ? "39,200,147" : c === AMBER ? "239,159,39" : "226,75,74";
+  return { bg: `rgba(${rgb},0.12)`, border: `1px solid rgba(${rgb},0.25)`, color: c };
+}
+
+/* ── Sub-score colour by magnitude ────────────────────────── */
+function subScoreColor(v: number) {
+  if (v >= 6) return TEAL_BRIGHT;
+  if (v >= 3) return AMBER;
   return RED;
 }
 
@@ -78,13 +91,13 @@ function Card({ t, anim, onClick, live }: {
   const ss = live?.ss ?? t.ss;
   const c = sc(score);
 
+  const foot = trajFooterStyle(t.traj);
+
   return (
     <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? SURFACE_HI : SURFACE, border: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "background 0.15s, border-color 0.15s" }}>
+      style={{ background: hov ? SURFACE_HI : SURFACE, borderTop: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderRight: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderBottom: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderLeft: `4px solid ${c}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "background 0.15s, border-color 0.15s" }}>
       {/* open hint */}
       <span style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: TEXT1, opacity: hov ? 1 : 0, pointerEvents: "none", transition: "opacity 0.12s", zIndex: 2 }}>Open {"\u2197"}</span>
-      {/* accent */}
-      <div style={{ height: 3, background: c, flexShrink: 0 }} />
       {/* body */}
       <div style={{ flex: 1, padding: "6px 9px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT1, marginBottom: 2 }}>{t.domain}</div>
@@ -104,18 +117,18 @@ function Card({ t, anim, onClick, live }: {
               {val === 0 ? (
                 <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: TEXT2 }}>&ndash;</div>
               ) : (
-                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: TEXT0 }}>{val.toFixed(1)}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: subScoreColor(val) }}>{val.toFixed(1)}</div>
               )}
             </div>
           ))}
         </div>
-        <div style={{ flex: 1, minHeight: 26 }}>
-          <Sparkline history={t.history} score={score} />
+        <div style={{ flex: 1, minHeight: 80 }}>
+          <Sparkline history={t.history} score={score} withFill strokeWidth={2} fillOpacity={0.15} size="expanded" />
         </div>
       </div>
-      {/* footer */}
-      <div style={{ padding: "3px 8px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: BG }}>
-        <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", fontFamily: M, color: trajColor(t.traj) }}>{t.traj}</span>
+      {/* footer — coloured by trajectory */}
+      <div style={{ padding: "3px 8px", borderTop: foot.border, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: foot.bg }}>
+        <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", fontFamily: M, color: foot.color }}>{t.traj}</span>
         <span style={{ fontSize: 10, fontFamily: M, color: TEXT1 }}>{t.next}</span>
       </div>
     </div>
@@ -188,30 +201,30 @@ export default function TrackersPage() {
 
         {/* S1.5: hero alert banner */}
         {urgentAlert && (
-          <div style={{ background: `linear-gradient(135deg, ${SURFACE} 0%, ${BG} 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: AMBER, flexShrink: 0, animation: "alertPulse 1.5s ease-in-out infinite" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 }}>
+          <div style={{ background: `linear-gradient(135deg, ${SURFACE} 0%, ${SURFACE} 60%, rgba(226,75,74,0.15) 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "16px 20px", minHeight: 90, display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: RED, flexShrink: 0, animation: "alertPulse 1.5s ease-in-out infinite" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, fontFamily: DISPLAY, color: TEXT0 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, fontFamily: DISPLAY, color: TEXT0 }}>
                   {urgentAlert.nextEvent} <span style={{ color: TEAL_BRIGHT }}>{"\u00B7"} {urgentAlert.days}d</span>
                 </span>
-                <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: urgentAlert.liveScore >= 7 ? RED : AMBER, background: urgentAlert.liveScore >= 7 ? "rgba(226,75,74,0.15)" : "rgba(239,159,39,0.15)", border: `1px solid ${urgentAlert.liveScore >= 7 ? "rgba(226,75,74,0.3)" : "rgba(239,159,39,0.3)"}`, padding: "1px 6px", borderRadius: 3 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#FFFFFF", background: RED, padding: "2px 8px", borderRadius: 3 }}>
                   {urgentAlert.liveScore >= 7 ? "HIGH" : "ELEVATED"}
                 </span>
                 <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: TEXT1, border: `1px solid ${BORDER2}`, padding: "1px 6px", borderRadius: 3 }}>
                   {urgentAlert.domain}
                 </span>
               </div>
-              <span style={{ fontSize: 11, color: TEXT1 }}>
+              <span style={{ fontSize: 12, color: TEXT1 }}>
                 {urgentAlert.domain} score elevated, preparation window open now
               </span>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: M, color: AMBER, background: "rgba(239,159,39,0.15)", border: "1px solid rgba(239,159,39,0.3)", padding: "2px 8px", borderRadius: 4, flexShrink: 0 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, fontFamily: M, color: AMBER, background: "rgba(239,159,39,0.15)", border: "1px solid rgba(239,159,39,0.3)", padding: "3px 10px", borderRadius: 4, flexShrink: 0 }}>
               {urgentAlert.liveScore.toFixed(1)} {"\u25B2"}
             </span>
             <button
               onClick={() => router.push(`/platform/tracker/${urgentAlert.slug}`)}
-              style={{ fontSize: 10, fontWeight: 600, color: "#0A1628", background: TEAL_BRIGHT, border: "none", padding: "5px 12px", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
+              style={{ fontSize: 11, fontWeight: 600, color: "#0A1628", background: TEAL_BRIGHT, border: "none", padding: "6px 14px", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
             >
               Open tracker {"\u2192"}
             </button>
