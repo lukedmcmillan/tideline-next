@@ -101,105 +101,110 @@ export async function GET(request: NextRequest) {
     'overfishing', 'stock', 'quota', 'MPA', 'maritime', 'offshore', 'trawling',
   ]
 
+  // Phase 1: Collect all eligible items from all sources (fast, no AI calls)
+  interface EligibleItem {
+    title: string; link: string; published_at: string; description: string | null;
+    source_name: string; topic: string; source_type: string;
+  }
+  const eligible: EligibleItem[] = []
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - 60)
+
   for (const source of RSS_SOURCES) {
     const items = await parseRSSFeed(source.rss)
 
+    if (items.length === 0) {
+      errors.push(source.name)
+    }
+
     for (const item of items) {
-      // Skip articles with no pub date
-      if (!item.published_at) {
-        totalSkipped++
-        continue
-      }
+      if (!item.published_at) { totalSkipped++; continue }
+      if (new Date(item.published_at) < cutoff) { totalSkipped++; continue }
+      if (/\b(les|des|une|pour|dans|avec|sur|est|del|los|las|por|una|con|que|como|der|die|und|auch|nicht)\b/i.test(item.title)) { totalSkipped++; continue }
+      if (/[\u0400-\u04FF\u10A0-\u10FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u30FF]/.test(item.title)) { totalSkipped++; continue }
 
-      // Skip articles older than 60 days
-      const pubDate = new Date(item.published_at)
-      const cutoff = new Date()
-      cutoff.setDate(cutoff.getDate() - 60)
-      if (pubDate < cutoff) {
-        totalSkipped++
-        continue
-      }
-
-      // Skip non-English titles
-      if (/\b(les|des|une|pour|dans|avec|sur|est|del|los|las|por|una|con|que|como|der|die|und|auch|nicht)\b/i.test(item.title)) {
-        totalSkipped++
-        continue
-      }
-      // Skip titles with predominantly non-Latin characters
-      if (/[\u0400-\u04FF\u10A0-\u10FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u30FF]/.test(item.title)) {
-        totalSkipped++
-        continue
-      }
-
-      // Skip non-ocean stories from general sources
       const isDedicated = OCEAN_DEDICATED_SOURCES.has(source.name)
       if (!isDedicated) {
         const titleLower = item.title.toLowerCase()
         const isRelevant = oceanKeywords.some(kw => titleLower.includes(kw.toLowerCase()))
-        if (!isRelevant) {
-          totalSkipped++
-          continue
-        }
+        if (!isRelevant) { totalSkipped++; continue }
       }
 
-      // Ocean-relevance gate (shadow mode — log but do not block)
-      const gateResult = await checkOceanRelevance({
-        title: item.title,
-        content: item.description || '',
-      })
-      gateProcessed++
-      gateTotalMs += gateResult.duration_ms
-      if (gateResult.verdict === 'gate_unavailable') {
-        gateUnavailable++
-      }
-      if (!gateResult.relevant) {
-        gateWouldQuarantine++
-        if (quarantineSampleTitles.length < 3) quarantineSampleTitles.push(item.title)
-        try {
-          await supabase.from('stories_quarantine').insert({
-            title: item.title,
-            source_name: source.name,
-            url: item.link,
-            published_at: item.published_at,
-            raw_content: (item.description || '').slice(0, 500),
-            haiku_verdict: gateResult.verdict,
-            haiku_raw_response: gateResult.raw,
-          })
-        } catch { /* quarantine insert failure is non-fatal */ }
-      }
-      // Shadow mode: proceed with insert regardless of gate result
-
-      const storyData: Record<string, unknown> = {
+      eligible.push({
         title: item.title,
         link: item.link,
+        published_at: item.published_at,
+        description: item.description,
         source_name: source.name,
         topic: source.topic,
         source_type: source.type,
-        published_at: item.published_at,
-      }
-      if (item.description) storyData.description = item.description
-
-      const { data: upserted, error } = await supabase
-        .from('stories')
-        .upsert(storyData, { onConflict: 'link', ignoreDuplicates: true })
-        .select('id, title, short_summary, full_summary')
-
-      if (error) {
-        totalSkipped++
-      } else {
-        totalSaved++
-        // Fire-and-forget entity extraction for new stories
-        if (upserted && upserted.length > 0) {
-          const s = upserted[0]
-          extractEntities(s)
-            .then(() => supabase.from('stories').update({ entities_extracted: true }).eq('id', s.id))
-            .catch(() => {})
-        }
-      }
+      })
     }
+  }
 
-    if (items.length === 0) {
-      errors.push(source.name)
+  // Phase 2: Batch ocean-relevance gate calls (15 concurrent per batch)
+  const GATE_BATCH = 15
+  const gateResults: Awaited<ReturnType<typeof checkOceanRelevance>>[] = []
+
+  for (let i = 0; i < eligible.length; i += GATE_BATCH) {
+    const batch = eligible.slice(i, i + GATE_BATCH)
+    const batchResults = await Promise.all(
+      batch.map(item => checkOceanRelevance({ title: item.title, content: item.description || '' }))
+    )
+    gateResults.push(...batchResults)
+  }
+
+  // Phase 3: Process DB writes sequentially with gate results
+  for (let i = 0; i < eligible.length; i++) {
+    const item = eligible[i]
+    const gateResult = gateResults[i]
+
+    gateProcessed++
+    gateTotalMs += gateResult.duration_ms
+    if (gateResult.verdict === 'gate_unavailable') gateUnavailable++
+
+    if (!gateResult.relevant) {
+      gateWouldQuarantine++
+      if (quarantineSampleTitles.length < 3) quarantineSampleTitles.push(item.title)
+      try {
+        await supabase.from('stories_quarantine').insert({
+          title: item.title,
+          source_name: item.source_name,
+          url: item.link,
+          published_at: item.published_at,
+          raw_content: (item.description || '').slice(0, 500),
+          haiku_verdict: gateResult.verdict,
+          haiku_raw_response: gateResult.raw,
+        })
+      } catch { /* quarantine insert failure is non-fatal */ }
+    }
+    // Shadow mode: proceed with insert regardless of gate result
+
+    const storyData: Record<string, unknown> = {
+      title: item.title,
+      link: item.link,
+      source_name: item.source_name,
+      topic: item.topic,
+      source_type: item.source_type,
+      published_at: item.published_at,
+    }
+    if (item.description) storyData.description = item.description
+
+    const { data: upserted, error } = await supabase
+      .from('stories')
+      .upsert(storyData, { onConflict: 'link', ignoreDuplicates: true })
+      .select('id, title, short_summary, full_summary')
+
+    if (error) {
+      totalSkipped++
+    } else {
+      totalSaved++
+      if (upserted && upserted.length > 0) {
+        const s = upserted[0]
+        extractEntities(s)
+          .then(() => supabase.from('stories').update({ entities_extracted: true }).eq('id', s.id))
+          .catch(() => {})
+      }
     }
   }
 
