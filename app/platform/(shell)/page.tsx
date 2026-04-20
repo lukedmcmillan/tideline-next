@@ -51,33 +51,20 @@ function arrowChar(delta: number): { char: string; color: string } {
   return { char: "\u2192", color: TEXT_DIM };
 }
 
-function actionVerdict(score: number, slug: string): string {
-  if (score >= 8) return "Seek legal advice";
-  const esg = new Set(["isa", "bbnj", "blue-finance"]);
-  const comp = new Set(["imo-shipping", "iuu"]);
-  if (score >= 6 && esg.has(slug)) return "Review TNFD position";
-  if (score >= 6 && comp.has(slug)) return "Flag for compliance review";
-  return "Monitor";
-}
-
 function fmtDate(): string {
   const d = new Date();
   return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).toUpperCase();
 }
 
 interface VScore { tracker_slug: string; score: number; momentum_direction: string; history?: number[] }
-interface Divergence { id: string; tracker_tag: string; score: number; headline?: string; why_it_matters: string; detected_at: string }
-
 export default function DashboardPage() {
   const [velocityScores, setVelocityScores] = useState<VScore[]>([]);
-  const [divergences, setDivergences] = useState<Divergence[]>([]);
   const [proofOfWork, setProofOfWork] = useState<ProofOfWorkData | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/dashboard").then(r => r.ok ? r.json() : {}),
-      fetch("/api/conflicts").then(r => r.ok ? r.json() : { divergences: [] }),
       fetch("/api/dashboard/proof-of-work").then(r => r.ok ? r.json() : null),
       // Fetch history for sparklines
       ...Object.keys(SLUG_NAMES).map(slug =>
@@ -86,7 +73,7 @@ export default function DashboardPage() {
           .catch(() => null)
       ),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([dash, conflictsData, pow, ...velocityResponses]: any[]) => {
+    ]).then(([dash, pow, ...velocityResponses]: any[]) => {
       const scores = (dash.velocityScores || []) as VScore[];
       // Attach history to each score
       const slugKeys = Object.keys(SLUG_NAMES);
@@ -97,7 +84,6 @@ export default function DashboardPage() {
         return { ...s, history };
       });
       setVelocityScores(enriched);
-      setDivergences(((conflictsData.divergences || []) as Divergence[]).slice(0, 3));
       setProofOfWork(pow);
       setLoaded(true);
     }).catch(() => setLoaded(true));
@@ -197,42 +183,16 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Active Conflicts */}
+        {/* Score Summary */}
         <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>Active conflicts</span>
-            <a href="/platform/conflicts" style={{ fontSize: 11.5, color: TEAL_BRIGHT, fontWeight: 500, textDecoration: "none", cursor: "pointer" }}>All →</a>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>Score summary</span>
+            <a href="/platform/trackers" style={{ fontSize: 11.5, color: TEAL_BRIGHT, fontWeight: 500, textDecoration: "none", cursor: "pointer" }}>All trackers →</a>
           </div>
-          {divergences.length === 0 ? (
-            <div style={{ fontSize: 12.5, color: TEXT_DIM, padding: "20px 0", textAlign: "center" }}>No active conflicts</div>
-          ) : divergences.map((d, i) => {
-            const isHigh = d.score >= 7;
-            return (
-              <div key={d.id} style={{ padding: "12px 0", borderTop: i > 0 ? `1px solid ${BORDER}` : "none" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                  <div style={{
-                    fontFamily: MONO, fontSize: 12, fontWeight: 500,
-                    padding: "2px 7px", borderRadius: 4, minWidth: 38, textAlign: "center",
-                    background: isHigh ? RED_SOFT : AMBER_SOFT,
-                    color: isHigh ? RED : AMBER,
-                  }}>{d.score.toFixed(1)}</div>
-                  <div style={{ fontSize: 12.5, lineHeight: 1.4, color: TEXT, fontWeight: 500 }}>
-                    {d.headline || d.why_it_matters.slice(0, 80)}
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                  <button style={{
-                    fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em",
-                    textTransform: "uppercase", color: TEXT_MUTED,
-                    border: `1px solid ${BORDER_HI}`, padding: "3px 8px",
-                    borderRadius: 4, background: "transparent", cursor: "pointer", fontWeight: 500,
-                  }}>
-                    {actionVerdict(d.score, d.tracker_tag)}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          <div style={{ fontSize: 12.5, color: TEXT_DIM, padding: "8px 0", textAlign: "center" }}>
+            <span style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, color: TEAL_BRIGHT }}>{watchCount}</span>
+            <span style={{ display: "block", fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>trackers at WATCH or above</span>
+          </div>
         </div>
 
         {/* Most Watched */}
@@ -292,8 +252,8 @@ export default function DashboardPage() {
           </div>
           <span style={{ color: BORDER_HI }}>|</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.active_divergences} DIVERGENCES</span>
-            <span>flagged</span>
+            <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.active_trackers} TRACKERS</span>
+            <span>monitored</span>
           </div>
           <div style={{ marginLeft: "auto", color: TEXT_DIM }}>
             Next scan: {proofOfWork.next_scan_utc} UTC

@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type { HeroSignalData } from "@/app/lib/types/dashboard";
-import HeroSignalDivergence from "@/components/HeroSignalDivergence";
 import HeroSignalBandCrossing from "@/components/HeroSignalBandCrossing";
 import HeroSignalGovernance from "@/components/HeroSignalGovernance";
 import HeroSignalVelocity from "@/components/HeroSignalVelocity";
-import HeroSignalScanning from "@/components/HeroSignalScanning";
 
 const BG2 = "#0D1E35";
 const BG3 = "#122845";
@@ -44,11 +42,9 @@ export default function HeroSignal() {
 
   const content = (() => {
     switch (data.type) {
-      case "divergence": return data.divergence ? <HeroSignalDivergence d={data.divergence} /> : null;
       case "band_crossing": return data.band_crossing ? <HeroSignalBandCrossing d={data.band_crossing} /> : null;
       case "governance_event": return data.governance_event ? <HeroSignalGovernance d={data.governance_event} /> : null;
       case "top_velocity": return data.top_velocity ? <HeroSignalVelocity d={data.top_velocity} /> : null;
-      case "scanning": return data.scanning ? <HeroSignalScanning d={data.scanning} /> : null;
       default: return null;
     }
   })();

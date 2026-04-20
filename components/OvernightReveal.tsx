@@ -111,9 +111,6 @@ export default function OvernightReveal() {
             </b>{" "}
             from {data.source_count} sources overnight.{" "}
             <b style={{ color: TEAL_BRIGHT, fontWeight: 600 }}>{data.top_mover_line}</b>.{" "}
-            <b style={{ color: TEAL_BRIGHT, fontWeight: 600 }}>
-              <span style={{ fontFamily: MONO, fontWeight: 500 }}>{data.divergence_line}</span>
-            </b>.{" "}
             <b style={{ color: TEAL_BRIGHT, fontWeight: 600 }}>{data.countdown_line}</b>{" "}
             — your readiness score just ticked to{" "}
             <b style={{ color: TEAL_BRIGHT, fontWeight: 600 }}>

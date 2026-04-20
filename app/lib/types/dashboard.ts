@@ -13,29 +13,12 @@ export interface OvernightData {
   doc_count: number;
   source_count: number;
   top_mover_line: string;
-  divergence_line: string;
   countdown_line: string;
   readiness_pct: number;
 }
 
 export interface HeroSignalData {
-  type: "divergence" | "band_crossing" | "governance_event" | "top_velocity" | "scanning";
-  divergence?: {
-    id: string;
-    tracker_tag: string;
-    score: number;
-    headline: string;
-    source_a_name: string;
-    source_a_type: string;
-    source_a_claim: string;
-    source_a_date?: string;
-    source_b_name: string;
-    source_b_type: string;
-    source_b_claim: string;
-    source_b_date?: string;
-    why_it_matters: string;
-    detected_at: string;
-  };
+  type: "band_crossing" | "governance_event" | "top_velocity";
   band_crossing?: {
     slug: string;
     name: string;
@@ -60,10 +43,6 @@ export interface HeroSignalData {
     direction: string;
     history: number[];
   };
-  scanning?: {
-    processed_today: number;
-    flagged_today: number;
-  };
 }
 
 export interface ReadinessData {
@@ -77,7 +56,7 @@ export interface ProofOfWorkData {
   last_ingestion_minutes_ago: number;
   docs_today: number;
   sources_monitored: number;
-  active_divergences: number;
+  active_trackers: number;
   next_scan_utc: string;
 }
 
@@ -98,7 +77,6 @@ export type MixedTickerItem =
   | { type: "headline"; title: string; source_name: string; time_ago: string }
   | { type: "score_delta"; name: string; score: number; delta: number }
   | { type: "countdown"; event_name: string; days: number }
-  | { type: "new_divergence"; source_a: string; source_b: string; score: number }
   | { type: "doc_ingestion"; count: number; source: string; time_ago: string };
 
 export interface Upcoming30dData {

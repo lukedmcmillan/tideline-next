@@ -61,21 +61,6 @@ export async function GET() {
     }
   }
 
-  // Divergence count in last 24h
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: recentDivs } = await supabase
-    .from("divergences")
-    .select("id, detected_at")
-    .is("dismissed_at", null)
-    .gte("detected_at", oneDayAgo);
-
-  const divCount = recentDivs?.length ?? 0;
-  const divergenceLine = divCount === 0
-    ? "No new divergences detected"
-    : divCount === 1
-      ? "One new divergence detected"
-      : `${divCount} new divergences detected`;
-
   // Nearest governance event
   const { data: nextEvent } = await supabase
     .from("governance_events")
@@ -91,22 +76,14 @@ export async function GET() {
     countdownLine = `${nextEvent.title} is now ${daysUntil} days away`;
   }
 
-  // Readiness pct: proxy based on tracker visits. Real calculation needs Sprint 2 schema.
-  // For now derive from: (active divergences resolved / total) as a rough proxy, clamped 40-90.
-  const { data: allDivs } = await supabase
-    .from("divergences")
-    .select("id, dismissed_at")
-    .limit(100);
-  const total = allDivs?.length ?? 1;
-  const resolved = (allDivs || []).filter(d => d.dismissed_at).length;
-  const readinessPct = Math.min(90, Math.max(40, Math.round((resolved / Math.max(total, 1)) * 100)));
+  // Readiness pct: proxy based on doc coverage. Real calculation needs Sprint 2 schema.
+  const readinessPct = Math.min(90, Math.max(40, Math.round((docCount / Math.max(50, 1)) * 100)));
 
   const data: OvernightData = {
     hours,
     doc_count: docCount,
     source_count: sourceCount,
     top_mover_line: topMoverLine,
-    divergence_line: divergenceLine,
     countdown_line: countdownLine,
     readiness_pct: readinessPct,
   };

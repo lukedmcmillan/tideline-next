@@ -64,15 +64,6 @@ function renderItem(item: MixedTickerItem) {
         </span>
       );
 
-    case "new_divergence":
-      return (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <span style={{ ...PILL_BASE, color: "#fff", background: RED, border: `1px solid ${RED}` }}>CONFLICT</span>
-          <span style={{ color: TEXT }}>{item.source_a} vs {item.source_b}</span>
-          <span style={{ color: RED }}>{item.score.toFixed(1)}/10</span>
-        </span>
-      );
-
     case "doc_ingestion":
       return (
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>

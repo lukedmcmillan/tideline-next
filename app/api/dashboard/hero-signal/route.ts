@@ -19,42 +19,25 @@ function bandFor(score: number): string {
 }
 
 export async function GET() {
-  // Priority a) Active divergence with score >= 7.0
-  try {
-    const { data: divs } = await supabase
-      .from("divergences")
-      .select("*")
-      .is("dismissed_at", null)
-      .gte("score", 7.0)
-      .order("score", { ascending: false })
-      .limit(1);
+  // ─── Priority 1: Governance event within 14 days ───────────
+  const upcoming = eventsWithinDays(14);
+  if (upcoming.length > 0) {
+    const e = upcoming[0];
+    const result: HeroSignalData = {
+      type: "governance_event",
+      governance_event: {
+        title: e.title,
+        body_name: e.body_name,
+        date: e.date,
+        days_until: e.days_until,
+        significance: e.significance,
+        description: e.description,
+      },
+    };
+    return NextResponse.json(result);
+  }
 
-    if (divs && divs.length > 0) {
-      const d = divs[0];
-      const result: HeroSignalData = {
-        type: "divergence",
-        divergence: {
-          id: d.id,
-          tracker_tag: d.tracker_tag,
-          score: d.score,
-          headline: d.headline || `${DOMAIN_NAMES[d.tracker_tag] || d.tracker_tag}: source divergence detected`,
-          source_a_name: d.source_a_name,
-          source_a_type: d.source_a_type,
-          source_a_claim: d.source_a_claim,
-          source_a_date: d.source_a_date,
-          source_b_name: d.source_b_name,
-          source_b_type: d.source_b_type,
-          source_b_claim: d.source_b_claim,
-          source_b_date: d.source_b_date,
-          why_it_matters: d.why_it_matters,
-          detected_at: d.detected_at,
-        },
-      };
-      return NextResponse.json(result);
-    }
-  } catch {}
-
-  // Priority b) Band crossing in last 24h
+  // ─── Priority 2: Band crossing in last 24h ────────────────
   try {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     for (const slug of SLUGS) {
@@ -87,28 +70,10 @@ export async function GET() {
     }
   } catch {}
 
-  // Priority c) Governance event within 14 days
-  const upcoming = eventsWithinDays(14);
-  if (upcoming.length > 0) {
-    const e = upcoming[0];
-    const result: HeroSignalData = {
-      type: "governance_event",
-      governance_event: {
-        title: e.title,
-        body_name: e.body_name,
-        date: e.date,
-        days_until: e.days_until,
-        significance: e.significance,
-        description: e.description,
-      },
-    };
-    return NextResponse.json(result);
-  }
-
-  // Priority d) Highest-velocity tracker
-  try {
-    let best: { slug: string; score: number; direction: string; history: number[] } | null = null;
-    for (const slug of SLUGS) {
+  // ─── Priority 3: Highest-velocity tracker (always has data) ─
+  let best: { slug: string; score: number; direction: string; history: number[] } | null = null;
+  for (const slug of SLUGS) {
+    try {
       const { data: rows } = await supabase
         .from("velocity_scores")
         .select("score, momentum_direction")
@@ -125,26 +90,23 @@ export async function GET() {
           history: rows.map(r => r.score).reverse(),
         };
       }
-    }
-    if (best) {
-      const result: HeroSignalData = {
-        type: "top_velocity",
-        top_velocity: {
-          slug: best.slug,
-          name: DOMAIN_NAMES[best.slug] ?? best.slug,
-          score: best.score,
-          direction: best.direction,
-          history: best.history,
-        },
-      };
-      return NextResponse.json(result);
-    }
-  } catch {}
+    } catch {}
+  }
 
-  // Priority e) Scanning state (should rarely reach here)
-  const result: HeroSignalData = {
-    type: "scanning",
-    scanning: { processed_today: 0, flagged_today: 0 },
-  };
-  return NextResponse.json(result);
+  if (best) {
+    const result: HeroSignalData = {
+      type: "top_velocity",
+      top_velocity: {
+        slug: best.slug,
+        name: DOMAIN_NAMES[best.slug] ?? best.slug,
+        score: best.score,
+        direction: best.direction,
+        history: best.history,
+      },
+    };
+    return NextResponse.json(result);
+  }
+
+  // Should never reach here — top_velocity always finds something
+  return NextResponse.json({ type: "top_velocity", top_velocity: { slug: "", name: "Tideline", score: 0, direction: "stable", history: [] } } satisfies HeroSignalData);
 }

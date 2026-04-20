@@ -157,10 +157,9 @@ function SidebarDatetime() {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
-function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, recentStories, onShortcuts, tier }: {
+function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, onShortcuts, tier }: {
   onNav?: () => void;
   urgentCount?: number;
-  conflictCount?: number;
   trackerData?: TrackerData[];
   projectData?: ProjectData[];
   recentStories?: RecentStory[];
@@ -175,7 +174,6 @@ function Sidebar({ onNav, urgentCount, conflictCount, trackerData, projectData, 
     { ic: <IcFeed />, label: "News Feed", href: "/platform/feed" },
     { ic: <IcWork />, label: "My Workspace", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcTrackers />, label: "Trackers", href: "/platform/trackers" },
-    { ic: <IcConflicts />, label: "Conflicts", href: "/platform/conflicts", badge: conflictCount && conflictCount > 0 ? String(conflictCount) : undefined, badgeColor: RED },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library" },
     { ic: <IcSearch />, label: "Research", href: "/platform/research" },
@@ -910,7 +908,6 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [urgentCount, setUrgentCount] = useState(0);
-  const [conflictCount, setConflictCount] = useState(0);
   const [trackerData, setTrackerData] = useState<TrackerData[]>([]);
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
   const [recentStories, setRecentStories] = useState<RecentStory[]>([]);
@@ -933,9 +930,7 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
       .then(r => r.ok ? r.json() : { stories: [] })
       .then(d => setRecentStories((d.stories || []).filter((s: any) => s.topic !== "all")))
       .catch(() => {});
-    fetch("/api/conflicts")
-      .then(r => r.ok ? r.json() : { divergences: [] })
-      .then(d => setConflictCount((d.divergences || []).length))
+    Promise.resolve() // conflicts feature retired
       .catch(() => {});
   }, []);
 
@@ -1010,14 +1005,14 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
               }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
               </button>
-              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} conflictCount={conflictCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} tier={tier} />
+              <Sidebar onNav={() => setSbOpen(false)} urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} tier={tier} />
             </div>
           </div>
         )}
 
         {/* Desktop sidebar */}
         <div className="sb-desktop" style={{ flexShrink: 0 }}>
-          <Sidebar urgentCount={urgentCount} conflictCount={conflictCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} tier={tier} />
+          <Sidebar urgentCount={urgentCount} trackerData={trackerData} projectData={projectData} recentStories={recentStories} onShortcuts={() => setShortcutsOpen(true)} tier={tier} />
         </div>
 
         {/* Main */}

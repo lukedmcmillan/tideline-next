@@ -115,28 +115,7 @@ function fetchCountdowns(): MixedTickerItem[] {
     }));
 }
 
-// ── 4. New divergences (last 24h, score >= 6.0, max 3) ───────────────
-async function fetchDivergences(): Promise<MixedTickerItem[]> {
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data } = await supabase
-    .from("divergences")
-    .select("source_a_name, source_b_name, score, detected_at")
-    .is("dismissed_at", null)
-    .gte("score", 6.0)
-    .gte("detected_at", since)
-    .order("score", { ascending: false })
-    .limit(3);
-
-  if (!data) return [];
-  return data.map(d => ({
-    type: "new_divergence" as const,
-    source_a: d.source_a_name,
-    source_b: d.source_b_name,
-    score: d.score,
-  }));
-}
-
-// ── 5. Doc ingestion (stories last 24h, grouped by source, top 3) ────
+// ── 4. Doc ingestion (stories last 24h, grouped by source, top 3) ────
 async function fetchDocIngestion(): Promise<MixedTickerItem[]> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data } = await supabase
@@ -213,15 +192,14 @@ function interleave(buckets: MixedTickerItem[][]): MixedTickerItem[] {
 
 export async function GET() {
   try {
-    const [headlines, scoreDeltas, divergences, docIngestion] = await Promise.all([
+    const [headlines, scoreDeltas, docIngestion] = await Promise.all([
       fetchHeadlines(),
       fetchScoreDeltas(),
-      fetchDivergences(),
       fetchDocIngestion(),
     ]);
     const countdowns = fetchCountdowns();
 
-    const buckets = [headlines, scoreDeltas, countdowns, divergences, docIngestion];
+    const buckets = [headlines, scoreDeltas, countdowns, docIngestion];
     let result = interleave(buckets);
 
     // Fallback: if completely empty, show all tracker scores

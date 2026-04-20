@@ -34,13 +34,8 @@ export async function GET() {
   const docsToday = todayStories?.length ?? 0;
   const sourcesMonitored = new Set((todayStories || []).map(s => s.source_name)).size;
 
-  // Active divergences
-  const { data: activeDivs } = await supabase
-    .from("divergences")
-    .select("id")
-    .is("dismissed_at", null);
-
-  const activeDivergences = activeDivs?.length ?? 0;
+  // Active trackers
+  const activeTrackers = 10; // 10 tracker domains monitored
 
   // Next scan: fetch-feeds runs at :00 every hour
   const nextHour = new Date(now);
@@ -52,7 +47,7 @@ export async function GET() {
     last_ingestion_minutes_ago: lastIngestionMinutesAgo,
     docs_today: docsToday,
     sources_monitored: Math.max(sourcesMonitored, 89), // floor at 89 (RSS source count)
-    active_divergences: activeDivergences,
+    active_trackers: activeTrackers,
     next_scan_utc: nextScanUtc,
   };
 
