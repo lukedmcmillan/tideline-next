@@ -338,7 +338,6 @@ export default function StoryPage() {
   const id = params.id as string;
 
   const [story, setStory] = useState<any>(null);
-  const [related, setRelated] = useState<any[]>([]);
   const [shortSummary, setShortSummary] = useState<string | null>(null);
   const [fullSummary, setFullSummary] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -356,15 +355,6 @@ export default function StoryPage() {
         setLoading(false);
         if (s.short_summary) setShortSummary(s.short_summary);
         if (s.full_summary) setFullSummary(s.full_summary);
-
-        // Related: same topic, exclude current, only summarised
-        fetch(`/api/stories?topic=${s.topic}&limit=5`)
-          .then(r => r.json())
-          .then(d => setRelated(
-            (d.stories || [])
-              .filter((r: any) => r.id !== id)
-              .slice(0, 4)
-          ));
 
         if (!s.short_summary) {
           setGenerating(true);
@@ -580,30 +570,6 @@ export default function StoryPage() {
         <ExpertContext storyId={id} />
       </div>
 
-      {/* Related stories */}
-      {related.length > 0 && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, marginBottom: 12 }}>Related stories</div>
-          <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-            {related.map((r, i) => {
-              const rSc = SRC_COLORS[r.source_type] || SRC_COLORS.media;
-              return (
-                <a
-                  key={r.id}
-                  href={`/platform/story/${r.id}`}
-                  style={{ display: "block", padding: "14px 20px", borderBottom: i < related.length - 1 ? `1px solid ${BLT}` : "none", textDecoration: "none" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", background: rSc.bg, color: rSc.color, borderRadius: 3 }}>{r.source_name}</span>
-                    <span style={{ fontSize: 11, color: T4 }}>{fmtDate(r.published_at)}</span>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4 }}>{decodeHtml(r.title)}</div>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

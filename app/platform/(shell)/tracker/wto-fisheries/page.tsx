@@ -15,7 +15,7 @@ const T1 = "#202124";
 const T2 = "#5F6368";
 
 interface TrackerEvent { id: string; event_date: string; title: string; summary: string | null; source_url: string | null; event_type: string }
-interface FeedStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null }
+
 
 function fdt(iso: string) { return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); }
 
@@ -52,17 +52,11 @@ const KEY_ACTORS = [
 
 export default function WTOFisheriesTracker() {
   const [events, setEvents] = useState<TrackerEvent[]>(PLACEHOLDER_EVENTS);
-  const [stories, setStories] = useState<FeedStory[]>([]);
-
   useEffect(() => {
     document.title = "WTO Fisheries Subsidies | Tideline";
     fetch(`/api/tracker-events?slug=${SLUG}&limit=8`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.events?.length) setEvents(d.events); })
-      .catch(() => {});
-    fetch(`/api/stories?limit=5&tracker=${SLUG}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.stories?.length) setStories(d.stories); })
       .catch(() => {});
   }, []);
 
@@ -151,25 +145,6 @@ export default function WTOFisheriesTracker() {
               {e.source_url && <a href={e.source_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: F, fontSize: 11, color: TEAL, textDecoration: "none", marginTop: 4, display: "inline-block" }}>Source {"\u2197"}</a>}
             </div>
           ))}
-        </div>
-        {/* Stories */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Related Stories</div>
-          {stories.length === 0 ? (
-            <div style={{ fontFamily: F, fontSize: 12, color: MU, padding: "24px 0" }}>No stories matched to this tracker yet</div>
-          ) : (
-            <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
-              {stories.map((s) => (
-                <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block", padding: "14px 16px", borderBottom: `0.5px solid ${BD}` }}>
-                  <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 3 }}>{s.title}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: F, fontSize: 10, color: MU }}>{s.source_name}</span>
-                  </div>
-                  {s.short_summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6, marginTop: 4 }}>{s.short_summary}</div>}
-                </a>
-              ))}
-            </div>
-          )}
         </div>
       </div>
       <TrackerDisclosure />

@@ -712,48 +712,6 @@ function ContractorTable({ contractors }: { contractors: Contractor[] }) {
   );
 }
 
-// ── Related stories ──────────────────────────────────────────────────────
-function RelatedStories({ stories }: { stories: FeedStory[] }) {
-  return (
-    <div style={{ marginTop: 24, marginBottom: 24 }}>
-      <div style={eyebrowStyle()}>Related stories from Tideline</div>
-      {stories.length === 0 ? (
-        <div style={{ background: WHITE, border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: 20, fontFamily: F, fontSize: 13, color: T4 }}>
-          No stories matched to this tracker yet.
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="stories-grid">
-          {stories.map((s) => (
-            <a
-              key={s.id}
-              href={`/platform/story/${s.id}`}
-              style={{
-                background: WHITE,
-                border: `0.5px solid ${BORDER}`,
-                borderRadius: 8,
-                padding: 20,
-                textDecoration: "none",
-              }}
-            >
-              <div style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 6 }}>
-                {s.title}
-              </div>
-              <div style={{ fontFamily: F, fontSize: 11, color: T4, marginBottom: s.short_summary ? 6 : 0 }}>
-                {s.source_name}, {fmtShortDate(s.published_at)}
-              </div>
-              {s.short_summary && (
-                <div style={{ fontFamily: F, fontSize: 12, color: T3, lineHeight: 1.6 }}>
-                  {s.short_summary}
-                </div>
-              )}
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Community documents panel ────────────────────────────────────────────
 function CommunityDocumentsPanel({ docs }: { docs: CommunityDoc[] }) {
   const [formOpen, setFormOpen] = useState(false);
@@ -1034,7 +992,6 @@ export default function ISATracker() {
   }, [trackerEvents]);
 
   const pressStories = feedStories.slice(0, 5);
-  const relatedStories = feedStories.slice(0, 6);
 
   return (
     <div style={{ fontFamily: F, color: T1, background: WHITE, minHeight: "100vh" }}>
@@ -1094,7 +1051,6 @@ export default function ISATracker() {
             </div>
 
             <ContractorTable contractors={contractors} />
-            <RelatedStories stories={relatedStories} />
             <CommunityDocumentsPanel docs={communityDocs} />
           </>
         )}

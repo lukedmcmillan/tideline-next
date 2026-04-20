@@ -506,13 +506,7 @@ interface TrackerEvent {
   event_type: string;
 }
 
-interface FeedStory {
-  id: string;
-  title: string;
-  source_name: string;
-  published_at: string;
-  short_summary: string | null;
-}
+
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   milestone: "#0E7C86",
@@ -565,47 +559,6 @@ function RecentEvents({ events }: { events: TrackerEvent[] }) {
   );
 }
 
-// ─── Recent Stories from Feed ────────────────────────────────────────────────
-
-function RecentStories({ stories }: { stories: FeedStory[] }) {
-  return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, marginBottom: 16, fontFamily: SANS }}>Related Stories from Tideline</div>
-      {stories.length === 0 ? (
-        <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "20px", fontSize: 13, color: MUTED, fontFamily: SANS, fontStyle: "italic" }}>No stories matched to this tracker yet</div>
-      ) : (
-        stories.map((s) => (
-          <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block" }}>
-            <div style={{
-              background: WHITE,
-              border: `1px solid ${BORDER}`,
-              padding: "16px 20px",
-              marginBottom: 8,
-            }}>
-              <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 500, color: NAVY, lineHeight: 1.4, marginBottom: 4 }}>
-                {s.title}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontFamily: SANS, fontSize: 10, color: MUTED }}>
-                  {s.source_name}
-                </span>
-                <span style={{ fontFamily: SANS, fontSize: 10, color: MUTED }}>
-                  {new Date(s.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}
-                </span>
-              </div>
-              {s.short_summary && (
-                <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 300, color: MUTED, lineHeight: 1.6 }}>
-                  {s.short_summary}
-                </div>
-              )}
-            </div>
-          </a>
-        ))
-      )}
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BBNJTracker() {
@@ -614,7 +567,6 @@ export default function BBNJTracker() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [trackerEvents, setTrackerEvents] = useState<TrackerEvent[]>([]);
-  const [feedStories, setFeedStories] = useState<FeedStory[]>([]);
 
   useEffect(() => { document.title = "High Seas Treaty | Tideline"; }, []);
 
@@ -634,10 +586,6 @@ export default function BBNJTracker() {
       .then((data) => setTrackerEvents(data.events || []))
       .catch(() => {});
 
-    fetch("/api/stories?limit=5&tracker=bbnj")
-      .then((r) => r.json())
-      .then((data) => setFeedStories(data.stories || []))
-      .catch(() => {});
   }, []);
 
   return (
@@ -685,7 +633,6 @@ export default function BBNJTracker() {
             </div>
             <CountryTable countries={countries} />
             <RecentEvents events={trackerEvents} />
-            <RecentStories stories={feedStories} />
           </>
         )}
       </div>

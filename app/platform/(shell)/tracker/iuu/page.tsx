@@ -17,7 +17,7 @@ const T2 = "#5F6368";
 
 interface CardingRow { id: string; country: string; card_type: "red" | "yellow"; issued_date: string; reason: string | null; trade_impact: string | null }
 interface TrackerEvent { id: string; event_date: string; title: string; summary: string | null; source_url: string | null; event_type: string }
-interface FeedStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null }
+
 
 function fdt(iso: string) { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
 function fmm(iso: string) { return new Date(iso).toLocaleDateString("en-GB", { month: "short", year: "numeric" }); }
@@ -135,39 +135,12 @@ function RecentEvents({ events }: { events: TrackerEvent[] }) {
   );
 }
 
-// ─── Related Stories ─────────────────────────────────────────────────────────
-
-function RecentStories({ stories }: { stories: FeedStory[] }) {
-  return (
-    <div style={{ marginBottom: 32 }}>
-      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 10 }}>Related Stories</div>
-      {stories.length === 0 ? (
-        <div style={{ fontFamily: F, fontSize: 12, color: MU, padding: "24px 0" }}>No stories matched to this tracker yet</div>
-      ) : (
-        <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
-          {stories.map((s) => (
-            <a key={s.id} href={`/platform/story/${s.id}`} style={{ textDecoration: "none", display: "block", padding: "14px 16px", borderBottom: `0.5px solid ${BD}` }}>
-              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, lineHeight: 1.4, marginBottom: 3 }}>{s.title}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontFamily: F, fontSize: 10, color: MU }}>{s.source_name}</span>
-                <span style={{ fontFamily: F, fontSize: 10, color: MU }}>{new Date(s.published_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
-              </div>
-              {s.short_summary && <div style={{ fontFamily: F, fontSize: 12, color: T2, lineHeight: 1.6, marginTop: 4 }}>{s.short_summary}</div>}
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function IUUTracker() {
   const [loading, setLoading] = useState(true);
   const [carding, setCarding] = useState<CardingRow[]>([]);
   const [events, setEvents] = useState<TrackerEvent[]>([]);
-  const [stories, setStories] = useState<FeedStory[]>([]);
   const [psmaCount, setPsmaCount] = useState(100);
 
   useEffect(() => { document.title = "Illegal Fishing | Tideline"; }, []);
@@ -176,12 +149,10 @@ export default function IUUTracker() {
     Promise.all([
       fetch("/api/iuu/carding").then(r => r.ok ? r.json() : []),
       fetch("/api/tracker-events?slug=iuu&limit=8").then(r => r.ok ? r.json() : { events: [] }),
-      fetch("/api/stories?limit=5&tracker=iuu").then(r => r.ok ? r.json() : { stories: [] }),
       fetch("/api/psma").then(r => r.ok ? r.json() : null),
-    ]).then(([card, ev, st, psma]) => {
+    ]).then(([card, ev, psma]) => {
       setCarding(card);
       setEvents(ev.events || []);
-      setStories(st.stories || []);
       if (psma?.party_count) setPsmaCount(psma.party_count);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
@@ -226,7 +197,6 @@ export default function IUUTracker() {
             <MetricCards redCount={redCount} yellowCount={yellowCount} psmaCount={psmaCount} />
             <CardingTable rows={carding} />
             <RecentEvents events={events} />
-            <RecentStories stories={stories} />
           </>
         )}
       </div>
