@@ -18,6 +18,7 @@ Given the story below, determine whether it is substantively about any of the fo
 - Blue economy, blue finance, or sustainable ocean investment
 - Deep-sea mining, seabed resources, or ISA-related activity
 - Freshwater fisheries, river fish migrations, anadromous species (salmon, sturgeon), inland fisheries governance
+- Fishing effort statistics, vessel monitoring, catch reporting, fisheries data and quota management
 
 Be INCLUSIVE: if the story is tangentially related (e.g. a climate policy that mentions ocean obligations, a trade agreement affecting fisheries, or a biodiversity treaty relevant to marine species), answer yes.
 
