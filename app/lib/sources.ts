@@ -28,16 +28,16 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Blue Marine Foundation", rss: "https://www.bluemarinefoundation.com/feed/", topic: "mpa", type: "ngo" },
   { name: "Global Fishing Watch", rss: "https://globalfishingwatch.org/feed/", topic: "iuu", type: "ngo" },
   { name: "High Seas Alliance", rss: "https://highseasalliance.org/feed/", topic: "governance", type: "ngo" },
-  { name: "DSCC", rss: "https://www.savethehighseas.org/feed/", topic: "dsm", type: "ngo" },
+  // DSCC removed 2026-04-22: savethehighseas.org/feed/ returns HTML not RSS. No alternative feed found. Consider adding to harvest-scraped-sources via Jina.
 
   // ─── RESEARCH & SCIENCE ───────────────────────────────────────────────────────
-  { name: "Nature Ocean & Marine", rss: "https://www.nature.com/search.rss?q=ocean&subject=earth-and-environmental-sciences", topic: "science", type: "res" },
+  // Nature Ocean & Marine removed 2026-04-22: search RSS endpoint at nature.com/search.rss is 404. No alternative.
   { name: "Nature Climate Change", rss: "https://www.nature.com/nclimate.rss", topic: "climate", type: "res" },
   { name: "Nature Sustainability", rss: "https://www.nature.com/natsustain.rss", topic: "governance", type: "res" },
   { name: "Nature Ecology & Evolution", rss: "https://www.nature.com/natecolevol.rss", topic: "science", type: "res" },
   { name: "Science Ocean Research", rss: "https://www.science.org/rss/news_current.xml", topic: "science", type: "res" },
-  { name: "Scripps Oceanography", rss: "https://scripps.ucsd.edu/news/rss.xml", topic: "science", type: "res" },
-  { name: "WHOI", rss: "https://www.whoi.edu/press-room/news-releases/rss/", topic: "science", type: "res" },
+  { name: "Scripps Oceanography", rss: "https://scripps.ucsd.edu/news/feed/", topic: "science", type: "res" },
+  { name: "WHOI", rss: "https://www.whoi.edu/feed/", topic: "science", type: "res" },
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
   { name: "PLOS ONE Marine", rss: "https://journals.plos.org/plosone/feed/atom?filterSubjects=Marine+and+aquatic+sciences", topic: "science", type: "res" },
   { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
@@ -63,7 +63,7 @@ export const RSS_SOURCES: RSSSource[] = [
 export const OCEAN_DEDICATED_SOURCES = new Set([
   // NGOs
   'Oceana', 'Ocean Conservancy', 'Sea Shepherd',
-  'Blue Marine Foundation', 'Global Fishing Watch', 'DSCC',
+  'Blue Marine Foundation', 'Global Fishing Watch',
   'High Seas Alliance', 'WWF',
   // Research
   'WHOI', 'Scripps Oceanography', 'MBARI',
@@ -74,7 +74,7 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine',
   'Undercurrent News', 'gCaptain', 'Splash247',
   // Nature journals (topic-filtered already)
-  'Nature Ocean & Marine', 'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
+  'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
   // Government (ocean-specific remits)
   'UK MMO', 'Fisheries and Oceans Canada (DFO)',
   // Finance
