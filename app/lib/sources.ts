@@ -14,10 +14,10 @@ export const RSS_SOURCES: RSSSource[] = [
   // { name: "European Environment Agency", rss: "https://www.eea.europa.eu/rss/highlights.rss", topic: "governance", type: "gov" },
   { name: "NOAA", rss: "https://www.noaa.gov/rss.xml", topic: "climate", type: "gov" },
   { name: "Fisheries and Oceans Canada (DFO)", rss: "https://api.io.canada.ca/io-server/gc/news/en/v2?dept=fisheriesoceans&sort=publishedDate&orderBy=desc&publishedDate%3E=2022-04-01&pick=25&format=atom&atomtitle=Canada%20News%20Centre%20-%20Fisheries%20and%20Oceans%20Canada", topic: "fisheries", type: "gov" },
-  { name: "EPA Water News", rss: "https://www.epa.gov/rss/epa-news-releases.rss", topic: "pollution", type: "gov" },
+  // TODO EPA Water News: removed 2026-04-21, general EPA feed not water-specific, RSS endpoints behind WAF/CAPTCHA. Research correct water-only endpoint.
   { name: "UK DEFRA", rss: "https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs.atom", topic: "governance", type: "gov" },
   { name: "UK MMO", rss: "https://www.gov.uk/government/organisations/marine-management-organisation.atom", topic: "governance", type: "gov" },
-  { name: "DG MARE", rss: "https://ec.europa.eu/commission/presscorner/api/rss?c=Maritime+Affairs+and+Fisheries", topic: "governance", type: "gov" },
+  // TODO DG MARE: removed 2026-04-21, presscorner ?c= filter returns all EC press releases (vaccination, banking, defence). No working maritime-only RSS endpoint found. Research oceans-and-fisheries.ec.europa.eu for RSS/Atom feed.
   { name: "FAO Fisheries", rss: "https://www.fao.org/fishery/rss/en", topic: "fisheries", type: "gov" },
 
   // REGULATORY
@@ -107,5 +107,5 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'GreenBiz', 'OECD Ocean Finance', 'WWF Oceans', 'WWF', 'Nature Ocean & Marine',
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
   'IWC', 'Carbon Brief',
-  'DG MARE', 'UK MMO', 'HELCOM', 'Fisheries and Oceans Canada (DFO)',
+  'UK MMO', 'HELCOM', 'Fisheries and Oceans Canada (DFO)',
 ]);
