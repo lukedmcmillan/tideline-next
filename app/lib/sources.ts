@@ -14,7 +14,7 @@ export const RSS_SOURCES: RSSSource[] = [
 
   // ─── REGULATORY ───────────────────────────────────────────────────────────────
   { name: "ISA", rss: "https://www.isa.org.jm/feed", topic: "dsm", type: "reg" },
-  { name: "CITES", rss: "https://cites.org/eng/news/rss.xml", topic: "cites", type: "reg" },
+  // CITES removed 2026-04-22: Cloudflare blocks Vercel IPs. Add to harvest-scraped-sources via Jina scraper.
   { name: "HELCOM", rss: "https://helcom.fi/feed/", topic: "governance", type: "reg" },
   { name: "CCAMLR", rss: "https://www.ccamlr.org/en/rss.xml", topic: "governance", type: "reg" },
   { name: "IPCC", rss: "https://www.ipcc.ch/feed/", topic: "climate", type: "reg" },
@@ -22,7 +22,7 @@ export const RSS_SOURCES: RSSSource[] = [
 
   // ─── NGOs ─────────────────────────────────────────────────────────────────────
   { name: "Oceana", rss: "https://oceana.org/feed/", topic: "all", type: "ngo" },
-  { name: "WWF", rss: "https://www.worldwildlife.org/press-releases.rss", topic: "all", type: "ngo" },
+  // WWF removed 2026-04-22: Cloudflare blocks Vercel IPs. Add to harvest-scraped-sources via Jina scraper.
   { name: "Ocean Conservancy", rss: "https://oceanconservancy.org/feed/", topic: "pollution", type: "ngo" },
   { name: "Sea Shepherd", rss: "https://seashepherd.org/feed/", topic: "iuu", type: "ngo" },
   { name: "Blue Marine Foundation", rss: "https://www.bluemarinefoundation.com/feed/", topic: "mpa", type: "ngo" },
@@ -66,12 +66,12 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   // NGOs
   'Oceana', 'Ocean Conservancy', 'Sea Shepherd',
   'Blue Marine Foundation', 'Global Fishing Watch',
-  'High Seas Alliance', 'WWF',
+  'High Seas Alliance',
   // Research
   'WHOI', 'Scripps Oceanography', 'MBARI',
   'British Antarctic Survey', 'Plymouth Marine Laboratory',
   // Regulatory
-  'ISA', 'CITES', 'HELCOM', 'CCAMLR', 'IPCC', 'CBD Secretariat',
+  'ISA', 'HELCOM', 'CCAMLR', 'IPCC', 'CBD Secretariat',
   // Media (ocean-specific)
   'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine',
   'Undercurrent News', 'gCaptain', 'Splash247', 'BBC Science & Environment',

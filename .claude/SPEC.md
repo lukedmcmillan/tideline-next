@@ -67,15 +67,41 @@
 - PROJECT_INDEX.md refreshed ✓
 - Hero Signal v3 plan produced (pending approval) ✓
 
+## Completed this session (2026-04-21)
+- Ocean-relevance gate shipped in shadow mode ✓ (3 commits: gate, batching, freshwater tune)
+  - Gate first-run data: 28.4% quarantine rate, ~95% accuracy, avg 749ms per Haiku call
+  - After RSS cleanup: 18.4% quarantine rate on 168 processed
+- RSS source cleanup ✓
+  - Removed: PLOS ONE Marine, Phys.org Ocean, Bloomberg Green (noisy); DSCC duplicate; DG MARE and EPA Water News (misconfigured)
+  - Sources: 87 → 83 total, 66 → 61 OCEAN_DEDICATED
+- 34 RSS sources still failing: FAO, IMO, CITES, IWC, CBD, Oceana, IUCN — critical gap, fixing tomorrow
+- PROJECT_INDEX.md refreshed ✓
+
 ## What's next
-1. Monitor feed cron for 24h, resolve persistent failures
-2. Entity tracking Week 1 Steps 2-7
-2. Brief-reply webhook (reply-to-brief → AI answer)
-3. Corporate Stripe pricing tier
-4. Prompt caching on all API calls
-5. ESG/NGO/journalist briefing_type PDF variants
-6. Blue Economy market widget (opt-in, investor segment only)
-7. Mobile app (Expo shell strategy)
+1. **PRIORITY (Tue 22 Apr)**: Triage all 34 failed RSS sources — produce triage table, fix Tier 1 (FAO, IMO, CITES, IWC, CBD, DSCC) first, then Tier 2-4
+2. Review 48h shadow gate data (Tue 22 Apr), flip gate to blocking if metrics hold
+3. Entity tracking Week 1 Steps 2-7
+4. Brief-reply webhook (reply-to-brief → AI answer)
+5. Corporate Stripe pricing tier
+6. Prompt caching on all API calls
+7. ESG/NGO/journalist briefing_type PDF variants
+8. Blue Economy market widget (opt-in, investor segment only)
+9. Mobile app (Expo shell strategy)
+
+## Known gaps — RSS sources needing Jina scrapers (separate session)
+
+These sources have no accessible RSS feed and need Jina-based scrapers added to `harvest-scraped-sources`. They collectively represent major gaps in Tideline's NGO and governance coverage.
+
+Priority order:
+1. **CITES** (cites.org) — Cloudflare blocks Vercel IPs; critical species trade governance
+2. **WWF** (worldwildlife.org) — Cloudflare blocks Vercel IPs; major NGO voice
+3. **IWC** (iwc.int) — Cloudflare blocks all RSS; key cetacean governance body
+4. **IUCN Red List** (iucn.org) — Cloudflare blocks all RSS; essential conservation authority
+5. **FAO Fisheries** (fao.org/fishery/en) — No RSS endpoint found; critical UN fisheries body
+6. **Marine Conservation Society** (mcsuk.org) — Cloudflare blocked; key UK NGO
+7. **Smithsonian Ocean** (ocean.si.edu) — Cloudflare blocked; strong science content
+8. **ClientEarth** (clientearth.org) — No RSS; major ocean litigation NGO
+9. **MSC** (msc.org) — No RSS; Marine Stewardship Council sustainability certification
 
 ## Known issues / debt
 - Firecrawl MCP not connecting on Windows — use Jina fallback
