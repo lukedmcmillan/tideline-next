@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
   let totalSkipped = 0
   const errors: string[] = []
 
-  // Ocean-relevance gate metrics (shadow mode)
+  // Ocean-relevance gate metrics
   let gateProcessed = 0
   let gateWouldQuarantine = 0
   let gateUnavailable = 0
@@ -149,8 +149,8 @@ export async function GET(request: NextRequest) {
   const { data: todayCounts } = await supabase
     .from('stories')
     .select('source_name')
-    .gte('published_at', `${today}T00:00:00Z`)
-    .lte('published_at', `${today}T23:59:59Z`)
+    .gte('created_at', `${today}T00:00:00Z`)
+    .lte('created_at', `${today}T23:59:59Z`)
 
   const sourceCountToday: Record<string, number> = {}
   for (const row of todayCounts || []) {
@@ -209,8 +209,8 @@ export async function GET(request: NextRequest) {
           haiku_raw_response: gateResult.raw,
         })
       } catch { /* quarantine insert failure is non-fatal */ }
+      continue // BLOCKING MODE: skip main stories insert
     }
-    // Shadow mode: proceed with insert regardless of gate result
 
     const storyData: Record<string, unknown> = {
       title: item.title,
@@ -240,16 +240,16 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Ocean-relevance gate shadow-mode summary
+  // Ocean-relevance gate summary (BLOCKING MODE — enabled 2026-04-22)
   const gateSummary = {
     run: new Date().toISOString(),
     processed: gateProcessed,
-    would_quarantine: gateWouldQuarantine,
+    quarantined: gateWouldQuarantine,
     gate_unavailable: gateUnavailable,
     avg_gate_ms: gateProcessed > 0 ? Math.round(gateTotalMs / gateProcessed) : 0,
     sample_quarantine_titles: quarantineSampleTitles,
   }
-  console.log('[ocean-gate:shadow]', JSON.stringify(gateSummary))
+  console.log('[ocean-gate:blocking]', JSON.stringify(gateSummary))
 
   return NextResponse.json({
     success: true,
@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
     failed_sources: errors,
     capped_sources: cappedSources,
     max_per_source: maxPerSource,
-    ocean_gate_shadow: gateSummary,
+    ocean_gate: gateSummary,
     timestamp: new Date().toISOString(),
   })
 }

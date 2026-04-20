@@ -1,3 +1,5 @@
+// BLOCKING MODE (enabled 2026-04-22): stories that fail the ocean-relevance check
+// are quarantined and NOT inserted into the main stories table.
 import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

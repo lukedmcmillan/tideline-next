@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ─── Ocean-relevance gate metrics (shadow mode) ──────────────────────────────
+// ─── Ocean-relevance gate metrics ────────────────────────────────────────────
 let _gateProcessed = 0;
 let _gateWouldQuarantine = 0;
 let _gateUnavailable = 0;
@@ -293,7 +293,7 @@ async function scrapeSource(source: ScrapedSource): Promise<ScrapeResult> {
                 .limit(1);
               if (recentDupe && recentDupe.length > 0) return;
 
-              // Ocean-relevance gate (shadow mode — log but do not block)
+              // Ocean-relevance gate (blocking mode)
               const gateResult = await checkOceanRelevance({
                 title,
                 content: markdown.slice(0, 500),
@@ -315,8 +315,8 @@ async function scrapeSource(source: ScrapedSource): Promise<ScrapeResult> {
                     haiku_raw_response: gateResult.raw,
                   });
                 } catch { /* quarantine insert failure is non-fatal */ }
+                return; // BLOCKING MODE: skip main stories insert
               }
-              // Shadow mode: proceed with insert regardless of gate result
 
               // Insert into stories for the summary pipeline
               await supabase.from("stories").upsert(
@@ -540,16 +540,16 @@ export async function GET(request: Request) {
   );
   const totalNew = allResults.reduce((acc, r) => acc + r.documents_new, 0);
 
-  // Ocean-relevance gate shadow-mode summary
+  // Ocean-relevance gate summary (BLOCKING MODE — enabled 2026-04-22)
   const gateSummary = {
     run: new Date().toISOString(),
     processed: _gateProcessed,
-    would_quarantine: _gateWouldQuarantine,
+    quarantined: _gateWouldQuarantine,
     gate_unavailable: _gateUnavailable,
     avg_gate_ms: _gateProcessed > 0 ? Math.round(_gateTotalMs / _gateProcessed) : 0,
     sample_quarantine_titles: [..._quarantineSampleTitles],
   };
-  console.log("[ocean-gate:shadow]", JSON.stringify(gateSummary));
+  console.log("[ocean-gate:blocking]", JSON.stringify(gateSummary));
 
   return NextResponse.json({
     success: true,
@@ -557,7 +557,7 @@ export async function GET(request: Request) {
     documents_found: totalFound,
     documents_new: totalNew,
     per_source: allResults,
-    ocean_gate_shadow: gateSummary,
+    ocean_gate: gateSummary,
     duration_ms: Date.now() - startTime,
     timestamp: new Date().toISOString(),
   });
