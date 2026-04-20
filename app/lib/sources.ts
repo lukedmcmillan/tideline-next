@@ -39,7 +39,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Scripps Oceanography", rss: "https://scripps.ucsd.edu/news/feed/", topic: "science", type: "res" },
   { name: "WHOI", rss: "https://www.whoi.edu/feed/", topic: "science", type: "res" },
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
-  { name: "PLOS ONE Marine", rss: "https://journals.plos.org/plosone/feed/atom?filterSubjects=Marine+and+aquatic+sciences", topic: "science", type: "res" },
+  // PLOS ONE Marine removed 2026-04-22: re-audit confirmed 9 quarantines in 12h (burns, eye disease, management studies). Not ocean-specific.
   { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
   { name: "Plymouth Marine Laboratory", rss: "https://www.pml.ac.uk/feed", topic: "science", type: "res" },
 
@@ -57,7 +57,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Splash247", rss: "https://splash247.com/feed/", topic: "shipping", type: "media" },
 
   // ─── ESG / FINANCE ────────────────────────────────────────────────────────────
-  { name: "Bloomberg Green", rss: "https://feeds.bloomberg.com/green/news.rss", topic: "bluefinance", type: "esg" },
+  // Bloomberg Green removed 2026-04-22: re-audit confirmed 6 quarantines in 12h. General climate/ESG, rarely ocean-specific.
 ];
 
 // Sources that are ocean-dedicated and bypass the keyword filter.
@@ -69,7 +69,7 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'High Seas Alliance', 'WWF',
   // Research
   'WHOI', 'Scripps Oceanography', 'MBARI',
-  'PLOS ONE Marine', 'British Antarctic Survey', 'Plymouth Marine Laboratory',
+  'British Antarctic Survey', 'Plymouth Marine Laboratory',
   // Regulatory
   'ISA', 'CITES', 'HELCOM', 'CCAMLR', 'IPCC', 'CBD Secretariat',
   // Media (ocean-specific)
@@ -79,6 +79,4 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
   // Government (ocean-specific remits)
   'UK MMO', 'Fisheries and Oceans Canada (DFO)',
-  // Finance
-  'Bloomberg Green',
 ]);
