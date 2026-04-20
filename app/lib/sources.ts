@@ -41,6 +41,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
   { name: "PLOS ONE Marine", rss: "https://journals.plos.org/plosone/feed/atom?filterSubjects=Marine+and+aquatic+sciences", topic: "science", type: "res" },
   { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
+  { name: "Plymouth Marine Laboratory", rss: "https://www.pml.ac.uk/feed", topic: "science", type: "res" },
 
   // ─── MEDIA ────────────────────────────────────────────────────────────────────
   { name: "Mongabay Oceans", rss: "https://news.mongabay.com/topic/oceans/feed/", topic: "all", type: "media" },
@@ -50,6 +51,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Undercurrent News", rss: "https://www.undercurrentnews.com/feed/", topic: "fisheries", type: "media" },
   { name: "Oceanographic Magazine", rss: "https://oceanographicmagazine.com/news/feed/", topic: "all", type: "media" },
   { name: "Phys.org Ocean", rss: "https://phys.org/rss-feed/earth-news/", topic: "science", type: "media" },
+  { name: "BBC Science & Environment", rss: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml", topic: "science", type: "media" },
   { name: "Carbon Brief", rss: "https://www.carbonbrief.org/feed/", topic: "climate", type: "media" },
   { name: "gCaptain", rss: "https://gcaptain.com/feed/", topic: "shipping", type: "media" },
   { name: "Splash247", rss: "https://splash247.com/feed/", topic: "shipping", type: "media" },
@@ -67,12 +69,12 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'High Seas Alliance', 'WWF',
   // Research
   'WHOI', 'Scripps Oceanography', 'MBARI',
-  'PLOS ONE Marine', 'British Antarctic Survey',
+  'PLOS ONE Marine', 'British Antarctic Survey', 'Plymouth Marine Laboratory',
   // Regulatory
   'ISA', 'CITES', 'HELCOM', 'CCAMLR', 'IPCC', 'CBD Secretariat',
   // Media (ocean-specific)
   'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine',
-  'Undercurrent News', 'gCaptain', 'Splash247',
+  'Undercurrent News', 'gCaptain', 'Splash247', 'BBC Science & Environment',
   // Nature journals (topic-filtered already)
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
   // Government (ocean-specific remits)
