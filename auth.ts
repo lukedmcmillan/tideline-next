@@ -109,7 +109,7 @@ export const authOptions = {
   pages: {
     signIn: '/sign-in',
     verifyRequest: '/sign-in?verify=1',
-    error: '/sign-in?error=1',
+    error: '/sign-in',
   },
   debug: true,
   session: {
@@ -122,8 +122,11 @@ export const authOptions = {
       if (url.startsWith('/')) return `${baseUrl}${url}`
       return `${baseUrl}/platform/feed`
     },
-    async signIn({ user }: { user: any }) {
+    async signIn({ user, account }: { user: any; account: any }) {
       if (!user?.email) return false
+
+      const emailPrefix = user.email.split('@')[0].slice(0, 3) + '***'
+      const provider = account?.provider || 'unknown'
 
       // Create user in public.users on first login
       try {
@@ -133,7 +136,7 @@ export const authOptions = {
           .eq('email', user.email)
           .single()
 
-        console.log('[auth] signIn check for:', user.email, 'existing:', !!existing)
+        console.log('[auth] signIn check for:', emailPrefix, 'provider:', provider, 'existing:', !!existing)
 
         if (!existing) {
           const { error: insertErr } = await supabase.from('users').insert({
@@ -145,11 +148,14 @@ export const authOptions = {
             topics: [],
             timezone: 'Europe/London',
           })
-          if (insertErr) console.error('[auth] users insert error:', insertErr.message, insertErr.details, insertErr.hint)
-          else console.log('[auth] created public.users row for:', user.email)
+          if (insertErr) {
+            console.error('AUTH_SIGNIN_FAIL:', provider, emailPrefix, insertErr.message, insertErr.details, insertErr.hint)
+          } else {
+            console.log('[auth] created public.users row for:', emailPrefix)
+          }
         }
-      } catch (err) {
-        console.error('[auth] signIn callback error:', err)
+      } catch (err: any) {
+        console.error('AUTH_SIGNIN_FAIL:', provider, emailPrefix, err?.message || err)
       }
 
       return true

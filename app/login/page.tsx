@@ -69,13 +69,25 @@ function LoginContent() {
           Ocean Intelligence
         </p>
 
-        {isError && (
-          <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 4, marginBottom: 20 }}>
-            <p style={{ fontSize: 13, color: "#dc2626", fontFamily: "'DM Sans', sans-serif" }}>
-              Sign in failed. Please try again.
-            </p>
-          </div>
-        )}
+        {isError && (() => {
+          const errorMessages: Record<string, string> = {
+            OAuthAccountNotLinked: "This email is already registered with a different sign-in method.",
+            Verification: "Sign-in link expired or already used. Request a new one.",
+            Configuration: "Sign-in is temporarily unavailable. Contact support.",
+            AccessDenied: "Access denied.",
+          };
+          const message = errorMessages[isError] || "Sign in failed. Please try again.";
+          return (
+            <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 4, marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: "#dc2626", fontFamily: "'DM Sans', sans-serif" }}>
+                {message}
+              </p>
+              <p style={{ fontSize: 11, color: "#8BA0BC", fontFamily: "'DM Mono', monospace", marginTop: 4 }}>
+                {isError}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Google OAuth */}
         <button
