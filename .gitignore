@@ -49,3 +49,9 @@ next-env.d.ts
 
 # temporary dashboard backup (delete after Sprint 3)
 app/platform/(shell)/page.old.tsx
+
+__pycache__/
+*.pyc
+
+__pycache__/
+*.pyc

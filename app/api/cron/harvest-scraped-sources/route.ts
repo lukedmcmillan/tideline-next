@@ -2,11 +2,27 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { fetchViaJina } from "@/app/lib/jina";
+import { checkOceanRelevance } from "@/app/lib/ocean-relevance-gate";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// ─── Ocean-relevance gate metrics (shadow mode) ──────────────────────────────
+let _gateProcessed = 0;
+let _gateWouldQuarantine = 0;
+let _gateUnavailable = 0;
+let _gateTotalMs = 0;
+const _quarantineSampleTitles: string[] = [];
+
+function resetGateMetrics() {
+  _gateProcessed = 0;
+  _gateWouldQuarantine = 0;
+  _gateUnavailable = 0;
+  _gateTotalMs = 0;
+  _quarantineSampleTitles.length = 0;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -223,6 +239,31 @@ async function scrapeSource(source: ScrapedSource): Promise<ScrapeResult> {
                 .limit(1);
               if (recentDupe && recentDupe.length > 0) return;
 
+              // Ocean-relevance gate (shadow mode — log but do not block)
+              const gateResult = await checkOceanRelevance({
+                title,
+                content: markdown.slice(0, 500),
+              });
+              _gateProcessed++;
+              _gateTotalMs += gateResult.duration_ms;
+              if (gateResult.verdict === "gate_unavailable") _gateUnavailable++;
+              if (!gateResult.relevant) {
+                _gateWouldQuarantine++;
+                if (_quarantineSampleTitles.length < 3) _quarantineSampleTitles.push(title);
+                try {
+                  await supabase.from("stories_quarantine").insert({
+                    title,
+                    source_name: source.name,
+                    url,
+                    published_at: new Date().toISOString(),
+                    raw_content: markdown.slice(0, 500),
+                    haiku_verdict: gateResult.verdict,
+                    haiku_raw_response: gateResult.raw,
+                  });
+                } catch { /* quarantine insert failure is non-fatal */ }
+              }
+              // Shadow mode: proceed with insert regardless of gate result
+
               // Insert into stories for the summary pipeline
               await supabase.from("stories").upsert(
                 {
@@ -412,6 +453,7 @@ export async function GET(request: Request) {
   }
 
   const startTime = Date.now();
+  resetGateMetrics();
 
   // Scrape all document sources in parallel
   const sourceResults = await Promise.allSettled(
@@ -444,12 +486,24 @@ export async function GET(request: Request) {
   );
   const totalNew = allResults.reduce((acc, r) => acc + r.documents_new, 0);
 
+  // Ocean-relevance gate shadow-mode summary
+  const gateSummary = {
+    run: new Date().toISOString(),
+    processed: _gateProcessed,
+    would_quarantine: _gateWouldQuarantine,
+    gate_unavailable: _gateUnavailable,
+    avg_gate_ms: _gateProcessed > 0 ? Math.round(_gateTotalMs / _gateProcessed) : 0,
+    sample_quarantine_titles: [..._quarantineSampleTitles],
+  };
+  console.log("[ocean-gate:shadow]", JSON.stringify(gateSummary));
+
   return NextResponse.json({
     success: true,
     sources_scraped: allResults.length,
     documents_found: totalFound,
     documents_new: totalNew,
     per_source: allResults,
+    ocean_gate_shadow: gateSummary,
     duration_ms: Date.now() - startTime,
     timestamp: new Date().toISOString(),
   });

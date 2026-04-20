@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { extractEntities } from '@/lib/entities'
 import { RSS_SOURCES, OCEAN_DEDICATED_SOURCES } from '@/app/lib/sources'
+import { checkOceanRelevance } from '@/app/lib/ocean-relevance-gate'
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -83,6 +84,13 @@ export async function GET(request: NextRequest) {
   let totalSkipped = 0
   const errors: string[] = []
 
+  // Ocean-relevance gate metrics (shadow mode)
+  let gateProcessed = 0
+  let gateWouldQuarantine = 0
+  let gateUnavailable = 0
+  let gateTotalMs = 0
+  const quarantineSampleTitles: string[] = []
+
   const oceanKeywords = [
     'ocean', 'marine', 'sea ', 'seas', 'coral', 'fish', 'whale', 'shark', 'trawl',
     'fishing', 'coastal', 'reef', 'dolphin', 'plastic', 'pollution', 'climate', 'carbon',
@@ -134,6 +142,33 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Ocean-relevance gate (shadow mode — log but do not block)
+      const gateResult = await checkOceanRelevance({
+        title: item.title,
+        content: item.description || '',
+      })
+      gateProcessed++
+      gateTotalMs += gateResult.duration_ms
+      if (gateResult.verdict === 'gate_unavailable') {
+        gateUnavailable++
+      }
+      if (!gateResult.relevant) {
+        gateWouldQuarantine++
+        if (quarantineSampleTitles.length < 3) quarantineSampleTitles.push(item.title)
+        try {
+          await supabase.from('stories_quarantine').insert({
+            title: item.title,
+            source_name: source.name,
+            url: item.link,
+            published_at: item.published_at,
+            raw_content: (item.description || '').slice(0, 500),
+            haiku_verdict: gateResult.verdict,
+            haiku_raw_response: gateResult.raw,
+          })
+        } catch { /* quarantine insert failure is non-fatal */ }
+      }
+      // Shadow mode: proceed with insert regardless of gate result
+
       const storyData: Record<string, unknown> = {
         title: item.title,
         link: item.link,
@@ -168,12 +203,24 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Ocean-relevance gate shadow-mode summary
+  const gateSummary = {
+    run: new Date().toISOString(),
+    processed: gateProcessed,
+    would_quarantine: gateWouldQuarantine,
+    gate_unavailable: gateUnavailable,
+    avg_gate_ms: gateProcessed > 0 ? Math.round(gateTotalMs / gateProcessed) : 0,
+    sample_quarantine_titles: quarantineSampleTitles,
+  }
+  console.log('[ocean-gate:shadow]', JSON.stringify(gateSummary))
+
   return NextResponse.json({
     success: true,
     saved: totalSaved,
     skipped: totalSkipped,
     sources: RSS_SOURCES.length,
     failed_sources: errors,
+    ocean_gate_shadow: gateSummary,
     timestamp: new Date().toISOString(),
   })
 }

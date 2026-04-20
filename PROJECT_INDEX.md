@@ -161,6 +161,8 @@ NextAuth v4: Google OAuth (primary) + Email magic link via Resend. JWT session s
 
 ## Current Work (2026-04-20)
 
+- Related Stories feature removed (unreliable matching eroded trust) — revisit with RAG embeddings
+- Hero Signal v3 plan produced: 4-type compact rotation (governance, band crossing, top story, top velocity)
 - Entity taxonomy: ~500 entities in `scripts/seed-entities.csv`, 9 types pending final reclassification
 - Entity type taxonomy migration: `20260420_entity_type_taxonomy.sql`
 - LP briefing PDF layer: next priority after entity work

@@ -54,6 +54,14 @@
 - Step 3: Seed loader script — BLOCKED on Step 2 completion
 - Step 5: Entity matching function — BLOCKED on Step 2 completion
 
+## Completed this session (2026-04-20)
+- Related Stories feature removed from 11 files (story detail + 10 trackers) ✓
+  - Topic-based matching was unreliable — surfaced unrelated content
+  - Preserved: sidebar recent stories, governance related events, directory related entities, all embeddings infra
+  - Will revisit with embeddings-based similarity when RAG is live
+- PROJECT_INDEX.md refreshed with accurate cron schedules from vercel.json ✓
+- Hero Signal v3 plan produced (pending approval): 4-type compact rotation, divergence retired, top-story added
+
 ## What's next
 1. Entity tracking Week 1 Steps 2-7
 2. Brief-reply webhook (reply-to-brief → AI answer)
