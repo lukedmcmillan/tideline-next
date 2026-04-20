@@ -41,7 +41,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
   // PLOS ONE Marine removed 2026-04-22: re-audit confirmed 9 quarantines in 12h (burns, eye disease, management studies). Not ocean-specific.
   { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
-  { name: "Plymouth Marine Laboratory", rss: "https://www.pml.ac.uk/feed", topic: "science", type: "res" },
+  // Plymouth Marine Laboratory removed 2026-04-22: redirects www→non-www (301), Vercel IP blocked at redirect destination.
 
   // ─── MEDIA ────────────────────────────────────────────────────────────────────
   { name: "Mongabay Oceans", rss: "https://news.mongabay.com/topic/oceans/feed/", topic: "all", type: "media" },
@@ -69,7 +69,7 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'High Seas Alliance',
   // Research
   'WHOI', 'Scripps Oceanography', 'MBARI',
-  'British Antarctic Survey', 'Plymouth Marine Laboratory',
+  'British Antarctic Survey',
   // Regulatory
   'ISA', 'HELCOM', 'CCAMLR', 'IPCC', 'CBD Secretariat',
   // Media (ocean-specific)
