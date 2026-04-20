@@ -38,7 +38,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Plastic Soup Foundation", rss: "https://www.plasticsoupfoundation.org/en/feed/", topic: "pollution", type: "ngo" },
   { name: "Sea Turtle Conservancy", rss: "https://conserveturtles.org/feed/", topic: "turtles", type: "ngo" },
   { name: "Reef Check", rss: "https://www.reefcheck.org/feed/", topic: "coral", type: "ngo" },
-  { name: "DSCC", rss: "https://www.savethehighseas.org/feed/", topic: "dsm", type: "ngo" },
+  // DSCC removed 2026-04-21: duplicate of Deep Sea Conservation Coalition (same URL)
   { name: "Blue Marine Foundation", rss: "https://www.bluemarinefoundation.com/feed/", topic: "mpa", type: "ngo" },
   { name: "Mission Blue", rss: "https://mission-blue.org/feed/", topic: "mpa", type: "ngo" },
   { name: "ClientEarth", rss: "https://www.clientearth.org/rss/latest-news/", topic: "governance", type: "ngo" },
@@ -63,7 +63,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "WHOI", rss: "https://www.whoi.edu/press-room/news-releases/rss/", topic: "science", type: "res" },
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
   { name: "Smithsonian Ocean", rss: "https://ocean.si.edu/rss.xml", topic: "science", type: "res" },
-  { name: "PLOS ONE Marine", rss: "https://journals.plos.org/plosone/feed/atom?filterSubjects=Marine+and+aquatic+sciences", topic: "science", type: "res" },
+  // PLOS ONE Marine removed 2026-04-21: 9 quarantines in 12h, content consistently off-topic (burns, eye disease)
   { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
   { name: "National Oceanography Centre", rss: "https://noc.ac.uk/feed", topic: "science", type: "res" },
   { name: "Plymouth Marine Laboratory", rss: "https://www.pml.ac.uk/feed/", topic: "science", type: "res" },
@@ -82,11 +82,11 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "New Scientist", rss: "https://www.newscientist.com/feed/home/", topic: "science", type: "media" },
   { name: "Natural History Museum", rss: "https://www.nhm.ac.uk/discover/news/rss-feed.xml", topic: "science", type: "media" },
   { name: "Oceanographic Magazine", rss: "https://oceanographicmagazine.com/news/feed/", topic: "all", type: "media" },
-  { name: "Phys.org Ocean", rss: "https://phys.org/rss-feed/earth-news/", topic: "science", type: "media" },
+  // Phys.org Ocean removed 2026-04-21: 4 quarantines in 12h, URL is earth-news/ not ocean-specific
   { name: "Carbon Brief", rss: "https://www.carbonbrief.org/feed/", topic: "climate", type: "media" },
 
   // ESG / FINANCE
-  { name: "Bloomberg Green", rss: "https://feeds.bloomberg.com/green/news.rss", topic: "bluefinance", type: "esg" },
+  // Bloomberg Green removed 2026-04-21: 6 quarantines in 12h, general climate/ESG not ocean-specific
   { name: "GreenBiz", rss: "https://www.greenbiz.com/rss.xml", topic: "bluefinance", type: "esg" },
   { name: "OECD Ocean Finance", rss: "https://www.oecd.org/ocean/rss.xml", topic: "bluefinance", type: "esg" },
   { name: "CBD Secretariat", rss: "https://www.cbd.int/rss/news.xml", topic: "governance", type: "reg" },
@@ -98,14 +98,14 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'Shark Trust', 'Sea Turtle Conservancy', 'Reef Check', 'Blue Marine Foundation',
   'Mission Blue', 'Plastic Soup Foundation', 'The Ocean Foundation', 'Surfrider Foundation',
   'Global Fishing Watch', 'EDF Oceans', '5 Gyres', 'MSC', 'Marine Conservation Society',
-  'ClientEarth', 'High Seas Alliance', 'DSCC', 'Deep Sea Conservation Coalition', 'WCS Marine',
+  'ClientEarth', 'High Seas Alliance', 'Deep Sea Conservation Coalition', 'WCS Marine',
   'WHOI', 'Scripps Oceanography', 'MBARI', 'Smithsonian Ocean', 'NASA Earth Observatory',
-  'PLOS ONE Marine', 'Plymouth Marine Laboratory', 'British Antarctic Survey',
+  'Plymouth Marine Laboratory', 'British Antarctic Survey',
   'National Oceanography Centre', 'ICES', 'ISA', 'IUCN Red List', 'IMO News', 'CITES',
   'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine', 'The Fish Site',
-  'Undercurrent News', 'IntraFish', 'Natural History Museum', 'Bloomberg Green',
+  'Undercurrent News', 'IntraFish', 'Natural History Museum',
   'GreenBiz', 'OECD Ocean Finance', 'WWF Oceans', 'WWF', 'Nature Ocean & Marine',
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
-  'IWC', 'Phys.org Ocean', 'Carbon Brief',
+  'IWC', 'Carbon Brief',
   'DG MARE', 'UK MMO', 'HELCOM', 'Fisheries and Oceans Canada (DFO)',
 ]);
