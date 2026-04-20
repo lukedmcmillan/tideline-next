@@ -24,23 +24,32 @@ function verificationOnlyAdapter(): Adapter {
       return token
     },
     async useVerificationToken({ identifier, token: tkn }) {
+      // Look up token regardless of used status. NextAuth v4 can call
+      // useVerificationToken twice during the callback flow (verify +
+      // redirect). If we filter by used=false, the second call fails
+      // with a Verification error.
       const { data } = await supabase
         .from('magic_links')
-        .select('email, token, expires_at')
+        .select('email, token, expires_at, used')
         .eq('email', identifier)
         .eq('token', tkn)
-        .eq('used', false)
         .maybeSingle()
 
-      if (data) {
+      if (!data) return null
+
+      // Expired tokens are invalid regardless
+      if (new Date(data.expires_at).getTime() < Date.now()) return null
+
+      // Mark as used (idempotent on second call)
+      if (!data.used) {
         await supabase
           .from('magic_links')
           .update({ used: true })
           .eq('email', identifier)
           .eq('token', tkn)
-        return { identifier: data.email, token: data.token, expires: new Date(data.expires_at) }
       }
-      return null
+
+      return { identifier: data.email, token: data.token, expires: new Date(data.expires_at) }
     },
     // Stubs — not used with JWT strategy but required by the interface
     createUser: async (u: any) => ({ ...u, id: u.id || crypto.randomUUID(), emailVerified: null }),
