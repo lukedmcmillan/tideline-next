@@ -7,12 +7,15 @@ export interface RSSSource {
 
 export const RSS_SOURCES: RSSSource[] = [
   // GOVERNMENT
-  { name: "NOAA Fisheries", rss: "https://www.fisheries.noaa.gov/rss.xml", topic: "fisheries", type: "gov" },
-  { name: "NOAA Ocean Service", rss: "https://oceanservice.noaa.gov/rss/oceancast.xml", topic: "climate", type: "gov" },
-  { name: "NOAA News", rss: "https://www.noaa.gov/news-release/feed", topic: "climate", type: "gov" },
+  // DEACTIVATED 2026-04-20 — URL 404, verified dead during Week 0 feed audit:
+  // { name: "NOAA Fisheries", rss: "https://www.fisheries.noaa.gov/rss.xml", topic: "fisheries", type: "gov" },
+  // { name: "NOAA Ocean Service", rss: "https://oceanservice.noaa.gov/rss/oceancast.xml", topic: "climate", type: "gov" },
+  // { name: "NOAA News", rss: "https://www.noaa.gov/news-release/feed", topic: "climate", type: "gov" },
+  // { name: "European Environment Agency", rss: "https://www.eea.europa.eu/rss/highlights.rss", topic: "governance", type: "gov" },
   { name: "EPA Water News", rss: "https://www.epa.gov/rss/epa-news-releases.rss", topic: "pollution", type: "gov" },
-  { name: "European Environment Agency", rss: "https://www.eea.europa.eu/rss/highlights.rss", topic: "governance", type: "gov" },
   { name: "UK DEFRA", rss: "https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs.atom", topic: "governance", type: "gov" },
+  { name: "UK MMO", rss: "https://www.gov.uk/government/organisations/marine-management-organisation.atom", topic: "governance", type: "gov" },
+  { name: "DG MARE", rss: "https://ec.europa.eu/commission/presscorner/api/rss?c=Maritime+Affairs+and+Fisheries", topic: "governance", type: "gov" },
   { name: "FAO Fisheries", rss: "https://www.fao.org/fishery/rss/en", topic: "fisheries", type: "gov" },
 
   // REGULATORY
@@ -20,6 +23,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "IMO News", rss: "https://www.imo.org/en/MediaCentre/PressBriefings/Pages/rss.aspx", topic: "shipping", type: "reg" },
   { name: "CITES", rss: "https://cites.org/eng/news/rss.xml", topic: "cites", type: "reg" },
   { name: "IWC", rss: "https://iwc.int/en/news/feed", topic: "whales", type: "reg" },
+  { name: "HELCOM", rss: "https://helcom.fi/feed/", topic: "governance", type: "reg" },
 
   // NGOs
   { name: "IUCN Red List", rss: "https://www.iucnredlist.org/rss.xml", topic: "iucn", type: "ngo" },
@@ -100,5 +104,6 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'Undercurrent News', 'IntraFish', 'Natural History Museum', 'Bloomberg Green',
   'GreenBiz', 'OECD Ocean Finance', 'WWF Oceans', 'WWF', 'Nature Ocean & Marine',
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
-  'IWC', 'Phys.org Ocean', 'Carbon Brief', 'NOAA News',
+  'IWC', 'Phys.org Ocean', 'Carbon Brief',
+  'DG MARE', 'UK MMO', 'HELCOM',
 ]);
