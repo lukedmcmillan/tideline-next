@@ -55,15 +55,21 @@
 - Step 5: Entity matching function — BLOCKED on Step 2 completion
 
 ## Completed this session (2026-04-20)
+- Week 2 source gap fix — critical feed quality audit and remediation ✓
+  - RSS sources reduced from 80 to 38: removed 36 dead/low-value feeds, fixed 12 URLs (Oceana, Mongabay, Hakai, etc.)
+  - Jina scraper targets increased from 7 to 14: added IWC, SeafoodSource, ICCAT, OSPAR news, MSC, TradeWinds, CBD news
+  - Per-source daily cap implemented in fetch-feeds cron: 15% of daily total, floor of 5 stories/source
+  - New shipping sources: gCaptain, Splash247, TradeWinds (Jina)
+  - CBD Secretariat confirmed dead RSS ("Under Construction"), migrated to Jina at cbd.int/news
+  - Feed cron verified: 123 saved, 178 skipped, 23 sources capped, 19.5% quarantine rate on ocean-relevance gate
+  - 8 sources showing intermittent failures (CITES, WWF, DSCC, Nature Ocean, Scripps, WHOI, BAS) — monitoring 24h
 - Related Stories feature removed from 11 files (story detail + 10 trackers) ✓
-  - Topic-based matching was unreliable — surfaced unrelated content
-  - Preserved: sidebar recent stories, governance related events, directory related entities, all embeddings infra
-  - Will revisit with embeddings-based similarity when RAG is live
-- PROJECT_INDEX.md refreshed with accurate cron schedules from vercel.json ✓
-- Hero Signal v3 plan produced (pending approval): 4-type compact rotation, divergence retired, top-story added
+- PROJECT_INDEX.md refreshed ✓
+- Hero Signal v3 plan produced (pending approval) ✓
 
 ## What's next
-1. Entity tracking Week 1 Steps 2-7
+1. Monitor feed cron for 24h, resolve persistent failures
+2. Entity tracking Week 1 Steps 2-7
 2. Brief-reply webhook (reply-to-brief → AI answer)
 3. Corporate Stripe pricing tier
 4. Prompt caching on all API calls

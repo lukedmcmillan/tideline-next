@@ -2,167 +2,333 @@
 
 Generated: 2026-04-20
 
-## Project Summary
-
-Ocean intelligence SaaS platform curating news, research, and regulatory developments. Next.js 16 + React 19 + Supabase + Stripe.
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-app/
-  api/
-    auth/           # NextAuth [...nextauth], verify
-    cron/            # 20 scheduled jobs (feeds, scrapers, briefs, agents)
-    admin/           # backfill-entities, backfill-velocity, documents, story-override
-    calendar/        # [token] iCal feed, subscribe
-    documents/       # [id] CRUD, export, generate-brief, submit
-    lp-briefing/     # LP briefing + PDF + stats
-    projects/        # CRUD, new-stories
-    stories/         # list, save, comments
-    stripe-webhook/  # 5 Stripe events
-    threads/         # list, me, match
-    user/            # dismiss-modal, modal-status, complete-onboarding, onboarding-status, sector, update-last-seen
-    webhooks/        # treaty-change
-    # Single-file routes: ask, consultations, dashboard, entities/search, governance-events,
-    #   iuu-status, isa-status, 30x30-status, blue-finance-status, iuu/carding, psma,
-    #   landing-data, portal, research/inline, search, sidebar-data, stories, subscribe,
-    #   subscription-access, summarise, survey, tracker-events, tracker-status/[slug],
-    #   tracker/view, treaty-status, trial-signup, velocity/[slug], waitlist,
-    #   workspace/quick-note, workspace/narrative, story/linkedin-draft
-  lib/               # Shared modules (16 files)
-    auth.ts           # getEmailFromSession, NextAuth helpers
-    sources.ts        # ~89 RSS feed definitions
-    embeddings.ts     # Vector embedding generation
-    search.ts         # Semantic search
-    subscription.ts   # Subscription status checks
-    tracker-metadata.ts # Tracker config per slug
-    velocity.ts       # Story velocity scoring
-    jina.ts           # Jina article scraping
-    confidence.ts     # Confidence scoring
-    events.ts         # Event helpers
-    brief-reply.ts    # Brief reply formatting
-    user-preferences.ts # User pref helpers
-    query-expansion.ts  # Search query expansion
-    html.ts           # HTML utilities
-  platform/(shell)/  # Authenticated app (behind auth middleware)
-    feed/            # Main news feed
-    story/[id]/      # Story detail + AI summary
-    tracker/         # 10 tracker pages (governance, iuu, 30x30, plastics, imo-shipping, wto-fisheries, offshore-wind, cites-marine, isa, bbnj, blue-finance)
-    trackers/        # Tracker index
-    threads/         # Thread view
-    directory/       # Entity directory
-    research/        # Research assistant
-    calendar/        # Governance calendar
-    workspace/       # Workspace
-    projects/        # Projects + [id] + [id]/draft
-    lp-briefing/     # LP briefing view
-    library/         # Document library + submit
-    settings/topics/ # Topic preferences
-    admin/library/   # Admin document management
-    layout.tsx       # Shell layout (sidebar nav)
-  # Public pages: layout.tsx, page.tsx (homepage), start/, sign-in/, subscribe/,
-  #   pricing/, upgrade/, demo/, survey/, reports/, workspace/, admin/brief/
-components/          # 27 shared components
-  Header, StoryCard, FeaturedCard, FeedSidebar, Paywall, TrialBanner,
-  ConversionModal, EarlyAccessModal, WelcomeState, SegmentSwitcher,
-  LinkedInDraftPanel, DesktopOnly, TopicsSelector, AlertToggle,
-  VelocityScore, Sparkline, TickerStrip, OvernightReveal,
-  TrackerHero, TrackerHistory, TrackerMethodology,
-  HeroSignal, HeroSignalBandCrossing, HeroSignalGovernance, HeroSignalVelocity
-scripts/             # CLI scripts + data files
-  seed-entities.csv   # ~500 entity definitions (active work)
-  seed-tracker-events.ts, seed-alert-preferences.ts
-  backfill-multipliers.ts, backfill-controversy.ts
-  embed-documents.ts, import-faolex.ts, processor-agent.ts
-  scraper-*.ts        # 5 scrapers (playwright, informea, openalex, ngo-reports, un-library, agent)
-  *.sql               # Table creation scripts
-supabase/
-  migrations/         # 34 migrations (20260330 - 20260420)
-  seeds/threads.sql
-data/audits/          # Feed audit reports + gap analysis
+tideline-next/
+├── app/
+│   ├── api/              # API routes (REST endpoints)
+│   │   ├── cron/         # 20 scheduled jobs
+│   │   ├── admin/        # Admin-only endpoints
+│   │   ├── webhooks/     # Supabase pg_net triggers
+│   │   └── ...           # Feature endpoints
+│   ├── lib/              # Shared server-side utilities
+│   ├── platform/(shell)/ # Authenticated platform pages
+│   └── tracker/          # Public tracker pages (legacy)
+├── components/           # Shared React components
+├── scripts/              # One-off data scripts (tsx)
+├── supabase/migrations/  # SQL migration files
+└── data/audits/          # Feed audit CSVs + analysis
 ```
 
-## Entry Points
+## 🚀 Entry Points
 
 - **Dev server**: `npm run dev`
-- **Build**: `npm run build`
+- **Production**: `npm run build && npm start`
 - **Lint**: `npm run lint`
 - **Seed scripts**: `npm run seed:events`, `npm run seed:alerts`
-- **Backfills**: `npm run backfill:multipliers`, `npm run backfill:controversy`
+- **Backfill**: `npm run backfill:multipliers`, `npm run backfill:controversy`
 
-## Cron Jobs (20 endpoints)
+## 📄 Public Pages
 
-| Job | Schedule | Purpose |
-|-----|----------|---------|
-| fetch-feeds | Every 2h (even hours) | RSS aggregation (~89 sources) |
-| summarise-pending | Every 2h +15m | AI summarization queue |
-| project-populate | Every 2h +30m | Auto-populate project feeds |
-| generate-embeddings | Daily 01:00 | Vector embeddings for stories |
-| embed-documents | Daily 03:00 | Document chunk embeddings (1GB/5min) |
-| scrape-governance-calendar | Every 10 days | Governance body meetings |
-| score-significance | Daily 03:30 | Story significance scoring |
-| governance-agent | Weekly Mon 04:00 | Governance intelligence |
-| blue-finance-agent | Weekly Mon 04:30 | Blue finance intelligence |
-| source-health | Weekly Mon 05:00 | Source health snapshots |
-| scrape-isa | Weekly Tue 05:00 | ISA document scraper |
-| generate-brief | Daily 05:45 | Daily brief generation |
-| send-brief | Daily 06:15 | Email daily brief |
-| harvest-scraped-sources | Daily 06:30 | Non-RSS scraping |
-| velocity-scores | Every 4 days 06:00 | Topic velocity recalc |
-| generate-connections | Daily 07:00 | Story connection graph |
-| monitor-sources | Weekly Mon 07:00 | Source health monitoring |
-| threshold-alerts | Daily 08:00 | Alert threshold checks |
-| scrape-psma | Weekly Wed 08:00 | PSMA status scraper |
-| conversion-triggers | Daily 09:00 | Trial conversion nudges |
+| Route | File | Description |
+|-------|------|-------------|
+| `/` | `app/page.tsx` | Marketing homepage |
+| `/start` | `app/start/page.tsx` | Trial signup flow |
+| `/sign-in` | `app/sign-in/page.tsx` | Magic link / Google auth |
+| `/pricing` | `app/pricing/page.tsx` | Pricing page |
+| `/demo` | `app/demo/page.tsx` | Demo page |
+| `/survey` | `app/survey/page.tsx` | User survey |
+| `/upgrade` | `app/upgrade/page.tsx` | Upgrade prompt |
+| `/workspace` | `app/workspace/page.tsx` | Standalone workspace |
+| `/workspace/[id]` | `app/workspace/[id]/page.tsx` | Workspace detail |
+| `/reports` | `app/reports/page.tsx` | Reports page |
+| `/admin/brief` | `app/admin/brief/page.tsx` | Admin brief override |
 
-## Database (Supabase)
+## 🔒 Platform Pages (auth required, `/platform/(shell)/`)
 
-**Schemas**: public, auth, next_auth
+| Route | Description |
+|-------|-------------|
+| `/platform/feed` | Main news feed with topic sidebar + paywall |
+| `/platform/story/[id]` | Story detail with AI summary |
+| `/platform/workspace` | Intelligence workspace |
+| `/platform/projects` | Research projects list |
+| `/platform/projects/[id]` | Project detail |
+| `/platform/projects/[id]/draft` | Project draft editor (Tiptap) |
+| `/platform/threads` | Intelligence threads |
+| `/platform/research` | Research assistant |
+| `/platform/calendar` | Governance calendar |
+| `/platform/directory` | Entity/org directory |
+| `/platform/library` | Document library |
+| `/platform/library/submit` | Document submission |
+| `/platform/lp-briefing` | LP briefing panel |
+| `/platform/settings/topics` | Topic preferences |
+| `/platform/trackers` | Tracker hub |
+| `/platform/admin/library` | Admin: library management |
 
-**Core tables**: users, stories, subscriptions, trial_signups, magic_links, scraped_sources, scrape_runs, treaty_ratifications, governance_bodies, governance_events, expected_decisions, calendar_subscriptions, threads, tracker_events, entities, embeddings, document_chunks, consultations, story_comments, workspace tables, survey_responses, waitlist, lp_portfolios, community_documents, source_health_snapshots
+## 🗺️ Tracker Pages (`/platform/tracker/`)
 
-**Latest migration**: 20260420_entity_type_taxonomy.sql
+| Tracker | Slug |
+|---------|------|
+| BBNJ Treaty | `bbnj` |
+| ISA (Deep Sea Mining) | `isa` |
+| IUU Fishing | `iuu` |
+| 30x30 Marine Protection | `30x30` |
+| Plastics Treaty | `plastics` |
+| Blue Finance | `blue-finance` |
+| IMO Shipping Decarbonisation | `imo-shipping` |
+| WTO Fisheries Subsidies | `wto-fisheries` |
+| CITES Marine | `cites-marine` |
+| Offshore Wind | `offshore-wind` |
+| Governance Calendar | `governance` |
 
-## Key Dependencies
+## 🌐 API Routes
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| next | 16.1.7 | Framework |
-| react | 19.2.3 | UI |
-| @supabase/supabase-js | ^2.99.2 | Database |
-| stripe | ^20.4.1 | Payments |
-| next-auth | ^4.24.13 | Auth (Google OAuth + magic link) |
-| @anthropic-ai/sdk | ^0.82.0 | AI summarization |
-| ai + @ai-sdk/anthropic | ^6.0 | AI SDK |
-| pdfkit | ^0.18.0 | PDF generation |
-| d3 + topojson-client | ^7.9 | Maps/charts |
-| chart.js + react-chartjs-2 | ^4.5 | Charts |
-| @tiptap/* | ^3.21 | Rich text editor |
-| ical-generator | ^10.1 | Calendar feeds |
-| csv-parse | ^6.2 | CSV parsing |
-| playwright | ^1.59 | Web scraping |
-| @mastra/core + @mastra/rag | ^1.24 | Agent/RAG framework |
+### Auth
+- `POST /api/auth/[...nextauth]` — NextAuth (Google OAuth + magic link)
+- `POST /api/auth/verify` — Validates magic link token, creates user, sets session cookie
+- `POST /api/magic-link` — Generates and sends magic link via Resend
 
-## 10 Tracker Tags
+### Content & Stories
+- `GET /api/stories` — Fetch stories (topic filter, pagination, id lookup)
+- `POST /api/stories/save` — Save/unsave story
+- `GET/POST /api/stories/comments` — Story comments
+- `POST /api/summarise` — On-demand AI summarization (Jina→fetch→RSS fallback)
+- `GET /api/search` — Semantic vector search
+- `POST /api/ask` — AI Q&A over corpus
+- `POST /api/research/inline` — Inline research assistant
 
-`bbnj` `isa` `30x30` `iuu` `imo-shipping` `wto-fisheries` `cites-marine` `plastics` `offshore-wind` `blue-finance`
+### User & Subscription
+- `GET /api/subscription-status` — Status + needsOnboarding flag
+- `GET /api/subscription-access` — Access tier check
+- `POST /api/onboarding` — Save topics + timezone
+- `POST /api/subscribe` — Create Stripe subscription (14-day trial)
+- `POST /api/stripe-webhook` — Stripe events (5 event types)
+- `POST /api/stripe/checkout` — Stripe checkout session
+- `GET /api/portal` — Stripe customer portal
+- `POST /api/trial-signup` — Pre-auth trial signup + welcome email
+- `POST /api/waitlist` — Waitlist signup
+- `POST /api/survey` — Survey response submission
+- `GET/POST /api/user/*` — User profile (sector, topics, modal, onboarding-status, last-seen)
 
-## Design System
+### Trackers
+- `GET /api/treaty-status` — BBNJ ratification data
+- `GET /api/iuu-status` — IUU fishing status
+- `GET /api/30x30-status` — 30x30 protection status
+- `GET /api/blue-finance-status` — Blue finance status
+- `GET /api/isa-status` — ISA mining status
+- `GET /api/isa-contractors` — ISA contractor list
+- `GET /api/psma` — PSMA compliance data
+- `GET /api/iuu/carding` — IUU carding data
+- `GET /api/tracker-status/[slug]` — Generic tracker status
+- `GET /api/tracker-events` — Tracker event log
+- `POST /api/tracker/view` — Record tracker view
+- `GET /api/velocity/[slug]` — Velocity score for topic
 
-- **Styling**: Inline styles (`style={{...}}`), not Tailwind classes in JSX
-- **Colors**: Navy #0a1628, Blue #1d6fa4, off-white backgrounds, CTA #112236
-- **Fonts**: DM Sans (body), Georgia (serif headlines), IBM Plex Mono
-- **Source badges**: gov (blue), reg (red), ngo (green), res (purple), media (yellow), esg (teal)
-- **Workspace standard**: White bg, left-aligned, 48px left pad, DM Sans only, teal primary, 4px radius buttons
+### Workspace & Projects
+- `GET/POST /api/projects` — Project CRUD
+- `GET/PUT/DELETE /api/project-entries/[id]` — Project entry management
+- `GET /api/projects/new-stories` — New stories since last visit
+- `GET/POST /api/threads` — Intelligence threads
+- `GET /api/threads/me` — User's threads
+- `POST /api/threads/match` — Thread matching
+- `GET /api/documents/[id]` — Document detail
+- `GET /api/documents/[id]/export` — Export document
+- `POST /api/documents/generate-brief` — AI brief generation
+- `POST /api/documents/submit` — Submit document to library
+- `POST /api/workspace/quick-note` — Quick note capture
+- `POST /api/workspace/narrative` — Narrative generation
+- `GET /api/community-documents` — Community document library
 
-## Auth
+### Calendar & Governance
+- `GET /api/governance-events` — Governance meeting events (body/topic/significance filters)
+- `GET /api/calendar/[token]` — Personal iCal feed
+- `POST /api/calendar/subscribe` — Create calendar subscription
+- `GET /api/consultations` — Regulatory consultation calendar
 
-NextAuth v4: Google OAuth (primary) + Email magic link via Resend. JWT session strategy. Middleware protects `/platform/*` and `/tracker/*`. First login creates `public.users` row, redirects to `/onboarding`.
+### LP & Admin
+- `GET /api/lp-briefing` — LP portfolio brief
+- `GET /api/lp-briefing/pdf` — PDF export of LP brief
+- `GET /api/lp-briefing/stats` — LP brief statistics
+- `GET/POST /api/lp-portfolios` — LP portfolio management
+- `GET /api/entities/search` — Entity search
+- `GET /api/dashboard` — Dashboard summary data
+- `GET /api/sidebar-data` — Sidebar data (topics, stories count)
+- `GET /api/landing-data` — Homepage data
+- `POST /api/alerts/subscribe` — Alert preference subscription
+- `GET /api/library/signed-url` — Signed URL for library docs
+- `POST /api/story/linkedin-draft` — LinkedIn post draft
+- `POST /api/admin/story-override` — Admin story curation
+- `POST /api/admin/backfill-entities` — Entity backfill
+- `POST /api/admin/backfill-velocity` — Velocity backfill
+- `POST /api/admin/documents/*` — Admin document upload
 
-## Current Work (2026-04-20)
+### Webhooks
+- `POST /api/webhooks/treaty-change` — pg_net trigger for treaty ratification changes → Claude significance assessment → story alert
 
-- Related Stories feature removed (unreliable matching eroded trust) — revisit with RAG embeddings
-- Hero Signal v3 plan produced: 4-type compact rotation (governance, band crossing, top story, top velocity)
-- Entity taxonomy: ~500 entities in `scripts/seed-entities.csv`, 9 types pending final reclassification
-- Entity type taxonomy migration: `20260420_entity_type_taxonomy.sql`
-- LP briefing PDF layer: next priority after entity work
+## ⏰ Cron Jobs (20 total)
+
+| Endpoint | Schedule | Purpose |
+|----------|----------|---------|
+| `cron/fetch-feeds` | Hourly | RSS aggregation (~89 sources) |
+| `cron/harvest-scraped-sources` | Every 6h | Web scraping (IMO, ISA, FAO, IUCN, etc.) |
+| `cron/scrape-governance-calendar` | Weekly Mon 3am UTC | Governance meeting extraction |
+| `cron/scrape-isa` | Scheduled | ISA deep-sea mining scraper |
+| `cron/scrape-psma` | Scheduled | PSMA compliance scraper |
+| `cron/summarise-pending` | Scheduled | AI summarization queue |
+| `cron/generate-embeddings` | Scheduled | Vector embedding generation |
+| `cron/embed-documents` | Scheduled | Document chunk embedding |
+| `cron/generate-connections` | Scheduled | Story connection graph |
+| `cron/score-significance` | Scheduled | Significance scoring |
+| `cron/velocity-scores` | Scheduled | Velocity score updates |
+| `cron/blue-finance-agent` | Scheduled | Blue finance monitoring |
+| `cron/governance-agent` | Scheduled | Governance event agent |
+| `cron/generate-brief` | Daily | AI brief generation |
+| `cron/send-brief` | Daily | Brief email delivery |
+| `cron/conversion-triggers` | Scheduled | Trial conversion emails |
+| `cron/source-health` | Scheduled | Source health reporting |
+| `cron/monitor-sources` | Scheduled | Source uptime monitoring |
+| `cron/threshold-alerts` | Scheduled | Threshold-based alerts |
+| `cron/project-populate` | Scheduled | Auto-populate projects |
+
+## 📦 Lib Modules (`app/lib/`)
+
+| File | Purpose |
+|------|---------|
+| `auth.ts` | `getEmailFromSession()` — extracts email from JWT for API routes |
+| `sources.ts` | RSS/scrape source definitions (~89 sources with tiers, topics, types) |
+| `ocean-relevance-gate.ts` | Batched Haiku calls to filter non-ocean stories (shadow mode) |
+| `embeddings.ts` | Vector embedding generation + upsert utilities |
+| `search.ts` | Semantic search over `story_embeddings` via pgvector |
+| `subscription.ts` | Subscription status helpers, access tier logic |
+| `jina.ts` | Jina API client for article scraping + HTML rendering |
+| `velocity.ts` | Velocity score calculation (story volume × source weight × recency) |
+| `tracker-metadata.ts` | Static config for tracker pages (labels, slugs, descriptions) |
+| `confidence.ts` | Confidence scoring for AI-extracted data |
+| `html.ts` | HTML stripping, text extraction utilities |
+| `events.ts` | Governance event helpers |
+| `brief-reply.ts` | Reply-to-brief email handling |
+| `user-preferences.ts` | User topic/notification preference helpers |
+| `query-expansion.ts` | Search query synonym expansion |
+
+## 🧩 Components
+
+| Component | Purpose |
+|-----------|---------|
+| `Header.tsx` | Shared site header |
+| `Paywall.tsx` | Hard paywall overlay (canceled/past_due/none) |
+| `TrialBanner.tsx` | Soft banner (≤5 days left in trial) |
+| `ConversionModal.tsx` | Upgrade prompt modal |
+| `WelcomeState.tsx` | First-login empty state |
+| `EarlyAccessModal.tsx` | Early access gate |
+| `StoryCard.tsx` | Feed story card |
+| `FeaturedCard.tsx` | Featured/hero story card |
+| `FeedSidebar.tsx` | Topic filter sidebar |
+| `SegmentSwitcher.tsx` | Feed segment tabs |
+| `AlertToggle.tsx` | Alert subscription toggle |
+| `VelocityScore.tsx` | Velocity score display badge |
+| `Sparkline.tsx` | Mini trend chart |
+| `TopicsSelector.tsx` | Multi-topic picker (onboarding + settings) |
+| `TrackerHero.tsx` | Tracker page hero section |
+| `TrackerHistory.tsx` | Historical trend display |
+| `TrackerMethodology.tsx` | Methodology explanation panel |
+| `HeroSignal.tsx` | Homepage live signal widget |
+| `HeroSignalBandCrossing.tsx` | Band crossing signal variant |
+| `HeroSignalGovernance.tsx` | Governance signal variant |
+| `HeroSignalVelocity.tsx` | Velocity signal variant |
+| `OvernightReveal.tsx` | Overnight stories reveal animation |
+| `TickerStrip.tsx` | Breaking news ticker |
+| `LinkedInDraftPanel.tsx` | LinkedIn post draft UI |
+| `DesktopOnly.tsx` | Desktop-only gate wrapper |
+| `workspace/IntelligenceThread.tsx` | AI intelligence thread UI |
+| `ui/TidelineLogo.tsx` | Logo SVG component |
+
+## 🗄️ Database (Supabase)
+
+**Key tables:**
+- `public.users` — subscription status, topics (jsonb), timezone, stripe_subscription_id, trial_ends_at
+- `public.stories` — title, link, source_name, topic, published_at, description, summaries, is_pro, alert_type, velocity_score
+- `public.scraped_sources` — non-RSS scraped content with content_hash dedup
+- `public.treaty_ratifications` — longitudinal BBNJ ratification change log
+- `public.governance_events` — meetings with significance, expected_decisions
+- `public.governance_bodies` — 10 intergovernmental bodies
+- `public.expected_decisions` — per-event decision tracker
+- `public.calendar_subscriptions` — personal iCal subscriptions
+- `public.scrape_runs` — scraper health log
+- `public.subscriptions` — Stripe subscription state
+- `public.embeddings` / `public.document_chunks` — vector search
+- `public.tracker_events` — tracker change event log
+- `public.projects` / `public.project_entries` — workspace projects
+- `public.threads` — intelligence threads
+- `public.entities` — named entities (orgs, treaties, species) with taxonomy
+- `public.lp_portfolios` — LP portfolio configs
+- `public.consultations` — regulatory consultation calendar
+- `public.source_health` / `public.source_health_snapshots` — feed health monitoring
+- `next_auth.users` — NextAuth session management (separate schema)
+
+**Latest migration:** `20260421_stories_quarantine.sql`
+
+## 🔗 Key Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `next` 16.x | App framework (App Router) |
+| `react` 19.x | UI |
+| `@anthropic-ai/sdk` ^0.82.0 | Claude API (summaries, classification) |
+| `@ai-sdk/anthropic` ^3.0.69 | AI SDK for streaming |
+| `@supabase/supabase-js` ^2.99.2 | Database client |
+| `next-auth` 4.x | Auth (Google + magic link) |
+| `stripe` | Payments + webhooks |
+| `resend` | Transactional email |
+| `@mastra/core` + `@mastra/rag` | RAG pipeline |
+| `@tiptap/*` ^3.x | Rich text editor (project drafts) |
+| `d3` | Data visualization (trackers) |
+| `pdfkit` | PDF generation (LP brief) |
+
+## 🔧 Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `vercel.json` | Cron schedules + function config |
+| `tsconfig.json` | TypeScript (`@/*` path alias to root) |
+| `.env.local` | Secrets (never committed) |
+| `middleware.ts` | Route protection for `/platform/*` |
+| `next.config.ts` | Next.js config |
+
+## 📝 Scripts (`scripts/`)
+
+| Script | Purpose |
+|--------|---------|
+| `seed-tracker-events.ts` | Seed governance tracker events |
+| `seed-alert-preferences.ts` | Seed alert defaults |
+| `seed-loader.ts` | Entity seed data loader |
+| `backfill-multipliers.ts` | Velocity multiplier backfill |
+| `backfill-controversy.ts` | Controversy score backfill |
+| `embed-documents.ts` | One-off document embedding |
+| `import-faolex.ts` | FAO FAOLEX fisheries data import |
+| `scraper-*.ts` | Various one-off scrapers (Playwright, InforMEA, OpenAlex, NGO, UN Library) |
+| `processor-agent.ts` | Document processing agent |
+
+## 🧠 AI Model Usage
+
+- **Summaries**: `claude-sonnet-4-20250514` (on-demand + batch)
+- **Relevance filtering**: `claude-haiku-*` (ocean-relevance gate, shadow mode)
+- **Governance extraction**: Claude via Jina-rendered HTML
+- **Treaty significance**: Claude in webhook handler
+- **Brief generation**: Claude (daily)
+- **Research/Ask**: Claude with RAG (Mastra)
+
+## 🔑 Environment Variables
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+ANTHROPIC_API_KEY
+RESEND_API_KEY
+STRIPE_SECRET_KEY / STRIPE_PRICE_ID / STRIPE_WEBHOOK_SECRET
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+CRON_SECRET
+JINA_API_KEY
+GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+NEXTAUTH_SECRET / NEXTAUTH_URL
+```

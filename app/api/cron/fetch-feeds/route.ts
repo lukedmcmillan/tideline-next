@@ -142,12 +142,44 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Phase 1.5: Per-source daily cap (soft 15% rule)
+  const MAX_SOURCE_PERCENT = 0.15
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { data: todayCounts } = await supabase
+    .from('stories')
+    .select('source_name')
+    .gte('published_at', `${today}T00:00:00Z`)
+    .lte('published_at', `${today}T23:59:59Z`)
+
+  const sourceCountToday: Record<string, number> = {}
+  for (const row of todayCounts || []) {
+    sourceCountToday[row.source_name] = (sourceCountToday[row.source_name] || 0) + 1
+  }
+
+  const totalTodaySoFar = (todayCounts || []).length
+  const maxPerSource = Math.max(5, Math.ceil(totalTodaySoFar * MAX_SOURCE_PERCENT))
+
+  const capped: EligibleItem[] = []
+  const cappedSources: string[] = []
+
+  for (const item of eligible) {
+    const currentCount = sourceCountToday[item.source_name] || 0
+    if (currentCount >= maxPerSource) {
+      if (!cappedSources.includes(item.source_name)) cappedSources.push(item.source_name)
+      totalSkipped++
+      continue
+    }
+    sourceCountToday[item.source_name] = currentCount + 1
+    capped.push(item)
+  }
+
   // Phase 2: Batch ocean-relevance gate calls (15 concurrent per batch)
   const GATE_BATCH = 15
   const gateResults: Awaited<ReturnType<typeof checkOceanRelevance>>[] = []
 
-  for (let i = 0; i < eligible.length; i += GATE_BATCH) {
-    const batch = eligible.slice(i, i + GATE_BATCH)
+  for (let i = 0; i < capped.length; i += GATE_BATCH) {
+    const batch = capped.slice(i, i + GATE_BATCH)
     const batchResults = await Promise.all(
       batch.map(item => checkOceanRelevance({ title: item.title, content: item.description || '' }))
     )
@@ -155,8 +187,8 @@ export async function GET(request: NextRequest) {
   }
 
   // Phase 3: Process DB writes sequentially with gate results
-  for (let i = 0; i < eligible.length; i++) {
-    const item = eligible[i]
+  for (let i = 0; i < capped.length; i++) {
+    const item = capped[i]
     const gateResult = gateResults[i]
 
     gateProcessed++
@@ -225,6 +257,8 @@ export async function GET(request: NextRequest) {
     skipped: totalSkipped,
     sources: RSS_SOURCES.length,
     failed_sources: errors,
+    capped_sources: cappedSources,
+    max_per_source: maxPerSource,
     ocean_gate_shadow: gateSummary,
     timestamp: new Date().toISOString(),
   })

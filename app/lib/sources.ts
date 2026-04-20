@@ -6,54 +6,31 @@ export interface RSSSource {
 }
 
 export const RSS_SOURCES: RSSSource[] = [
-  // GOVERNMENT
-  // DEACTIVATED 2026-04-20 — URL 404, verified dead during Week 0 feed audit:
-  // { name: "NOAA Fisheries", rss: "https://www.fisheries.noaa.gov/rss.xml", topic: "fisheries", type: "gov" },
-  // { name: "NOAA Ocean Service", rss: "https://oceanservice.noaa.gov/rss/oceancast.xml", topic: "climate", type: "gov" },
-  // { name: "NOAA News", rss: "https://www.noaa.gov/news-release/feed", topic: "climate", type: "gov" },
-  // { name: "European Environment Agency", rss: "https://www.eea.europa.eu/rss/highlights.rss", topic: "governance", type: "gov" },
+  // ─── GOVERNMENT ───────────────────────────────────────────────────────────────
   { name: "NOAA", rss: "https://www.noaa.gov/rss.xml", topic: "climate", type: "gov" },
   { name: "Fisheries and Oceans Canada (DFO)", rss: "https://api.io.canada.ca/io-server/gc/news/en/v2?dept=fisheriesoceans&sort=publishedDate&orderBy=desc&publishedDate%3E=2022-04-01&pick=25&format=atom&atomtitle=Canada%20News%20Centre%20-%20Fisheries%20and%20Oceans%20Canada", topic: "fisheries", type: "gov" },
-  // TODO EPA Water News: removed 2026-04-21, general EPA feed not water-specific, RSS endpoints behind WAF/CAPTCHA. Research correct water-only endpoint.
   { name: "UK DEFRA", rss: "https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs.atom", topic: "governance", type: "gov" },
   { name: "UK MMO", rss: "https://www.gov.uk/government/organisations/marine-management-organisation.atom", topic: "governance", type: "gov" },
-  // TODO DG MARE: removed 2026-04-21, presscorner ?c= filter returns all EC press releases (vaccination, banking, defence). No working maritime-only RSS endpoint found. Research oceans-and-fisheries.ec.europa.eu for RSS/Atom feed.
-  { name: "FAO Fisheries", rss: "https://www.fao.org/fishery/rss/en", topic: "fisheries", type: "gov" },
 
-  // REGULATORY
+  // ─── REGULATORY ───────────────────────────────────────────────────────────────
   { name: "ISA", rss: "https://www.isa.org.jm/feed", topic: "dsm", type: "reg" },
-  { name: "IMO News", rss: "https://www.imo.org/en/MediaCentre/PressBriefings/Pages/rss.aspx", topic: "shipping", type: "reg" },
   { name: "CITES", rss: "https://cites.org/eng/news/rss.xml", topic: "cites", type: "reg" },
-  { name: "IWC", rss: "https://iwc.int/en/news/feed", topic: "whales", type: "reg" },
   { name: "HELCOM", rss: "https://helcom.fi/feed/", topic: "governance", type: "reg" },
+  { name: "CCAMLR", rss: "https://www.ccamlr.org/en/rss.xml", topic: "governance", type: "reg" },
+  { name: "IPCC", rss: "https://www.ipcc.ch/feed/", topic: "climate", type: "reg" },
+  // CBD Secretariat: moved to Jina scraper 2026-04-20 (site "Under Construction", no RSS)
 
-  // NGOs
-  { name: "IUCN Red List", rss: "https://www.iucnredlist.org/rss.xml", topic: "iucn", type: "ngo" },
+  // ─── NGOs ─────────────────────────────────────────────────────────────────────
+  { name: "Oceana", rss: "https://oceana.org/feed/", topic: "all", type: "ngo" },
   { name: "WWF", rss: "https://www.worldwildlife.org/press-releases.rss", topic: "all", type: "ngo" },
-  { name: "Oceana", rss: "https://oceana.org/rss.xml", topic: "all", type: "ngo" },
   { name: "Ocean Conservancy", rss: "https://oceanconservancy.org/feed/", topic: "pollution", type: "ngo" },
   { name: "Sea Shepherd", rss: "https://seashepherd.org/feed/", topic: "iuu", type: "ngo" },
-  { name: "Shark Trust", rss: "https://www.sharktrust.org/feed", topic: "sharks", type: "ngo" },
-  { name: "WCS Marine", rss: "https://newsroom.wcs.org/rss.aspx", topic: "all", type: "ngo" },
-  { name: "Plastic Soup Foundation", rss: "https://www.plasticsoupfoundation.org/en/feed/", topic: "pollution", type: "ngo" },
-  { name: "Sea Turtle Conservancy", rss: "https://conserveturtles.org/feed/", topic: "turtles", type: "ngo" },
-  { name: "Reef Check", rss: "https://www.reefcheck.org/feed/", topic: "coral", type: "ngo" },
-  // DSCC removed 2026-04-21: duplicate of Deep Sea Conservation Coalition (same URL)
   { name: "Blue Marine Foundation", rss: "https://www.bluemarinefoundation.com/feed/", topic: "mpa", type: "ngo" },
-  { name: "Mission Blue", rss: "https://mission-blue.org/feed/", topic: "mpa", type: "ngo" },
-  { name: "ClientEarth", rss: "https://www.clientearth.org/rss/latest-news/", topic: "governance", type: "ngo" },
-  { name: "EDF Oceans", rss: "https://www.edf.org/feed/category/oceans", topic: "fisheries", type: "ngo" },
-  { name: "5 Gyres", rss: "https://www.5gyres.org/feed", topic: "pollution", type: "ngo" },
-  { name: "The Ocean Foundation", rss: "https://oceanfdn.org/feed/", topic: "acidification", type: "ngo" },
-  { name: "Surfrider Foundation", rss: "https://www.surfrider.org/feed", topic: "pollution", type: "ngo" },
   { name: "Global Fishing Watch", rss: "https://globalfishingwatch.org/feed/", topic: "iuu", type: "ngo" },
-  { name: "MSC", rss: "https://www.msc.org/media-centre/news-opinion/rss", topic: "fisheries", type: "ngo" },
-  { name: "Marine Conservation Society", rss: "https://www.mcsuk.org/feed/", topic: "governance", type: "ngo" },
   { name: "High Seas Alliance", rss: "https://highseasalliance.org/feed/", topic: "governance", type: "ngo" },
-  { name: "Deep Sea Conservation Coalition", rss: "https://www.savethehighseas.org/feed/", topic: "dsm", type: "ngo" },
-  { name: "WWF Oceans", rss: "https://www.worldwildlife.org/stories.rss", topic: "governance", type: "ngo" },
+  { name: "DSCC", rss: "https://www.savethehighseas.org/feed/", topic: "dsm", type: "ngo" },
 
-  // RESEARCH & SCIENCE
+  // ─── RESEARCH & SCIENCE ───────────────────────────────────────────────────────
   { name: "Nature Ocean & Marine", rss: "https://www.nature.com/search.rss?q=ocean&subject=earth-and-environmental-sciences", topic: "science", type: "res" },
   { name: "Nature Climate Change", rss: "https://www.nature.com/nclimate.rss", topic: "climate", type: "res" },
   { name: "Nature Sustainability", rss: "https://www.nature.com/natsustain.rss", topic: "governance", type: "res" },
@@ -62,50 +39,44 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Scripps Oceanography", rss: "https://scripps.ucsd.edu/news/rss.xml", topic: "science", type: "res" },
   { name: "WHOI", rss: "https://www.whoi.edu/press-room/news-releases/rss/", topic: "science", type: "res" },
   { name: "MBARI", rss: "https://www.mbari.org/feed/", topic: "technology", type: "res" },
-  { name: "Smithsonian Ocean", rss: "https://ocean.si.edu/rss.xml", topic: "science", type: "res" },
-  // PLOS ONE Marine removed 2026-04-21: 9 quarantines in 12h, content consistently off-topic (burns, eye disease)
+  { name: "PLOS ONE Marine", rss: "https://journals.plos.org/plosone/feed/atom?filterSubjects=Marine+and+aquatic+sciences", topic: "science", type: "res" },
   { name: "British Antarctic Survey", rss: "https://www.bas.ac.uk/feed/", topic: "climate", type: "res" },
-  { name: "National Oceanography Centre", rss: "https://noc.ac.uk/feed", topic: "science", type: "res" },
-  { name: "Plymouth Marine Laboratory", rss: "https://www.pml.ac.uk/feed/", topic: "science", type: "res" },
 
-  // MEDIA
-  { name: "Mongabay Oceans", rss: "https://news.mongabay.com/oceans/feed/", topic: "all", type: "media" },
+  // ─── MEDIA ────────────────────────────────────────────────────────────────────
+  { name: "Mongabay Oceans", rss: "https://news.mongabay.com/topic/oceans/feed/", topic: "all", type: "media" },
   { name: "Guardian Oceans", rss: "https://www.theguardian.com/environment/oceans/rss", topic: "governance", type: "media" },
   { name: "Guardian Fishing", rss: "https://www.theguardian.com/environment/fishing/rss", topic: "fisheries", type: "media" },
   { name: "Hakai Magazine", rss: "https://www.hakaimagazine.com/feed/", topic: "all", type: "media" },
-  { name: "The Fish Site", rss: "https://thefishsite.com/feed", topic: "aquaculture", type: "media" },
   { name: "Undercurrent News", rss: "https://www.undercurrentnews.com/feed/", topic: "fisheries", type: "media" },
-  { name: "IntraFish", rss: "https://www.intrafish.com/rss", topic: "fisheries", type: "media" },
-  { name: "BBC Science & Environment", rss: "https://feeds.bbci.co.uk/news/science_environment/rss.xml", topic: "all", type: "media" },
-  { name: "ScienceAlert", rss: "https://www.sciencealert.com/feed", topic: "science", type: "media" },
-  { name: "National Geographic", rss: "https://www.nationalgeographic.com/feed/rss", topic: "all", type: "media" },
-  { name: "New Scientist", rss: "https://www.newscientist.com/feed/home/", topic: "science", type: "media" },
-  { name: "Natural History Museum", rss: "https://www.nhm.ac.uk/discover/news/rss-feed.xml", topic: "science", type: "media" },
   { name: "Oceanographic Magazine", rss: "https://oceanographicmagazine.com/news/feed/", topic: "all", type: "media" },
-  // Phys.org Ocean removed 2026-04-21: 4 quarantines in 12h, URL is earth-news/ not ocean-specific
+  { name: "Phys.org Ocean", rss: "https://phys.org/rss-feed/earth-news/", topic: "science", type: "media" },
   { name: "Carbon Brief", rss: "https://www.carbonbrief.org/feed/", topic: "climate", type: "media" },
+  { name: "gCaptain", rss: "https://gcaptain.com/feed/", topic: "shipping", type: "media" },
+  { name: "Splash247", rss: "https://splash247.com/feed/", topic: "shipping", type: "media" },
 
-  // ESG / FINANCE
-  // Bloomberg Green removed 2026-04-21: 6 quarantines in 12h, general climate/ESG not ocean-specific
-  { name: "GreenBiz", rss: "https://www.greenbiz.com/rss.xml", topic: "bluefinance", type: "esg" },
-  { name: "OECD Ocean Finance", rss: "https://www.oecd.org/ocean/rss.xml", topic: "bluefinance", type: "esg" },
-  { name: "CBD Secretariat", rss: "https://www.cbd.int/rss/news.xml", topic: "governance", type: "reg" },
-  { name: "IPCC", rss: "https://www.ipcc.ch/feed/", topic: "climate", type: "reg" },
+  // ─── ESG / FINANCE ────────────────────────────────────────────────────────────
+  { name: "Bloomberg Green", rss: "https://feeds.bloomberg.com/green/news.rss", topic: "bluefinance", type: "esg" },
 ];
 
+// Sources that are ocean-dedicated and bypass the keyword filter.
+// All sources here have their full output ingested without title-keyword matching.
 export const OCEAN_DEDICATED_SOURCES = new Set([
+  // NGOs
   'Oceana', 'Ocean Conservancy', 'Sea Shepherd',
-  'Shark Trust', 'Sea Turtle Conservancy', 'Reef Check', 'Blue Marine Foundation',
-  'Mission Blue', 'Plastic Soup Foundation', 'The Ocean Foundation', 'Surfrider Foundation',
-  'Global Fishing Watch', 'EDF Oceans', '5 Gyres', 'MSC', 'Marine Conservation Society',
-  'ClientEarth', 'High Seas Alliance', 'Deep Sea Conservation Coalition', 'WCS Marine',
-  'WHOI', 'Scripps Oceanography', 'MBARI', 'Smithsonian Ocean', 'NASA Earth Observatory',
-  'Plymouth Marine Laboratory', 'British Antarctic Survey',
-  'National Oceanography Centre', 'ICES', 'ISA', 'IUCN Red List', 'IMO News', 'CITES',
-  'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine', 'The Fish Site',
-  'Undercurrent News', 'IntraFish', 'Natural History Museum',
-  'GreenBiz', 'OECD Ocean Finance', 'WWF Oceans', 'WWF', 'Nature Ocean & Marine',
-  'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
-  'IWC', 'Carbon Brief',
-  'UK MMO', 'HELCOM', 'Fisheries and Oceans Canada (DFO)',
+  'Blue Marine Foundation', 'Global Fishing Watch', 'DSCC',
+  'High Seas Alliance', 'WWF',
+  // Research
+  'WHOI', 'Scripps Oceanography', 'MBARI',
+  'PLOS ONE Marine', 'British Antarctic Survey',
+  // Regulatory
+  'ISA', 'CITES', 'HELCOM', 'CCAMLR', 'IPCC', 'CBD Secretariat',
+  // Media (ocean-specific)
+  'Mongabay Oceans', 'Hakai Magazine', 'Oceanographic Magazine',
+  'Undercurrent News', 'gCaptain', 'Splash247',
+  // Nature journals (topic-filtered already)
+  'Nature Ocean & Marine', 'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
+  // Government (ocean-specific remits)
+  'UK MMO', 'Fisheries and Oceans Canada (DFO)',
+  // Finance
+  'Bloomberg Green',
 ]);
