@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { extractEntities } from "@/lib/entities";
+import { matchEntitiesBatch } from "@/lib/entity-matching";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,41 +16,38 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch stories not yet processed
+  // Only process stories that have a summary — nothing to match against otherwise
   const { data: toProcess } = await supabase
     .from("stories")
-    .select("id, title, short_summary, full_summary")
+    .select("id")
     .or("entities_extracted.eq.false,entities_extracted.is.null")
+    .not("short_summary", "is", null)
     .order("published_at", { ascending: false })
     .limit(50);
 
-  let processed = 0;
-  let skipped = 0;
+  const ids = (toProcess || []).map((s) => s.id);
 
-  for (const story of toProcess || []) {
-    try {
-      await extractEntities(story);
-      processed++;
-    } catch {
-      skipped++;
-    }
-    // Mark as processed regardless of whether entities were found
+  const result = await matchEntitiesBatch(ids);
+
+  // Mark all processed stories as extracted
+  if (ids.length > 0) {
     await supabase
       .from("stories")
       .update({ entities_extracted: true })
-      .eq("id", story.id);
+      .in("id", ids);
   }
 
-  // Count remaining
+  // Count remaining (including those without summaries yet)
   const { count } = await supabase
     .from("stories")
     .select("id", { count: "exact", head: true })
     .or("entities_extracted.eq.false,entities_extracted.is.null");
 
   return NextResponse.json({
-    processed,
-    skipped,
+    processed: result.processed,
+    total_matches: result.totalMatches,
+    avg_matches_per_story: result.avgMatchesPerStory,
     total_remaining: count ?? 0,
-    batch_size: (toProcess || []).length,
+    batch_size: ids.length,
   });
 }

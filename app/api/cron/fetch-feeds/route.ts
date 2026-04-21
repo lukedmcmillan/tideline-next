@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { extractEntities } from '@/lib/entities'
+import { matchEntitiesToStory } from '@/lib/entity-matching'
 import { RSS_SOURCES, OCEAN_DEDICATED_SOURCES } from '@/app/lib/sources'
 import { checkOceanRelevance } from '@/app/lib/ocean-relevance-gate'
 
@@ -83,6 +83,9 @@ export async function GET(request: NextRequest) {
   let totalSaved = 0
   let totalSkipped = 0
   const errors: string[] = []
+  let storiesMatched = 0
+  let totalEntityMentions = 0
+  let matchingErrors = 0
 
   // Ocean-relevance gate metrics
   let gateProcessed = 0
@@ -225,7 +228,7 @@ export async function GET(request: NextRequest) {
     const { data: upserted, error } = await supabase
       .from('stories')
       .upsert(storyData, { onConflict: 'link', ignoreDuplicates: true })
-      .select('id, title, short_summary, full_summary')
+      .select('id, title, short_summary, entities_extracted')
 
     if (error) {
       totalSkipped++
@@ -233,9 +236,18 @@ export async function GET(request: NextRequest) {
       totalSaved++
       if (upserted && upserted.length > 0) {
         const s = upserted[0]
-        extractEntities(s)
-          .then(() => supabase.from('stories').update({ entities_extracted: true }).eq('id', s.id))
-          .catch(() => {})
+        if (s.short_summary && !s.entities_extracted) {
+          try {
+            const matchResult = await matchEntitiesToStory(s.id)
+            if (matchResult.matched > 0) {
+              storiesMatched++
+              totalEntityMentions += matchResult.matched
+              await supabase.from('stories').update({ entities_extracted: true }).eq('id', s.id)
+            }
+          } catch {
+            matchingErrors++
+          }
+        }
       }
     }
   }
@@ -260,6 +272,11 @@ export async function GET(request: NextRequest) {
     capped_sources: cappedSources,
     max_per_source: maxPerSource,
     ocean_gate: gateSummary,
+    entity_matching: {
+      stories_matched: storiesMatched,
+      total_entity_mentions_written: totalEntityMentions,
+      matching_errors: matchingErrors,
+    },
     timestamp: new Date().toISOString(),
   })
 }
