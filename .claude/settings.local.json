@@ -132,7 +132,10 @@
       "Bash(for job:*)",
       "Bash(do echo:*)",
       "Bash(test -f \"app/platform/\\(shell\\)/page.old.tsx\")",
-      "Bash(tr '|' '\\\\n')"
+      "Bash(tr '|' '\\\\n')",
+      "Bash(Get-FileHash \"C:\\\\Users\\\\luke.mcmillan\\\\tideline-next\\\\app\\\\lib\\\\entity-brief.ts\" -Algorithm MD5)",
+      "Bash(rm -f \"{}\")",
+      "Read(//c/Users/luke.mcmillan/tideline-next/**)"
     ]
   }
 }

@@ -431,66 +431,84 @@ function TimelineChart({ timeline }: { timeline: TimelineEntry[] }) {
   );
 }
 
-// ─── Country Table ────────────────────────────────────────────────────────────
+// ─── Continent Accordion ──────────────────────────────────────────────────────
 
-function CountryTable({ countries }: { countries: Country[] }) {
-  const [filter, setFilter] = useState<"all" | "ratified" | "signed">("all");
+const REGION_ORDER = ["Europe", "Africa", "Latin America", "Asia-Pacific", "Pacific", "MENA", "North America"];
 
-  const filtered = countries
-    .filter((c) => filter === "all" || c.status === filter)
-    .sort((a, b) => a.country_name.localeCompare(b.country_name));
+function ContinentAccordion({ countries }: { countries: Country[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+
+  // Group countries by region, include "Other" for unmapped
+  const grouped: Record<string, Country[]> = {};
+  for (const r of REGION_ORDER) grouped[r] = [];
+  grouped["Other"] = [];
+  for (const c of countries) {
+    const r = REGIONS[c.country_name];
+    if (r && grouped[r]) grouped[r].push(c);
+    else grouped["Other"].push(c);
+  }
+
+  const regions = [...REGION_ORDER, ...(grouped["Other"].length > 0 ? ["Other"] : [])];
+
+  const statusPill = (status: string) => ({
+    background: status === "ratified" ? `${TEAL}18` : status === "signed" ? `${BLUE}18` : "#f3f4f6",
+    color: status === "ratified" ? TEAL : status === "signed" ? BLUE : MUTED,
+  });
+
+  const total = countries.length;
 
   return (
-    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, padding: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+    <div style={{ background: WHITE, border: `1px solid ${BORDER}`, marginBottom: 40 }}>
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUTED, fontFamily: SANS }}>
-          All Countries ({filtered.length})
+          Countries by Region ({total})
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {(["all", "ratified", "signed"] as const).map((f) => (
-            <button key={f} onClick={() => setFilter(f)}
-              style={{ padding: "5px 14px", border: `1px solid ${filter === f ? NAVY : BORDER}`, background: filter === f ? NAVY : WHITE, color: filter === f ? WHITE : NAVY, fontSize: 12, fontFamily: SANS, borderRadius: 3, cursor: "pointer", fontWeight: filter === f ? 600 : 400 }}>
-              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
-        </div>
+        <div style={{ fontSize: 11, color: MUTED, fontFamily: SANS }}>Click a region to expand</div>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: SANS, fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: `2px solid ${BORDER}` }}>
-              <th style={{ textAlign: "left", padding: "10px 12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}>Country</th>
-              <th style={{ textAlign: "left", padding: "10px 12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}>Status</th>
-              <th style={{ textAlign: "left", padding: "10px 12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}>Date</th>
-              <th style={{ textAlign: "left", padding: "10px 12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}>Region</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((c) => (
-              <tr key={c.country_name} style={{ borderBottom: `1px solid ${BORDER}` }}>
-                <td style={{ padding: "10px 12px", fontWeight: 500, color: NAVY }}>{c.country_name}</td>
-                <td style={{ padding: "10px 12px" }}>
-                  <span style={{
-                    display: "inline-block",
-                    padding: "2px 10px",
-                    borderRadius: 12,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    background: c.status === "ratified" ? `${TEAL}18` : c.status === "signed" ? `${BLUE}18` : "#f3f4f6",
-                    color: c.status === "ratified" ? TEAL : c.status === "signed" ? BLUE : MUTED,
-                  }}>
-                    {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+      {regions.map((region) => {
+        const list = (grouped[region] || []).sort((a, b) => a.country_name.localeCompare(b.country_name));
+        if (list.length === 0) return null;
+        const ratified = list.filter(c => c.status === "ratified").length;
+        const isOpen = open === region;
+        return (
+          <div key={region} style={{ borderBottom: `1px solid ${BORDER}` }}>
+            <button
+              onClick={() => setOpen(isOpen ? null : region)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "14px 20px", background: isOpen ? "#f8f9fa" : WHITE,
+                border: "none", cursor: "pointer", fontFamily: SANS, textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: NAVY }}>{region}</span>
+                <span style={{ fontSize: 11, color: MUTED }}>{list.length} countries</span>
+                {ratified > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 500, color: TEAL, background: `${TEAL}18`, padding: "1px 8px", borderRadius: 10 }}>
+                    {ratified} ratified
                   </span>
-                </td>
-                <td style={{ padding: "10px 12px", color: MUTED }}>
-                  {c.status_date ? new Date(c.status_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                </td>
-                <td style={{ padding: "10px 12px", color: MUTED }}>{REGIONS[c.country_name] || "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                )}
+              </div>
+              <span style={{ fontSize: 12, color: MUTED, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>▾</span>
+            </button>
+            {isOpen && (
+              <div style={{ padding: "0 20px 12px" }}>
+                {list.map((c) => (
+                  <div key={c.country_name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}`, flexWrap: "wrap" }}>
+                    <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, color: NAVY, flex: "1 1 160px", minWidth: 120 }}>{c.country_name}</span>
+                    <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 10, ...statusPill(c.status) }}>
+                      {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+                    </span>
+                    <span style={{ fontFamily: SANS, fontSize: 11, color: MUTED, minWidth: 80 }}>
+                      {c.status_date ? new Date(c.status_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -633,7 +651,7 @@ export default function BBNJTracker() {
               <RegionalBreakdown countries={countries} />
               <TimelineChart timeline={timeline} />
             </div>
-            <CountryTable countries={countries} />
+            <ContinentAccordion countries={countries} />
             <RecentEvents events={trackerEvents} />
           </>
         )}

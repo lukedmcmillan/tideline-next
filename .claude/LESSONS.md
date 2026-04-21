@@ -57,6 +57,8 @@
 - **send-brief had wrong column name**: `users.status` does not exist — correct column is `users.subscription_status`. Bug was masked by TEST_EMAIL mode (never hit the query). Always verify column names against migration files before shipping a send cron.
 - **Pipeline mutual exclusion via onboarded_at**: `onboarded_at IS NOT NULL` → entity brief. `onboarded_at IS NULL` → legacy topic brief. Users migrate automatically on onboarding completion. Never add both pipeline queries to the same cron.
 
+- **Diagnostic script before cron build**: for data-dependent pipelines (entity feed, brief composer), write a `scripts/test-*.ts` diagnostic first. Run it against real DB to get: distribution stats, test user output, raw query results, rendered HTML. Calibrate thresholds from real data, not assumptions. Caught: wrong significance scale (0-10 vs 0-92), PostgREST order syntax error, and all-quiet user state before writing any cron logic.
+
 ## Ops / environment
 
 - **Shell env vars don't persist across PowerShell sessions**: always reload `CRON_SECRET` at session start using `Get-Content`. Don't assume a variable set earlier in the day is still available in a new terminal.
