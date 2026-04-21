@@ -956,8 +956,10 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
         @media(max-width:768px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
         .mobile-tab-bar{display:none}
         .top-bar-search-icon{display:none}
+        .platform-topbar{}
         @media(max-width:768px){
-          .trial-banner-wrap{position:sticky!important;top:0!important;bottom:auto!important;left:auto!important;right:auto!important;width:auto!important;max-width:90%!important;margin:8px auto!important;padding:6px 16px!important;border-radius:20px!important;justify-content:center!important}
+          .platform-topbar{position:sticky!important;top:0!important;z-index:100!important;background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+          .trial-banner-wrap{position:sticky!important;top:64px!important;bottom:auto!important;left:auto!important;right:auto!important;width:auto!important;max-width:90%!important;margin:8px auto!important;padding:6px 16px!important;border-radius:20px!important;justify-content:center!important}
           .trial-banner-wrap .trial-text{font-size:12px!important;color:#FFFFFF!important}
           .top-bar-search{display:none!important}
           .top-bar-search-icon{display:flex!important}
@@ -967,7 +969,7 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
       `}</style>
 
       {/* Top bar */}
-      <div style={{ height: 64, background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: 0, flexShrink: 0, zIndex: 100 }}>
+      <div className="platform-topbar" style={{ height: 64, background: WHITE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: 0, flexShrink: 0, zIndex: 100 }}>
         {/* Burger */}
         <button className="sb-toggle" onClick={() => setSbOpen(!sbOpen)} style={{ display: "none", width: 48, height: 64, alignItems: "center", justifyContent: "center", cursor: "pointer", background: "none", border: "none", color: T3 }}>
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
