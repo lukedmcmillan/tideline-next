@@ -64,17 +64,17 @@ export default function HeroSignalVelocity({ d }: { d: D }) {
       )}
 
       <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
-        <button style={{
+        <button className="mob-tap" style={{
           fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600,
           padding: "8px 14px", borderRadius: 7, border: "none", cursor: "pointer",
           background: TEAL, color: "#0A1628",
         }}>View tracker</button>
-        <button style={{
+        <button className="mob-tap" style={{
           fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 500,
           padding: "8px 14px", borderRadius: 7, cursor: "pointer",
           background: "transparent", color: TEXT_MUTED, border: `1px solid ${BORDER_HI}`,
         }}>View sources</button>
-        <button style={{
+        <button className="mob-tap" style={{
           fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 500,
           padding: "8px 14px", borderRadius: 7, border: "none", cursor: "pointer",
           background: "transparent", color: TEXT_DIM, marginLeft: "auto",

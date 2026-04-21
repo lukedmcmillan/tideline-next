@@ -50,8 +50,11 @@ export default function OvernightReveal() {
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration: 0s !important; animation-iteration-count: 1 !important; }
         }
+        @media (max-width: 768px) {
+          .overnight-outer { margin: 16px 16px 0 !important; }
+        }
       `}</style>
-      <div style={{
+      <div className="overnight-outer" style={{
         margin: "20px 32px 0",
         padding: "18px 22px",
         background: "linear-gradient(135deg, rgba(29,158,117,0.08), rgba(29,158,117,0.02) 60%, transparent)",
@@ -122,6 +125,7 @@ export default function OvernightReveal() {
         {/* Dismiss */}
         <button
           onClick={dismiss}
+          className="mob-tap"
           style={{
             background: "none",
             border: "none",

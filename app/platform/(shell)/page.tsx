@@ -96,13 +96,20 @@ export default function DashboardPage() {
 
   return (
     <div style={{ background: BG, minHeight: "100%", color: TEXT, fontFamily: SANS }}>
-      {/* Ticker Strip removed: revisit if needed */}
+      <style>{`
+        @media(max-width:768px){
+          .dash-header{padding:16px 16px 12px!important}
+          .dash-grid{padding:0 16px 16px!important;grid-template-columns:1fr!important}
+          .dash-grid>*:first-child{grid-column:1!important;grid-row:auto!important;min-height:300px!important}
+          .dash-pow{margin:0 16px!important;flex-direction:column!important;align-items:flex-start!important;gap:10px!important}
+        }
+      `}</style>
 
       {/* Overnight Reveal */}
       <OvernightReveal />
 
       {/* Page Header */}
-      <div style={{ padding: "24px 32px 18px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+      <div className="dash-header" style={{ padding: "24px 32px 18px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontFamily: MONO, fontSize: 11, color: TEXT_MUTED, letterSpacing: "0.02em" }}>
             {fmtDate()}
@@ -115,7 +122,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Grid */}
-      <div style={{ padding: "0 32px 24px", display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 20 }}>
+      <div className="dash-grid" style={{ padding: "0 32px 24px", display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 20 }}>
 
         {/* Hero Signal (spans 2 rows) */}
         <HeroSignal />
@@ -219,7 +226,7 @@ export default function DashboardPage() {
 
       {/* Proof of Work Footer */}
       {proofOfWork && (
-        <div style={{
+        <div className="dash-pow" style={{
           margin: "0 32px",
           padding: "14px 20px",
           background: BG2,
@@ -239,18 +246,18 @@ export default function DashboardPage() {
             <span>Last ingestion</span>
             <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.last_ingestion_minutes_ago} MIN AGO</span>
           </div>
-          <span style={{ color: BORDER_HI }}>|</span>
+          <span className="mob-hide" style={{ color: BORDER_HI }}>|</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span>Today</span>
             <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.docs_today} DOCS</span>
             <span>processed</span>
           </div>
-          <span style={{ color: BORDER_HI }}>|</span>
+          <span className="mob-hide" style={{ color: BORDER_HI }}>|</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.sources_monitored} SOURCES</span>
             <span>monitored</span>
           </div>
-          <span style={{ color: BORDER_HI }}>|</span>
+          <span className="mob-hide" style={{ color: BORDER_HI }}>|</span>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.active_trackers} TRACKERS</span>
             <span>monitored</span>
