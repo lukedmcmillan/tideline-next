@@ -34,6 +34,24 @@
 - **Remove feature code AND its dead data flows**: when removing a UI feature (Related Stories), also remove the state variables, API fetch calls, type interfaces, and Promise.all entries that existed solely to feed it. Leaving dead fetches wastes bandwidth on every page load. In the IUU tracker, `Promise.all` went from 4 fetches to 3 after removing the stories fetch.
 - **Grep broadly, act narrowly**: `grep -rn 'related'` catches everything, but most matches are incidental text ("ocean-related", "related fields"). Categorize hits into feature code vs. prose before touching anything.
 
+## Feed / source management
+
+- **RSS source config needs periodic auditing**: DG MARE was misconfigured from initial setup, silently polluting the feed with general EC content for months. A source that looks legitimate at setup can drift or was wrong from day one — audit periodically against actual output.
+- **OCEAN_DEDICATED_SOURCES fast-lane bypass is a double-edged sword**: misconfigured sources in this list skip the keyword filter safety net entirely. Misconfigured fast-lane sources are more dangerous than misconfigured standard sources.
+- **"Built" ≠ "shipped"**: always check `git status` and verify the Vercel deploy SHA matches the latest commit before calling a feature live. A feature in local code that hasn't deployed is not live.
+
+## Entity matching
+
+- **extractEntities vs matchEntitiesToStory**: extractEntities (old) discovered new entities via Claude Haiku and wrote mentions without scores. matchEntitiesToStory (new) matches against seeded taxonomy using 3 passes and writes match_score, match_method, confidence. Never mix — one creates entities, one matches them.
+- **Entity matching only fires when short_summary is set**: new stories have no summary at feed-fetch time. Guard `if (s.short_summary && !s.entities_extracted)` prevents wasteful passes on empty stories. Backfill script handles historical corpus.
+- **Backfill via script, not HTTP endpoint**: matchEntitiesBatch on 50 stories with embedding calls exceeds Vercel's function timeout. Always run bulk backfill via `scripts/backfill-entity-matching.ts` (20 stories/pass, no timeout). The HTTP endpoint is fine for top-ups of 5–10 stories.
+- **SQL fragments pasted in wrong terminal create garbage files**: pasting multi-line SQL or code into PowerShell/bash creates files named after the tokens (`,- `, `2`, `MAX_MATCHES_PER_STORY)`, etc.). Always run SQL in Supabase Studio. Delete garbage files before committing.
+
+## Ops / environment
+
+- **Shell env vars don't persist across PowerShell sessions**: always reload `CRON_SECRET` at session start using `Get-Content`. Don't assume a variable set earlier in the day is still available in a new terminal.
+- **SQL goes to Supabase Studio, not PowerShell**: pasting multi-line SQL into PowerShell creates empty garbage files named after the SQL tokens. Always run migrations via Supabase dashboard SQL editor.
+
 ## Process
 
 - **Dev server bypass and API 401s**: middleware dev-bypass on `/platform/*` lets pages render without auth, but API routes still enforce session. Toggle always renders null for unauthenticated viewers. Not a bug, just a consequence of the bypass.

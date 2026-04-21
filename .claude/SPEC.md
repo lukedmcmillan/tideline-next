@@ -76,17 +76,33 @@
   - Sources: 87 → 83 total, 66 → 61 OCEAN_DEDICATED
 - 34 RSS sources still failing: FAO, IMO, CITES, IWC, CBD, Oceana, IUCN — critical gap, fixing tomorrow
 - PROJECT_INDEX.md refreshed ✓
+- **Week 2 entity matching — COMPLETE AND VERIFIED ✓**
+  - Step 5: matchEntitiesToStory built — 3-pass (exact substring → fuzzy trigram → semantic embedding)
+  - Step 6: deferred — embeddings backfill scheduled post-Week 3
+  - Step 7: matcher wired into fetch-feeds cron and backfill-entities admin route; extractEntities fully replaced
+  - Backfill run: 20 stories → 53 entity mentions written, 2.7 avg/story, 0 errors
+  - BBNJ, IMO, ISA, LTC governance stories matching correct seed entities
+  - entity_mentions table: match_score, match_method, confidence all populated
+  - entities_extracted flag set on all 20 processed stories
+  - Ocean-relevance gate flipped to BLOCKING mode ✓
 
 ## What's next
-1. **PRIORITY (Tue 22 Apr)**: Triage all 34 failed RSS sources — produce triage table, fix Tier 1 (FAO, IMO, CITES, IWC, CBD, DSCC) first, then Tier 2-4
-2. Review 48h shadow gate data (Tue 22 Apr), flip gate to blocking if metrics hold
-3. Entity tracking Week 1 Steps 2-7
-4. Brief-reply webhook (reply-to-brief → AI answer)
-5. Corporate Stripe pricing tier
-6. Prompt caching on all API calls
-7. ESG/NGO/journalist briefing_type PDF variants
-8. Blue Economy market widget (opt-in, investor segment only)
-9. Mobile app (Expo shell strategy)
+**Week 3 — Morning Brief Pipeline (Steps 8, 9, 10)**
+- First task: run backfill-entities against full story corpus (not just 20 stories) before brief goes live
+  - Script: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-entity-matching.ts`
+  - Run until "No unmatched stories found"
+- Step 8: Brief generator (daily digest from top stories + entity signals)
+- Step 9: Email template (brief HTML email via Resend)
+- Step 10: Brief cron + send (morning_brief_queue → dispatch)
+
+**Backlog**
+1. Triage all 34 failed RSS sources — Tier 1: FAO, IMO, CITES, IWC, CBD, DSCC
+2. Brief-reply webhook (reply-to-brief → AI answer)
+3. Corporate Stripe pricing tier
+4. Prompt caching on all API calls
+5. ESG/NGO/journalist briefing_type PDF variants
+6. Blue Economy market widget (opt-in, investor segment only)
+7. Mobile app (Expo shell strategy)
 
 ## Known gaps — RSS sources needing Jina scrapers (separate session)
 
