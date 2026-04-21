@@ -47,3 +47,33 @@ h1, h2, h3 {
   line-height: 1.75;
   color: var(--text-muted);
 }
+
+/* ── Mobile layout utilities ─────────────────────────────────────────────
+   Structural layout only. All colour, typography, and component-specific
+   styling stays as inline styles. Breakpoint: 768px (iPhone SE target: 375px).
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Desktop defaults (no-op — elements are visible/laid out by inline styles) */
+.mob-show        { display: none; }
+.mob-show-block  { display: none; }
+.mob-show-grid   { display: none; }
+
+@media (max-width: 768px) {
+  /* Visibility */
+  .mob-hide        { display: none !important; }
+  .mob-show        { display: flex !important; }
+  .mob-show-block  { display: block !important; }
+  .mob-show-grid   { display: grid !important; }
+
+  /* Layout structure */
+  .mob-stack  { flex-direction: column !important; }
+  .mob-1col   { grid-template-columns: 1fr !important; }
+  .mob-2col   { grid-template-columns: 1fr 1fr !important; }
+  .mob-full   { width: 100% !important; max-width: 100% !important; }
+
+  /* Spacing */
+  .mob-pad    { padding: 16px !important; }
+
+  /* Tap targets (iOS HIG minimum 44×44px) */
+  .mob-tap    { min-height: 44px !important; display: flex !important; align-items: center !important; }
+}

@@ -881,8 +881,8 @@ function MobileTabBar() {
         return (
           <a key={t.label} href={t.href} style={{
             display: "flex", flexDirection: "column", alignItems: "center",
-            gap: 2, textDecoration: "none",
-            color: on ? TEAL : T4,
+            justifyContent: "center", gap: 2, textDecoration: "none",
+            color: on ? TEAL : T4, minWidth: 44, minHeight: 44,
           }}>
             {t.icon}
             <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500 }}>{t.label}</span>
@@ -953,13 +953,15 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
         a{text-decoration:none;color:inherit}
         .rp-desktop{}
         @media(max-width:1279px){.rp-desktop{display:none!important}}
-        @media(max-width:1023px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
+        @media(max-width:768px){.sb-desktop{display:none!important}.sb-toggle{display:flex!important}.main-ml{margin-left:0!important}}
         .mobile-tab-bar{display:none}
-        @media(max-width:1023px){
+        .top-bar-search-icon{display:none}
+        @media(max-width:768px){
           .trial-banner-wrap{position:fixed!important;top:auto!important;bottom:56px!important;left:0!important;right:0!important;z-index:100!important;background:#1D9E75!important;padding:10px 20px!important}
           .trial-banner-wrap .trial-text{font-size:11px!important;color:#FFFFFF!important}
           .mobile-tab-bar{display:flex!important}
           .top-bar-search{display:none!important}
+          .top-bar-search-icon{display:flex!important}
           .top-bar-right-tier{display:none!important}
           .top-bar-manage-sub{display:none!important}
         }
@@ -976,12 +978,16 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
           <TidelineLogo size="md" theme="light" />
         </a>
         <WorkspaceBreadcrumb projectData={projectData} />
-        {/* Search */}
+        {/* Search — desktop */}
         <div className="top-bar-search" onClick={() => setSearchOpen(true)} style={{ flex: 1, maxWidth: 560, height: 42, background: BG, border: "1px solid transparent", borderRadius: 24, display: "flex", alignItems: "center", padding: "0 14px 0 16px", gap: 10, cursor: "text", transition: "all .2s" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke={T4} strokeWidth="1.5"/><path d="M11 11l3.5 3.5" stroke={T4} strokeWidth="1.5" strokeLinecap="round"/></svg>
           <span style={{ flex: 1, fontSize: 14, fontFamily: F, color: T4 }}>Search or ask Tideline anything</span>
           <span style={{ fontSize: 11, background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 4, padding: "1px 6px", color: T4, fontFamily: M }}>{"\u2318"}K</span>
         </div>
+        {/* Search icon — mobile only */}
+        <button className="top-bar-search-icon" onClick={() => setSearchOpen(true)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: T3 }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.6"/><path d="M14 14l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+        </button>
         {/* Right */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 16px 0 24px", marginLeft: "auto" }}>
           <span className="top-bar-right-tier" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", fontSize: 11, fontWeight: 500, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "4px 10px", color: T2, background: WHITE }}>Individual</span>
@@ -998,7 +1004,7 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
           <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.4)", transition: "opacity 200ms ease" }} onClick={() => setSbOpen(false)}>
             <div style={{ width: 280, height: "100%", background: NAVY, transform: "translateX(0)", transition: "transform 200ms ease", position: "relative" }} onClick={e => e.stopPropagation()}>
               <button onClick={() => setSbOpen(false)} style={{
-                position: "absolute", top: 12, right: 12, width: 40, height: 40,
+                position: "absolute", top: 12, right: 12, width: 44, height: 44,
                 borderRadius: 8, background: "rgba(255,255,255,0.15)",
                 border: "none", cursor: "pointer", display: "flex",
                 alignItems: "center", justifyContent: "center", zIndex: 10,
