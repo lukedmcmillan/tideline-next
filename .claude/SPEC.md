@@ -86,14 +86,30 @@
   - entities_extracted flag set on all 20 processed stories
   - Ocean-relevance gate flipped to BLOCKING mode ✓
 
+## Completed this session (2026-04-21, continued)
+**Week 3 — Morning Brief Pipeline — FUNCTIONAL ✓**
+- Steps 8, 9, 10 complete: generate-entity-briefs cron + send-entity-briefs cron + entity-brief library
+- First brief sent successfully to lukedmcmillan@hotmail.com at 14:28 UTC
+- Quiet-dominant template rendering correctly
+- Pulse substance surfacing: ISA 6.5 WATCH accelerating, IMO 5.9 WATCH accelerating, BBNJ 1.2 LOW stable
+- Tracker display names correct (TRACKER_DISPLAY_NAMES map: ISA, BBNJ, IMO, 30x30, etc.)
+- Design system holds (DM Sans, navy/teal, 600px, no em dashes)
+- Significance thresholds calibrated to real distribution (P95=18): Material >= 25, Watch 10-24
+- send-brief subscription_status bug fixed (.in("subscription_status",...) + .is("onboarded_at", null))
+- One queued row failed on send — under investigation (likely Resend rate limit or duplicate queue entry)
+- vercel.json NOT yet updated — awaiting material-present brief test
+
 ## What's next
-**Week 3 — Morning Brief Pipeline (Steps 8, 9, 10)**
-- First task: run backfill-entities against full story corpus (not just 20 stories) before brief goes live
-  - Script: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-entity-matching.ts`
-  - Run until "No unmatched stories found"
-- Step 8: Brief generator (daily digest from top stories + entity signals)
-- Step 9: Email template (brief HTML email via Resend)
-- Step 10: Brief cron + send (morning_brief_queue → dispatch)
+**Week 3 — remaining**
+- Material-present brief test: needs a tracked entity with a significance >= 25 story in the 24h window
+  - Can force-test by temporarily lowering MATERIAL_THRESHOLD or seeding a high-score story
+- Fix the one failed queue row (check morning_brief_queue for status='failed', inspect error logs)
+- Add crons to vercel.json once material-present path confirmed:
+  ```json
+  { "path": "/api/cron/generate-entity-briefs", "schedule": "0 * * * *" },
+  { "path": "/api/cron/send-entity-briefs", "schedule": "*/15 * * * *" }
+  ```
+- Remaining corpus backfill: ~1202 stories unmatched (run scripts/run-full-backfill.ts --skip-semantic --limit 1400 --force)
 
 **Backlog**
 1. Triage all 34 failed RSS sources — Tier 1: FAO, IMO, CITES, IWC, CBD, DSCC

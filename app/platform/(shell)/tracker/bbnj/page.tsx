@@ -627,7 +627,8 @@ export default function BBNJTracker() {
         ) : (
           <>
             {stats && <StatCards stats={stats} />}
-            <WorldMap countries={countries} />
+            <div className="mob-hide"><WorldMap countries={countries} /></div>
+            <p className="mob-show-block" style={{ fontSize: 11, color: MUTED, fontFamily: SANS, fontStyle: "italic", marginBottom: 24 }}>Interactive map available on desktop</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="region-timeline-grid">
               <RegionalBreakdown countries={countries} />
               <TimelineChart timeline={timeline} />

@@ -47,6 +47,16 @@
 - **Backfill via script, not HTTP endpoint**: matchEntitiesBatch on 50 stories with embedding calls exceeds Vercel's function timeout. Always run bulk backfill via `scripts/backfill-entity-matching.ts` (20 stories/pass, no timeout). The HTTP endpoint is fine for top-ups of 5–10 stories.
 - **SQL fragments pasted in wrong terminal create garbage files**: pasting multi-line SQL or code into PowerShell/bash creates files named after the tokens (`,- `, `2`, `MAX_MATCHES_PER_STORY)`, etc.). Always run SQL in Supabase Studio. Delete garbage files before committing.
 
+## Entity brief pipeline
+
+- **Significance score distribution is heavily right-skewed**: median=0, P75=15, P90=42, P95=52 (with 1000 live stories). Thresholds calibrated at Material>=25, Watch 10-24. Do not use intuitive 0-10 scale — the field is 0-92 range.
+- **Quiet-dominant is the primary brief template, not the fallback**: given median=0, most users most days will have 0 material/watch stories. Design the quiet template first. Substance comes from velocity_scores pulse data.
+- **PostgREST `.order()` on embedded resources fails**: `.order("stories.significance_score", {ascending: false})` throws "failed to parse order". Fix: `.order("significance_score", { ascending: false, foreignTable: "stories" })`.
+- **PostgreSQL TIME column returns "HH:MM:SS"** from Supabase JS, not "HH:MM". Always split on ":" and take first two components when comparing to brief_time.
+- **morning_brief_queue status constraint**: `pending | sent | failed | skipped` — no 'ready'. Use 'pending' for queued-but-not-sent state.
+- **send-brief had wrong column name**: `users.status` does not exist — correct column is `users.subscription_status`. Bug was masked by TEST_EMAIL mode (never hit the query). Always verify column names against migration files before shipping a send cron.
+- **Pipeline mutual exclusion via onboarded_at**: `onboarded_at IS NOT NULL` → entity brief. `onboarded_at IS NULL` → legacy topic brief. Users migrate automatically on onboarding completion. Never add both pipeline queries to the same cron.
+
 ## Ops / environment
 
 - **Shell env vars don't persist across PowerShell sessions**: always reload `CRON_SECRET` at session start using `Get-Content`. Don't assume a variable set earlier in the day is still available in a new terminal.

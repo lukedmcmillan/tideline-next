@@ -259,7 +259,8 @@ export async function GET(request: Request) {
       const { data: users, error: subError } = await supabase
         .from("users")
         .select("id, email, unsubscribe_token")
-        .in("status", ["active", "trialing"]);
+        .in("subscription_status", ["active", "trialing"])
+        .is("onboarded_at", null);
 
       if (subError || !users || users.length === 0) {
         return NextResponse.json({
