@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import OvernightReveal from "@/components/OvernightReveal";
+import DashboardReveal from "@/components/DashboardReveal";
 import HeroSignal from "@/components/HeroSignal";
 import Sparkline from "@/components/Sparkline";
 import type { TickerItem, ProofOfWorkData } from "@/app/lib/types/dashboard";
@@ -105,8 +105,8 @@ export default function DashboardPage() {
         }
       `}</style>
 
-      {/* Overnight Reveal */}
-      <OvernightReveal />
+      {/* Dynamic Reveal */}
+      <DashboardReveal />
 
       {/* Page Header */}
       <div className="dash-header" style={{ padding: "24px 32px 18px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>

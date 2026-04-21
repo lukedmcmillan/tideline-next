@@ -8,6 +8,20 @@ export interface TickerItem {
   delta: number; // vs 7 days ago, positive = up
 }
 
+export interface RevealData {
+  header: string;
+  summary: string;
+  window: { since: string; until: string; hours: number };
+  activity: {
+    documents_processed: number;
+    new_stories_in_tracked_domains: number;
+    score_moves: Array<{ tracker: string; from: number; to: number; direction: string }>;
+    band_crossings: Array<{ tracker: string; from_band: string; to_band: string }>;
+    countdown_deltas: Array<{ event: string; days_until: number; days_closer: number }>;
+  };
+  is_quiet: boolean;
+}
+
 export interface OvernightData {
   hours: number;
   doc_count: number;
