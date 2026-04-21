@@ -69,7 +69,7 @@ function PaperParksCallout() {
   return (
     <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderLeft: `3px solid ${RED}`, borderRadius: 8, padding: "16px 20px", marginBottom: 24 }}>
       <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 8 }}>The Numbers Gap</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: F, fontSize: 28, fontWeight: 600, color: AMBER }}>9.9%</div>
           <div style={{ fontFamily: F, fontSize: 11, color: MU }}>designated</div>

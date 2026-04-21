@@ -83,7 +83,7 @@ function CardingTable({ rows }: { rows: CardingRow[] }) {
     <div style={{ marginBottom: 32 }}>
       <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: MU, marginBottom: 4 }}>EU Carding Status</div>
       <div style={{ fontFamily: F, fontSize: 11, color: MU, marginBottom: 12 }}>Countries currently under EU IUU fishing sanctions or warnings</div>
-      <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, overflowX: "auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 0.7fr 2fr", padding: "10px 16px", borderBottom: `0.5px solid ${BD}` }}>
           {["Country", "Status", "Issued", "Consequence"].map(h => (
             <div key={h} style={{ fontFamily: F, fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: MU }}>{h}</div>

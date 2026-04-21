@@ -595,6 +595,7 @@ export default function BBNJTracker() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @media (max-width: 768px) {
           .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .region-timeline-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -627,7 +628,7 @@ export default function BBNJTracker() {
           <>
             {stats && <StatCards stats={stats} />}
             <WorldMap countries={countries} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="stat-grid">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="region-timeline-grid">
               <RegionalBreakdown countries={countries} />
               <TimelineChart timeline={timeline} />
             </div>

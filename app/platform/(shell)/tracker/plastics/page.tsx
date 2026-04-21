@@ -109,7 +109,7 @@ function CoreDeadlock() {
   return (
     <div style={{ background: WHITE, border: `0.5px solid ${BD}`, borderLeft: `3px solid ${AMBER}`, borderRadius: 8, padding: "16px 20px", marginBottom: 24 }}>
       <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 8 }}>The Core Deadlock</div>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 24, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 24, marginBottom: 12, flexWrap: "wrap" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL, marginBottom: 2 }}>High Ambition Coalition</div>
           <div style={{ fontFamily: F, fontSize: 11, color: MU, marginBottom: 2 }}>130+ countries</div>
