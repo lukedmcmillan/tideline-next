@@ -98,7 +98,7 @@ export default function DashboardPage() {
     <div style={{ background: BG, minHeight: "100%", color: TEXT, fontFamily: SANS }}>
       <style>{`
         @media(max-width:768px){
-          .dash-header{padding:16px 16px 12px!important}
+          .dash-header{display:none!important}
           .dash-grid{padding:0 16px 16px!important;grid-template-columns:1fr!important}
           .dash-grid>*:first-child{grid-column:1!important;grid-row:auto!important;min-height:300px!important}
           .dash-pow{margin:0 16px!important;flex-direction:column!important;align-items:flex-start!important;gap:10px!important}
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         <HeroSignal />
 
         {/* Tracker Velocity with Sparklines */}
-        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="mob-hide" style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>Tracker velocity · 30d</span>
             <a href="/platform/trackers" style={{ fontSize: 11.5, color: TEAL_BRIGHT, fontWeight: 500, textDecoration: "none", cursor: "pointer" }}>All trackers →</a>
@@ -162,7 +162,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Your Exposure Today */}
-        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="mob-hide" style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase", marginBottom: 14 }}>
             Your exposure today
           </div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Score Summary */}
-        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="mob-hide" style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>Score summary</span>
             <a href="/platform/trackers" style={{ fontSize: 11.5, color: TEAL_BRIGHT, fontWeight: 500, textDecoration: "none", cursor: "pointer" }}>All trackers →</a>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Most Watched */}
-        <div style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div className="mob-hide" style={{ background: BG2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase", marginBottom: 14 }}>
             Most watched · this week
           </div>
@@ -224,9 +224,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Mobile: link to full tracker dashboard */}
+      <a href="/platform/trackers" className="mob-show-block" style={{ display: "none", padding: "16px 16px 24px", fontFamily: SANS, fontSize: 14, fontWeight: 500, color: TEAL_BRIGHT, textDecoration: "none" }}>View trackers →</a>
+
       {/* Proof of Work Footer */}
       {proofOfWork && (
-        <div className="dash-pow" style={{
+        <div className="dash-pow mob-hide" style={{
           margin: "0 32px",
           padding: "14px 20px",
           background: BG2,

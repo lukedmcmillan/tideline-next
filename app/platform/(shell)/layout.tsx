@@ -957,9 +957,8 @@ function PlatformLayoutInner({ children }: { children: React.ReactNode }) {
         .mobile-tab-bar{display:none}
         .top-bar-search-icon{display:none}
         @media(max-width:768px){
-          .trial-banner-wrap{position:fixed!important;top:auto!important;bottom:56px!important;left:0!important;right:0!important;z-index:100!important;background:#1D9E75!important;padding:10px 20px!important}
-          .trial-banner-wrap .trial-text{font-size:11px!important;color:#FFFFFF!important}
-          .mobile-tab-bar{display:flex!important}
+          .trial-banner-wrap{position:sticky!important;top:0!important;bottom:auto!important;left:auto!important;right:auto!important;width:auto!important;max-width:90%!important;margin:8px auto!important;padding:6px 16px!important;border-radius:20px!important;justify-content:center!important}
+          .trial-banner-wrap .trial-text{font-size:12px!important;color:#FFFFFF!important}
           .top-bar-search{display:none!important}
           .top-bar-search-icon{display:flex!important}
           .top-bar-right-tier{display:none!important}
