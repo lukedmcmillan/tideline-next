@@ -43,7 +43,7 @@ export default function CITESMarineTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); } @media (max-width: 768px) { .status-grid { grid-template-columns: 1fr !important; } .metric-grid { grid-template-columns: repeat(2, 1fr) !important; } .two-col { grid-template-columns: 1fr !important; } }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); } @media (max-width: 768px) { .status-grid { grid-template-columns: 1fr 1fr !important; } .status-grid > div:last-child { grid-column: 1 / -1 !important; } .metric-grid { grid-template-columns: repeat(2, 1fr) !important; } .two-col { grid-template-columns: 1fr !important; } }`}</style>
       <TrackerHero
         slug="cites-marine"
         title="CITES Marine Species"

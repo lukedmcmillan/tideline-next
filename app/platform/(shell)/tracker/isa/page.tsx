@@ -997,16 +997,12 @@ export default function ISATracker() {
     <div style={{ fontFamily: F, color: T1, background: WHITE, minHeight: "100vh" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @media (max-width: 1024px) {
+        @media (max-width: 768px) {
           .two-col { grid-template-columns: 1fr !important; }
           .metric-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .status-grid { grid-template-columns: 1fr !important; }
-          .status-grid > div { border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; }
-          .status-grid > div:first-child { border-top: none; padding-top: 0; }
+          .status-grid { grid-template-columns: 1fr 1fr !important; }
+          .status-grid > div:last-child { grid-column: 1 / -1 !important; border-left: none !important; padding-left: 0 !important; border-top: 1px solid rgba(255,255,255,0.08) !important; padding-top: 24px !important; }
           .stories-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 640px) {
-          .metric-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 

@@ -182,9 +182,8 @@ export default function PlasticsTreatyTracker() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @media (max-width: 768px) {
           .plastics-metrics { grid-template-columns: repeat(2, 1fr) !important; }
-          .status-cols { grid-template-columns: 1fr !important; }
-          .status-cols > div { border-left: none !important; padding-left: 0 !important; border-top: 0.5px solid rgba(255,255,255,0.1); padding-top: 16px; }
-          .status-cols > div:first-child { border-top: none; padding-top: 0; }
+          .status-cols { grid-template-columns: 1fr 1fr !important; }
+          .status-cols > div:last-child { grid-column: 1 / -1 !important; border-left: none !important; padding-left: 0 !important; border-top: 0.5px solid rgba(255,255,255,0.1) !important; padding-top: 16px !important; }
         }
       `}</style>
 

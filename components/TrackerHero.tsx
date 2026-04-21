@@ -107,8 +107,15 @@ export default function TrackerHero({
 
   return (
     <>
+    <style>{`
+      @media (max-width: 768px) {
+        .tracker-hero-inner { padding: 0 16px !important; }
+        .tracker-hero-cards { grid-template-columns: 1fr 1fr !important; }
+        .tracker-hero-next-event { grid-column: 1 / -1 !important; }
+      }
+    `}</style>
     <div style={{ background: NAVY, padding: "40px 0" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px" }}>
+      <div className="tracker-hero-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 48px" }}>
         {/* Row 1: eyebrow + alert pill */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontFamily: F, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.14em", color: TEAL }}>
@@ -169,7 +176,7 @@ export default function TrackerHero({
         </p>
 
         {/* Row 4: three cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1 }}>
+        <div className="tracker-hero-cards" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1 }}>
           {/* Card 1: Stage */}
           <div style={cardStyle}>
             <div style={labelStyle}>STAGE {stage} OF 5</div>
@@ -208,7 +215,7 @@ export default function TrackerHero({
           </div>
 
           {/* Card 3: Next Event */}
-          <div style={cardStyle}>
+          <div className="tracker-hero-next-event" style={cardStyle}>
             <div style={labelStyle}>NEXT EVENT</div>
             {daysUntil !== null ? (
               daysUntil <= 0 ? (
