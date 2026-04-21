@@ -62,7 +62,7 @@ export default function WTOFisheriesTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); } @media (max-width: 768px) { .status-grid { grid-template-columns: 1fr !important; } .metric-grid { grid-template-columns: repeat(2, 1fr) !important; } .two-col { grid-template-columns: 1fr !important; } }`}</style>
       <TrackerHero
         slug="wto-fisheries"
         title="WTO Fisheries Subsidies"
@@ -85,7 +85,7 @@ export default function WTOFisheriesTracker() {
         <TrackerMethodology slug="wto-fisheries" />
 
         {/* Status Blocks */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }} className="status-grid">
           {STATUS_BLOCKS.map((s) => (
             <div key={s.label} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderRadius: 8, padding: "16px 20px" }}>
               <div style={{ fontFamily: F, fontSize: 9, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", color: MU, marginBottom: 8 }}>{s.label}</div>
@@ -97,7 +97,7 @@ export default function WTOFisheriesTracker() {
         </div>
 
         {/* Metric Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }} className="metric-grid">
           {METRIC_CARDS.map((c) => (
             <div key={c.label} className="metric-card" onClick={() => window.open(c.url, "_blank")} style={{ background: WHITE, border: `0.5px solid ${BD}`, borderTop: `3px solid ${TEAL}`, borderRadius: 8, padding: "16px 20px", cursor: "pointer", position: "relative", transition: "box-shadow 0.15s" }}>
               <span className="mc-arrow" style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: MU, opacity: 0, transition: "opacity 0.15s", pointerEvents: "none" }}>{"\u2197"}</span>

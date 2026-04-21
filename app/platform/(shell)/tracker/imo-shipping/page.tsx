@@ -43,7 +43,7 @@ export default function IMOShippingTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); } @media (max-width: 768px) { .status-grid { grid-template-columns: 1fr !important; } .metric-grid { grid-template-columns: repeat(2, 1fr) !important; } .two-col { grid-template-columns: 1fr !important; } }`}</style>
       <TrackerHero
         slug="imo-shipping"
         title="IMO Shipping Emissions"
@@ -66,7 +66,7 @@ export default function IMOShippingTracker() {
         <TrackerMethodology slug="imo-shipping" />
 
         {/* Status Blocks */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }} className="status-grid">
           {[
             { label: "MEPC 84", value: "Convening 27 Apr 2026", detail: "Net-Zero Framework implementing measures. Carbon intensity targets under review.", source: "IMO official calendar", url: "https://www.imo.org" },
             { label: "EU ETS Shipping", value: "Live \u2014 Phase 1 compliance", detail: "First compliance period closed March 2025. Allowance surrender deadline passed. Phase 2 reporting underway.", source: "European Commission", url: "https://transport.ec.europa.eu" },
@@ -82,7 +82,7 @@ export default function IMOShippingTracker() {
         </div>
 
         {/* Metric Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }} className="metric-grid">
           {[
             { value: "~3,700", unit: "EU-flagged + calling", label: "Vessels affected by EU ETS", note: "Subject to EU ETS allowance surrender from Jan 2024 \u2014 first compliance period closed March 2025", url: "https://transport.ec.europa.eu" },
             { value: "Annual", unit: "reporting cycle", label: "CII compliance deadline", note: "Carbon Intensity Indicator rating determines vessel operational restrictions", url: "https://www.imo.org" },

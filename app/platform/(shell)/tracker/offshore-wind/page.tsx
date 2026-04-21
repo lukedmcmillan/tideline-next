@@ -43,7 +43,7 @@ export default function OffshoreWindTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); } @media (max-width: 768px) { .status-grid { grid-template-columns: 1fr !important; } .metric-grid { grid-template-columns: repeat(2, 1fr) !important; } .two-col { grid-template-columns: 1fr !important; } }`}</style>
       <TrackerHero
         slug="offshore-wind"
         title="Offshore Wind and Marine Spatial Planning"
@@ -66,7 +66,7 @@ export default function OffshoreWindTracker() {
         <TrackerMethodology slug="offshore-wind" />
 
         {/* Status Blocks */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }} className="status-grid">
           {[
             { label: "US Offshore Wind Leasing", value: "Suspended \u2014 appellate review", detail: "Federal leasing suspended pending appellate court ruling on executive order challenged by developers. Outcome determines Atlantic wind buildout timeline.", source: "BOEM", url: "https://www.boem.gov/renewable-energy" },
             { label: "Crown Estate Round 5", value: "Awards confirmed \u2014 Nov 2025", detail: "Largest UK leasing round confirmed. Projects now in planning and consenting phase. First power expected 2031-2033.", source: "The Crown Estate", url: "https://www.thecrownestate.co.uk" },
@@ -82,7 +82,7 @@ export default function OffshoreWindTracker() {
         </div>
 
         {/* Metric Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }} className="metric-grid">
           {[
             { value: "280GW", unit: "installed by 2030 target", label: "Global offshore wind capacity", note: "IEA target \u2014 current installed capacity ~80GW as of 2025", url: "https://www.iea.org/energy-system/renewables/wind" },
             { value: "\u00A31bn+", unit: "annual seabed rent", label: "Crown Estate Round 5", note: "Annual seabed rent from Round 5 \u2014 largest UK leasing round in history", url: "https://www.thecrownestate.co.uk" },

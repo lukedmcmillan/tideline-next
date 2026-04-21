@@ -43,7 +43,7 @@ export default function CITESMarineTracker() {
 
   return (
     <div style={{ fontFamily: F, color: T1, background: "#f8f9fa", minHeight: "100vh" }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } .metric-card:hover .mc-arrow { opacity: 1 !important; } .metric-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); } @media (max-width: 768px) { .status-grid { grid-template-columns: 1fr !important; } .metric-grid { grid-template-columns: repeat(2, 1fr) !important; } .two-col { grid-template-columns: 1fr !important; } }`}</style>
       <TrackerHero
         slug="cites-marine"
         title="CITES Marine Species"
@@ -66,7 +66,7 @@ export default function CITESMarineTracker() {
         <TrackerMethodology slug="cites-marine" />
 
         {/* Status Blocks */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }} className="status-grid">
           {[
             { label: "CITES CoP20 Outcomes", value: "Listings adopted \u2014 Nov 2025", detail: "Blue shark, shortfin mako, and additional ray species listed under Appendix II. Trade in these species now requires CITES permits. Implementation deadline varies by jurisdiction.", source: "CITES Secretariat", url: "https://cites.org/eng/cop" },
             { label: "Blue Shark Appendix II", value: "Controls active \u2014 Mar 2026", detail: "Estimated 20 million blue sharks traded annually before listing. Hong Kong, Japan, and Spain are primary trade hubs. Permit requirements now apply to all commercial trade.", source: "CITES trade database", url: "https://trade.cites.org" },
@@ -82,7 +82,7 @@ export default function CITESMarineTracker() {
         </div>
 
         {/* Metric Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 32 }} className="metric-grid">
           {[
             { value: "~20M", unit: "individuals pre-listing", label: "Blue shark annual trade", note: "Blue shark listed Appendix II at CoP20 Nov 2025 \u2014 permits now required for all trade", url: "https://trade.cites.org" },
             { value: "14", unit: "marine species", label: "Species newly listed at CoP20", note: "Includes blue shark, shortfin mako, and 12 ray species \u2014 largest marine listing in CITES history", url: "https://cites.org/eng/cop" },
