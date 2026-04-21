@@ -127,7 +127,7 @@ function Card({ t, anim, onClick, live }: {
         </div>
       </div>
       {/* footer — coloured by trajectory */}
-      <div style={{ padding: "3px 8px", borderTop: foot.border, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: foot.bg }}>
+      <div style={{ padding: "3px 8px", borderTop: foot.border, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: foot.bg, flexWrap: "wrap" }}>
         <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", fontFamily: M, color: foot.color }}>{t.traj}</span>
         <span style={{ fontSize: 10, fontFamily: M, color: TEXT1 }}>{t.next}</span>
       </div>
@@ -188,20 +188,32 @@ export default function TrackersPage() {
       <style>{`
         @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes alertPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
+        @media(max-width:768px){
+          .trackers-page{height:auto!important;overflow:visible!important}
+          .trackers-s3{flex:none!important;overflow:visible!important;min-height:0!important}
+          .trackers-alert{flex-wrap:wrap!important;min-height:auto!important}
+          .trackers-alert>button{width:100%!important;justify-content:center!important;margin-top:8px!important}
+          .trackers-cd{overflow-x:auto!important;flex-wrap:nowrap!important;scrollbar-width:none}
+          .trackers-cd::-webkit-scrollbar{display:none}
+          .trackers-cd-cell{min-width:130px!important;flex-shrink:0!important;flex:none!important}
+          .trackers-cd-wrap{position:relative}
+          .trackers-cd-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:40px;background:linear-gradient(to right,transparent,#0B1628);pointer-events:none;z-index:1}
+          .trackers-grid{grid-template-columns:1fr 1fr!important;overflow:visible!important;grid-auto-rows:auto!important}
+        }
       `}</style>
-      <div style={{ background: BG, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: F }}>
+      <div className="trackers-page" style={{ background: BG, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: F }}>
 
         {/* S1: topbar */}
         <div style={{ height: 38, background: SURFACE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "0 12px 0 20px", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT0 }}>Live Signal Trackers</span>
-          <span style={{ width: 1, height: 16, background: BORDER2, margin: "0 14px" }} />
-          <span style={{ fontSize: 11, color: TEXT1 }}>Pulse Score {"\u00B7"} recalculated every four days</span>
+          <span className="mob-hide" style={{ width: 1, height: 16, background: BORDER2, margin: "0 14px" }} />
+          <span className="mob-hide" style={{ fontSize: 11, color: TEXT1 }}>Pulse Score {"\u00B7"} recalculated every four days</span>
           {Object.keys(liveScores).length === 0 && <span style={{ fontSize: 10, color: TEXT2, marginLeft: 12 }}>Recalculating scores...</span>}
         </div>
 
         {/* S1.5: hero alert banner */}
         {urgentAlert && (
-          <div style={{ background: `linear-gradient(135deg, ${SURFACE} 0%, ${SURFACE} 60%, rgba(226,75,74,0.15) 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "16px 20px", minHeight: 90, display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+          <div className="trackers-alert" style={{ background: `linear-gradient(135deg, ${SURFACE} 0%, ${SURFACE} 60%, rgba(226,75,74,0.15) 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "16px 20px", minHeight: 90, display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: RED, flexShrink: 0, animation: "alertPulse 1.5s ease-in-out infinite" }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -223,6 +235,7 @@ export default function TrackersPage() {
               {urgentAlert.liveScore.toFixed(1)} {"\u25B2"}
             </span>
             <button
+              className="mob-tap"
               onClick={() => router.push(`/platform/tracker/${urgentAlert.slug}`)}
               style={{ fontSize: 11, fontWeight: 600, color: "#0A1628", background: TEAL_BRIGHT, border: "none", padding: "6px 14px", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
             >
@@ -243,21 +256,23 @@ export default function TrackersPage() {
         </div>
 
         {/* S3: grid area */}
-        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "6px 14px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
+        <div className="trackers-s3" style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "6px 14px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
           {/* countdowns */}
-          <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
-            {CDS.map((cd, i) => (
-              <div key={cd.ev} style={{ flex: 1, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", display: "flex", alignItems: "center", gap: 10, borderRight: i < CDS.length - 1 ? `1px solid ${BORDER}` : undefined }}>
-                <div><span style={{ fontSize: 18, fontWeight: 700, fontFamily: M, color: AMBER, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, fontFamily: M, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", color: TEXT0 }}>{cd.ev}</span>
-                  <span style={{ fontSize: 9, color: TEXT1, marginTop: 1 }}>{cd.sub}</span>
+          <div className="trackers-cd-wrap" style={{ flexShrink: 0 }}>
+            <div className="trackers-cd" style={{ display: "flex", gap: 5 }}>
+              {CDS.map((cd, i) => (
+                <div key={cd.ev} className="trackers-cd-cell" style={{ flex: 1, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", display: "flex", alignItems: "center", gap: 10, borderRight: i < CDS.length - 1 ? `1px solid ${BORDER}` : undefined }}>
+                  <div><span style={{ fontSize: 18, fontWeight: 700, fontFamily: M, color: AMBER, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, fontFamily: M, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", color: TEXT0 }}>{cd.ev}</span>
+                    <span style={{ fontSize: 9, color: TEXT1, marginTop: 1 }}>{cd.sub}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          {/* grid: 5 columns, 6px gap, sorted by score desc */}
-          <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridAutoRows: "1fr", gap: 6 }}>
+          {/* grid: 5 columns desktop, 2 columns mobile, sorted by score desc */}
+          <div className="trackers-grid" style={{ flex: 1, minHeight: 0, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridAutoRows: "1fr", gap: 6 }}>
             {sorted.map(t => (
               <Card key={t.slug} t={t} anim={anim} onClick={() => router.push(`/platform/tracker/${t.slug}`)} live={liveScores[t.slug]} />
             ))}
