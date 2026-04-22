@@ -22,33 +22,27 @@ const BODY_TO_SLUG: Record<string, string> = {
   "WTO-Fish": "wto-fisheries",
 };
 
-// stories.topic → tracker slug (best-effort; unmatched topics are skipped)
-const TOPIC_TO_SLUG: Record<string, string> = {
-  "deep-sea-mining": "isa",
-  isa: "isa",
-  bbnj: "bbnj",
-  "high-seas": "bbnj",
-  "ocean-governance": "bbnj",
-  iuu: "iuu",
-  "illegal-fishing": "iuu",
-  fisheries: "iuu",
-  plastics: "plastics",
-  "plastic-pollution": "plastics",
-  "30x30": "30x30",
-  "marine-protected-areas": "30x30",
-  mpas: "30x30",
-  "imo-shipping": "imo-shipping",
-  shipping: "imo-shipping",
-  maritime: "imo-shipping",
-  "offshore-wind": "offshore-wind",
-  "renewable-energy": "offshore-wind",
-  "cites-marine": "cites-marine",
-  cites: "cites-marine",
-  "blue-finance": "blue-finance",
-  "ocean-finance": "blue-finance",
-  "wto-fisheries": "wto-fisheries",
-  "fisheries-subsidies": "wto-fisheries",
+// Per-tracker topic arrays — mirrors TRACKER_TOPICS in app/lib/velocity.ts.
+// Used both for activity spike counting and high-sig story routing.
+const TRACKER_TOPICS: Record<string, string[]> = {
+  isa: ["dsm"],
+  bbnj: ["bbnj", "high-seas"],
+  iuu: ["iuu"],
+  "30x30": ["mpa", "30x30"],
+  "blue-finance": ["blue-finance", "esg"],
+  plastics: ["plastics", "pollution"],
+  "imo-shipping": ["shipping"],
+  "offshore-wind": ["offshore-wind"],
+  "cites-marine": ["cites", "sharks", "shark", "rays", "guitarfish"],
+  "wto-fisheries": ["wto-fisheries", "fisheries-subsidies", "subsidies"],
 };
+
+// Reverse map: topic → tracker slug (for high-sig story routing)
+const TOPIC_TO_SLUG: Record<string, string> = Object.fromEntries(
+  Object.entries(TRACKER_TOPICS).flatMap(([slug, topics]) =>
+    topics.map((t) => [t, slug])
+  )
+);
 
 const COUNTDOWN_IMPORTANCE: Record<number, number> = {
   3: 9.5,
@@ -255,88 +249,73 @@ export async function generateCountdownSignals(): Promise<number> {
   return inserted;
 }
 
-// ─── 3. Convergence Spike Signals ────────────────────────────────────────────
-// Compares source count per topic in the current 6h window vs the prior 6h
-// window. Emits when a topic gains ≥2 new outlets and has ≥3 total.
-// Deduped: one signal per tracker per 6-hour window.
+// ─── 3. Activity Spike Signals ───────────────────────────────────────────────
+// Per-tracker story volume spike: compares ingestion count in the current 6h
+// window vs the previous 6h window. Emits when volume doubles AND count >= 3.
+// Uses the same topic-to-tracker mapping as the velocity score calculator.
+// Stored as signal_type='convergence_spike' (no schema change needed).
+// Deduped: one signal per tracker per 3-hour window.
 
 export async function generateConvergenceSignals(): Promise<number> {
   let inserted = 0;
 
+  const threeHoursAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
   const sixHoursAgo = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
   const twelveHoursAgo = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
 
-  const [{ data: currentStories }, { data: previousStories }] =
-    await Promise.all([
-      supabase
-        .from("stories")
-        .select("topic, source_name")
-        .gte("created_at", sixHoursAgo),
-      supabase
-        .from("stories")
-        .select("topic, source_name")
-        .gte("created_at", twelveHoursAgo)
-        .lt("created_at", sixHoursAgo),
-    ]);
-
-  if (!currentStories || currentStories.length === 0) return 0;
-
-  // Group by topic → set of distinct source names
-  function countSources(
-    rows: { topic: string | null; source_name: string }[]
-  ): Record<string, number> {
-    const map: Record<string, Set<string>> = {};
-    for (const r of rows) {
-      if (!r.topic) continue;
-      if (!map[r.topic]) map[r.topic] = new Set();
-      map[r.topic].add(r.source_name);
-    }
-    return Object.fromEntries(
-      Object.entries(map).map(([t, s]) => [t, s.size])
-    );
-  }
-
-  const current = countSources(currentStories);
-  const previous = countSources(previousStories ?? []);
-
-  for (const [topic, currentCount] of Object.entries(current)) {
-    const prevCount = previous[topic] ?? 0;
-    const delta = currentCount - prevCount;
-
-    if (currentCount < 3 || delta < 2) continue;
-
-    const trackerSlug = TOPIC_TO_SLUG[topic] ?? null;
-    if (!trackerSlug) continue;
-
-    // Dedup: no convergence_spike for this tracker in the current 6h window
-    const { data: existing } = await supabase
-      .from("signal_events")
-      .select("id")
-      .eq("signal_type", "convergence_spike")
-      .eq("tracker_slug", trackerSlug)
-      .gte("created_at", sixHoursAgo)
-      .limit(1);
-
-    if (existing && existing.length > 0) continue;
-
-    const trackerName = DOMAIN_NAMES[trackerSlug] ?? topic;
-    // Importance scales with outlet count: 6.5 at 3 outlets → 8.0 at ~10+
-    const importance = Math.min(8.0, Math.round((6.5 + delta * 0.2) * 10) / 10);
-
+  for (const [slug, topics] of Object.entries(TRACKER_TOPICS)) {
     try {
+      // Count stories ingested per tracker in current and previous 6h windows
+      const [{ count: currentCount }, { count: prevCount }] = await Promise.all([
+        supabase
+          .from("stories")
+          .select("id", { count: "exact", head: true })
+          .in("topic", topics)
+          .gte("created_at", sixHoursAgo),
+        supabase
+          .from("stories")
+          .select("id", { count: "exact", head: true })
+          .in("topic", topics)
+          .gte("created_at", twelveHoursAgo)
+          .lt("created_at", sixHoursAgo),
+      ]);
+
+      const current = currentCount ?? 0;
+      const previous = prevCount ?? 0;
+
+      // Spike condition: volume doubled AND at least 3 stories in current window
+      if (current < 3 || current < previous * 2) continue;
+
+      // Dedup: no activity spike for this tracker in the last 3h
+      const { data: existing } = await supabase
+        .from("signal_events")
+        .select("id")
+        .eq("signal_type", "convergence_spike")
+        .eq("tracker_slug", slug)
+        .gte("created_at", threeHoursAgo)
+        .limit(1);
+
+      if (existing && existing.length > 0) continue;
+
+      const trackerName = DOMAIN_NAMES[slug] ?? slug;
+      const ratio = previous > 0 ? current / previous : current;
+      const importance = Math.min(
+        8.0,
+        Math.round((6.5 + (ratio - 1) * 0.5) * 10) / 10
+      );
+
       await supabase.from("signal_events").insert({
         signal_type: "convergence_spike",
-        tracker_slug: trackerSlug,
-        headline: `${currentCount} outlets covering ${trackerName}`,
-        body: `Tideline sees this: ${currentCount} sources in last 6 hours${prevCount > 0 ? ` (up from ${prevCount})` : ""}.`,
+        tracker_slug: slug,
+        headline: `${trackerName} coverage accelerating`,
+        body: `${current} stories in last 6 hours (up from ${previous} in the prior 6 hours).`,
         importance,
-        action_label: "Read stories",
-        action_url: "/platform/feed",
+        action_label: "View tracker",
+        action_url: `/platform/tracker/${slug}`,
         metadata: {
-          topic,
-          outlet_count: currentCount,
-          previous_count: prevCount,
-          delta,
+          outlet_count: current,
+          previous_count: previous,
+          ratio: Math.round(ratio * 10) / 10,
           window_hours: 6,
         },
         expires_at: new Date(Date.now() + 6 * 3600 * 1000).toISOString(),
@@ -344,7 +323,7 @@ export async function generateConvergenceSignals(): Promise<number> {
       inserted++;
     } catch (err) {
       console.error(
-        `[signal-gen] convergence_spike failed for topic ${topic}:`,
+        `[signal-gen] convergence_spike (activity spike) failed for ${slug}:`,
         err
       );
     }
