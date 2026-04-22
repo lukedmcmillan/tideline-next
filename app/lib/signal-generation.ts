@@ -120,6 +120,30 @@ export async function generateBandCrossingSignals(): Promise<number> {
 }
 
 // ─── 2. Countdown Threshold Signals ──────────────────────────────────────────
+// Procedural events blocklist — these don't warrant subscriber signals
+const PROCEDURAL_KEYWORDS = [
+  "workshop",
+  "informal",
+  "ad-hoc",
+  "ad hoc",
+  "expert group",
+  "technical meeting",
+  "advisory group",
+  "working group",
+  "spanish-speaking",
+  "french-speaking",
+  "arabic-speaking",
+  "capacity-building",
+  "capacity building",
+  "side event",
+  "informal consultation",
+  "subsidiary body",
+];
+
+const isProcedural = (eventName: string): boolean => {
+  const lower = eventName.toLowerCase();
+  return PROCEDURAL_KEYWORDS.some((kw) => lower.includes(kw));
+};
 // Queries governance_events in the next 90 days. For each event, finds the
 // most precise threshold that applies (3/7/14/30 days). Deduped by
 // source_event_id + threshold. Capped to one signal per tracker per run
@@ -172,6 +196,9 @@ export async function generateCountdownSignals(): Promise<number> {
       else if (daysUntil <= 30) threshold = 30;
 
       if (threshold === null) continue;
+
+      // Filter procedural events that don't warrant subscriber signals
+      if (isProcedural(event.title)) continue;
 
       // Dedup: already emitted for this event at this exact threshold
       const { data: existing } = await supabase
@@ -292,7 +319,7 @@ export async function generateConvergenceSignals(): Promise<number> {
         .select("id")
         .eq("signal_type", "convergence_spike")
         .eq("tracker_slug", slug)
-        .gte("fetched_at", threeHoursAgo)
+        .gte("created_at", threeHoursAgo)
         .limit(1);
 
       if (existing && existing.length > 0) continue;
