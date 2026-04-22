@@ -117,9 +117,9 @@ export async function GET(request: Request) {
         }
 
         // 5. Compose HTML + subject line
-        const html = composeEntityBriefHtml(feed, dateStr, gate);
-        const subject = await generateEntitySubjectLine(feed, gate);
-        const storyCount = feed.material.length + feed.watch.length;
+        const html = composeEntityBriefHtml(feed, dateStr);
+        const subject = await generateEntitySubjectLine(feed);
+        const storyCount = feed.material.length + feed.watch.length + feed.topStories.length;
 
         // 6. Insert into queue
         const { error: insertErr } = await supabase
