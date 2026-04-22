@@ -34,8 +34,8 @@ const supabase = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-const MATERIAL_THRESHOLD = 25;
-const WATCH_THRESHOLD = 10;
+export const MATERIAL_THRESHOLD = 25;
+export const WATCH_THRESHOLD = 10;
 const MAX_PER_SECTION = 5;
 const BASE_URL = "https://www.thetideline.co";
 
@@ -455,10 +455,10 @@ async function selectPulseCard(
   );
 
   // Record in brief_pulse_history (non-fatal)
-  supabase.from("brief_pulse_history").insert({
+  void supabase.from("brief_pulse_history").insert({
     user_id: userId,
     tracker_slug: selectedSlug,
-  }).then(() => {}).catch(() => {});
+  });
 
   return {
     trackerSlug: selectedSlug,
@@ -606,7 +606,7 @@ export async function getUserEntityFeed(userId: string): Promise<EntityBriefFeed
 
       // Find MAX(fetched_at) per entity in-app
       for (const m of quietMentions || []) {
-        const fa = (m.stories as { fetched_at: string } | null)?.fetched_at;
+        const fa = (m.stories as unknown as { fetched_at: string } | null)?.fetched_at;
         if (!fa) continue;
         const d = new Date(fa);
         const existing = lastSeenByEntity.get(m.entity_id);
