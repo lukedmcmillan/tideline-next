@@ -177,8 +177,8 @@ export async function GET(request: NextRequest) {
   const { data: todayCounts } = await supabase
     .from('stories')
     .select('source_name')
-    .gte('created_at', `${today}T00:00:00Z`)
-    .lte('created_at', `${today}T23:59:59Z`)
+    .gte('fetched_at', `${today}T00:00:00Z`)
+    .lte('fetched_at', `${today}T23:59:59Z`)
 
   const sourceCountToday: Record<string, number> = {}
   for (const row of todayCounts || []) {

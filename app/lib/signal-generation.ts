@@ -271,13 +271,13 @@ export async function generateConvergenceSignals(): Promise<number> {
           .from("stories")
           .select("id", { count: "exact", head: true })
           .in("topic", topics)
-          .gte("created_at", sixHoursAgo),
+          .gte("fetched_at", sixHoursAgo),
         supabase
           .from("stories")
           .select("id", { count: "exact", head: true })
           .in("topic", topics)
-          .gte("created_at", twelveHoursAgo)
-          .lt("created_at", sixHoursAgo),
+          .gte("fetched_at", twelveHoursAgo)
+          .lt("fetched_at", sixHoursAgo),
       ]);
 
       const current = currentCount ?? 0;
@@ -292,7 +292,7 @@ export async function generateConvergenceSignals(): Promise<number> {
         .select("id")
         .eq("signal_type", "convergence_spike")
         .eq("tracker_slug", slug)
-        .gte("created_at", threeHoursAgo)
+        .gte("fetched_at", threeHoursAgo)
         .limit(1);
 
       if (existing && existing.length > 0) continue;
@@ -347,7 +347,7 @@ export async function generateHighSigStorySignals(): Promise<number> {
       "id, title, topic, source_name, link, short_summary, description, significance_score"
     )
     .gte("significance_score", 8)
-    .gte("created_at", threeHoursAgo)
+    .gte("fetched_at", threeHoursAgo)
     .order("significance_score", { ascending: false })
     .limit(20);
 
