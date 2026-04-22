@@ -14,6 +14,9 @@ export const RSS_SOURCES: RSSSource[] = [
 
   // ─── REGULATORY ───────────────────────────────────────────────────────────────
   { name: "ISA", rss: "https://www.isa.org.jm/feed", topic: "dsm", type: "reg" },
+  // UNEP uses non-standard XML: <response> root, <path> for URLs, dates in <created><time datetime="..."></created>.
+  // Handled by the generalised parser (no special-case code needed).
+  { name: "UNEP", rss: "https://www.unep.org/news-and-stories/rss.xml", topic: "governance", type: "reg" },
   // CITES removed 2026-04-22: Cloudflare blocks Vercel IPs. Add to harvest-scraped-sources via Jina scraper.
   { name: "HELCOM", rss: "https://helcom.fi/feed/", topic: "governance", type: "reg" },
   { name: "CCAMLR", rss: "https://www.ccamlr.org/en/rss.xml", topic: "governance", type: "reg" },

@@ -22,6 +22,7 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
     const xml = await res.text()
 
     const items: { title: string; link: string; published_at: string | null; description: string | null }[] = []
+    // Match standard RSS <item>, Atom <entry>, and non-standard <item key="..."> (e.g. UNEP)
     const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
     const entryRegex = /<entry[^>]*>([\s\S]*?)<\/entry>/gi
     let match
@@ -30,14 +31,37 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
       while ((match = regex.exec(xml)) !== null) {
         const item = match[1]
         const title = item.match(/<title[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/i)?.[1]?.trim()
-        const link = isAtom
-          ? item.match(/<link[^>]*href="([^"]+)"/i)?.[1]?.trim()
-          : item.match(/<link[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/link>/i)?.[1]?.trim()
-            || item.match(/<link[^>]*href="([^"]+)"/i)?.[1]?.trim()
-        const pubDate = item.match(/<pubDate[^>]*>(.*?)<\/pubDate>/i)?.[1]?.trim()
+
+        // URL extraction — priority order handles standard RSS, Atom, and non-standard feeds (e.g. UNEP uses <path>)
+        const link =
+          item.match(/<link[^>]*>(?:<!\[CDATA\[)?(https?:\/\/[^<]+?)(?:\]\]>)?<\/link>/i)?.[1]?.trim()
+          || (isAtom ? item.match(/<link[^>]*href="([^"]+)"/i)?.[1]?.trim() : undefined)
+          || item.match(/<link[^>]*href="([^"]+)"/i)?.[1]?.trim()
+          || item.match(/<path[^>]*>(?:<!\[CDATA\[)?(https?:\/\/[^<]+?)(?:\]\]>)?<\/path>/i)?.[1]?.trim()
+          || (item.match(/<guid[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/guid>/i)?.[1]?.trim().match(/^https?:\/\//)
+              ? item.match(/<guid[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/guid>/i)?.[1]?.trim()
+              : undefined)
+
+        // Date extraction — priority order; falls back to <time datetime="..."> inside <created>/<modified>
+        // to handle Drupal-based feeds (e.g. UNEP) that embed dates in HTML template comments
+        const rawDate =
+          item.match(/<pubDate[^>]*>(.*?)<\/pubDate>/i)?.[1]?.trim()
           || item.match(/<published[^>]*>(.*?)<\/published>/i)?.[1]?.trim()
           || item.match(/<updated[^>]*>(.*?)<\/updated>/i)?.[1]?.trim()
           || item.match(/<dc:date[^>]*>(.*?)<\/dc:date>/i)?.[1]?.trim()
+          || item.match(/<created[^>]*>[\s\S]*?<time[^>]*datetime="([^"]+)"/i)?.[1]?.trim()
+          || item.match(/<modified[^>]*>[\s\S]*?<time[^>]*datetime="([^"]+)"/i)?.[1]?.trim()
+
+        let published_at: string | null = null
+        if (rawDate) {
+          const parsed = new Date(rawDate)
+          published_at = isNaN(parsed.getTime()) ? null : parsed.toISOString()
+        }
+        if (!published_at) {
+          // Feed genuinely carries no timestamp — use ingestion time and log for auditing
+          console.warn(`[fetch-feeds] no date found for item from ${url} — using fetched_at`)
+          published_at = new Date().toISOString()
+        }
 
         const descRaw = item.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i)?.[1]?.trim()
           || item.match(/<content[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content>/i)?.[1]?.trim()
@@ -58,7 +82,7 @@ async function parseRSSFeed(url: string): Promise<{ title: string; link: string;
               .replace(/&#8221;/g, '"').replace(/&#8211;/g, '-').replace(/&#8212;/g, '-')
               .replace(/&nbsp;/g, ' ').replace(/&hellip;/g, '...').replace(/<[^>]+>/g, '').trim(),
             link: link.replace(/&amp;/g, '&'),
-            published_at: pubDate ? new Date(pubDate).toISOString() : null,
+            published_at,
             description: description || null,
           })
         }
