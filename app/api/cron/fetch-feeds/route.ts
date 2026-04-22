@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { matchEntitiesToStory } from '@/lib/entity-matching'
 import { RSS_SOURCES, OCEAN_DEDICATED_SOURCES } from '@/app/lib/sources'
 import { checkOceanRelevance } from '@/app/lib/ocean-relevance-gate'
+import { runSignalGeneration } from '@/app/lib/signal-generation'
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -287,6 +288,13 @@ export async function GET(request: NextRequest) {
   }
   console.log('[ocean-gate:blocking]', JSON.stringify(gateSummary))
 
+  let signalStats = null;
+  try {
+    signalStats = await runSignalGeneration();
+  } catch (e) {
+    console.error('Signal generation failed:', e);
+  }
+
   return NextResponse.json({
     success: true,
     saved: totalSaved,
@@ -301,6 +309,7 @@ export async function GET(request: NextRequest) {
       total_entity_mentions_written: totalEntityMentions,
       matching_errors: matchingErrors,
     },
+    signal_generation: signalStats,
     timestamp: new Date().toISOString(),
   })
 }
