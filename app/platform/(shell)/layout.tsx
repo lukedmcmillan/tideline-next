@@ -32,6 +32,7 @@ const IcDir = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" 
 const IcBrief = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h12a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M5 6h8M5 9h6M5 12h4"/></svg>;
 const IcOverview = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>;
 const IcTrackers = () => <svg width="18" height="18" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4"><polyline points="1,11 4,6.5 7,9 10,3.5 13,6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IcEntities = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="6" r="3"/><path d="M1 16c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5" strokeLinecap="round"/><circle cx="13.5" cy="5.5" r="2.5"/><path d="M17 16c0-2.8-1.8-4.5-3.5-4.5" strokeLinecap="round"/></svg>;
 const IcConflicts = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 2l7 14H2L9 2z"/><path d="M9 7v4M9 13h.01"/></svg>;
 
 // ── Trial Banner ─────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
   const nav: { ic: React.ReactNode; label: string; href: string; badge?: string; badgeColor?: string }[] = [
     { ic: <IcOverview />, label: "Dashboard", href: "/platform" },
     { ic: <IcFeed />, label: "News Feed", href: "/platform/feed" },
+    { ic: <IcEntities />, label: "Entities", href: "/platform/entities" },
     { ic: <IcWork />, label: "My Workspace", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcTrackers />, label: "Trackers", href: "/platform/trackers" },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
@@ -557,6 +559,7 @@ function RightPanel() {
 
   if (path === "/platform") return null;
   if (path?.startsWith("/platform/tracker")) return null;
+  if (path?.startsWith("/platform/entities")) return null;
   if (isCalendar) return <CalendarRightPanel />;
   if (isWorkspace) return null;
   if (isProjects) return null;

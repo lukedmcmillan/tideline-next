@@ -26,6 +26,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { TRACKER_DESCRIPTIONS } from "./tracker-descriptions";
+import { MATERIAL_THRESHOLD, WATCH_THRESHOLD } from "./constants";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,9 +34,6 @@ const supabase = createClient(
 );
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-
-export const MATERIAL_THRESHOLD = 25;
-export const WATCH_THRESHOLD = 10;
 const MAX_PER_SECTION = 5;
 const BASE_URL = "https://www.thetideline.co";
 
