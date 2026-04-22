@@ -128,7 +128,16 @@ export async function generateBandCrossingSignals(): Promise<number> {
 // ─── 2. Countdown Threshold Signals ──────────────────────────────────────────
 // Queries governance_events in the next 90 days. For each event, finds the
 // most precise threshold that applies (3/7/14/30 days). Deduped by
-// source_event_id + threshold so each event emits once per threshold crossing.
+// source_event_id + threshold. Capped to one signal per tracker per run
+// (most imminent qualifying event wins) to prevent procedural-heavy bodies
+// like CBD from dominating the feed.
+
+const COUNTDOWN_HEADLINE: Record<number, string> = {
+  3: "Event imminent",
+  7: "Event approaching",
+  14: "Upcoming",
+  30: "On calendar",
+};
 
 export async function generateCountdownSignals(): Promise<number> {
   let inserted = 0;
@@ -144,6 +153,15 @@ export async function generateCountdownSignals(): Promise<number> {
     .order("starts_at", { ascending: true });
 
   if (!events || events.length === 0) return 0;
+
+  // Phase 1: collect all candidates that pass threshold + dedup checks
+  interface Candidate {
+    event: (typeof events)[0];
+    threshold: number;
+    daysUntil: number;
+    trackerSlug: string;
+  }
+  const candidates: Candidate[] = [];
 
   for (const event of events) {
     try {
@@ -172,26 +190,48 @@ export async function generateCountdownSignals(): Promise<number> {
 
       if (existing && existing.length > 0) continue;
 
-      // Resolve tracker slug from governance body abbreviation
       const bodyAbbr =
         (event.governance_bodies as { abbreviation?: string } | null)
           ?.abbreviation ?? "";
       const trackerSlug = BODY_TO_SLUG[bodyAbbr] ?? "bbnj";
 
+      candidates.push({ event, threshold, daysUntil, trackerSlug });
+    } catch (err) {
+      console.error(
+        `[signal-gen] countdown candidate check failed for event ${event.id}:`,
+        err
+      );
+    }
+  }
+
+  // Phase 2: keep only the most imminent candidate per tracker
+  const bestPerTracker = new Map<string, Candidate>();
+  for (const c of candidates) {
+    const existing = bestPerTracker.get(c.trackerSlug);
+    if (!existing || c.daysUntil < existing.daysUntil) {
+      bestPerTracker.set(c.trackerSlug, c);
+    }
+  }
+
+  // Phase 3: insert one signal per tracker
+  for (const { event, threshold, daysUntil, trackerSlug } of bestPerTracker.values()) {
+    try {
+      const startsAt = new Date(event.starts_at);
       const dateStr = startsAt.toLocaleDateString("en-GB", {
         day: "numeric",
         month: "short",
         year: "numeric",
       });
       const location = event.location ? ` · ${event.location}` : "";
+      const trackerName = DOMAIN_NAMES[trackerSlug] ?? trackerSlug;
       // 4h expiry for 3-day threshold, 12h for all others
       const expiryHours = threshold <= 3 ? 4 : 12;
 
       await supabase.from("signal_events").insert({
         signal_type: "countdown_threshold",
         tracker_slug: trackerSlug,
-        headline: `${event.title} now ${daysUntil} day${daysUntil === 1 ? "" : "s"} away`,
-        body: `${dateStr}${location}`,
+        headline: `${COUNTDOWN_HEADLINE[threshold]} · ${daysUntil} day${daysUntil === 1 ? "" : "s"}`,
+        body: `${event.title} · ${trackerName} · ${dateStr}${location}`,
         importance: COUNTDOWN_IMPORTANCE[threshold],
         action_label: "View event",
         action_url: `/platform/tracker/${trackerSlug}`,
@@ -206,7 +246,7 @@ export async function generateCountdownSignals(): Promise<number> {
       inserted++;
     } catch (err) {
       console.error(
-        `[signal-gen] countdown_threshold failed for event ${event.id}:`,
+        `[signal-gen] countdown_threshold insert failed for event ${event.id}:`,
         err
       );
     }
