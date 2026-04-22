@@ -371,7 +371,7 @@ export async function generateHighSigStorySignals(): Promise<number> {
   const { data: stories } = await supabase
     .from("stories")
     .select(
-      "id, title, topic, source_name, link, short_summary, description, significance_score"
+      "id, title, topic, source_name, link, short_summary, description, significance_score, cross_tracker_flags"
     )
     .gte("significance_score", 8)
     .gte("fetched_at", threeHoursAgo)
@@ -381,8 +381,9 @@ export async function generateHighSigStorySignals(): Promise<number> {
   if (!stories || stories.length === 0) return 0;
 
   for (const story of stories) {
-    const trackerSlug = story.topic ? TOPIC_TO_SLUG[story.topic] ?? null : null;
-    if (!trackerSlug) continue;
+    const rawFlag = (story.cross_tracker_flags as string[] | null)?.[0] ?? null;
+    const trackerSlug = rawFlag ? rawFlag.replace(/_/g, "-") : null;
+    if (!trackerSlug || !TRACKER_SLUGS.includes(trackerSlug)) continue;
 
     // Dedup: one signal per story
     const { data: existing } = await supabase
