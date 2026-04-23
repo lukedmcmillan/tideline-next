@@ -26,14 +26,15 @@ export interface EntityDashboardItem {
   daily_counts: number[];    // 7 elements, index 0 = 6 days ago, index 6 = today
   daily_material: boolean[]; // 7 elements, true if any material mention
   is_tracked: boolean;
-  tracked_since: string | null; // ISO timestamp from user_entities.added_at
+  tracked_since: string | null;
+  latest_snippet: string | null; // short_summary of most recent story
 }
 
 // ── Shared: aggregate mentions for a set of entity IDs ──────────────────────
 async function aggregateMentions(
   entityIds: string[],
   now: Date
-): Promise<Map<string, Pick<EntityDashboardItem, "activity_30d" | "material_7d" | "last_seen" | "daily_counts" | "daily_material">>> {
+): Promise<Map<string, Pick<EntityDashboardItem, "activity_30d" | "material_7d" | "last_seen" | "daily_counts" | "daily_material" | "latest_snippet">>> {
   const window30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const todayDay = Math.floor(now.getTime() / 86400000);
   const window7dMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
@@ -45,6 +46,7 @@ async function aggregateMentions(
       last_seen: null as string | null,
       daily_counts: [0, 0, 0, 0, 0, 0, 0] as number[],
       daily_material: [false, false, false, false, false, false, false] as boolean[],
+      latest_snippet: null as string | null,
     }])
   );
 
@@ -52,7 +54,7 @@ async function aggregateMentions(
 
   const { data: mentions } = await supabase
     .from("entity_mentions")
-    .select("entity_id, stories!inner(fetched_at, significance_score)")
+    .select("entity_id, stories!inner(fetched_at, significance_score, short_summary)")
     .in("entity_id", entityIds)
     .gte("stories.fetched_at", window30d)
     .eq("stories.status", "live");
@@ -61,6 +63,7 @@ async function aggregateMentions(
     const story = mention.stories as unknown as {
       fetched_at: string;
       significance_score: number;
+      short_summary: string | null;
     } | null;
     if (!story) continue;
 
@@ -75,6 +78,7 @@ async function aggregateMentions(
 
     if (!row.last_seen || story.fetched_at > row.last_seen) {
       row.last_seen = story.fetched_at;
+      row.latest_snippet = story.short_summary ?? null;
     }
 
     if (fetchedMs >= window7dMs && story.significance_score >= MATERIAL_THRESHOLD) {
@@ -137,11 +141,11 @@ export async function GET(req: NextRequest) {
 
   // ── SCOPE: tracked ─────────────────────────────────────────────────────────
   if (scope !== "all") {
+    const { count: totalCount } = await supabase
+      .from("entities")
+      .select("id", { count: "exact", head: true });
+
     if (trackedIds.length === 0) {
-      // Also return total entity count for the toggle label
-      const { count: totalCount } = await supabase
-        .from("entities")
-        .select("id", { count: "exact", head: true });
       return NextResponse.json({
         entities: [],
         tier,
@@ -168,10 +172,6 @@ export async function GET(req: NextRequest) {
       if (b.material_7d !== a.material_7d) return b.material_7d - a.material_7d;
       return b.activity_30d - a.activity_30d;
     });
-
-    const { count: totalCount } = await supabase
-      .from("entities")
-      .select("id", { count: "exact", head: true });
 
     return NextResponse.json({
       entities: result,
@@ -201,6 +201,7 @@ export async function GET(req: NextRequest) {
       last_seen: null,
       daily_counts: [0, 0, 0, 0, 0, 0, 0],
       daily_material: [false, false, false, false, false, false, false],
+      latest_snippet: null,
     };
     const trackedSince = isTracked ? (trackedMap.get(e.id)?.added_at ?? null) : null;
     return {
