@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import DashboardReveal from "@/components/DashboardReveal";
-import HeroSignal from "@/components/HeroSignal";
+import Link from "next/link";
 import Sparkline from "@/components/Sparkline";
 import type { ProofOfWorkData } from "@/app/lib/types/dashboard";
 
@@ -23,6 +23,14 @@ const RED          = "#E24B4A";
 const RED_SOFT     = "#FCEAEA";
 const SANS         = "'DM Sans', -apple-system, sans-serif";
 const MONO         = "'DM Mono', ui-monospace, monospace";
+
+// ── Desktop-only tokens ───────────────────────────────────────────────────────
+const NAVY_SHELL   = "#0B1628";
+const CANVAS       = "#F7F9FC";
+const CARD         = "#FFFFFF";
+const BORDER_D     = "#E4E9F2";
+const PURPLE       = "#7C3AED";
+const PURPLE_SOFT  = "#EDE9FE";
 
 // ── Tracker display names ─────────────────────────────────────────────────────
 const SLUG_NAMES: Record<string, string> = {
@@ -62,7 +70,23 @@ interface VScore {
   history?: number[];
 }
 
-// ── Desktop helpers ───────────────────────────────────────────────────────────
+interface NewStoriesData {
+  count: number;
+  since: string;
+  sparkline: number[];
+  projects: { id: string; name: string; new_count: number }[];
+}
+
+interface EntityItem {
+  id: string;
+  name: string;
+  entity_type: string;
+  activity_30d: number;
+  material_7d: number;
+  daily_counts: number[];
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
 function fmtDate(): string {
   const d = new Date();
   return d.toLocaleDateString("en-GB", {
@@ -149,6 +173,30 @@ function buildSummary(signals: Signal[]): string {
   if (signals.length === 1) return `${phrases[0]}.`;
   if (signals.length === 2) return `${phrases[0]} and ${phrases[1]}.`;
   return `${phrases[0]} and ${phrases[1]}, plus ${signals.length - 2} more.`;
+}
+
+// ── Desktop helpers ───────────────────────────────────────────────────────────
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "morning";
+  if (h < 17) return "afternoon";
+  return "evening";
+}
+
+function fmtLastChecked(sinceIso: string | null): string {
+  if (!sinceIso) return "a while";
+  const h = (Date.now() - new Date(sinceIso).getTime()) / 3600000;
+  if (h < 1) return `${Math.max(1, Math.round(h * 60))}m`;
+  if (h < 24) return `${Math.round(h)}h`;
+  return `${Math.round(h / 24)}d`;
+}
+
+function entityTrend(counts: number[]): { char: string; color: string } {
+  const recent = counts.slice(4, 7).reduce((a, b) => a + b, 0);
+  const older  = counts.slice(1, 4).reduce((a, b) => a + b, 0);
+  if (recent > older) return { char: "\u2191", color: TEAL };
+  if (recent < older) return { char: "\u2193", color: RED };
+  return { char: "\u2192", color: TEXT_FAINT };
 }
 
 // ── Mobile sub-components ─────────────────────────────────────────────────────
@@ -333,29 +381,114 @@ function HeroCard({ sig, onAction }: { sig: Signal; onAction: () => void }) {
   );
 }
 
+// ── Desktop sub-components ────────────────────────────────────────────────────
+
+function KpiBar({ data }: { data: number[] }) {
+  const max = Math.max(...data, 1);
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 24 }}>
+      {data.map((v, i) => (
+        <div key={i} style={{
+          flex: 1,
+          height: `${Math.max(12, Math.round((v / max) * 100))}%`,
+          background: i === data.length - 1 ? TEAL : BORDER_D,
+          borderRadius: 2,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function EntityAvatar({ name }: { name: string }) {
+  const initials = name.split(" ").slice(0, 2).map(w => w[0] ?? "").join("").toUpperCase();
+  return (
+    <div style={{
+      width: 32, height: 32, borderRadius: "50%",
+      background: PURPLE, color: "#fff",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 12, fontWeight: 700, flexShrink: 0, fontFamily: SANS,
+    }}>
+      {initials}
+    </div>
+  );
+}
+
+function EntityBar({ counts }: { counts: number[] }) {
+  const max = Math.max(...counts, 1);
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 1.5, height: 20, width: 56 }}>
+      {counts.map((v, i) => (
+        <div key={i} style={{
+          flex: 1,
+          height: `${Math.max(10, Math.round((v / max) * 100))}%`,
+          background: i === counts.length - 1 ? PURPLE : BORDER_D,
+          borderRadius: 1,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function FeedIcon({ type }: { type: Signal["signal_type"] }) {
+  const bg =
+    type === "countdown_threshold" ? AMBER_SOFT :
+    type === "high_sig_story" ? PURPLE_SOFT :
+    TEAL_SOFT;
+  const fg =
+    type === "countdown_threshold" ? AMBER :
+    type === "high_sig_story" ? PURPLE :
+    TEAL;
+  const char =
+    type === "countdown_threshold" ? "⏱" :
+    type === "band_crossing" ? "↑" :
+    type === "convergence_spike" ? "⚡" :
+    "●";
+  return (
+    <div style={{
+      width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+      background: bg, color: fg,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 13, fontWeight: 700,
+    }}>
+      {char}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const firstName = session?.user?.name?.split(" ")[0] ?? session?.user?.email?.split("@")[0] ?? "there";
+
   const [signals, setSignals]             = useState<Signal[]>([]);
   const [since, setSince]                 = useState<string | null>(null);
   const [isQuiet, setIsQuiet]             = useState(false);
   const [velocityScores, setVelocityScores] = useState<VScore[]>([]);
   const [proofOfWork, setProofOfWork]     = useState<ProofOfWorkData | null>(null);
+  const [newStories, setNewStories]       = useState<NewStoriesData | null>(null);
+  const [entities, setEntities]           = useState<{ entities: EntityItem[] } | null>(null);
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState(false);
   const [expanded, setExpanded]           = useState(false);
 
   useEffect(() => {
+    // Wait for session to resolve before firing auth-gated requests
+    if (status === "loading") return;
+
     const slugs = Object.keys(SLUG_NAMES);
     Promise.all([
-      fetch("/api/dashboard/signals").then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); }),
+      // Option A: graceful degradation — signals 401/500 returns empty instead of throwing
+      fetch("/api/dashboard/signals").then(r => r.ok ? r.json() : { signals: [], is_quiet: true, window: null }),
       fetch("/api/dashboard").then(r => r.ok ? r.json() : { velocityScores: [] }),
       fetch("/api/dashboard/proof-of-work").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/dashboard/new-stories").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/entities/dashboard?scope=tracked").then(r => r.ok ? r.json() : null).catch(() => null),
       ...slugs.map(slug =>
         fetch(`/api/velocity/${slug}`).then(r => r.ok ? r.json() : null).catch(() => null)
       ),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([sigData, dashData, pow, ...velocityResponses]: any[]) => {
+    ]).then(([sigData, dashData, pow, newStoriesData, entitiesData, ...velocityResponses]: any[]) => {
       setSignals(sigData.signals ?? []);
       setSince(sigData.window?.since ?? null);
       setIsQuiet(sigData.is_quiet ?? false);
@@ -368,18 +501,35 @@ export default function DashboardPage() {
       });
       setVelocityScores(enriched);
       setProofOfWork(pow);
+      setNewStories(newStoriesData);
+      setEntities(entitiesData);
       setLoading(false);
     }).catch(() => {
       setError(true);
       setLoading(false);
     });
 
-    fetch("/api/user/update-last-seen", { method: "POST" }).catch(() => {});
-  }, []);
+    if (status === "authenticated") {
+      fetch("/api/user/update-last-seen", { method: "POST" }).catch(() => {});
+    }
+  }, [status]);
 
   // Derived — desktop
-  const sorted     = [...velocityScores].sort((a, b) => b.score - a.score);
-  const watchCount = velocityScores.filter(v => v.score >= 4).length;
+  const sorted        = [...velocityScores].sort((a, b) => b.score - a.score);
+  const totalTrackers = velocityScores.length || 10;
+  const activeCount   = velocityScores.filter(v => v.score >= 4).length;
+  const lowCount      = velocityScores.filter(v => v.score > 0 && v.score < 4).length;
+  const inactiveCount = Math.max(0, totalTrackers - activeCount - lowCount);
+
+  const sodSignal = signals.find(s => s.signal_type === "countdown_threshold")
+    ?? signals.find(s => s.signal_type === "band_crossing")
+    ?? signals[0]
+    ?? null;
+
+  const topEntities = (entities?.entities ?? []).slice(0, 4);
+  const topProjects = (newStories?.projects ?? []).slice(0, 3);
+
+  const projectBorderColors = [TEAL, AMBER, TEXT_FAINT];
 
   // Derived — mobile
   const sinceStr       = since ? fmtSince(since) : "7am";
@@ -531,197 +681,550 @@ export default function DashboardPage() {
       </div>
 
       {/* ════════════════════════════════════════
-          DESKTOP — multi-column grid, light tokens
-          Layout restored from commit 7dc1fe2
+          DESKTOP — Google-console command deck
+          Navy shell 10px padding, canvas inset
           ════════════════════════════════════════ */}
-      <div className="dash-desktop">
+      <div
+        className="dash-desktop"
+        style={{ background: NAVY_SHELL, minHeight: "100vh", padding: 10 }}
+      >
+        <div style={{
+          background: CANVAS,
+          borderRadius: 8,
+          minHeight: "calc(100vh - 20px)",
+          overflow: "auto",
+          padding: "20px 24px 28px",
+          fontFamily: SANS,
+        }}>
 
-        {/* Overnight Reveal strip */}
-        <DashboardReveal />
-
-        {/* Page header */}
-        <div style={{ padding: "24px 32px 18px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-          <div style={{ fontFamily: MONO, fontSize: 11, color: TEXT_MUTED, letterSpacing: "0.02em" }}>
-            {fmtDate()}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>
-            <span style={{ width: 6, height: 6, background: TEAL, borderRadius: "50%", display: "inline-block" }} />
-            Live
-          </div>
-        </div>
-
-        {/* 3-column grid */}
-        <div style={{ padding: "0 32px 24px", display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 20 }}>
-
-          {/* Col 1, rows 1-2: HeroSignal (positions itself via gridRow/gridColumn in component) */}
-          <HeroSignal />
-
-          {/* Col 2, row 1: Tracker Velocity + Sparklines */}
-          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>
-                Tracker velocity · 30d
-              </span>
-              <a href="/platform/trackers" style={{ fontSize: 11.5, color: TEAL, fontWeight: 500, textDecoration: "none" }}>
-                All trackers →
-              </a>
+          {/* ── 1. Page header ───────────────────────────────────────────────── */}
+          <div style={{
+            display: "flex", alignItems: "flex-start",
+            justifyContent: "space-between", marginBottom: 18,
+          }}>
+            <div>
+              <div style={{ fontSize: 11, color: TEXT_FAINT, marginBottom: 4, letterSpacing: "0.04em" }}>
+                {fmtDate()} · you last checked {fmtLastChecked(since)} ago
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: TEXT, lineHeight: 1.25 }}>
+                Good {greeting()}, {firstName}
+              </div>
             </div>
-            {sorted.slice(0, 6).map(v => {
-              const sc = scoreColor(v.score);
-              const a = arrowChar(
-                v.momentum_direction === "accelerating" ? 1
-                : v.momentum_direction === "decelerating" ? -1
-                : 0
-              );
-              return (
-                <div key={v.tracker_slug} style={{
-                  display: "grid", gridTemplateColumns: "90px 1fr 36px 22px",
-                  alignItems: "center", gap: 12, padding: "10px 0",
-                  borderTop: `1px solid ${BORDER}`,
-                }}>
-                  <div style={{ fontSize: 12.5, color: TEXT, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {SLUG_NAMES[v.tracker_slug] || v.tracker_slug}
-                  </div>
-                  <div style={{ height: 26, display: "flex", alignItems: "center" }}>
-                    {v.history && v.history.length >= 2
-                      ? <Sparkline history={v.history} score={v.score} />
-                      : <div style={{ flex: 1, height: 1, background: BORDER }} />}
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 500, textAlign: "right", color: sc }}>
-                    {v.score.toFixed(1)}
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 12, textAlign: "center", color: a.color }}>
-                    {a.char}
-                  </div>
-                </div>
-              );
-            })}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", paddingTop: 4 }}>
+              <button
+                onClick={() => router.push("/platform/brief")}
+                style={{
+                  fontFamily: SANS, fontSize: 13, fontWeight: 500,
+                  color: TEXT_MUTED, background: "transparent",
+                  border: `1px solid ${BORDER_D}`, borderRadius: 6,
+                  padding: "7px 14px", cursor: "pointer",
+                }}
+              >
+                Build brief
+              </button>
+              <button
+                onClick={() => router.push("/platform/projects/new")}
+                style={{
+                  fontFamily: SANS, fontSize: 13, fontWeight: 600,
+                  color: "#fff", background: TEAL,
+                  border: "none", borderRadius: 6,
+                  padding: "7px 14px", cursor: "pointer",
+                }}
+              >
+                + New project
+              </button>
+            </div>
           </div>
 
-          {/* Col 3, row 1: Your Exposure Today */}
-          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase", marginBottom: 14 }}>
-              Your exposure today
+          {/* ── 2. KPI strip ─────────────────────────────────────────────────── */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
+            gap: 10, marginBottom: 10,
+          }}>
+
+            {/* KPI 1: Tracker status */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{ fontSize: 11, color: TEXT_FAINT, marginBottom: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
+                Tracker status
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+                <span style={{ fontSize: 28, fontWeight: 700, color: TEXT, lineHeight: 1 }}>
+                  {activeCount}
+                </span>
+                <span style={{ fontSize: 13, color: TEXT_MUTED }}>
+                  of {totalTrackers} live
+                </span>
+              </div>
+              {/* 3-segment bar */}
+              <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", gap: 1, marginBottom: 8 }}>
+                <div style={{ flex: activeCount, background: AMBER, minWidth: activeCount > 0 ? 4 : 0 }} />
+                <div style={{ flex: lowCount, background: RED, minWidth: lowCount > 0 ? 4 : 0 }} />
+                <div style={{ flex: Math.max(inactiveCount, 1), background: BORDER_D, minWidth: 4 }} />
+              </div>
+              <div style={{ fontSize: 11, color: TEXT_FAINT }}>
+                {activeCount} watch · {lowCount} low · {inactiveCount} quiet
+              </div>
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-              <span style={{ fontFamily: SANS, fontWeight: 800, fontSize: 48, lineHeight: 1, letterSpacing: "-0.03em", color: AMBER }}>
-                {watchCount}
-              </span>
-              <span style={{ fontFamily: MONO, fontSize: 13, color: TEXT_MUTED }}>
-                of {velocityScores.length}
-              </span>
+
+            {/* KPI 2: New stories */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{ fontSize: 11, color: TEXT_FAINT, marginBottom: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
+                New stories
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 2 }}>
+                <span style={{ fontSize: 28, fontWeight: 700, color: TEXT, lineHeight: 1 }}>
+                  {newStories?.count ?? 0}
+                </span>
+                <span style={{ fontSize: 13, color: TEXT_MUTED }}>
+                  since {newStories?.since ? fmtSince(newStories.since) : "..."}
+                </span>
+              </div>
+              {newStories?.sparkline && newStories.sparkline.length > 0 && (
+                <KpiBar data={newStories.sparkline} />
+              )}
+              <div style={{ fontSize: 11, color: TEXT_FAINT, marginTop: 6 }}>
+                on your trackers
+              </div>
             </div>
-            <div style={{ fontSize: 12.5, color: TEXT_MUTED, marginBottom: 18 }}>
-              domains in WATCH or above
+
+            {/* KPI 3: New in projects */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{ fontSize: 11, color: TEXT_FAINT, marginBottom: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
+                New in your projects
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+                <span style={{ fontSize: 28, fontWeight: 700, color: TEXT, lineHeight: 1 }}>
+                  {topProjects.reduce((s, p) => s + p.new_count, 0)}
+                </span>
+                <span style={{ fontSize: 13, color: TEXT_MUTED }}>new items</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {topProjects.filter(p => p.new_count > 0).map(p => (
+                  <span key={p.id} style={{
+                    fontSize: 11, fontWeight: 500,
+                    color: TEAL, border: `1px solid ${TEAL}`,
+                    borderRadius: 6, padding: "2px 8px",
+                  }}>
+                    {p.name.split(" ")[0]} +{p.new_count}
+                  </span>
+                ))}
+                {topProjects.length === 0 && (
+                  <span style={{ fontSize: 11, color: TEXT_FAINT }}>No projects yet</span>
+                )}
+              </div>
             </div>
-            <div style={{ marginTop: 2 }}>
-              {sorted.slice(0, 6).map(v => {
-                const band = bandLabel(v.score);
-                const pct = Math.min(100, (v.score / 10) * 100);
-                return (
-                  <div key={v.tracker_slug} style={{ display: "grid", gridTemplateColumns: "1fr 80px 56px", alignItems: "center", gap: 10, padding: "7px 0", fontSize: 12 }}>
-                    <div style={{ color: TEXT }}>{SLUG_NAMES[v.tracker_slug] || v.tracker_slug}</div>
-                    <div style={{ height: 4, background: BG, borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: band.color, borderRadius: 2 }} />
+
+            {/* KPI 4: Readiness */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              borderRight: `3px solid ${AMBER}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{ fontSize: 11, color: TEXT_FAINT, marginBottom: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
+                Readiness
+              </div>
+              {sodSignal?.signal_type === "countdown_threshold" ? (
+                <>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
+                    <span style={{ fontSize: 28, fontWeight: 700, color: AMBER, lineHeight: 1 }}>
+                      {typeof sodSignal.metadata.days_until === "number" ? sodSignal.metadata.days_until : "?"}
+                    </span>
+                    <span style={{ fontSize: 13, color: TEXT_MUTED }}>days</span>
+                  </div>
+                  {/* Progress bar */}
+                  {typeof sodSignal.metadata.days_until === "number" && (
+                    <div style={{ height: 4, background: BORDER_D, borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%",
+                        width: `${Math.max(5, Math.min(100, 100 - ((sodSignal.metadata.days_until as number) / 90) * 100))}%`,
+                        background: AMBER, borderRadius: 2,
+                      }} />
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textAlign: "right", fontWeight: 500, color: band.color }}>
-                      {band.label}
+                  )}
+                  <div style={{ fontSize: 11, color: TEXT_FAINT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {typeof sodSignal.metadata.event_name === "string"
+                      ? sodSignal.metadata.event_name
+                      : sodSignal.headline}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: TEXT_FAINT, paddingTop: 4 }}>
+                  No upcoming events
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── 3. Middle row ─────────────────────────────────────────────────── */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "1.6fr 1fr",
+            gap: 10, marginBottom: 10,
+          }}>
+
+            {/* Tracker pulse */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center",
+                justifyContent: "space-between", marginBottom: 14,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Tracker pulse · 30D
+                </span>
+                <a href="/platform/trackers" style={{ fontSize: 12, color: TEAL, fontWeight: 500, textDecoration: "none" }}>
+                  All trackers →
+                </a>
+              </div>
+
+              {sorted.slice(0, 6).map((v, i) => {
+                const sc  = scoreColor(v.score);
+                const bl  = bandLabel(v.score);
+                const arr = arrowChar(
+                  v.momentum_direction === "accelerating" ? 1
+                    : v.momentum_direction === "decelerating" ? -1
+                    : 0
+                );
+                return (
+                  <div
+                    key={v.tracker_slug}
+                    onClick={() => router.push(`/platform/tracker/${v.tracker_slug}`)}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "88px 1fr 44px 80px",
+                      alignItems: "center", gap: 12,
+                      padding: "10px 0",
+                      borderTop: i > 0 ? `0.5px solid ${BORDER_D}` : "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ fontSize: 12.5, fontWeight: 500, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {SLUG_NAMES[v.tracker_slug] ?? v.tracker_slug}
+                    </div>
+                    <div style={{ height: 26, display: "flex", alignItems: "center" }}>
+                      {v.history && v.history.length >= 2
+                        ? <Sparkline history={v.history} score={v.score} />
+                        : <div style={{ flex: 1, height: 1, background: BORDER_D }} />}
+                    </div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, textAlign: "right", color: sc, fontVariantNumeric: "tabular-nums" }}>
+                      {v.score.toFixed(1)} {arr.char}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, letterSpacing: "0.08em",
+                        color: bl.color, border: `1px solid ${bl.color}`,
+                        borderRadius: 4, padding: "2px 7px",
+                      }}>
+                        {bl.label}
+                      </span>
                     </div>
                   </div>
                 );
               })}
-            </div>
-          </div>
 
-          {/* Col 2, row 2: Score Summary */}
-          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase" }}>
-                Score summary
-              </span>
-              <a href="/platform/trackers" style={{ fontSize: 11.5, color: TEAL, fontWeight: 500, textDecoration: "none" }}>
-                All trackers →
-              </a>
-            </div>
-            <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <span style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, color: TEAL }}>{watchCount}</span>
-              <span style={{ display: "block", fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>
-                trackers at WATCH or above
-              </span>
-            </div>
-          </div>
-
-          {/* Col 3, row 2: Most Watched */}
-          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: TEXT_MUTED, textTransform: "uppercase", marginBottom: 14 }}>
-              Most watched · this week
-            </div>
-            {sorted.slice(0, 5).map((v, i) => (
-              <div key={v.tracker_slug} style={{
-                display: "grid", gridTemplateColumns: "18px 1fr 50px",
-                alignItems: "center", gap: 10, padding: "9px 0",
-                borderTop: i > 0 ? `1px solid ${BORDER}` : "none",
-                fontSize: 12.5,
+              {/* Footer legend */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 16,
+                marginTop: 14, paddingTop: 12,
+                borderTop: `0.5px solid ${BORDER_D}`,
               }}>
-                <div style={{ fontFamily: MONO, color: TEXT_FAINT, fontSize: 11 }}>{i + 1}</div>
-                <div style={{ color: TEXT }}>{SLUG_NAMES[v.tracker_slug] || v.tracker_slug}</div>
-                <div style={{ fontFamily: MONO, fontSize: 11.5, color: TEXT_MUTED, textAlign: "right" }}>
-                  {Math.round(v.score * 14)}
-                </div>
+                {[
+                  { color: TEAL, label: "Elevated" },
+                  { color: AMBER, label: "Watch" },
+                  { color: RED, label: "Low" },
+                ].map(({ color, label }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 2, background: color }} />
+                    <span style={{ fontSize: 11, color: TEXT_FAINT }}>{label}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Proof of Work footer */}
-        {proofOfWork && (
+            {/* Activity feed */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 14 }}>
+                Since you last checked
+              </div>
+
+              {signals.slice(0, 5).map((sig, i) => (
+                <div
+                  key={sig.id}
+                  onClick={() => router.push(sig.action_url)}
+                  style={{
+                    display: "flex", gap: 10, alignItems: "flex-start",
+                    padding: "10px 0",
+                    borderTop: i > 0 ? `0.5px solid ${BORDER_D}` : "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <FeedIcon type={sig.signal_type} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 12.5, fontWeight: 600, color: TEXT,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      marginBottom: 2,
+                    }}>
+                      {sig.headline}
+                    </div>
+                    <div style={{ fontSize: 11, color: TEXT_FAINT }}>
+                      {SLUG_NAMES[sig.tracker_slug] ?? sig.tracker_slug} · {fmtAge(sig.age_hours)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {signals.length === 0 && !loading && (
+                <div style={{ fontSize: 13, color: TEXT_FAINT, paddingTop: 8 }}>
+                  All quiet since your last visit.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── 4. Bottom row ─────────────────────────────────────────────────── */}
           <div style={{
-            margin: "0 32px",
-            padding: "14px 20px",
-            background: SURFACE,
-            border: `1px solid ${BORDER}`,
-            borderTop: `1px solid ${TEAL_SOFT}`,
-            borderRadius: "10px 10px 0 0",
-            display: "flex",
-            alignItems: "center",
-            gap: 24,
-            fontFamily: MONO,
-            fontSize: 11,
-            color: TEXT_MUTED,
-            letterSpacing: "0.04em",
+            display: "grid", gridTemplateColumns: "1.1fr 1fr 1fr",
+            gap: 10,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, display: "inline-block" }} />
-              <span>Last ingestion</span>
-              <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.last_ingestion_minutes_ago} MIN AGO</span>
-            </div>
-            <span style={{ color: BORDER_STRONG }}>|</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span>Today</span>
-              <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.docs_today} DOCS</span>
-              <span>processed</span>
-            </div>
-            <span style={{ color: BORDER_STRONG }}>|</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.sources_monitored} SOURCES</span>
-              <span>monitored</span>
-            </div>
-            <span style={{ color: BORDER_STRONG }}>|</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ color: TEXT, fontWeight: 500 }}>{proofOfWork.active_trackers} TRACKERS</span>
-              <span>active</span>
-            </div>
-            <div style={{ marginLeft: "auto", color: TEXT_FAINT }}>
-              Next scan: {proofOfWork.next_scan_utc} UTC
-            </div>
-          </div>
-        )}
 
-        {loading && (
-          <div style={{ textAlign: "center", padding: 60, color: TEXT_FAINT, fontFamily: MONO, fontSize: 13 }}>
-            Loading...
+            {/* Signal of the day */}
+            <div style={{
+              background: "linear-gradient(135deg, #0B1628 0%, #162544 100%)",
+              borderRadius: 8,
+              padding: "20px 22px",
+              display: "flex", flexDirection: "column", minHeight: 200,
+            }}>
+              <div style={{ marginBottom: 14 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+                  color: "rgba(255,255,255,0.55)",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 4, padding: "2px 8px",
+                }}>
+                  SIGNAL
+                </span>
+              </div>
+
+              {sodSignal ? (
+                <>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: 1.35, marginBottom: 10 }}>
+                    {sodSignal.signal_type === "countdown_threshold" && typeof sodSignal.metadata.event_name === "string"
+                      ? sodSignal.metadata.event_name
+                      : sodSignal.headline}
+                  </div>
+
+                  {sodSignal.signal_type === "countdown_threshold" && typeof sodSignal.metadata.days_until === "number" && (
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+                      <span style={{ fontSize: 52, fontWeight: 700, color: AMBER, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                        {sodSignal.metadata.days_until as number}
+                      </span>
+                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)" }}>days</span>
+                    </div>
+                  )}
+
+                  <div style={{
+                    fontSize: 12.5, color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.55, marginBottom: 18, flex: 1,
+                  }}>
+                    {sodSignal.body}
+                  </div>
+
+                  <button
+                    onClick={() => router.push(sodSignal.action_url)}
+                    style={{
+                      fontFamily: SANS, fontSize: 13, fontWeight: 600,
+                      color: "#fff", background: TEAL,
+                      border: "none", borderRadius: 6,
+                      padding: "8px 16px", cursor: "pointer",
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    {sodSignal.action_label}
+                  </button>
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", paddingTop: 8 }}>
+                  No priority signals right now.
+                </div>
+              )}
+            </div>
+
+            {/* Most active entities */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 14 }}>
+                Most active this week
+              </div>
+
+              {topEntities.length > 0 ? topEntities.map((e, i) => {
+                const trend = entityTrend(e.daily_counts);
+                return (
+                  <div
+                    key={e.id}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "9px 0",
+                      borderTop: i > 0 ? `0.5px solid ${BORDER_D}` : "none",
+                    }}
+                  >
+                    <EntityAvatar name={e.name} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {e.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: TEXT_FAINT }}>
+                        {e.activity_30d} mentions
+                      </div>
+                    </div>
+                    <EntityBar counts={e.daily_counts} />
+                    <span style={{ fontSize: 14, color: trend.color, fontWeight: 700, width: 14, textAlign: "center", flexShrink: 0 }}>
+                      {trend.char}
+                    </span>
+                  </div>
+                );
+              }) : (
+                <div style={{ fontSize: 13, color: TEXT_FAINT, paddingTop: 8 }}>
+                  No tracked entities yet.
+                </div>
+              )}
+            </div>
+
+            {/* Your projects */}
+            <div style={{
+              background: CARD, borderRadius: 8,
+              border: `0.5px solid ${BORDER_D}`,
+              padding: "16px 20px",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center",
+                justifyContent: "space-between", marginBottom: 14,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Your projects
+                </span>
+                <Link href="/platform/projects" style={{ fontSize: 12, color: TEAL, fontWeight: 500, textDecoration: "none" }}>
+                  All →
+                </Link>
+              </div>
+
+              {topProjects.length > 0 ? topProjects.map((p, i) => (
+                <div
+                  key={p.id}
+                  onClick={() => router.push(`/platform/projects/${p.id}`)}
+                  style={{
+                    padding: "10px 10px 10px 12px",
+                    marginBottom: i < topProjects.length - 1 ? 8 : 0,
+                    borderLeft: `3px solid ${projectBorderColors[i]}`,
+                    borderRadius: "0 6px 6px 0",
+                    background: "#FAFBFC",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, marginRight: 8 }}>
+                      {p.name}
+                    </div>
+                    {p.new_count > 0 && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600,
+                        color: projectBorderColors[i],
+                        border: `1px solid ${projectBorderColors[i]}`,
+                        borderRadius: 4, padding: "1px 6px", flexShrink: 0,
+                      }}>
+                        +{p.new_count}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: TEXT_FAINT }}>
+                    {p.new_count} new stories
+                  </div>
+                </div>
+              )) : (
+                <div style={{ fontSize: 13, color: TEXT_FAINT, paddingTop: 8 }}>
+                  No projects yet.{" "}
+                  <Link
+                    href="/platform/projects/new"
+                    style={{ color: TEAL, textDecoration: "none", fontWeight: 500 }}
+                  >
+                    Create one
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* ── Proof of work footer ─────────────────────────────────────────── */}
+          {proofOfWork && (
+            <div style={{
+              marginTop: 10,
+              padding: "12px 20px",
+              background: CARD,
+              border: `0.5px solid ${BORDER_D}`,
+              borderTop: `2px solid ${TEAL_SOFT}`,
+              borderRadius: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              fontSize: 11,
+              color: TEXT_FAINT,
+              letterSpacing: "0.03em",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, display: "inline-block" }} />
+                <span>Last ingestion</span>
+                <span style={{ color: TEXT, fontWeight: 600 }}>{proofOfWork.last_ingestion_minutes_ago} MIN AGO</span>
+              </div>
+              <span style={{ color: BORDER_D }}>|</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span>Today</span>
+                <span style={{ color: TEXT, fontWeight: 600 }}>{proofOfWork.docs_today} DOCS</span>
+                <span>processed</span>
+              </div>
+              <span style={{ color: BORDER_D }}>|</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: TEXT, fontWeight: 600 }}>{proofOfWork.sources_monitored} SOURCES</span>
+                <span>monitored</span>
+              </div>
+              <span style={{ color: BORDER_D }}>|</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: TEXT, fontWeight: 600 }}>{proofOfWork.active_trackers} TRACKERS</span>
+                <span>active</span>
+              </div>
+              <div style={{ marginLeft: "auto" }}>
+                Next scan: {proofOfWork.next_scan_utc} UTC
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div style={{ textAlign: "center", padding: 60, color: TEXT_FAINT, fontSize: 13 }}>
+              Loading...
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
