@@ -99,17 +99,76 @@
 - One queued row failed on send — under investigation (likely Resend rate limit or duplicate queue entry)
 - vercel.json NOT yet updated — awaiting material-present brief test
 
+## Completed this session (2026-04-22) — part 3
+**Fruit Machine Phase 4 — /api/dashboard/signals LIVE ✓**
+- New route: `app/api/dashboard/signals/route.ts` (SHA 0e26e75, deployed after type fix SHA 4275e6a)
+- Reads `users.last_dashboard_view` to determine window (falls back to now-24h)
+- Filters by `getUserTrackedDomains(userId)` — defaults to all 10 if no prefs set
+- Fetches signal_events (limit 100), computes `display_score = importance * exp(-age_hours / decay)` per type
+- Decay constants: band_crossing 48h, countdown_threshold 12h, convergence_spike 6h, high_sig_story 12h
+- Returns top 20 sorted by display_score, with window metadata and `is_quiet` flag
+- Updates `last_dashboard_view` fire-and-forget on every request
+- Verified: 20+ signals returned and ranked correctly; band crossings dominate; today's convergence spike present; future `?since=` returns `is_quiet=true`
+
+**Known debt (post-launch action required):**
+- `app/lib/entity-brief.ts` has TypeScript strictness issues that blocked multiple deploys today
+- Morning brief entity pipeline was never formally approved — currently half-built
+- Post-launch: either formalise or remove entirely
+
+## Completed this session (2026-04-22) — part 2
+**Fruit Machine (Signal Feed) — Phases 1–3 COMPLETE ✓**
+- signal_events schema live in Supabase
+- signal-generation library (`app/lib/signal-generation.ts`) with 4 generators:
+  - `band_crossing`: fires when velocity_scores band changes (runs every 4 days)
+  - `countdown_threshold`: fires 3/7/14/30d before governance events; procedural events filtered (workshops, expert groups, capacity-building, etc.)
+  - `convergence_spike`: activity spike detector — real signal fired today ("IMO Shipping coverage accelerating — 12 stories in 6 hours vs 1 in prior")
+  - `high_sig_story`: fixed via cross_tracker_flags normalisation (SHA f79f2de); fires on next scrape with stories scoring ≥8
+- Signal generation wired into cron runs
+- Ocean-relevance gate blocking mode confirmed stable (~25–28% quarantine rate)
+
+**Mobile Phase 4b — all 10 tracker pages responsive ✓**
+- TrackerHero fix: 2-col layout + full-width Next Event at ≤768px (shared component)
+- IUU carding table overflow fixed
+- BBNJ region timeline stacking fixed; BBNJ map hidden on mobile with regional breakdown full-width
+- 30x30 and Plastics flex row wrap fixed
+- BBNJ continent accordion replaces 148-country flat table
+
+## Completed this session (2026-04-22) — part 1
+**Week 3 — v6 Premium Brief Template — COMPLETE AND DEPLOYED ✓**
+- Full rebuild of app/lib/entity-brief.ts to v6 premium design
+- First v6 brief approved in inbox 22 April 2026
+- New DB: users.first_name, velocity_scores.interpretation, brief_pulse_history (with index)
+- app/lib/tracker-descriptions.ts added (10 tracker one-liners)
+- UNEP added to RSS_SOURCES with generalised parser (path+datetime support)
+
+Design changes:
+- Plus Jakarta Sans throughout (#F7F7F5 page bg, #1D9E75 teal, #EF9F27 amber)
+- Masthead: 32px teal T-square box + stacked "Tideline" / "OCEAN INTELLIGENCE" lockup
+- Opening: firstName greeting + dynamic subline (all moved / N of M moved / all quiet)
+- YOUR N TODAY: all tracked entities listed, amber dot if moved / grey if quiet
+- Pulse tracker card: rotating per user/day, SVG sparkline 260x60, WoW delta, band label, interpretation
+  - Rotation logic: band cross > max WoW > least recently featured (brief_pulse_history) > day-of-week
+  - interpretation cached to velocity_scores.interpretation weekly
+- Editor's Call: mint card (#F4FBF7), Haiku editorial judgement with action suggestion
+- Across the Sector: progressive significance fallback (25→15→10→5→0), always renders if stories exist
+- The Week Ahead: 7-day→30-day fallback on governance_events
+- Footer: three links + Tideline Ocean Intelligence outside white card
+
+Engineering:
+- Quiet entity sentences deterministic (90-day entity_mentions lookback, no Haiku — zero refusal risk)
+- Subject line truncates to last word boundary (handles short and long headlines)
+- test-entity-brief.ts updated for v6 (all entities, pulse card, rotation test, all 3 subject line cases)
+
 ## What's next
-**Week 3 — remaining**
-- Material-present brief test: needs a tracked entity with a significance >= 25 story in the 24h window
-  - Can force-test by temporarily lowering MATERIAL_THRESHOLD or seeding a high-score story
-- Fix the one failed queue row (check morning_brief_queue for status='failed', inspect error logs)
-- Add crons to vercel.json once material-present path confirmed:
-  ```json
-  { "path": "/api/cron/generate-entity-briefs", "schedule": "0 * * * *" },
-  { "path": "/api/cron/send-entity-briefs", "schedule": "*/15 * * * *" }
-  ```
-- Remaining corpus backfill: ~1202 stories unmatched (run scripts/run-full-backfill.ts --skip-semantic --limit 1400 --force)
+**Fruit Machine Phase 5 (next session)**
+- `SignalFeed` component with pull-to-refresh gesture
+- After Phase 5: mobile is fully launch-ready
+
+**Week 4**
+- Step 11: Entity dashboard page at /platform/entities
+- Step 12: Entity detail page
+- Step 12.5: Contact directory
+- Step 13: Entity picker modal
 
 **Backlog**
 1. Triage all 34 failed RSS sources — Tier 1: FAO, IMO, CITES, IWC, CBD, DSCC

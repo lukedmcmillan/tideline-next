@@ -2,130 +2,271 @@
 
 import { useState } from "react";
 
-const TEAL = "#0E7C86";
-const TEXT = "#202124";
-const SECONDARY = "#5F6368";
-const MUTED = "#80868B";
-const BORDER = "#E8EAED";
-const SURFACE = "#F8F9FA";
-const F = "'DM Sans', sans-serif";
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const BG        = "#0B1628";
+const SURFACE   = "#112236";
+const BORDER    = "rgba(255,255,255,0.08)";
+const TEXT      = "#F5F7FA";
+const SECONDARY = "rgba(255,255,255,0.65)";
+const MUTED     = "rgba(255,255,255,0.35)";
+const TEAL      = "#1D9E75";
+const SEL_BG    = "rgba(29,158,117,0.14)";
+const F         = "'DM Sans', sans-serif";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface RatingItem { id: string; label: string; }
 
 interface QuestionDef {
   id: string;
-  type: string;
+  type: "single" | "single_with_other" | "multi" | "multi_with_other"
+      | "rating_matrix" | "single_plus_text" | "text" | "early_access";
   question: string;
   options?: string[];
+  items?: RatingItem[];
   helper?: string;
-  min?: string;
-  max?: string;
   placeholder?: string;
-  sectionId: string;
+  followUpLabel?: string;
+  followUpPlaceholder?: string;
 }
 
-const SECTIONS = [
-  { id: "about_you", label: "About you", questions: [
-    { id: "role", type: "single_with_other", question: "What\u2019s your role?", options: ["Marine / ocean researcher","Policy & regulation","NGO / conservation","Shipping & maritime","Aquaculture","Finance & investment","Consulting","Media & journalism","Other"] },
-    { id: "procurement", type: "single", question: "If you used a platform like this, how would you pay for it?", options: ["Personal subscription \u2014 my own money","Expense it through work","Procure it for my team or organisation","Not sure yet"] },
-    { id: "time_spent", type: "single", question: "How much time per week do you spend tracking ocean news, policy, and research?", options: ["Under 1 hour","1\u20133 hours","3\u20135 hours","5+ hours"] },
-  ]},
-  { id: "the_problem", label: "The problem", questions: [
-    { id: "current_sources", type: "multi", helper: "Select all that apply", question: "How do you currently stay on top of ocean developments?", options: ["Google alerts","Industry newsletters","Academic journals","LinkedIn","Word of mouth","Manually checking multiple sites","I don\u2019t \u2014 it\u2019s a real problem"] },
-    { id: "hardest_to_track", type: "multi", helper: "Select all that apply", question: "What\u2019s hardest to keep on top of?", options: ["Regulatory & policy changes","Treaty negotiations and ratifications","New research and science","Industry news and deals","IUU fishing and enforcement actions","Blue finance and investment activity","Who said what and when"] },
-    { id: "biggest_pain", type: "single", question: "What\u2019s the single biggest information gap in your working week?", options: ["Finding out about things too late","Spending too long searching across too many sources","No single place that covers everything I need","Hard to track how a story or regulation evolves over time","Difficult to find citable sources quickly"] },
-  ]},
-  { id: "core_platform", label: "The core platform", questions: [
-    { id: "feed_value", type: "scale", question: "A live feed aggregating press, policy documents, regulatory filings, and research papers \u2014 all in one place, updated in real time. How useful?", min: "Not useful", max: "Extremely useful" },
-    { id: "brief_value", type: "scale", question: "A daily curated brief drawn from that feed \u2014 summarised, prioritised, delivered before 7am. How valuable?", min: "Not valuable", max: "Extremely valuable" },
-    { id: "tracker_value", type: "scale", question: "Live trackers for specific issues \u2014 BBNJ Treaty ratification, ISA deep-sea mining decisions, 30x30 targets, IUU enforcement, Blue Finance flows. How useful?", min: "Not useful", max: "Extremely useful" },
-  ]},
-  { id: "intelligence_tools", label: "Intelligence tools", questions: [
-    { id: "workspace_value", type: "scale", question: "A research workspace where you ask questions across policy documents, treaty text, and regulatory records \u2014 and get cited answers. How valuable?", min: "Not valuable", max: "Extremely valuable" },
-    { id: "meeting_prep_value", type: "scale", question: "Meeting prep in 30 seconds \u2014 type who you\u2019re meeting, get a brief on their recent activity, regulatory context, and three questions to ask. How useful?", min: "Not useful", max: "Extremely useful" },
-    { id: "entity_alerts_value", type: "scale", question: "Departure alerts \u2014 the moment an organisation or individual you\u2019re tracking appears in new coverage, you\u2019re notified and it\u2019s filed to your project automatically. How useful?", min: "Not useful", max: "Extremely useful" },
-    { id: "contradiction_value", type: "single", question: "When two sources report conflicting information on the same development, Tideline flags it: \u2018Sources diverge on this.\u2019 Would you find that useful?", options: ["Yes \u2014 this would be very valuable","Possibly","No, I don\u2019t need that level of detail"] },
-  ]},
-  { id: "workflow_tools", label: "Workflow & output", questions: [
-    { id: "report_value", type: "single", question: "Generating a structured briefing note or compliance report from your research \u2014 exportable as Word or PDF. Would you use this?", options: ["Yes, regularly","Occasionally","Probably not"] },
-    { id: "linkedin_value", type: "single", question: "One-click LinkedIn post drafted from any story \u2014 professional tone, no hashtags, grounded in the source. Would you use this?", options: ["Yes, regularly","Occasionally","Probably not"] },
-    { id: "calendar_value", type: "single", question: "A public ocean governance calendar \u2014 IMO MEPC, BBNJ sessions, ISA meetings, CBD COP dates \u2014 embeddable on any website. Useful?", options: ["Yes, I\u2019d use it personally","Yes, I\u2019d embed it on our site","Not really relevant to me"] },
-    { id: "alerts_value", type: "single", question: "Keyword alerts \u2014 immediate notification when a topic you\u2019re tracking appears in the feed. Would you want this?", options: ["Yes, this would be very useful","Possibly","No, I don\u2019t need that level of detail"] },
-  ]},
-  { id: "pricing", label: "Pricing", questions: [
-    { id: "price", type: "single", question: "If a platform covered all of this \u2014 live feed, daily brief, trackers, research workspace, meeting prep, alerts, departure alerts, report generation \u2014 what would feel like a fair monthly price?", options: ["\u00A350\u2013100","\u00A3100\u2013150","\u00A3150\u2013250","\u00A3250+","I wouldn\u2019t pay for this"] },
-    { id: "missing", type: "text", question: "What would make this genuinely indispensable for your work \u2014 something you can\u2019t find anywhere right now?", placeholder: "Your answer" },
-  ]},
+// ── Questions ─────────────────────────────────────────────────────────────────
+const QUESTIONS: QuestionDef[] = [
+  {
+    id: "role",
+    type: "single_with_other",
+    question: "What is your primary role?",
+    options: [
+      "Finance & investment",
+      "ESG / sustainability",
+      "Shipping & maritime compliance",
+      "Policy & regulation",
+      "NGO / conservation",
+      "Marine / ocean researcher",
+      "Media & journalism",
+      "Consulting",
+      "Other",
+    ],
+  },
+  {
+    id: "procurement",
+    type: "single",
+    question: "If you used Tideline, how would you most likely pay for it?",
+    options: [
+      "Personal subscription (my own money)",
+      "Expense it through work",
+      "Procure it for my team or organisation",
+      "Not sure yet",
+    ],
+  },
+  {
+    id: "time_spent",
+    type: "single",
+    question: "How much time per week do you spend tracking ocean regulatory and blue finance developments?",
+    options: ["Under 1 hour", "1\u20133 hours", "3\u20135 hours", "5+ hours"],
+  },
+  {
+    id: "current_sources",
+    type: "multi",
+    question: "How do you currently stay on top of ocean developments?",
+    helper: "Select all that apply",
+    options: [
+      "Google Alerts",
+      "Industry newsletters",
+      "LinkedIn",
+      "Academic journals",
+      "Word of mouth",
+      "Manually checking multiple sites",
+      "Specialist intelligence platforms (RepRisk, Bloomberg, Refinitiv etc)",
+      "I don\u2019t have a good system: it\u2019s a real problem",
+    ],
+  },
+  {
+    id: "hardest_to_track",
+    type: "multi",
+    question: "What is hardest to keep on top of?",
+    helper: "Select all that apply",
+    options: [
+      "Regulatory & policy changes",
+      "Treaty negotiations and ratifications",
+      "New research and science",
+      "Blue finance and investment activity",
+      "IUU fishing and enforcement actions",
+      "Industry news and deals",
+      "Who said what and when: actor positions and statements",
+      "Deep sea mining developments",
+      "Offshore wind regulatory changes",
+    ],
+  },
+  {
+    id: "biggest_pain",
+    type: "single",
+    question: "What is the single biggest information gap in your working week?",
+    options: [
+      "Hard to track how a story or regulation evolves over time",
+      "Difficult to find citable sources quickly",
+      "Spending too long searching across too many sources",
+      "No single place that covers everything I need",
+      "Finding out about things too late",
+      "Can\u2019t track what specific entities have committed to vs what they\u2019re actually doing",
+    ],
+  },
+  {
+    id: "q7_ratings",
+    type: "rating_matrix",
+    question: "How valuable would each of these be to your work?",
+    helper: "Rate from 1 (not valuable) to 5 (extremely valuable). Skip any that don\u2019t apply.",
+    items: [
+      { id: "val_daily_brief",        label: "Daily curated ocean intelligence brief" },
+      { id: "val_live_feed",          label: "Live news feed with AI summaries" },
+      { id: "val_regulatory_tracker", label: "Regulatory tracker with momentum scores" },
+      { id: "val_workspace",          label: "Workspace to save and organise research" },
+      { id: "val_meeting_prep",       label: "Meeting prep tool with citable sources" },
+      { id: "val_entity_alerts",      label: "Entity alerts: track specific organisations, governments, or individuals" },
+      { id: "val_contradiction",      label: "Contradiction detection: when two authoritative sources say different things about the same event" },
+      { id: "val_commitment_tracker", label: "Commitment tracker: what an entity promised vs what the regulatory environment shows" },
+      { id: "val_risk_reports",       label: "Exportable risk assessment reports" },
+      { id: "val_embed_widget",       label: "Embeddable intelligence widget for your organisation\u2019s platform" },
+      { id: "val_ai_drafting",        label: "AI-drafted briefing documents and LinkedIn posts" },
+    ],
+  },
+  {
+    id: "entity_tracking_value",
+    type: "single_plus_text",
+    question: "How valuable would it be to track specific entities and receive alerts when they appear in new stories, change their stated positions, or make new commitments?",
+    options: [
+      "Very valuable: I would use this daily",
+      "Useful: I would check it regularly",
+      "Possibly useful",
+      "Not relevant to my work",
+    ],
+    followUpLabel: "Which specific entities would you most want to track?",
+    followUpPlaceholder: "e.g. ISA, specific flag states, blue bond issuers, TNFD, named investment funds",
+  },
+  {
+    id: "output_format",
+    type: "single",
+    question: "Which output format would be most useful to your day-to-day work?",
+    options: [
+      "Daily brief in my inbox",
+      "Weekly digest: less frequent, more substantial",
+      "Structured risk assessment per entity or topic",
+      "Exportable report I can drop into my own documents",
+      "Embeddable feed on my organisation\u2019s platform",
+      "Real-time alerts only: no digest",
+    ],
+  },
+  {
+    id: "existing_tools",
+    type: "multi_with_other",
+    question: "What tools do you currently use to track ocean regulatory or blue finance developments?",
+    helper: "Select all that apply",
+    options: [
+      "RepRisk",
+      "Bloomberg ESG",
+      "Refinitiv / LSEG",
+      "MSCI ESG",
+      "Sustainalytics",
+      "Google Alerts",
+      "Newsletters and RSS feeds",
+      "Nothing formal",
+      "Other",
+    ],
+  },
+  {
+    id: "contact_directory_value",
+    type: "single",
+    question: "How valuable would access to direct contact details for key regulatory actors be to your work?",
+    helper: "Treaty body delegates, flag state officials, ISA Council members, compliance officers",
+    options: [
+      "Very valuable: I regularly need to contact these people",
+      "Useful: I occasionally need to find the right person",
+      "Possibly useful",
+      "Not relevant to my work",
+    ],
+  },
+  {
+    id: "team_size",
+    type: "single",
+    question: "How many people in your organisation would benefit from this intelligence?",
+    options: ["Just me", "2\u20135 people", "6\u201315 people", "16\u201350 people", "50+ people"],
+  },
+  {
+    id: "willingness_to_pay",
+    type: "single",
+    question: "If Tideline delivered exactly the intelligence you needed, what would you be willing to pay?",
+    options: [
+      "I wouldn\u2019t pay for this",
+      "\u00A320\u201350 per month",
+      "\u00A350\u2013100 per month",
+      "\u00A3100\u2013150 per month",
+      "\u00A3150\u2013250 per month",
+      "\u00A3250+ per month",
+      "Our organisation would pay for a team licence: pricing depends on seats",
+    ],
+  },
+  {
+    id: "missing_coverage",
+    type: "text",
+    question: "What would you want Tideline to cover that you currently cannot find anywhere?",
+    placeholder: "Anything goes: the more specific the better",
+  },
+  {
+    id: "early_access",
+    type: "early_access",
+    question: "Want to be part of what comes next?",
+  },
 ];
 
-const ALL_QUESTIONS: QuestionDef[] = SECTIONS.flatMap((s) => s.questions.map((q) => ({ ...q, sectionId: s.id })));
-const TOTAL = ALL_QUESTIONS.length;
+const TOTAL = QUESTIONS.length; // 15
 
+// ── Responsive CSS ────────────────────────────────────────────────────────────
 const MOBILE_CSS = `
-@media (max-width: 480px) {
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+@media (max-width: 520px) {
   .survey-body { padding-left: 16px !important; padding-right: 16px !important; }
+  .survey-header { padding-left: 16px !important; padding-right: 16px !important; }
   .survey-intro { padding-left: 16px !important; padding-right: 16px !important; }
   .survey-nav { flex-direction: column-reverse !important; gap: 12px !important; }
   .survey-nav button { width: 100% !important; }
-  .survey-header { padding-left: 16px !important; padding-right: 16px !important; }
-  .survey-intro-footer { flex-direction: column !important; align-items: flex-start !important; }
+  .survey-intro-footer { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
   .survey-intro-footer button { width: 100% !important; }
+  .rating-row { flex-wrap: wrap !important; }
+  .rating-label { width: 100% !important; }
 }
 `;
 
-// ── Intro screen ─────────────────────────────────────────────────────────
+// ── Intro screen ──────────────────────────────────────────────────────────────
 function Intro({ onStart }: { onStart: () => void }) {
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: F }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');${MOBILE_CSS}`}</style>
+    <div style={{ minHeight: "100vh", background: BG, fontFamily: F }}>
+      <style>{MOBILE_CSS}</style>
       <div style={{ borderBottom: `1px solid ${BORDER}`, padding: "0 24px", height: 56, display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
         <span style={{ color: TEXT, fontSize: 15, fontWeight: 600, letterSpacing: "-0.2px" }}>Tideline</span>
-        <span style={{ color: BORDER, fontSize: 14, margin: "0 2px" }}>{"\u00B7"}</span>
+        <span style={{ color: BORDER, fontSize: 14, margin: "0 4px" }}>&middot;</span>
         <span style={{ color: MUTED, fontSize: 13 }}>Ocean Intelligence</span>
       </div>
       <div className="survey-intro" style={{ maxWidth: 600, margin: "0 auto", padding: "64px 24px 80px" }}>
-        <div style={{ borderLeft: `3px solid ${TEAL}`, paddingLeft: 20, marginBottom: 40 }}>
-          <p style={{ color: SECONDARY, fontSize: 15, lineHeight: 1.75, marginBottom: 12 }}>
-            The ISA decision landed at 6am. The BBNJ ratification passed on a Tuesday. The enforcement action was buried in a port authority bulletin.
-          </p>
-          <p style={{ color: SECONDARY, fontSize: 15, lineHeight: 1.75 }}>
-            You found out three days later.
-          </p>
-        </div>
-        <h1 style={{ color: TEXT, fontSize: 26, fontWeight: 600, lineHeight: 1.3, letterSpacing: "-0.4px", marginBottom: 16, wordBreak: "break-word" as const }}>
-          Tideline is being built so that never happens again.
-        </h1>
-        <p style={{ color: SECONDARY, fontSize: 15, lineHeight: 1.7, marginBottom: 12 }}>
-          A live feed. A daily brief before 7am. Trackers for the issues that matter. A research workspace with cited answers. Meeting prep in 30 seconds. Departure alerts when your entities move. One-click briefing reports.
+        <p style={{ color: MUTED, fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
+          Market research survey
         </p>
-        <p style={{ color: SECONDARY, fontSize: 15, lineHeight: 1.7, marginBottom: 40 }}>
-          Five minutes of your time will shape what it becomes.
+        <h1 style={{ color: TEXT, fontSize: 28, fontWeight: 600, lineHeight: 1.25, letterSpacing: "-0.5px", marginBottom: 24 }}>
+          Tideline: Ocean Intelligence
+        </h1>
+        <p style={{ color: SECONDARY, fontSize: 15, lineHeight: 1.75, marginBottom: 40 }}>
+          Tideline tracks ocean regulatory developments, treaty negotiations, blue finance activity, and enforcement actions for professionals in ESG, sustainable finance, shipping, and ocean policy. This survey helps us understand what intelligence professionals in this space need most. Takes 4 minutes.
         </p>
         <div style={{ borderTop: `1px solid ${BORDER}`, marginBottom: 32 }} />
-
-        <div style={{ marginBottom: 40 }}>
-          <p style={{ color: MUTED, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 16 }}>What we'll cover</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {SECTIONS.map((s, i) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", background: SURFACE, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ color: MUTED, fontSize: 11, fontWeight: 600 }}>{i + 1}</span>
-                </div>
-                <span style={{ color: SECONDARY, fontSize: 14 }}>{s.label} <span style={{ color: MUTED, fontSize: 12 }}>{"\u00B7"} {s.questions.length} questions</span></span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="survey-intro-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ display: "flex", gap: 24 }}>
-            {[`${TOTAL} questions`, "~6 minutes", "Anonymous"].map((label) => (
+        <div className="survey-intro-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" as const }}>
+            {["15 questions", "4 minutes", "Anonymous"].map((label) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: TEAL }} />
                 <span style={{ color: MUTED, fontSize: 13 }}>{label}</span>
               </div>
             ))}
           </div>
-          <button onClick={onStart} style={{ background: TEAL, border: "none", borderRadius: 4, padding: "0 28px", height: 40, color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: F, boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }}>
+          <button onClick={onStart} style={{ background: TEAL, border: "none", borderRadius: 4, padding: "0 28px", height: 40, color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: F, flexShrink: 0 }}>
             Start survey
           </button>
         </div>
@@ -134,48 +275,48 @@ function Intro({ onStart }: { onStart: () => void }) {
   );
 }
 
-// ── Main survey ──────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 export default function SurveyPage() {
-  const [started, setStarted] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [current, setCurrent] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
+  const [started, setStarted]       = useState(false);
+  const [answers, setAnswers]       = useState<Record<string, any>>({});
+  const [current, setCurrent]       = useState(0);
+  const [submitted, setSubmitted]   = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (!started) return <Intro onStart={() => setStarted(true)} />;
 
-  const q = ALL_QUESTIONS[current];
-  const progress = (current / TOTAL) * 100;
-  const currentSection = SECTIONS.find((s) => s.id === q.sectionId);
-  const sectionIndex = SECTIONS.findIndex((s) => s.id === q.sectionId);
+  const q        = QUESTIONS[current];
+  const progress = ((current + 1) / TOTAL) * 100;
 
-  function handleSingle(id: string, val: string) { setAnswers((a) => ({ ...a, [id]: val })); }
+  function handleSingle(id: string, val: string) {
+    setAnswers((a) => ({ ...a, [id]: val }));
+  }
   function handleMulti(id: string, val: string) {
     setAnswers((a) => {
-      const prev = a[id] || [];
-      return { ...a, [id]: prev.includes(val) ? prev.filter((v: string) => v !== val) : [...prev, val] };
+      const prev: string[] = a[id] || [];
+      return { ...a, [id]: prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val] };
     });
   }
-  function handleScale(id: string, val: number) { setAnswers((a) => ({ ...a, [id]: val })); }
-  function handleText(id: string, val: string) { setAnswers((a) => ({ ...a, [id]: val })); }
 
-  function canAdvance() {
-    if (q.type === "text") return true;
+  function canAdvance(): boolean {
+    if (q.type === "text" || q.type === "rating_matrix" || q.type === "early_access") return true;
     const ans = answers[q.id];
     if (!ans) return false;
-    if (Array.isArray(ans)) return ans.length > 0;
+    if (q.type === "multi" || q.type === "multi_with_other") {
+      return Array.isArray(ans) && ans.length > 0;
+    }
     if (q.type === "single_with_other") {
       if (!ans.value) return false;
-      if (ans.value === "Other") return ans.other?.trim().length > 0;
+      if (ans.value === "Other") return (ans.other || "").trim().length > 0;
       return true;
     }
-    return true;
+    return true; // single, single_plus_text
   }
 
   async function handleSubmit() {
     setSubmitting(true);
     try {
-      await fetch("/api/survey", {
+      await fetch("/api/survey-v2", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers),
@@ -184,34 +325,32 @@ export default function SurveyPage() {
     setSubmitted(true);
   }
 
-  // ── Thank you ──────────────────────────────────────────────────────────
+  // ── Thank you ─────────────────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div style={{ minHeight: "100vh", background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F, padding: 24 }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');${MOBILE_CSS}`}</style>
+      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F, padding: 24 }}>
+        <style>{MOBILE_CSS}</style>
         <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
           <div style={{ width: 56, height: 56, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
-          <p style={{ color: SECONDARY, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500, marginBottom: 8 }}>Response recorded</p>
+          <p style={{ color: MUTED, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, marginBottom: 8 }}>Response recorded</p>
           <h2 style={{ color: TEXT, fontSize: 22, fontWeight: 500, marginBottom: 12, letterSpacing: "-0.3px" }}>Thank you for your time.</h2>
-          <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.65, marginBottom: 32 }}>Your input genuinely shapes Tideline. I'll be in touch as the platform develops.</p>
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, padding: "16px 20px", textAlign: "left", marginBottom: 32 }}>
-            <p style={{ color: TEXT, fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Want early access?</p>
-            <p style={{ color: MUTED, fontSize: 13, lineHeight: 1.6 }}>Reply to the message that brought you here and I'll add you to the list.</p>
-          </div>
-          <div style={{ paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
-            <p style={{ color: MUTED, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>Tideline {"\u00B7"} Ocean Intelligence</p>
+          <p style={{ color: SECONDARY, fontSize: 14, lineHeight: 1.65 }}>Your input shapes what Tideline becomes. We will be in touch as the platform develops.</p>
+          <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
+            <p style={{ color: MUTED, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>Tideline &middot; Ocean Intelligence</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── Question screen ────────────────────────────────────────────────────
+  // ── Question screen ───────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: F }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');${MOBILE_CSS}`}</style>
+    <div style={{ minHeight: "100vh", background: BG, fontFamily: F }}>
+      <style>{MOBILE_CSS}</style>
 
       {/* Progress bar */}
       <div style={{ height: 3, background: BORDER, position: "sticky", top: 0, zIndex: 10 }}>
@@ -219,54 +358,48 @@ export default function SurveyPage() {
       </div>
 
       {/* Header */}
-      <div className="survey-header" style={{ borderBottom: `1px solid ${BORDER}`, padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+      <div className="survey-header" style={{ borderBottom: `1px solid ${BORDER}`, padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL, flexShrink: 0 }} />
-          <span style={{ color: TEXT, fontSize: 15, fontWeight: 600, letterSpacing: "-0.2px", whiteSpace: "nowrap" }}>Tideline</span>
-          <span style={{ color: BORDER, fontSize: 14, margin: "0 2px" }}>{"\u00B7"}</span>
-          <span style={{ color: MUTED, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentSection?.label}</span>
+          <span style={{ color: TEXT, fontSize: 15, fontWeight: 600, letterSpacing: "-0.2px" }}>Tideline</span>
+          <span style={{ color: BORDER, fontSize: 14, margin: "0 4px" }}>&middot;</span>
+          <span style={{ color: MUTED, fontSize: 13 }}>Ocean Intelligence</span>
         </div>
         <span style={{ color: MUTED, fontSize: 13, flexShrink: 0 }}>{current + 1} / {TOTAL}</span>
       </div>
 
       {/* Body */}
       <div className="survey-body" style={{ maxWidth: 600, margin: "0 auto", padding: "48px 24px 80px" }}>
-        {/* Section pill */}
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 20, padding: "4px 12px", marginBottom: 20 }}>
-          <span style={{ color: TEAL, fontSize: 11, fontWeight: 600 }}>{sectionIndex + 1}</span>
-          <span style={{ color: MUTED, fontSize: 11 }}>/</span>
-          <span style={{ color: MUTED, fontSize: 11 }}>{SECTIONS.length}</span>
-          <span style={{ color: SECONDARY, fontSize: 11, fontWeight: 500 }}>{currentSection?.label}</span>
-        </div>
 
-        <h2 style={{ color: TEXT, fontSize: 20, fontWeight: 500, lineHeight: 1.4, marginBottom: q.helper ? 6 : 28, letterSpacing: "-0.3px" }}>
+        <h2 style={{ color: TEXT, fontSize: 20, fontWeight: 500, lineHeight: 1.4, marginBottom: q.helper ? 8 : 28, letterSpacing: "-0.3px" }}>
           {q.question}
         </h2>
         {q.helper && <p style={{ color: MUTED, fontSize: 13, marginBottom: 20 }}>{q.helper}</p>}
 
-        {/* Single with Other */}
+        {/* single_with_other */}
         {q.type === "single_with_other" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {(q.options || []).map((opt) => {
-              const selected = answers[q.id]?.value === opt;
+              const sel = answers[q.id]?.value === opt;
               return (
                 <div key={opt}>
-                  <div onClick={() => setAnswers((a) => ({ ...a, [q.id]: { value: opt, other: "" } }))}
-                    style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: selected ? "#E6F4F1" : "transparent", cursor: "pointer", transition: "background 0.1s" }}
-                    onMouseEnter={(e) => { if (!selected) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
-                    onMouseLeave={(e) => { if (!selected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  <div
+                    onClick={() => setAnswers((a) => ({ ...a, [q.id]: { value: opt, other: "" } }))}
+                    style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: sel ? SEL_BG : "transparent", cursor: "pointer", transition: "background 0.1s" }}
+                    onMouseEnter={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
+                    onMouseLeave={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                   >
-                    <span style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${selected ? TEAL : "#BDC1C6"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {selected && <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />}
+                    <span style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${sel ? TEAL : BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {sel && <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />}
                     </span>
-                    <span style={{ color: selected ? TEXT : SECONDARY, fontSize: 14, fontWeight: selected ? 500 : 400 }}>{opt}</span>
+                    <span style={{ color: sel ? TEXT : SECONDARY, fontSize: 14, fontWeight: sel ? 500 : 400 }}>{opt}</span>
                   </div>
-                  {selected && opt === "Other" && (
+                  {sel && opt === "Other" && (
                     <div style={{ paddingLeft: 48, paddingRight: 16, paddingBottom: 8 }}>
                       <input autoFocus placeholder="Please describe your role"
                         value={answers[q.id]?.other || ""}
                         onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: { value: "Other", other: e.target.value } }))}
-                        style={{ width: "100%", border: "none", borderBottom: `2px solid ${TEAL}`, borderRadius: 0, padding: "4px 0", color: TEXT, fontSize: 16, fontFamily: F, outline: "none", background: "transparent" }}
+                        style={{ width: "100%", border: "none", borderBottom: `2px solid ${TEAL}`, padding: "4px 0", color: TEXT, fontSize: 15, fontFamily: F, outline: "none", background: "transparent" }}
                       />
                     </div>
                   )}
@@ -276,99 +409,236 @@ export default function SurveyPage() {
           </div>
         )}
 
-        {/* Single */}
+        {/* single */}
         {q.type === "single" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {(q.options || []).map((opt) => {
-              const selected = answers[q.id] === opt;
+              const sel = answers[q.id] === opt;
               return (
-                <div key={opt} onClick={() => handleSingle(q.id, opt)}
-                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: selected ? "#E6F4F1" : "transparent", cursor: "pointer", transition: "background 0.1s" }}
-                  onMouseEnter={(e) => { if (!selected) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
-                  onMouseLeave={(e) => { if (!selected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                <div key={opt}
+                  onClick={() => handleSingle(q.id, opt)}
+                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: sel ? SEL_BG : "transparent", cursor: "pointer", transition: "background 0.1s" }}
+                  onMouseEnter={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
+                  onMouseLeave={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  <span style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${selected ? TEAL : "#BDC1C6"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {selected && <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />}
+                  <span style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${sel ? TEAL : BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {sel && <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />}
                   </span>
-                  <span style={{ color: selected ? TEXT : SECONDARY, fontSize: 14, fontWeight: selected ? 500 : 400 }}>{opt}</span>
+                  <span style={{ color: sel ? TEXT : SECONDARY, fontSize: 14, fontWeight: sel ? 500 : 400 }}>{opt}</span>
                 </div>
               );
             })}
           </div>
         )}
 
-        {/* Multi */}
+        {/* multi */}
         {q.type === "multi" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {(q.options || []).map((opt) => {
-              const selected = (answers[q.id] || []).includes(opt);
+              const sel = (answers[q.id] || []).includes(opt);
               return (
-                <div key={opt} onClick={() => handleMulti(q.id, opt)}
-                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: selected ? "#E6F4F1" : "transparent", cursor: "pointer", transition: "background 0.1s" }}
-                  onMouseEnter={(e) => { if (!selected) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
-                  onMouseLeave={(e) => { if (!selected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                <div key={opt}
+                  onClick={() => handleMulti(q.id, opt)}
+                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: sel ? SEL_BG : "transparent", cursor: "pointer", transition: "background 0.1s" }}
+                  onMouseEnter={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
+                  onMouseLeave={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  <span style={{ width: 18, height: 18, borderRadius: 3, border: `2px solid ${selected ? TEAL : "#BDC1C6"}`, background: selected ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
-                    {selected && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  <span style={{ width: 18, height: 18, borderRadius: 3, border: `2px solid ${sel ? TEAL : BORDER}`, background: sel ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                    {sel && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                   </span>
-                  <span style={{ color: selected ? TEXT : SECONDARY, fontSize: 14, fontWeight: selected ? 500 : 400 }}>{opt}</span>
+                  <span style={{ color: sel ? TEXT : SECONDARY, fontSize: 14, fontWeight: sel ? 500 : 400 }}>{opt}</span>
                 </div>
               );
             })}
           </div>
         )}
 
-        {/* Scale */}
-        {q.type === "scale" && (
-          <div style={{ marginTop: 8 }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-              {[1, 2, 3, 4, 5].map((n) => {
-                const selected = answers[q.id] === n;
+        {/* multi_with_other */}
+        {q.type === "multi_with_other" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {(q.options || []).map((opt) => {
+              const sel = (answers[q.id] || []).includes(opt);
+              return (
+                <div key={opt}>
+                  <div
+                    onClick={() => handleMulti(q.id, opt)}
+                    style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: sel ? SEL_BG : "transparent", cursor: "pointer", transition: "background 0.1s" }}
+                    onMouseEnter={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
+                    onMouseLeave={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <span style={{ width: 18, height: 18, borderRadius: 3, border: `2px solid ${sel ? TEAL : BORDER}`, background: sel ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                      {sel && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                    </span>
+                    <span style={{ color: sel ? TEXT : SECONDARY, fontSize: 14, fontWeight: sel ? 500 : 400 }}>{opt}</span>
+                  </div>
+                  {sel && opt === "Other" && (
+                    <div style={{ paddingLeft: 48, paddingRight: 16, paddingBottom: 8 }}>
+                      <input autoFocus placeholder="Please describe"
+                        value={answers.existing_tools_other || ""}
+                        onChange={(e) => setAnswers((a) => ({ ...a, existing_tools_other: e.target.value }))}
+                        style={{ width: "100%", border: "none", borderBottom: `2px solid ${TEAL}`, padding: "4px 0", color: TEXT, fontSize: 15, fontFamily: F, outline: "none", background: "transparent" }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* rating_matrix */}
+        {q.type === "rating_matrix" && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+              <div style={{ flex: 1 }} />
+              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <span key={n} style={{ width: 32, textAlign: "center", color: MUTED, fontSize: 11, fontWeight: 600 }}>{n}</span>
+                ))}
+              </div>
+            </div>
+            {(q.items || []).map((item) => {
+              const sel = answers[item.id];
+              return (
+                <div key={item.id} className="rating-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 0", borderTop: `1px solid ${BORDER}`, gap: 12 }}>
+                  <span className="rating-label" style={{ color: SECONDARY, fontSize: 14, lineHeight: 1.4, flex: 1 }}>{item.label}</span>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    {[1, 2, 3, 4, 5].map((n) => {
+                      const active = sel === n;
+                      return (
+                        <button key={n}
+                          onClick={() => setAnswers((a) => ({ ...a, [item.id]: n }))}
+                          style={{ width: 32, height: 32, background: active ? TEAL : "transparent", border: `1px solid ${active ? TEAL : BORDER}`, borderRadius: 4, color: active ? "#fff" : MUTED, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
+                        >
+                          {n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ borderTop: `1px solid ${BORDER}` }} />
+          </div>
+        )}
+
+        {/* single_plus_text */}
+        {q.type === "single_plus_text" && (
+          <div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 28 }}>
+              {(q.options || []).map((opt) => {
+                const sel = answers[q.id] === opt;
                 return (
-                  <button key={n} onClick={() => handleScale(q.id, n)}
-                    style={{ flex: 1, height: 48, minWidth: 44, background: selected ? TEAL : "#fff", border: `1px solid ${selected ? TEAL : BORDER}`, borderRadius: 4, color: selected ? "#fff" : SECONDARY, fontSize: 16, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.1s", boxShadow: selected ? "0 1px 2px rgba(0,0,0,0.15)" : "none" }}>
-                    {n}
-                  </button>
+                  <div key={opt}
+                    onClick={() => handleSingle(q.id, opt)}
+                    style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 4, minHeight: 44, background: sel ? SEL_BG : "transparent", cursor: "pointer", transition: "background 0.1s" }}
+                    onMouseEnter={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = SURFACE; }}
+                    onMouseLeave={(e) => { if (!sel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <span style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${sel ? TEAL : BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {sel && <span style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />}
+                    </span>
+                    <span style={{ color: sel ? TEXT : SECONDARY, fontSize: 14, fontWeight: sel ? 500 : 400 }}>{opt}</span>
+                  </div>
                 );
               })}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: MUTED, fontSize: 12 }}>{q.min}</span>
-              <span style={{ color: MUTED, fontSize: 12 }}>{q.max}</span>
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 24 }}>
+              <p style={{ color: TEXT, fontSize: 14, fontWeight: 500, marginBottom: 10 }}>{q.followUpLabel}</p>
+              <textarea
+                placeholder={q.followUpPlaceholder}
+                value={answers.entity_tracking_open || ""}
+                onChange={(e) => setAnswers((a) => ({ ...a, entity_tracking_open: e.target.value }))}
+                rows={3}
+                style={{ width: "100%", border: "none", borderBottom: `2px solid ${BORDER}`, background: "transparent", color: TEXT, fontSize: 15, fontFamily: F, resize: "none", outline: "none", padding: "8px 0", lineHeight: 1.6, boxSizing: "border-box" as const }}
+                onFocus={(e) => { (e.target as HTMLTextAreaElement).style.borderBottomColor = TEAL; }}
+                onBlur={(e) => { (e.target as HTMLTextAreaElement).style.borderBottomColor = BORDER; }}
+              />
             </div>
           </div>
         )}
 
-        {/* Text */}
+        {/* text */}
         {q.type === "text" && (
-          <textarea placeholder={q.placeholder} value={answers[q.id] || ""} onChange={(e) => handleText(q.id, e.target.value)} rows={4}
-            style={{ width: "100%", border: "none", borderBottom: `2px solid ${BORDER}`, borderRadius: 0, padding: "8px 0", color: TEXT, fontSize: 16, fontFamily: F, resize: "none", outline: "none", background: "transparent", lineHeight: 1.6, boxSizing: "border-box" as const, maxWidth: "100%" }}
-            onFocus={(e) => { (e.target as HTMLElement).style.borderBottomColor = TEAL; }}
-            onBlur={(e) => { (e.target as HTMLElement).style.borderBottomColor = BORDER; }}
+          <textarea
+            placeholder={q.placeholder}
+            value={answers[q.id] || ""}
+            onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+            rows={4}
+            style={{ width: "100%", border: "none", borderBottom: `2px solid ${BORDER}`, background: "transparent", color: TEXT, fontSize: 15, fontFamily: F, resize: "none", outline: "none", padding: "8px 0", lineHeight: 1.6, boxSizing: "border-box" as const }}
+            onFocus={(e) => { (e.target as HTMLTextAreaElement).style.borderBottomColor = TEAL; }}
+            onBlur={(e) => { (e.target as HTMLTextAreaElement).style.borderBottomColor = BORDER; }}
           />
+        )}
+
+        {/* early_access */}
+        {q.type === "early_access" && (
+          <div>
+            <p style={{ color: SECONDARY, fontSize: 15, lineHeight: 1.75, marginBottom: 28 }}>
+              If you would like early access to Tideline or want to be considered for a founding member rate when we launch, leave your email below. Founding members get lifetime access at a locked-in rate. No spam. We will only reach out when it matters.
+            </p>
+            <div style={{ marginBottom: 28 }}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={answers.email_provided || ""}
+                onChange={(e) => setAnswers((a) => ({ ...a, email_provided: e.target.value }))}
+                style={{ width: "100%", border: "none", borderBottom: `2px solid ${BORDER}`, background: "transparent", color: TEXT, fontSize: 16, fontFamily: F, padding: "8px 0", outline: "none", boxSizing: "border-box" as const }}
+                onFocus={(e) => { (e.target as HTMLInputElement).style.borderBottomColor = TEAL; }}
+                onBlur={(e) => { (e.target as HTMLInputElement).style.borderBottomColor = BORDER; }}
+              />
+              <p style={{ color: MUTED, fontSize: 12, marginTop: 6 }}>Optional</p>
+            </div>
+            {[
+              { key: "wants_early_access",    label: "I would like to be part of a small group of early testers" },
+              { key: "wants_founding_member", label: "I am interested in a founding member rate when Tideline launches" },
+              { key: "wants_updates",         label: "Keep me updated on progress" },
+            ].map(({ key, label }) => {
+              const checked = answers[key] === true;
+              return (
+                <div key={key}
+                  onClick={() => setAnswers((a) => ({ ...a, [key]: !a[key] }))}
+                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
+                >
+                  <span style={{ width: 18, height: 18, borderRadius: 3, border: `2px solid ${checked ? TEAL : BORDER}`, background: checked ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                    {checked && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  </span>
+                  <span style={{ color: SECONDARY, fontSize: 14 }}>{label}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* Navigation */}
         <div className="survey-nav" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 40 }}>
           {current > 0 ? (
-            <button onClick={() => setCurrent((c) => c - 1)}
-              style={{ background: "none", border: "none", color: SECONDARY, fontSize: 14, cursor: "pointer", fontFamily: F, padding: "8px 0" }}>
+            <button
+              onClick={() => setCurrent((c) => c - 1)}
+              style={{ background: "transparent", border: `1px solid ${BORDER}`, borderRadius: 4, color: SECONDARY, fontSize: 14, cursor: "pointer", fontFamily: F, padding: "0 20px", height: 36 }}
+            >
               Back
             </button>
           ) : <span />}
 
           {current < TOTAL - 1 ? (
-            <button onClick={() => { if (canAdvance()) setCurrent((c) => c + 1); }}
-              style={{ background: canAdvance() ? TEAL : "#F1F3F4", border: "none", borderRadius: 4, padding: "0 24px", height: 36, color: canAdvance() ? "#fff" : "#BDC1C6", fontSize: 14, fontWeight: 500, cursor: canAdvance() ? "pointer" : "default", fontFamily: F, transition: "background 0.15s", boxShadow: canAdvance() ? "0 1px 2px rgba(0,0,0,0.2)" : "none" }}>
+            <button
+              onClick={() => { if (canAdvance()) setCurrent((c) => c + 1); }}
+              style={{ background: canAdvance() ? TEAL : SURFACE, border: `1px solid ${canAdvance() ? TEAL : BORDER}`, borderRadius: 4, padding: "0 24px", height: 36, color: canAdvance() ? "#fff" : MUTED, fontSize: 14, fontWeight: 500, cursor: canAdvance() ? "pointer" : "default", fontFamily: F, transition: "all 0.15s" }}
+            >
               Next
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={submitting}
-              style={{ background: submitting ? "#F1F3F4" : TEAL, border: "none", borderRadius: 4, padding: "0 24px", height: 36, color: submitting ? "#BDC1C6" : "#fff", fontSize: 14, fontWeight: 500, cursor: submitting ? "default" : "pointer", fontFamily: F, boxShadow: !submitting ? "0 1px 2px rgba(0,0,0,0.2)" : "none" }}>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              style={{ background: submitting ? SURFACE : TEAL, border: `1px solid ${submitting ? BORDER : TEAL}`, borderRadius: 4, padding: "0 24px", height: 36, color: submitting ? MUTED : "#fff", fontSize: 14, fontWeight: 500, cursor: submitting ? "default" : "pointer", fontFamily: F }}
+            >
               {submitting ? "Submitting..." : "Submit"}
             </button>
           )}
         </div>
+
       </div>
     </div>
   );

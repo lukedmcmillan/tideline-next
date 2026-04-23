@@ -59,13 +59,29 @@
 
 - **Diagnostic script before cron build**: for data-dependent pipelines (entity feed, brief composer), write a `scripts/test-*.ts` diagnostic first. Run it against real DB to get: distribution stats, test user output, raw query results, rendered HTML. Calibrate thresholds from real data, not assumptions. Caught: wrong significance scale (0-10 vs 0-92), PostgREST order syntax error, and all-quiet user state before writing any cron logic.
 
+## Signal generation
+
+- **Content generators ship with silent filter bugs**: every generator needs a simulation query testing end-to-end before trusting count output. Count-only tests miss wrong column names, missing whitelist values, and dedup false positives. Write a diagnostic script first.
+- **stories uses fetched_at, not created_at**: `stories.fetched_at` is the ingestion timestamp. Other tables (signal_events, entity_mentions, etc.) use `created_at`. Column names are not consistent across tables — always verify per table.
+- **Tracker slug convention varies by data source**: `cross_tracker_flags` stores underscores (e.g. `imo_shipping`); routes use hyphens (`imo-shipping`). Normalise with `.replace(/_/g, "-")` immediately on read — never compare raw flag values to slug arrays.
+- **cross_tracker_flags is the authoritative story→tracker link**: `stories.topic` is a broad category (fisheries, shipping, governance) and must not be used for tracker routing. Only `cross_tracker_flags` maps stories to specific tracker slugs.
+
 ## Ops / environment
 
 - **Shell env vars don't persist across PowerShell sessions**: always reload `CRON_SECRET` at session start using `Get-Content`. Don't assume a variable set earlier in the day is still available in a new terminal.
 - **SQL goes to Supabase Studio, not PowerShell**: pasting multi-line SQL into PowerShell creates empty garbage files named after the SQL tokens. Always run migrations via Supabase dashboard SQL editor.
+
+## Git / deploy discipline
+
+- **Git status check after every Claude Code "done"**: three times this week local commits weren't pushed to origin, causing "it doesn't work on production" confusion. Always run `git status` + `git log --oneline -3` and confirm the Vercel deploy SHA matches before calling a feature live.
+- **Migration files in supabase/migrations/ are not auto-applied**: a `.sql` file in that directory does not mean the table exists in the database. Every migration must be manually run in Supabase Studio and verified with a diagnostic query.
+- **Build failures block ALL deploys, not just the broken feature**: a TypeScript error in any file prevents every pending feature from reaching production. Check Vercel build status after every commit — a pushed SHA is not a deployed feature until the build passes.
+- **Claude Code can confidently report fixes for files it never committed**: always verify with `git log` + `git status` after a fix claim. The agent may describe a change as done while the file sits modified and unstaged.
+- **Never leave modified files across task boundaries**: uncommitted drift (entity-brief sat modified for hours unreviewed) causes changes to be swept into unrelated commits accidentally. Every task boundary: commit what's ready, revert what isn't.
 
 ## Process
 
 - **Dev server bypass and API 401s**: middleware dev-bypass on `/platform/*` lets pages render without auth, but API routes still enforce session. Toggle always renders null for unauthenticated viewers. Not a bug, just a consequence of the bypass.
 - **Next.js route registration on Windows**: new API route folders sometimes need `.next` cache cleared + dev server restart to register. `rm -rf .next` fixes stale route manifests.
 - **Agent hallucination risk**: agents will confidently cite specific file names, line numbers, and architectural conventions that don't exist. Always require real grep output or real SQL query results before accepting architectural claims. The `story_comments` incident: agent read a migration file, assumed the table existed, built FK and RLS reasoning on it — table was never created in the database.
+- **Claude Code audits can be confidently wrong**: push back with actual queries when audit results don't match observed behaviour. The agent will assert something is broken based on static code reading; a real DB query or curl test is the ground truth.
