@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import DashboardReveal from "@/components/DashboardReveal";
 import HeroSignal from "@/components/HeroSignal";
+import SignalFeed from "@/components/SignalFeed";
 import Sparkline from "@/components/Sparkline";
 import type { TickerItem, ProofOfWorkData } from "@/app/lib/types/dashboard";
 
@@ -102,11 +103,20 @@ export default function DashboardPage() {
           .dash-grid{padding:0 16px 16px!important;grid-template-columns:1fr!important}
           .dash-grid>*:first-child{grid-column:1!important;grid-row:auto!important;min-height:300px!important}
           .dash-pow{margin:0 16px!important;flex-direction:column!important;align-items:flex-start!important;gap:10px!important}
+          .dash-reveal{display:none!important}
+          .mob-signal-feed{display:block!important}
         }
       `}</style>
 
-      {/* Dynamic Reveal */}
-      <DashboardReveal />
+      {/* Dynamic Reveal — desktop only */}
+      <div className="dash-reveal">
+        <DashboardReveal />
+      </div>
+
+      {/* Signal Feed — mobile only */}
+      <div className="mob-signal-feed" style={{ display: "none", padding: "0 16px" }}>
+        <SignalFeed />
+      </div>
 
       {/* Page Header */}
       <div className="dash-header" style={{ padding: "24px 32px 18px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>

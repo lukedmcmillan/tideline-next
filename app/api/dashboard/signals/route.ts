@@ -34,8 +34,8 @@ function nextEvenHourUTC(now: Date): Date {
 
 export async function GET(req: NextRequest) {
   try {
-    const email = await getEmailFromSession(req);
-    if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+   const email = await getEmailFromSession(req);
+   if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const now = new Date();
     const maxWindowStart = new Date(now.getTime() - MAX_WINDOW_HOURS * 3600 * 1000);
