@@ -9,7 +9,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const MAX_WINDOW_HOURS = 24;
 const PRE_FILTER_LIMIT = 100;
 const RETURN_LIMIT = 20;
 
@@ -39,7 +38,6 @@ export async function GET(req: NextRequest) {
    if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const now = new Date();
-    const maxWindowStart = new Date(now.getTime() - MAX_WINDOW_HOURS * 3600 * 1000);
 
     // Resolve user id + last_dashboard_view in one query
     const { data: userRow, error: userErr } = await supabase
@@ -53,19 +51,15 @@ export async function GET(req: NextRequest) {
 
     const userId: string = userRow.id;
 
-    // Determine window start
-    let since: Date;
-    const sinceParam = req.nextUrl.searchParams.get("since");
-
-    if (sinceParam) {
-      const parsed = new Date(sinceParam);
-      since = isNaN(parsed.getTime()) ? maxWindowStart : parsed;
-    } else if (userRow.last_dashboard_view) {
-      const lastView = new Date(userRow.last_dashboard_view);
-      since = lastView < maxWindowStart ? maxWindowStart : lastView;
-    } else {
-      since = maxWindowStart;
-    }
+    // Sliding minimum window: always show at least the last 6 hours,
+    // even if the user refreshes frequently. Falls back to 24h on first visit.
+    // last_dashboard_view is NOT updated here — only on explicit acknowledgment.
+    const lastDashboardView = userRow.last_dashboard_view
+      ? new Date(userRow.last_dashboard_view)
+      : null;
+    const sinceCandidate = lastDashboardView ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    const since = sinceCandidate < sixHoursAgo ? sinceCandidate : sixHoursAgo;
 
     // Get tracked domains (defaults to all 10 if none set)
     const trackedSlugs = await getUserTrackedDomains(userId);
@@ -143,12 +137,8 @@ export async function GET(req: NextRequest) {
 
     const windowHours = Math.round(((now.getTime() - since.getTime()) / 3600000) * 10) / 10;
 
-    // Fire-and-forget: update last_dashboard_view
-    supabase
-      .from("users")
-      .update({ last_dashboard_view: now.toISOString() })
-      .eq("id", userId)
-      .then(() => {/* intentionally fire-and-forget */});
+    // last_dashboard_view intentionally NOT updated here.
+    // See: sliding minimum window comment above.
 
     return NextResponse.json({
       signals: topWithHistory,

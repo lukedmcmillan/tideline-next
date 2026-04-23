@@ -159,6 +159,26 @@ Engineering:
 - Subject line truncates to last word boundary (handles short and long headlines)
 - test-entity-brief.ts updated for v6 (all entities, pulse card, rotation test, all 3 subject line cases)
 
+## Completed this session (2026-04-23)
+- Survey v2 rebuilt for blue finance / ESG audience ✓ (15 questions, dark navy, DM Sans)
+  - New DB table `survey_responses_v2` (35 cols, RLS, 2 indexes, `is_priority_lead` generated column)
+  - New API route `/api/survey-v2` with Resend notification to lukedmcmillan@gmail.com
+  - Existing 35 rows in `survey_responses` untouched
+- Dashboard desktop layout restored to pre-350185f multi-column grid with light tokens ✓
+  - Mobile single-column layout preserved exactly from 350185f
+  - CSS class toggle at 769px breakpoint; trendChar() em dash violation fixed
+- Dashboard data seeded for Luke: 6 topics, 2 projects, 4 entities in watchlist, last_dashboard_view ✓
+- **Bug fixed: `/api/dashboard/signals` self-defeating window shrinkage ✓**
+  - Root cause: fire-and-forget update reset `last_dashboard_view = NOW` on every API call, shrinking window to seconds between refreshes
+  - Fix: sliding minimum window — always show at least last 6 hours regardless of refresh frequency
+  - `last_dashboard_view` fire-and-forget update removed from signals route
+  - Build passes, lint clean in signals route
+- tasks/todo.md created with 2 open tickets (user_topics removal, mojibake fix)
+
+## Open tickets (tasks/todo.md)
+1. Remove `user_topics` dead code path — `getUserTrackedDomains()` queries a non-existent table, falls back to ALL_SLUGS silently
+2. Fix mojibake in `generateBandCrossingSignals` — live cron writes `â†'` instead of `→`
+
 ## What's next
 **Fruit Machine Phase 5 (next session)**
 - `SignalFeed` component with pull-to-refresh gesture

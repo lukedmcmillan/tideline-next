@@ -79,6 +79,13 @@
 - **Claude Code can confidently report fixes for files it never committed**: always verify with `git log` + `git status` after a fix claim. The agent may describe a change as done while the file sits modified and unstaged.
 - **Never leave modified files across task boundaries**: uncommitted drift (entity-brief sat modified for hours unreviewed) causes changes to be swept into unrelated commits accidentally. Every task boundary: commit what's ready, revert what isn't.
 
+## Dashboard / signals architecture
+
+- **Sliding minimum window pattern for activity feeds**: a fire-and-forget `last_seen = NOW` on every API call is self-defeating — it shrinks the window on every refresh until users only see signals created in the last few seconds. Fix with a floor: `since = min(last_seen, now - 6h)`. Users always see at least 6 hours of activity even on rapid refresh.
+- **`last_dashboard_view` should only update on explicit acknowledgment**: updating on every GET request conflates "I looked at the dashboard" with "I read everything up to this point." In v2, add a separate `acknowledged_at` column and only update it when the user takes an action (e.g. dismiss all, mark read).
+- **Two-table topic storage was a silent failure**: `users.topics` (jsonb array) and `user_topics` (separate table) co-existed. Code split across both with no warning: `getUserTrackedDomains()` queried the table (which didn't exist), failed silently, and returned ALL_SLUGS. `new-stories` API read the jsonb column correctly. A seed targeting one was invisible to the other. Lesson: pick one source of truth per concept and enforce it with a grep check in code review.
+- **Live diagnostic scripts over static code reading**: the signals "all quiet" bug was undiagnosable by reading code alone. A 40-line `scripts/diag-signals.mjs` replicated the exact API query server-side, revealed `since = 14 minutes ago` (not 3 hours), and identified the exact filter cutting all rows. Write a diagnostic before guessing.
+
 ## Process
 
 - **Dev server bypass and API 401s**: middleware dev-bypass on `/platform/*` lets pages render without auth, but API routes still enforce session. Toggle always renders null for unauthenticated viewers. Not a bug, just a consequence of the bypass.
