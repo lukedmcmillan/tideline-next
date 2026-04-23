@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     "app/api/lp-briefing/pdf/route": ["./node_modules/pdfkit/js/data/**/*"],
   },
   async redirects() {
-    return [
+    const trackerRedirects = [
       'isa','bbnj','iuu','30x30','blue-finance',
       'plastics','imo-shipping','wto-fisheries',
       'offshore-wind','cites-marine','governance',
@@ -27,6 +27,21 @@ const nextConfig: NextConfig = {
       destination: `/platform/tracker/${slug}`,
       permanent: true,
     }));
+
+    return [
+      ...trackerRedirects,
+      // Entities pages consolidated into Directory
+      {
+        source: '/platform/entities',
+        destination: '/platform/directory?scope=tracked',
+        permanent: false,
+      },
+      {
+        source: '/platform/entities/:path*',
+        destination: '/platform/directory?scope=tracked',
+        permanent: false,
+      },
+    ];
   },
 };
 

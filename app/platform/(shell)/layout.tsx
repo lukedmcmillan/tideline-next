@@ -173,7 +173,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
   const nav: { ic: React.ReactNode; label: string; href: string; badge?: string; badgeColor?: string }[] = [
     { ic: <IcOverview />, label: "Dashboard", href: "/platform" },
     { ic: <IcFeed />, label: "News Feed", href: "/platform/feed" },
-    { ic: <IcEntities />, label: "Entities", href: "/platform/entities" },
+
     { ic: <IcWork />, label: "My Workspace", href: "/platform/projects", badge: projectData && projectData.length > 0 ? String(projectData.length) : undefined },
     { ic: <IcTrackers />, label: "Trackers", href: "/platform/trackers" },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
@@ -559,7 +559,7 @@ function RightPanel() {
 
   if (path === "/platform") return null;
   if (path?.startsWith("/platform/tracker")) return null;
-  if (path?.startsWith("/platform/entities")) return null;
+  if (path?.startsWith("/platform/directory")) return null;
   if (isCalendar) return <CalendarRightPanel />;
   if (isWorkspace) return null;
   if (isProjects) return null;
