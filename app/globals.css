@@ -24,6 +24,22 @@
   /* Surfaces */
   --bg: #F8F9FA;
   --surface: #FFFFFF;
+
+  /* Dashboard light mode tokens — additive, do not modify tokens above */
+  --light-bg: #F7F9FB;
+  --light-surface: #FFFFFF;
+  --light-surface-alt: #F2F5F8;
+  --light-border: #E3E8EF;
+  --light-border-strong: #D0D7E2;
+  --light-text: #0B1628;
+  --light-text-muted: #5B6F8C;
+  --light-text-faint: #8BA0BC;
+  --light-teal: #1D9E75;
+  --light-teal-soft: #E6F4EF;
+  --light-amber: #EF9F27;
+  --light-amber-soft: #FDF2DF;
+  --light-red: #E24B4A;
+  --light-red-soft: #FCEAEA;
 }
 
 body {
