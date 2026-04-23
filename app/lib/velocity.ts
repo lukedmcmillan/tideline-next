@@ -218,3 +218,24 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
 
   return { trackerSlug, score, scoreA: Math.round(scoreA * multiplier * 10) / 10, scoreB: Math.round(scoreB * multiplier * 10) / 10, scoreC: Math.round(scoreC * multiplier * 10) / 10, currentCount, momentumDirection, interpretation };
 }
+
+// ── Shared week-deduplication helper ─────────────────────────────────────────
+// Takes an array of rows that have a `calculated_at` ISO string, deduplicates
+// to one row per ISO week (most recent within each week wins), and returns up
+// to `limit` rows newest-first.
+export function weeklyDedupe<T extends { calculated_at: string }>(rows: T[], limit = 10): T[] {
+  const seen = new Set<string>();
+  const deduped: T[] = [];
+  for (const row of rows) {
+    const dt = new Date(row.calculated_at);
+    const jan4 = new Date(dt.getFullYear(), 0, 4);
+    const weekNum = Math.ceil(((dt.getTime() - jan4.getTime()) / 86400000 + jan4.getDay() + 1) / 7);
+    const key = `${dt.getFullYear()}-W${weekNum}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(row);
+    }
+    if (deduped.length >= limit) break;
+  }
+  return deduped;
+}

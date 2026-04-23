@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getEmailFromSession } from "@/app/lib/auth";
 import { getUserTrackedDomains, userIdFromEmail } from "@/app/lib/user-preferences";
+import { weeklyDedupe } from "@/app/lib/velocity";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -113,6 +114,31 @@ export async function GET(req: NextRequest) {
     scored.sort((a, b) => b.display_score - a.display_score);
     const top = scored.slice(0, RETURN_LIMIT);
 
+    // Attach velocity history (8 weekly scores, oldest-first) to band_crossing signals
+    const bcSlugs = [...new Set(top.filter(s => s.signal_type === "band_crossing").map(s => s.tracker_slug))];
+    const historyMap: Record<string, number[]> = {};
+
+    await Promise.all(bcSlugs.map(async (slug) => {
+      const { data: vRows } = await supabase
+        .from("velocity_scores")
+        .select("score, calculated_at")
+        .eq("tracker_slug", slug)
+        .order("calculated_at", { ascending: false })
+        .limit(50);
+
+      if (!vRows || vRows.length === 0) return;
+      const weekly = weeklyDedupe(vRows, 8);
+      // Reverse to oldest-first for chart rendering
+      historyMap[slug] = weekly.reverse().map(r => r.score);
+    }));
+
+    // Merge history into band_crossing signals
+    const topWithHistory = top.map(s => {
+      if (s.signal_type !== "band_crossing") return s;
+      const history = historyMap[s.tracker_slug];
+      return history && history.length > 0 ? { ...s, history } : s;
+    });
+
     const isQuiet = scored.filter((s) => s.age_hours < 2).length === 0;
 
     const windowHours = Math.round(((now.getTime() - since.getTime()) / 3600000) * 10) / 10;
@@ -125,7 +151,7 @@ export async function GET(req: NextRequest) {
       .then(() => {/* intentionally fire-and-forget */});
 
     return NextResponse.json({
-      signals: top,
+      signals: topWithHistory,
       window: {
         since: since.toISOString(),
         until: now.toISOString(),

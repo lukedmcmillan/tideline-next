@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { weeklyDedupe } from "@/app/lib/velocity";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,19 +27,7 @@ export async function GET(
   const latest = data[0];
 
   // Deduplicate to one row per ISO week (keep most recent per week)
-  const seen = new Set<string>();
-  const deduped: typeof data = [];
-  for (const d of data) {
-    const dt = new Date(d.calculated_at);
-    const jan4 = new Date(dt.getFullYear(), 0, 4);
-    const weekNum = Math.ceil(((dt.getTime() - jan4.getTime()) / 86400000 + jan4.getDay() + 1) / 7);
-    const key = `${dt.getFullYear()}-W${weekNum}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      deduped.push(d);
-    }
-    if (deduped.length >= 10) break;
-  }
+  const deduped = weeklyDedupe(data, 10);
 
   const history = deduped.map((d) => ({ score: d.score, score_volume: d.score_volume, score_recency: d.score_recency, score_signals: d.score_signals, calculated_at: d.calculated_at, interpretation: d.interpretation }));
 

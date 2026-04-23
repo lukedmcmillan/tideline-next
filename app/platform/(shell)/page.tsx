@@ -48,6 +48,7 @@ interface Signal {
   action_url: string;
   created_at: string;
   metadata: Record<string, unknown>;
+  history?: number[];
 }
 
 interface VScore {
@@ -114,8 +115,35 @@ function buildSummary(signals: Signal[]): string {
   return `${phrases[0]} and ${phrases[1]}, plus ${signals.length - 2} more.`;
 }
 
-function isRising(toBand: unknown): boolean {
-  return toBand === "HIGH" || toBand === "ELEVATED";
+function isRising(metadata: Record<string, unknown>): boolean {
+  return Number(metadata.to_score ?? 0) > Number(metadata.from_score ?? 0);
+}
+
+// ── Mini bar sparkline ────────────────────────────────────────────────────────
+function MiniBar({ scores, rising }: { scores: number[]; rising: boolean }) {
+  const TARGET = 8;
+  const padCount = Math.max(0, TARGET - scores.length);
+  const padded = [...Array(padCount).fill(0), ...scores].slice(-TARGET);
+  const accent = rising ? TEAL : RED;
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 22, marginTop: 10, marginLeft: 4 }}>
+      {padded.map((score, i) => {
+        const isLast = i === TARGET - 1;
+        const pct = score <= 0 ? 15 : Math.max(15, Math.round((score / 10) * 100));
+        return (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: `${pct}%`,
+              background: isLast ? accent : BORDER,
+              borderRadius: 2,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 // ── Section header ────────────────────────────────────────────────────────────
@@ -137,7 +165,7 @@ function SectionHeader({ left, right }: { left: string; right?: string }) {
 // ── Signal card ───────────────────────────────────────────────────────────────
 function SignalCard({ sig, onClick }: { sig: Signal; onClick: () => void }) {
   const m = sig.metadata as Record<string, unknown>;
-  const rising = isRising(m.to_band);
+  const rising = isRising(m);
   const railColor = sig.signal_type === "high_sig_story" ? AMBER
     : sig.signal_type === "band_crossing" && !rising ? RED
     : TEAL;
@@ -193,6 +221,11 @@ function SignalCard({ sig, onClick }: { sig: Signal; onClick: () => void }) {
             {String(m.momentum ?? "")}
           </span>
         </div>
+      )}
+
+      {/* Sparkline — band_crossing only */}
+      {sig.signal_type === "band_crossing" && sig.history && sig.history.length > 0 && (
+        <MiniBar scores={sig.history} rising={rising} />
       )}
 
       {/* Headline */}
