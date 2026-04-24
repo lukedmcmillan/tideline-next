@@ -34,15 +34,7 @@ function nextEvenHourUTC(now: Date): Date {
 
 export async function GET(req: NextRequest) {
   try {
-   // TEMP DIAGNOSTIC — remove after auth is confirmed working
-   console.log("[signals] cookies:", req.cookies.getAll().map(c => c.name));
-   const { getToken: _gt } = await import("next-auth/jwt");
-   const rawToken = await _gt({ req, secret: process.env.NEXTAUTH_SECRET });
-   console.log("[signals] getToken result:", rawToken ? { email: rawToken.email, sub: rawToken.sub } : null);
-   console.log("[signals] NEXTAUTH_SECRET:", process.env.NEXTAUTH_SECRET ? "set" : "MISSING");
-   // END TEMP DIAGNOSTIC
-
-   const email = await getEmailFromSession(req);
+const email = await getEmailFromSession(req);
    if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const now = new Date();
