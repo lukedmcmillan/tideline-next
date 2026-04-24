@@ -50,7 +50,7 @@ const AMBER        = "#EF9F27";
 const RED_COL      = "#E24B4A";
 const PULSE_BG     = "#FAFAF8";
 const PULSE_BORDER = "#EDEDEA";
-const DOT_QUIET    = "#D4DDE8";
+const DOT_QUIET    = "#C2CBD6";
 
 const TRACKER_DISPLAY_NAMES: Record<string, string> = {
   "isa":           "ISA",
@@ -814,7 +814,7 @@ export function composeEntityBriefHtml(feed: EntityBriefFeed, dateStr: string): 
         <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:14px;">
           <tr>
             <td width="14" style="vertical-align:top;padding-top:5px;">
-              <div style="width:6px;height:6px;border-radius:50%;background:${dotColor};"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};"></div>
             </td>
             <td style="vertical-align:top;padding-left:4px;">
               <div style="font-family:${F};font-size:15px;font-weight:600;color:${TEXT_PRIMARY};line-height:1.4;">${entity.entityName}</div>
@@ -872,8 +872,8 @@ export function composeEntityBriefHtml(feed: EntityBriefFeed, dateStr: string): 
                   ${sparkSvg}
                   <table cellpadding="0" cellspacing="0" width="100%" style="margin-top:4px;">
                     <tr>
-                      <td style="font-family:${F};font-size:10px;color:${TEXT_LIGHT};">12 weeks ago</td>
-                      <td style="font-family:${F};font-size:10px;color:${TEXT_LIGHT};text-align:right;">Today</td>
+                      <td style="font-family:${F};font-size:10px;color:${TEXT_LIGHT};white-space:nowrap;">12W ago</td>
+                      <td style="font-family:${F};font-size:10px;color:${TEXT_LIGHT};text-align:right;white-space:nowrap;">NOW</td>
                     </tr>
                   </table>
                 </td>
