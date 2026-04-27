@@ -27,6 +27,8 @@ function getAnthropic() {
 
 const BATCH_LIMIT = 500;
 const DELAY_MS = 2000;
+const limitArg = process.argv.find(a => a.startsWith("--limit="));
+const TOTAL_LIMIT = limitArg ? parseInt(limitArg.split("=")[1], 10) : Infinity;
 
 const VALID_DOCUMENT_TYPES = [
   "treaty", "resolution", "report", "regulation",
@@ -252,7 +254,7 @@ Return only corrected JSON. No markdown.`,
   console.log(`  OK: "${title}" (${docType})`);
 }
 
-const loopMode = process.argv.includes("--loop");
+const loopMode = process.argv.includes("--loop") || limitArg !== undefined;
 
 async function processBatch(): Promise<number> {
   const { data: items, error } = await getSupabase()
@@ -287,7 +289,8 @@ async function processBatch(): Promise<number> {
 
 async function main() {
   console.log("=== Tideline Library Processor Agent ===");
-  console.log(`Batch size: ${BATCH_LIMIT} | Loop mode: ${loopMode}\n`);
+  const limitDisplay = TOTAL_LIMIT === Infinity ? "unlimited" : String(TOTAL_LIMIT);
+  console.log(`Batch size: ${BATCH_LIMIT} | Limit: ${limitDisplay} | Loop mode: ${loopMode}\n`);
 
   let totalProcessed = 0;
   let batchNum = 0;
@@ -305,6 +308,11 @@ async function main() {
     }
 
     console.log(`\nBatch ${batchNum} done (${count} items, ${totalProcessed} total)`);
+
+    if (totalProcessed >= TOTAL_LIMIT) {
+      console.log(`Reached --limit of ${TOTAL_LIMIT}. Stopping.`);
+      break;
+    }
   } while (loopMode);
 
   console.log(`\n=== Processing complete. ${totalProcessed} items processed. ===`);
