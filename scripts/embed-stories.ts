@@ -36,42 +36,72 @@ async function embedBatch(texts: string[]): Promise<number[][]> {
   return data.data.map((d: { embedding: number[] }) => d.embedding);
 }
 
+async function fetchAllEligibleStories() {
+  const PAGE = 1000;
+  let offset = 0;
+  const results: { id: string; title: string; source_name: string | null; published_at: string | null; link: string | null; description: string | null; full_summary: string | null }[] = [];
+  while (true) {
+    const { data, error } = await supabase
+      .from("stories")
+      .select("id, title, source_name, published_at, link, description, full_summary")
+      .or("description.not.is.null,full_summary.not.is.null")
+      .order("published_at", { ascending: false })
+      .range(offset, offset + PAGE - 1);
+    if (error) { console.error("Fetch error:", error.message); process.exit(1); }
+    if (!data || data.length === 0) break;
+    results.push(...data);
+    if (data.length < PAGE) break;
+    offset += PAGE;
+  }
+  return results;
+}
+
 async function main() {
-  console.log("=== Tideline Story Embeddings Backfill ===\n");
+  const isBackfill = process.argv.includes("--backfill");
+  console.log(`=== Tideline Story Embeddings${isBackfill ? " (--backfill: all stories)" : ""} ===\n`);
 
   if (!JINA_API_KEY) {
     console.error("JINA_API_KEY is not set. Aborting.");
     process.exit(1);
   }
 
-  // Fetch all stories with usable text content
-  const { data: allStories, error: fetchError } = await supabase
-    .from("stories")
-    .select("id, title, source_name, published_at, link, description, full_summary")
-    .or("description.not.is.null,full_summary.not.is.null")
-    .order("published_at", { ascending: false })
-    .limit(STORIES_PER_FETCH);
-
-  if (fetchError) {
-    console.error("Fetch error:", fetchError.message);
-    process.exit(1);
+  // Fetch eligible stories
+  let allStories: Awaited<ReturnType<typeof fetchAllEligibleStories>>;
+  if (isBackfill) {
+    allStories = await fetchAllEligibleStories();
+  } else {
+    const { data, error } = await supabase
+      .from("stories")
+      .select("id, title, source_name, published_at, link, description, full_summary")
+      .or("description.not.is.null,full_summary.not.is.null")
+      .order("published_at", { ascending: false })
+      .limit(STORIES_PER_FETCH);
+    if (error) { console.error("Fetch error:", error.message); process.exit(1); }
+    allStories = data ?? [];
   }
 
-  if (!allStories || allStories.length === 0) {
-    console.log("No stories with short_summary found.");
+  if (allStories.length === 0) {
+    console.log("No eligible stories found.");
     return;
   }
 
-  console.log(`Fetched ${allStories.length} stories with short_summary.\n`);
+  console.log(`Fetched ${allStories.length} eligible stories.\n`);
 
-  // Resume: find which story_ids already have a story_chunks row
-  const storyIds = allStories.map((s) => s.id);
-  const { data: existingChunks } = await supabase
-    .from("story_chunks")
-    .select("story_id")
-    .in("story_id", storyIds);
+  // Resume: load ALL embedded story_ids (paginated to avoid URL-length limits)
+  const alreadyEmbedded = new Set<string>();
+  let page = 0;
+  const PAGE = 1000;
+  while (true) {
+    const { data: chunk } = await supabase
+      .from("story_chunks")
+      .select("story_id")
+      .range(page * PAGE, (page + 1) * PAGE - 1);
+    if (!chunk || chunk.length === 0) break;
+    chunk.forEach((c) => alreadyEmbedded.add(c.story_id));
+    if (chunk.length < PAGE) break;
+    page++;
+  }
 
-  const alreadyEmbedded = new Set((existingChunks || []).map((c) => c.story_id));
   const toProcess = allStories.filter((s) => !alreadyEmbedded.has(s.id));
 
   if (toProcess.length === 0) {
