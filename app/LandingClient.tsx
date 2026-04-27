@@ -6,6 +6,7 @@ import EarlyAccessModal from "@/components/EarlyAccessModal";
 import Header from "@/components/Header";
 import BriefPreview from "@/components/BriefPreview";
 import VelocityScore from "@/components/VelocityScore";
+import DirectoryPreview from "@/components/DirectoryPreview";
 
 // Social proof data shape — fetched server-side in page.tsx, passed down as props.
 // Used by the social proof bar (Phase 3). Ignored by all other sections.
@@ -331,6 +332,33 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             >
               Start your 7-day free trial {"\u2192"}
             </button>
+          </div>
+        </div>
+
+        <div style={{ borderTop: "1px solid #E8EAED", margin: "5rem 0" }} />
+
+        {/* Row 3: The Directory — text left, component right */}
+        <div className="showcase-row">
+          <div className="showcase-text" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: "10px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#8BA0BC", marginBottom: "20px" }}>
+              The Directory
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(26px,3vw,36px)", lineHeight: 1.15, letterSpacing: "-0.02em", margin: "0 0 20px 0" }}>
+              <span style={{ color: "#0A1628" }}>928 entities, nine types.</span><br />
+              <span style={{ color: "#1D9E75" }}>Star one. The Brief notices.</span>
+            </h2>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "16px", color: "#5A7290", lineHeight: 1.7, margin: "0 0 28px 0" }}>
+              Every body, treaty, company, and country that shapes ocean governance, signal-rated weekly. Track what matters to you. When a tracked entity moves, it surfaces in your Brief.
+            </p>
+            <button
+              onClick={() => setShowEarlyAccess(true)}
+              style={{ fontFamily: "'DM Sans',sans-serif", fontSize: "14px", fontWeight: 600, color: "#1D9E75", background: "none", border: "none", padding: 0, cursor: "pointer", letterSpacing: "0.01em", alignSelf: "flex-start" }}
+            >
+              Start your 7-day free trial {"\u2192"}
+            </button>
+          </div>
+          <div className="showcase-component">
+            <DirectoryPreview />
           </div>
         </div>
       </section>
