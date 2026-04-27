@@ -200,6 +200,9 @@ export default function VelocityFallback({ slug }: Props) {
         <div style={{ fontFamily: F, fontSize: 11, color: M }}>
           Type {meta.type} {"\u00B7"} {meta.typeName} {"\u00B7"} Risk multiplier {meta.multiplier}x
         </div>
+        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#C5C5C5", marginTop: 4 }}>
+          Showing recent representative data. Live scores temporarily unavailable.
+        </div>
       </div>
     </div>
   );
