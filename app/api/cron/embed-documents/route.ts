@@ -295,8 +295,8 @@ async function embedNewStories(): Promise<{ embedded: number; failed: number }> 
   // Fetch recent stories with usable text
   const { data: stories, error: fetchError } = await supabase
     .from("stories")
-    .select("id, title, source_name, published_at, link, short_summary, description")
-    .not("short_summary", "is", null)
+    .select("id, title, source_name, published_at, link, description, full_summary")
+    .or("description.not.is.null,full_summary.not.is.null")
     .order("published_at", { ascending: false })
     .limit(STORIES_PER_RUN + 50);
 
@@ -319,7 +319,12 @@ async function embedNewStories(): Promise<{ embedded: number; failed: number }> 
 
   for (let i = 0; i < toEmbed.length; i += EMBED_BATCH_SIZE) {
     const batch = toEmbed.slice(i, i + EMBED_BATCH_SIZE);
-    const texts = batch.map((s) => `${s.title}. ${s.short_summary || s.description || ""}`.trim());
+    const texts = batch.map((s) => {
+      const text = (s.description && s.description.length > 500)
+        ? `${s.title}. ${s.description}`
+        : `${s.title}. ${s.full_summary ?? ""}`;
+      return text.trim();
+    });
 
     let embeddings: number[][];
     try {

@@ -67,7 +67,7 @@ These files were reviewed in April 2026 and left uncached for deliberate reasons
 ## RAG Architecture (workspace ask)
 
 - `document_chunks`: Jina 768-dim embeddings of library PDFs (primary sources). Populated by `scripts/embed-documents.ts` (backfill) and `app/api/cron/embed-documents/route.ts` (ongoing). Column: `chunk_text`.
-- `story_chunks`: Jina 768-dim embeddings of feed stories (secondary sources). Populated by `scripts/embed-stories.ts` (backfill) and `app/api/cron/embed-documents/route.ts` (ongoing, bolted on). Column: `chunk_text`.
+- `story_chunks`: Jina 768-dim embeddings of feed stories (secondary sources). Populated by `scripts/embed-stories.ts` (backfill) and `app/api/cron/embed-documents/route.ts` (ongoing, bolted on). Column: `chunk_text`. Embedded text: `title + description` where description >500 chars (original RSS source text, preferred for retrieval quality), else `title + full_summary` (Claude-generated fallback). Future improvement: extend scraper to fetch full article body and embed that instead (deferred).
 - Both tables are queried by `app/api/workspace/ask/route.ts` via `match_document_chunks` and `match_story_chunks` RPCs.
 - All embeddings use Jina `jina-embeddings-v2-base-en` (768 dimensions). Do not introduce a different embedding model or dimension without migrating both tables and both RPCs.
 - `documents.embedding vector(1536)` exists but is not used. Do not write to it or build search paths for it without a scoped plan.

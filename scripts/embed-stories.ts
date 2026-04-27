@@ -47,8 +47,8 @@ async function main() {
   // Fetch all stories with usable text content
   const { data: allStories, error: fetchError } = await supabase
     .from("stories")
-    .select("id, title, source_name, published_at, link, short_summary, description")
-    .not("short_summary", "is", null)
+    .select("id, title, source_name, published_at, link, description, full_summary")
+    .or("description.not.is.null,full_summary.not.is.null")
     .order("published_at", { ascending: false })
     .limit(STORIES_PER_FETCH);
 
@@ -91,8 +91,10 @@ async function main() {
 
     // Build embed text for each story: title + short_summary
     const embedTexts = batch.map((s) => {
-      const summary = s.short_summary || s.description || "";
-      return `${s.title}. ${summary}`.trim();
+      const text = (s.description && s.description.length > 500)
+        ? `${s.title}. ${s.description}`
+        : `${s.title}. ${s.full_summary ?? ""}`;
+      return text.trim();
     });
 
     let embeddings: number[][];
