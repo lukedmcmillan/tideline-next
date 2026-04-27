@@ -136,7 +136,12 @@
       "Bash(Get-FileHash \"C:\\\\Users\\\\luke.mcmillan\\\\tideline-next\\\\app\\\\lib\\\\entity-brief.ts\" -Algorithm MD5)",
       "Bash(rm -f \"{}\")",
       "Read(//c/Users/luke.mcmillan/tideline-next/**)",
-      "Bash(grep -n '\"\"stories\"\"' app/lib/signal-generation.ts)"
+      "Bash(grep -n '\"\"stories\"\"' app/lib/signal-generation.ts)",
+      "Bash(python3:*)",
+      "Bash(git:*)",
+      "mcp__claude_ai_Vercel__get_runtime_logs",
+      "Bash(rtk git:*)",
+      "Bash(rtk grep:*)"
     ]
   }
 }
