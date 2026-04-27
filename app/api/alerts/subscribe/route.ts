@@ -1,20 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getEmailFromSession } from "@/app/lib/auth";
+import { ALERTABLE_TRACKER_SLUGS } from "@/app/lib/trackers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-const VALID_SLUGS = new Set([
-  "isa",
-  "bbnj",
-  "iuu",
-  "30x30",
-  "blue-finance",
-  "governance",
-]);
 
 export async function POST(req: NextRequest) {
   const email = await getEmailFromSession(req);
@@ -30,7 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   const tracker_slug = body.tracker_slug;
-  if (!tracker_slug || !VALID_SLUGS.has(tracker_slug)) {
+  if (!tracker_slug || !ALERTABLE_TRACKER_SLUGS.has(tracker_slug)) {
     return NextResponse.json({ error: "Invalid tracker_slug" }, { status: 400 });
   }
 
@@ -57,7 +49,7 @@ export async function DELETE(req: NextRequest) {
 
   const url = new URL(req.url);
   const tracker_slug = url.searchParams.get("tracker_slug");
-  if (!tracker_slug || !VALID_SLUGS.has(tracker_slug)) {
+  if (!tracker_slug || !ALERTABLE_TRACKER_SLUGS.has(tracker_slug)) {
     return NextResponse.json({ error: "Invalid tracker_slug" }, { status: 400 });
   }
 

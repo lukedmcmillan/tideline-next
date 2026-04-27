@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import AlertToggle from "@/components/AlertToggle";
+import VelocityFallback from "@/components/VelocityFallback";
+import VelocityEmpty from "@/components/VelocityEmpty";
 
 const F = "'DM Sans',system-ui,sans-serif";
 const M = "#9AA0A6";
@@ -94,6 +96,7 @@ export default function VelocityScore({ slug }: { slug: string }) {
   const [data, setData] = useState<Latest | null>(null);
   const [hist, setHist] = useState<Pt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [noScores, setNoScores] = useState(false);
   const [tip, setTip] = useState<{ x: number; y: number; pt: Pt } | null>(null);
   const [modal, setModal] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -103,7 +106,15 @@ export default function VelocityScore({ slug }: { slug: string }) {
   useEffect(() => {
     fetch(`/api/velocity/${slug}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.latest) { setData(d.latest); setHist((d.history ?? []).slice().reverse()); } setLoading(false); })
+      .then(d => {
+        if (d?.status === "no_scores_yet") {
+          setNoScores(true);
+        } else if (d?.latest) {
+          setData(d.latest);
+          setHist((d.history ?? []).slice().reverse());
+        }
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [slug]);
 
@@ -178,7 +189,8 @@ export default function VelocityScore({ slug }: { slug: string }) {
   }, [hist, data, slug]);
 
   if (loading) return <Skeleton />;
-  if (!data) return null;
+  if (noScores) return <VelocityEmpty slug={slug} />;
+  if (!data) return <VelocityFallback slug={slug} />;
 
   const c = col(data.score);
   const mb = momBadge(data.momentum_direction);
