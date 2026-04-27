@@ -179,6 +179,15 @@ Engineering:
 1. Remove `user_topics` dead code path — `getUserTrackedDomains()` queries a non-existent table, falls back to ALL_SLUGS silently
 2. Fix mojibake in `generateBandCrossingSignals` — live cron writes `â†'` instead of `→`
 
+## Completed this session (2026-04-27)
+**Landing page v5 rebuild — COMPLETE ✓**
+- Full rebuild of `app/LandingClient.tsx` to match approved mockup-v5.html
+- New components: `components/LandingHeader.tsx`, `components/HeroPulseCard.tsx`
+- All 8 phases shipped: promo bar, header, hero with animated pulse card, 3-stat band, 3-row showcase, split-screen comparison + mid-CTA, supporting band (Directory + iPhone brief) + IsntStrip + BuiltFor, 3-card pricing + Founder + Final CTA, 4-column footer
+- Dead code removed: `roles`, `formatVerifiedDate`, `PulseFallback`, `PulseErrorBoundary`, `BriefPreview`/`VelocityScore`/`DirectoryPreview` imports
+- `styles/landing.css` stripped from 1030 lines to ~52 lines (4 keyframes + reduced-motion + visibility utilities)
+- Key constraints honoured: light editorial palette, 7-day trial everywhere, 3-stat bar, no 4th stat, single-colour navy headlines with teal italic accent
+
 ## What's next
 **Fruit Machine Phase 5 (next session)**
 - `SignalFeed` component with pull-to-refresh gesture

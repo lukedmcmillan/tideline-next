@@ -1,5 +1,9 @@
 # Lessons Learned
 
+## TODOs (carry forward)
+
+- **EarlyAccessModal vs /start audit**: both exist and do similar jobs. When landing page rebuild stabilises, audit whether they are redundant and consolidate into one conversion flow. Decision made April 2026 to keep EarlyAccessModal wired to landing CTAs; /start routing was out of scope for the v5 rebuild.
+
 ## Workflow patterns
 
 - **Plan-first /sc:workflow**: surfaced 4 missing files (mockup path, 3 spec files) before any code was written. Saved an entire rework cycle.
@@ -28,6 +32,14 @@
 
 - **pg_trgm short-string similarity**: trigram similarity scores on short entity names (4-8 chars) will be lower than intuitive (0.5-0.7 range on exact match). Threshold 0.4 is correctly tuned for the entities table. Do not raise the threshold above 0.5 without re-testing against short names like "Mowi", "IUCN", "WWF".
 - **Verification count mismatches**: when a verification query returns an unexpected count, first check whether the expectation was based on a correct earlier observation. Do not assume migration failure before re-querying raw data with a different diagnostic approach.
+
+## Landing page builds
+
+- **Large section replacements (>100 lines) need Python splice scripts**: Edit tool requires matching the entire old_string verbatim; at 500+ line blocks this is impractical. Write a temp Python script with Write tool, run via Bash, then delete — find start/end byte markers, do `content[:start] + new_content + content[end:]`, write back.
+- **Bash heredoc fails for complex Python**: `python3 << 'PYEOF'` with multi-line string assignments containing backticks or special chars causes "unexpected EOF". Always write the Python to a temp file instead.
+- **Scoped `<style>` tags for hover/responsive**: inline `style={{}}` can't do `:hover` or `@media`. Add a `<style>{...}</style>` immediately before the section that needs it. Keep keyframe names prefixed (`lp-*`) to avoid collisions.
+- **Static marketing components ≠ live data mounts**: `HeroPulseCard` is curated content with CSS animations — not a `VelocityScore` mount. Comment makes this clear and prevents future refactor confusion.
+- **Dead code accumulates across phases**: after a major page rebuild, always do a final pass to grep for unused imports, unused state, and unused helper functions. In the v5 rebuild: `roles`, `formatVerifiedDate`, `PulseFallback`, `PulseErrorBoundary`, and 3 dead component imports survived all 8 build phases until a dedicated cleanup step.
 
 ## Feature retirement
 

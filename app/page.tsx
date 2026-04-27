@@ -9,7 +9,7 @@ const FALLBACK_VERIFIED_DATE = "2026-04-24";
 const FALLBACK: SocialProof = {
   entities: 928,
   documents: 2800,
-  trackers: 11,
+  trackers: 10,
   sources: 38,
   verifiedDate: FALLBACK_VERIFIED_DATE,
   isFallback: true,
