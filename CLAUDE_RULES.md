@@ -44,8 +44,18 @@ These files have `cache_control: { type: "ephemeral" }` applied to static system
 - `app/api/story/linkedin-draft/route.ts`
 - `app/api/summarise/route.ts`
 - `app/api/threads/match/route.ts`
+- `app/lib/ocean-relevance-gate.ts`
 
 When adding or modifying a system prompt longer than 200 tokens that is identical across requests, apply caching by splitting into a static cached block and a dynamic block.
+
+### Intentionally NOT cached (do not re-audit these)
+
+These files were reviewed in April 2026 and left uncached for deliberate reasons:
+
+- `app/lib/velocity.ts` — Two calls: interpretation system is ~25 tokens, sentiment has no system param. Both well below the 1024-token minimum. No restructure warranted.
+- `app/api/webhooks/treaty-change/route.ts` — Event-driven (~1–5 calls/day). Prompt is in user content, not system. Volume and savings do not justify restructuring.
+- `app/api/cron/send-brief/route.ts` — 1 call/day. Not worth caching.
+- `app/api/documents/generate-brief/route.ts` — On-demand user action. Not high-volume.
 
 ## Design Rules
 
