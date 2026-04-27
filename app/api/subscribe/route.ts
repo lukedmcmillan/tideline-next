@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const subscription = await getStripe().subscriptions.create({
       customer: customer.id,
       items: [{ price: process.env.STRIPE_PRICE_ID! }],
-      trial_period_days: 14,
+      trial_period_days: 7,
       payment_settings: {
         payment_method_types: ["card"],
         save_default_payment_method: "on_subscription",

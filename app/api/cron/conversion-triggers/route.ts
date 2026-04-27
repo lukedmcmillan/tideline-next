@@ -36,18 +36,23 @@ export async function GET(request: Request) {
   try {
     const now = Date.now();
 
-    // ── JOB 1: Day 5 modal flag ───────────────────────────────────────
-    // Trial users with 9-10 days remaining (day 4-5 of 14-day trial)
-    const day9 = new Date(now + 9 * 24 * 60 * 60 * 1000).toISOString();
-    const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000).toISOString();
+    // ── JOB 1: Day 4-5 modal flag ─────────────────────────────────────
+    // CRITICAL: This +2d/+3d window targets day 4-5 of a
+    // 7-day trial. If trial length changes in
+    // app/api/subscribe/route.ts (trial_period_days), this
+    // window MUST update to TRIAL_DAYS - 4 (lower) and
+    // TRIAL_DAYS - 5 (upper). Coupled to: LandingClient hero
+    // copy, EarlyAccessModal, subscribe/page.tsx, start/page.tsx.
+    const day2 = new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString();
+    const day3 = new Date(now + 3 * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: modalUsers, error: modalError } = await supabase
       .from("users")
       .select("id, email")
       .eq("subscription_status", "trial")
       .eq("day5_modal_shown", false)
-      .gte("trial_ends_at", day9)
-      .lte("trial_ends_at", day10);
+      .gte("trial_ends_at", day2)
+      .lte("trial_ends_at", day3);
 
     if (modalError) {
       console.error("[Conversion] Modal query error:", modalError);
@@ -67,7 +72,7 @@ export async function GET(request: Request) {
         modalFlagged = ids.length;
       }
     }
-    console.log(`[Conversion] Day 5 modal: flagged ${modalFlagged} users`);
+    console.log(`[Conversion] Day 4-5 modal (2-3d remaining): flagged ${modalFlagged} users`);
 
     // ── JOB 2: Expiry email ───────────────────────────────────────────
     // Trial users with 23-25 hours remaining
@@ -97,7 +102,7 @@ export async function GET(request: Request) {
           </div>
           <div style="padding:40px 32px;background:#ffffff;border:1px solid #E4E4E4;">
             <h1 style="font-size:22px;color:#0D0D0D;margin:0 0 16px;font-family:Georgia,serif;">Your trial ends tomorrow</h1>
-            <p style="font-size:15px;color:#64748B;margin:0 0 28px;font-family:sans-serif;">Your 14-day trial ends tomorrow. To keep access, go to thetideline.co/pricing.</p>
+            <p style="font-size:15px;color:#64748B;margin:0 0 28px;font-family:sans-serif;">Your 7-day trial ends tomorrow. To keep access, go to thetideline.co/pricing.</p>
             <a href="https://www.thetideline.co/pricing" style="display:inline-block;padding:13px 28px;background:#0E7C86;color:#ffffff;font-size:14px;font-weight:500;text-decoration:none;font-family:sans-serif;border-radius:6px;">Continue access</a>
           </div>
         </div>`

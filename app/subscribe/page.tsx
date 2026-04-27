@@ -156,7 +156,7 @@ function CheckoutForm() {
       </button>
 
       <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, fontFamily: SANS, lineHeight: 1.6 }}>
-        Your 14-day free trial starts today. You won&apos;t be charged until it ends. Cancel anytime.
+        Your 7-day free trial starts today. You won&apos;t be charged until it ends. Cancel anytime.
       </p>
     </form>
   );
@@ -193,7 +193,7 @@ export default function SubscribePage() {
             <span style={{ fontSize: 15, fontWeight: 700, color: NAVY, fontFamily: SERIF }}>Tideline Professional</span>
             <span style={{ fontSize: 15, fontWeight: 700, color: NAVY, fontFamily: SANS }}>£25<span style={{ fontSize: 13, fontWeight: 400, color: MUTED }}>/month</span></span>
           </div>
-          <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS }}>14-day free trial included</div>
+          <div style={{ fontSize: 13, color: MUTED, fontFamily: SANS }}>7-day free trial included</div>
         </div>
 
         {/* Stripe Elements */}

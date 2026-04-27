@@ -249,7 +249,7 @@ export default function StartPage() {
                 {submitting ? "Setting up your dashboard..." : "Start my free trial →"}
               </button>
               <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, fontFamily: SANS, lineHeight: 1.6 }}>
-                14 days free. No card required. If Tideline doesn't change how you start your day, unsubscribe. No questions, no friction.
+                7 days free. No card required. If Tideline doesn't change how you start your day, unsubscribe. No questions, no friction.
               </p>
             </form>
             <button onClick={() => setStep("topics")} style={{ background: "none", border: "none", color: MUTED, fontSize: 13, cursor: "pointer", fontFamily: SANS, textDecoration: "underline", marginTop: 20, padding: 0 }}>← Back</button>
