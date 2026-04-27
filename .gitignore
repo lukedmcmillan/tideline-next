@@ -58,3 +58,9 @@ __pycache__/
 
 # Sentry Config File
 .env.sentry-build-plugin
+# Windows / Office temp files
+~$*
+*.docx
+rustup-init.exe
+tmp-*.html
+
