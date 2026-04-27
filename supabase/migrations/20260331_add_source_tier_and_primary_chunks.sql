@@ -5,8 +5,8 @@ alter table stories add column if not exists issuing_body text;
 alter table stories add column if not exists document_type text;
 alter table stories add column if not exists source_url text;
 
--- Primary source chunks: embeddings for RAG over governing body documents
-create table primary_source_chunks (
+-- Story chunks: Jina 768-dim embeddings for RAG over feed stories (secondary sources)
+create table story_chunks (
   id uuid primary key default gen_random_uuid(),
   story_id uuid references stories(id) on delete cascade,
   chunk_text text not null,
@@ -19,11 +19,11 @@ create table primary_source_chunks (
   created_at timestamptz default now()
 );
 
-create index on primary_source_chunks
+create index on story_chunks
   using ivfflat (embedding vector_cosine_ops);
 
-alter table primary_source_chunks enable row level security;
+alter table story_chunks enable row level security;
 create policy "Authenticated users can read chunks"
-  on primary_source_chunks for select
+  on story_chunks for select
   to authenticated
   using (true);

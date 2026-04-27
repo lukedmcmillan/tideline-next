@@ -272,15 +272,87 @@ export async function GET(request: Request) {
     failed.length > 0 ? failed.map((f) => `${f.title}: ${f.error}`).join("; ") : null
   );
 
+  // Embed new stories (secondary sources) in the same cron run
+  const storyResult = await embedNewStories();
+
   return NextResponse.json({
     documents_processed: results.length,
     documents_succeeded: succeeded.length,
     documents_failed: failed.length,
     chunks_created: totalChunks,
+    stories_embedded: storyResult.embedded,
+    stories_failed: storyResult.failed,
     duration_ms: Date.now() - startTime,
     failed: failed.length > 0 ? failed.map((f) => ({ title: f.title, error: f.error })) : undefined,
   });
 }
+
+// ─── Story embedding (secondary sources) ────────────────────────────────────
+
+const STORIES_PER_RUN = 100;
+
+async function embedNewStories(): Promise<{ embedded: number; failed: number }> {
+  // Fetch recent stories with usable text
+  const { data: stories, error: fetchError } = await supabase
+    .from("stories")
+    .select("id, title, source_name, published_at, link, short_summary, description")
+    .not("short_summary", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(STORIES_PER_RUN + 50);
+
+  if (fetchError || !stories || stories.length === 0) return { embedded: 0, failed: 0 };
+
+  // Resume: skip stories already in story_chunks
+  const ids = stories.map((s) => s.id);
+  const { data: existing } = await supabase
+    .from("story_chunks")
+    .select("story_id")
+    .in("story_id", ids);
+
+  const done = new Set((existing || []).map((c) => c.story_id));
+  const toEmbed = stories.filter((s) => !done.has(s.id)).slice(0, STORIES_PER_RUN);
+
+  if (toEmbed.length === 0) return { embedded: 0, failed: 0 };
+
+  let embedded = 0;
+  let failed = 0;
+
+  for (let i = 0; i < toEmbed.length; i += EMBED_BATCH_SIZE) {
+    const batch = toEmbed.slice(i, i + EMBED_BATCH_SIZE);
+    const texts = batch.map((s) => `${s.title}. ${s.short_summary || s.description || ""}`.trim());
+
+    let embeddings: number[][];
+    try {
+      embeddings = await embedBatch(texts);
+    } catch {
+      failed += batch.length;
+      continue;
+    }
+
+    const rows = batch.map((s, j) => ({
+      story_id: s.id,
+      chunk_text: texts[j],
+      chunk_index: 0,
+      embedding: JSON.stringify(embeddings[j]),
+      issuing_body: s.source_name ?? null,
+      document_type: "news",
+      date_issued: s.published_at ? s.published_at.slice(0, 10) : null,
+      source_url: s.link ?? null,
+    }));
+
+    const { error: insertError } = await supabase.from("story_chunks").insert(rows);
+    if (insertError) {
+      failed += batch.length;
+      continue;
+    }
+
+    embedded += batch.length;
+  }
+
+  return { embedded, failed };
+}
+
+// ─── Logging ─────────────────────────────────────────────────────────────────
 
 async function logRun(docsProcessed: number, chunksCreated: number, failedCount: number, errorText: string | null) {
   await supabase.from("cron_log").insert({

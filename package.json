@@ -10,7 +10,8 @@
     "seed:events": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-tracker-events.ts",
     "seed:alerts": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-alert-preferences.ts",
     "backfill:multipliers": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-multipliers.ts",
-    "backfill:controversy": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-controversy.ts"
+    "backfill:controversy": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-controversy.ts",
+    "embeddings:stories": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/embed-stories.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.69",

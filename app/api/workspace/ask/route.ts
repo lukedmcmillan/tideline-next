@@ -42,7 +42,7 @@ interface DocChunkMatch {
   similarity: number;
 }
 
-interface PrimaryChunkMatch {
+interface StoryChunkMatch {
   chunk_text: string;
   issuing_body: string | null;
   document_type: string | null;
@@ -72,25 +72,25 @@ interface Source {
 async function searchBothCorpora(
   embeddingJson: string,
   docThreshold: number,
-  primaryThreshold: number,
+  storyThreshold: number,
   docCount: number,
-  primaryCount: number
-): Promise<{ docChunks: DocChunkMatch[]; primaryChunks: PrimaryChunkMatch[] }> {
-  const [docResult, primaryResult] = await Promise.all([
+  storyCount: number
+): Promise<{ docChunks: DocChunkMatch[]; storyChunks: StoryChunkMatch[] }> {
+  const [docResult, storyResult] = await Promise.all([
     supabase.rpc("match_document_chunks", {
       query_embedding: embeddingJson,
       match_threshold: docThreshold,
       match_count: docCount,
     }),
-    supabase.rpc("match_primary_chunks", {
+    supabase.rpc("match_story_chunks", {
       query_embedding: embeddingJson,
-      match_threshold: primaryThreshold,
-      match_count: primaryCount,
+      match_threshold: storyThreshold,
+      match_count: storyCount,
     }),
   ]);
   return {
     docChunks: docResult.data || [],
-    primaryChunks: primaryResult.data || [],
+    storyChunks: storyResult.data || [],
   };
 }
 
@@ -179,26 +179,26 @@ export async function POST(req: NextRequest) {
 
   // Combine all results
   const allDocChunks: DocChunkMatch[] = [];
-  const allPrimaryChunks: PrimaryChunkMatch[] = [];
+  const allStoryChunks: StoryChunkMatch[] = [];
   for (const result of searchResults) {
     allDocChunks.push(...result.docChunks);
-    allPrimaryChunks.push(...result.primaryChunks);
+    allStoryChunks.push(...result.storyChunks);
   }
 
   const dedupedDocChunks = deduplicateChunks(allDocChunks);
-  const dedupedPrimaryChunks = deduplicateChunks(allPrimaryChunks);
+  const dedupedStoryChunks = deduplicateChunks(allStoryChunks);
 
   console.log("[workspace/ask] Search results:", {
     strategies: searchResults.length,
     rawDoc: allDocChunks.length,
-    rawPrimary: allPrimaryChunks.length,
+    rawStory: allStoryChunks.length,
     dedupedDoc: dedupedDocChunks.length,
-    dedupedPrimary: dedupedPrimaryChunks.length,
+    dedupedStory: dedupedStoryChunks.length,
   });
 
   // 4. Text search fallback if semantic search found nothing
-  let textSearchChunks: PrimaryChunkMatch[] = [];
-  if (dedupedDocChunks.length === 0 && dedupedPrimaryChunks.length === 0) {
+  let textSearchChunks: StoryChunkMatch[] = [];
+  if (dedupedDocChunks.length === 0 && dedupedStoryChunks.length === 0) {
     const keywords = extractKeywords(question);
     if (keywords.length > 0) {
       console.log("[workspace/ask] Falling back to text search:", keywords);
@@ -257,7 +257,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  for (const chunk of [...dedupedPrimaryChunks, ...textSearchChunks]) {
+  for (const chunk of [...dedupedStoryChunks, ...textSearchChunks]) {
     sources.push({
       document_id: null,
       title: chunk.issuing_body || "Primary source",

@@ -64,6 +64,14 @@ These files were reviewed in April 2026 and left uncached for deliberate reasons
 - Inline styles only in JSX. No Tailwind utility classes.
 - Fonts: DM Sans (body), Georgia (serif headlines), DM Mono (monospace). Google Sans on landing page only.
 
+## RAG Architecture (workspace ask)
+
+- `document_chunks`: Jina 768-dim embeddings of library PDFs (primary sources). Populated by `scripts/embed-documents.ts` (backfill) and `app/api/cron/embed-documents/route.ts` (ongoing). Column: `chunk_text`.
+- `story_chunks`: Jina 768-dim embeddings of feed stories (secondary sources). Populated by `scripts/embed-stories.ts` (backfill) and `app/api/cron/embed-documents/route.ts` (ongoing, bolted on). Column: `chunk_text`.
+- Both tables are queried by `app/api/workspace/ask/route.ts` via `match_document_chunks` and `match_story_chunks` RPCs.
+- All embeddings use Jina `jina-embeddings-v2-base-en` (768 dimensions). Do not introduce a different embedding model or dimension without migrating both tables and both RPCs.
+- `documents.embedding vector(1536)` exists but is not used. Do not write to it or build search paths for it without a scoped plan.
+
 ## CTA Buttons
 
 Never change button labels, `onClick` handlers, or `href` attributes on the landing page or any signup flow without explicit instruction. These are wired to email capture and payment flows. Changing them silently breaks conversion.
