@@ -91,7 +91,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 fontSize: 17, lineHeight: 1.5, color: "#3A4A5C",
                 maxWidth: "48ch", marginBottom: 24,
               }}>
-                Watch entities, read primary sources, score regulatory activity, and receive a personalised brief before 7am.
+                A destination for ocean governance professionals. Track entities, search the document library, build research projects, and receive a personalised brief before 7am.
               </p>
 
               {/* CTAs */}
@@ -123,8 +123,8 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               {/* Trust line */}
               <div style={{
                 display: "flex", alignItems: "center", gap: 14,
-                fontFamily: "'DM Mono',monospace", fontSize: 11,
-                color: "#6B7A8C", letterSpacing: "0.04em",
+                fontFamily: "'DM Sans',sans-serif", fontSize: 11,
+                color: "#6B7A8C",
               }}>
                 <span>No card required</span>
                 <span style={{ color: "#E5E1D8" }}>·</span>
@@ -137,44 +137,6 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             {/* Right: ISA Pulse card */}
             <HeroPulseCard />
 
-          </div>
-        </div>
-      </section>
-
-      {/* ── STATS BAND ───────────────────────────────────────────────────── */}
-      <style>{`
-        @media (max-width: 900px) {
-          .lp-stats-grid { grid-template-columns: repeat(2,1fr) !important; gap: 24px !important; }
-        }
-      `}</style>
-      <section style={{
-        padding: "40px 0",
-        borderTop: "1px solid #E5E1D8", borderBottom: "1px solid #E5E1D8",
-        background: "#F4F2EC",
-      }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <div className="lp-stats-grid" style={{
-            display: "grid", gridTemplateColumns: "repeat(3,1fr)",
-            gap: 32, maxWidth: 880, margin: "0 auto", textAlign: "center",
-          }}>
-            {[
-              { value: "10,000+",                                    label: "primary source documents in the library" },
-              { value: socialProof.entities.toLocaleString("en-GB"), label: "entities you can track"                 },
-              { value: String(socialProof.trackers),                 label: "regulatory pulse domains, scored weekly" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div style={{
-                  fontFamily: "'DM Mono',monospace", fontWeight: 500,
-                  fontSize: "clamp(36px,4vw,56px)", color: "#0B1628",
-                  lineHeight: 1, letterSpacing: "-0.025em", marginBottom: 10,
-                }}>
-                  {stat.value}
-                </div>
-                <div style={{ fontSize: 14, color: "#6B7A8C", lineHeight: 1.4 }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -200,7 +162,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 Every signal, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>one inbox</em>.
               </h3>
               <p style={{ fontSize: 16, lineHeight: 1.55, color: "#3A4A5C", maxWidth: "44ch", marginBottom: 16 }}>
-                Continuous coverage of every story that matters across ocean governance. Tagged to entities and trackers, summarised in the platform, with the source one click away.
+                Continuous coverage from over 100 independent news outlets and primary source publishers. Tagged to entities and trackers, summarised in the platform, with the source one click away.
               </p>
               <a href="/platform/feed" className="lp-sc-link">See the feed {"\u2192"}</a>
             </div>
@@ -277,7 +239,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 Ten domains, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>scored weekly</em>.
               </h3>
               <p style={{ fontSize: 16, lineHeight: 1.55, color: "#3A4A5C", maxWidth: "44ch", marginBottom: 16 }}>
-                A regulatory activity index calibrated against the historical record. Methodology published openly {"\u2014"} including its failure modes.
+                Recognise when something might be coming so you can prepare. A regulatory activity index calibrated against the historical record, with the methodology published openly.
               </p>
               <a href="/methodology" className="lp-sc-link">Read the methodology {"\u2192"}</a>
             </div>
@@ -288,10 +250,10 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             <div className="lp-sc-text-order">
               <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The workspace</div>
               <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(28px,2.8vw,36px)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", marginBottom: 14 }}>
-                Tag the project, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>the platform builds the file</em>.
+                Choose what to follow. The platform <em style={{ fontStyle: "normal", color: "#1D9E75" }}>watches</em>.
               </h3>
               <p style={{ fontSize: 16, lineHeight: 1.55, color: "#3A4A5C", maxWidth: "44ch", marginBottom: 16 }}>
-                Build situation reports, regulatory watches, briefing notes. Tag a project {"\u2014"} primary documents from the library and stories from the feed attach automatically. Ask Tideline questions of your library, rolling out Q3 2026.
+                Pick the entities, regulators, or companies you care about. Whenever they appear in the press, in a document, or in a regulatory filing, that information attaches itself to your active projects automatically.
               </p>
               <a href="#" className="lp-sc-link">Tour the workspace {"\u2192"}</a>
             </div>
@@ -402,9 +364,10 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           {/* Close line */}
           <div style={{ textAlign: "center", marginTop: 48, maxWidth: "56ch", marginLeft: "auto", marginRight: "auto" }}>
             <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: "clamp(20px,2.2vw,26px)", color: "#0B1628", lineHeight: 1.35, letterSpacing: "-0.015em" }}>
-              Less than <em style={{ fontStyle: "normal", color: "#1D9E75" }}>&pound;25 a week</em>. Less than a single billable hour. The week you actually want.
+              <div>Less than <em style={{ fontStyle: "normal", color: "#1D9E75" }}>&pound;25 a week</em>.</div>
+              <div>Less than a single billable hour.</div>
             </div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#6B7A8C", letterSpacing: "0.06em", marginTop: 12 }}>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#6B7A8C", marginTop: 12 }}>
               7-day free trial · No card required · 47 founding spots remaining
             </div>
           </div>
@@ -461,7 +424,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                   Every entity, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>in one place</em>.
                 </h4>
                 <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.55, maxWidth: "38ch" }}>
-                  928 entities across companies, regulators, contractors, and financial institutions. Star the ones that matter.
+                  928 entities across companies, regulators, contractors, and financial institutions. Star the ones that matter. Don&apos;t see an entity you&apos;re looking for? Email us and we&apos;ll add it.
                 </p>
               </div>
               <div style={{ flex: 1, minHeight: 280, display: "flex", alignItems: "stretch" }}>
@@ -544,18 +507,30 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                       {/* Your entities */}
                       <div style={{ padding: "8px 0", borderTop: "1px solid #E5E1D8" }}>
                         <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 6.5, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Your entities</div>
-                        {[
-                          { dot: "#1D9E75", name: "ACME Shipping", status: "MEPC 83 papers reference fleet emissions." },
-                          { dot: "#C97A1A", name: "Pacific Minerals", status: "Council deferral affects timelines." },
-                        ].map(e => (
-                          <div key={e.name} style={{ display: "flex", gap: 5, marginBottom: 6 }}>
-                            <div style={{ width: 5, height: 5, borderRadius: "50%", background: e.dot, marginTop: 3, flexShrink: 0 }} />
-                            <div>
-                              <div style={{ fontSize: 7.5, fontWeight: 600, color: "#0B1628", marginBottom: 1, fontFamily: "'DM Sans',sans-serif" }}>{e.name}</div>
-                              <div style={{ fontSize: 7, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>{e.status}</div>
+                        {/* ACME Shipping — inline sparkline */}
+                        <div style={{ display: "flex", gap: 5, marginBottom: 6 }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", marginTop: 3, flexShrink: 0 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                              <div style={{ fontSize: 7.5, fontWeight: 600, color: "#0B1628", fontFamily: "'DM Sans',sans-serif" }}>ACME Shipping</div>
+                              <svg width="32" height="11" viewBox="0 0 32 11" style={{ flexShrink: 0 }}>
+                                <path d="M0 9 L5.5 7 L11 5.5 L16 4 L21.5 2.5 L27 1.5 L32 0.5" fill="none" stroke="#1D9E75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
                             </div>
+                            <div style={{ fontSize: 7, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>MEPC 83 papers reference fleet emissions.</div>
                           </div>
-                        ))}
+                        </div>
+                        {/* Pacific Minerals — amber pulse badge */}
+                        <div style={{ display: "flex", gap: 5, marginBottom: 6 }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C97A1A", marginTop: 3, flexShrink: 0 }} />
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                              <div style={{ fontSize: 7.5, fontWeight: 600, color: "#0B1628", fontFamily: "'DM Sans',sans-serif" }}>Pacific Minerals</div>
+                              <span style={{ background: "#FBF3E5", color: "#C97A1A", fontSize: 6, padding: "1px 4px", borderRadius: 99, fontWeight: 600, letterSpacing: "0.03em", flexShrink: 0 }}>↑ 7.2</span>
+                            </div>
+                            <div style={{ fontSize: 7, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>ISA Pulse moved 6.4 → 7.2 overnight.</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -596,17 +571,16 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           </div>
           <div className="lp-segments">
             {[
-              { letter: "E", name: "ESG and blue finance",   track: "Track TNFD, BBNJ, blue bonds, ISA exposure.",        get: "Portfolio intelligence with citable sources." },
-              { letter: "L", name: "Marine lawyers",         track: "Track regulatory changes across IMO, ISA, FAO, OSPAR.", get: "Cited regulatory briefs in minutes." },
-              { letter: "S", name: "Shipping compliance",    track: "Track IMO MEPC, MARPOL, EU MRV, port state.",        get: "Compliance window awareness early." },
-              { letter: "N", name: "Conservation NGOs",      track: "Track 30x30, IUU, MPAs, consultations.",             get: "Replace six tabs and Google Alerts." },
-              { letter: "C", name: "Climate finance",        track: "Track ISA, debt-for-nature, sustainable finance.",   get: "Emerging market signal early." },
+              { name: "ESG and blue finance",   track: "Track TNFD, BBNJ, blue bonds, ISA exposure.",          get: "Portfolio intelligence with citable sources." },
+              { name: "Marine lawyers",         track: "Track regulatory changes across IMO, ISA, FAO, OSPAR.", get: "Cited regulatory briefs in minutes." },
+              { name: "Shipping compliance",    track: "Track IMO MEPC, MARPOL, EU MRV, port state.",          get: "Compliance window awareness early." },
+              { name: "Conservation NGOs",      track: "Track 30x30, IUU, MPAs, consultations.",               get: "Replace six tabs and Google Alerts." },
+              { name: "Climate finance",        track: "Track ISA, debt-for-nature, sustainable finance.",     get: "Emerging market signal early." },
             ].map((seg, i, arr) => (
-              <div key={seg.letter} className="lp-segment" style={{ padding: "28px 22px", borderRight: i < arr.length - 1 ? "1px solid #E5E1D8" : "none" }}>
-                <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 24, color: "#1D9E75", marginBottom: 12, lineHeight: 1 }}>{seg.letter}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#0B1628", marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.01em" }}>{seg.name}</div>
-                <div style={{ fontSize: 12, color: "#3A4A5C", lineHeight: 1.5, marginBottom: 8 }}>{seg.track}</div>
-                <div style={{ fontSize: 12, color: "#6B7A8C", lineHeight: 1.5 }}>{seg.get}</div>
+              <div key={seg.name} className="lp-segment" style={{ padding: "28px 22px", borderRight: i < arr.length - 1 ? "1px solid #E5E1D8" : "none" }}>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 700, fontSize: 20, color: "#0B1628", marginBottom: 10, lineHeight: 1.2, letterSpacing: "-0.01em" }}>{seg.name}</div>
+                <div style={{ fontSize: 13, color: "#3A4A5C", lineHeight: 1.5, marginBottom: 8 }}>{seg.track}</div>
+                <div style={{ fontSize: 13, color: "#6B7A8C", lineHeight: 1.5 }}>{seg.get}</div>
               </div>
             ))}
           </div>
@@ -647,7 +621,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <div style={{ fontSize: 13, color: "#6B7A8C", marginBottom: 24 }}>per month, forever</div>
               <div style={{ borderTop: "1px solid #E5E1D8", marginBottom: 18 }} />
               <ul style={{ listStyle: "none", marginBottom: 24, flexGrow: 1, padding: 0 }}>
-                {["Full platform access", "Personalised brief", "All trackers", "Workspace and library", "All future features included"].map(f => (
+                {["Direct line to the founder. Shape what gets built next.", "Full platform access", "Personalised brief", "All trackers", "Workspace and library", "All future features included"].map(f => (
                   <li key={f} style={{ fontSize: 13, color: "#3A4A5C", padding: "5px 0", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <span style={{ color: "#1D9E75", fontWeight: 700, flexShrink: 0 }}>&#10003;</span>{f}
                   </li>
@@ -741,7 +715,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           >
             Start your 7-day free trial
           </button>
-          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.06em", marginTop: 14 }}>
+          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 14 }}>
             Cancel any time. Your data stays yours.
           </div>
         </div>

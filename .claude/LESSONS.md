@@ -51,6 +51,12 @@
 - **Design token reconciliation across files**: before adding new CSS custom properties, check globals.css for existing names at similar hex values. The handoff used `--bg-warm: #FAFAF7` which matched; `--navy: #0B1628` was spelled correctly but globals had a legacy alias `--navy-deep: #0A1628` with a different value — update the conflicting token, don't add a duplicate.
 - **`text-wrap: balance` TypeScript workaround**: TypeScript strict mode rejects `textWrap: "balance"` as not in `CSSProperties`. Cast as `as never` — it's a known gap between the TS DOM types and browser support. Do not suppress with `@ts-ignore` which is broader.
 
+## Design system rules need user verification before treating as locked
+
+- **"Locked" design rules can be wrong**: the italic-on-accent-word pattern was documented as locked (per README handoff spec and prior sessions) but turned out to be wrong — italics were removed site-wide in a later pass. A rule documented in a spec is not ground truth; it reflects the designer's thinking at the time. Always verify with the user before treating a visual rule as immutable across multiple build sessions.
+- **Desktop vs mobile italic inconsistency**: mobile file had `fontStyle: "italic"` throughout; desktop had already used `fontStyle: "normal"` everywhere. A single replace_all on mobile was sufficient — desktop needed no italic changes. Always grep both files before assuming symmetry.
+- **DM Mono vs DM Sans split**: the rule is clean — DM Mono stays for eyebrow labels (uppercase section labels, UI pills, tracker tags) and goes everywhere else (trust lines, sub-lines, inline body copy). When in doubt: if it reads like body copy to the user, it should be DM Sans.
+
 ## Feature retirement
 
 - **Remove feature code AND its dead data flows**: when removing a UI feature (Related Stories), also remove the state variables, API fetch calls, type interfaces, and Promise.all entries that existed solely to feed it. Leaving dead fetches wastes bandwidth on every page load. In the IUU tracker, `Promise.all` went from 4 fetches to 3 after removing the stories fetch.

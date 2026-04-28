@@ -278,6 +278,24 @@ Priority order:
 8. **ClientEarth** (clientearth.org) — No RSS; major ocean litigation NGO
 9. **MSC** (msc.org) — No RSS; Marine Stewardship Council sustainability certification
 
+## Landing page — current state (2026-04-28)
+- Mobile landing rebuilt from Claude Design handoff bundle (LandingClientMobile.tsx, ~1,550 lines) ✓
+- Desktop/mobile split via CSS mob-show-block/mob-hide — SSR-safe, zero CLS ✓
+- Stats band removed from both desktop and mobile (three numbers covered by inline copy) ✓
+- Site-wide copy + typography pass complete:
+  - All teal accent em tags changed from fontStyle: "italic" → "normal" on mobile ✓ (desktop was already normal)
+  - DM Mono → DM Sans for trust lines, sub-lines, inline copy (eyebrow labels still DM Mono) ✓
+  - Hero sub-line: "A destination for ocean governance professionals..." ✓
+  - Feed copy: "Continuous coverage from over 100 independent news outlets..." ✓
+  - Pulse copy: "Recognise when something might be coming..." ✓
+  - Workspace H2/copy: "Choose what to follow. The platform watches." ✓
+  - Comparison closing: two-line split (desktop + mobile) ✓
+  - Built-for: letter glyphs removed, sector name as bold heading ✓
+  - Directory sub-copy: email prompt appended ✓
+  - Brief mockup: amber badge + inline sparkline + ISA Pulse delta enrichment ✓
+  - Founding member pricing: "Direct line to the founder..." as first feature ✓
+- Next: responsive QA at 360/390/414/430px and 1200/1440px
+
 ## Known issues / debt
 - Firecrawl MCP not connecting on Windows — use Jina fallback
 - community-documents POST bug fix pending push

@@ -377,7 +377,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           Ocean intelligence · Live
         </div>
 
-        {/* H1: 38px Plus Jakarta 800, teal italic accent, no trailing period */}
+        {/* H1: 38px Plus Jakarta 800, teal accent (colour only, no italic), no trailing period */}
         {/* [BUG-FIX 9] Period removed from "ocean governance" */}
         <h1 style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -390,7 +390,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           margin: "0 0 12px",
         }}>
           The platform of record for{" "}
-          <em style={{ fontStyle: "italic", color: "#1D9E75" }}>ocean governance</em>
+          <em style={{ fontStyle: "normal", color: "#1D9E75" }}>ocean governance</em>
         </h1>
 
         {/* Sub: 16px DM Sans, max-width 32ch */}
@@ -402,7 +402,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           maxWidth: "32ch",
           margin: "0 0 16px",
         }}>
-          Watch entities, read primary sources, score regulatory activity, and receive a personalised brief before 7am.
+          A destination for ocean governance professionals. Track entities, search the document library, build research projects, and receive a personalised brief before 7am.
         </p>
 
         {/* Primary CTA: full-width, 52px min-height, 10px radius */}
@@ -450,7 +450,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           See the platform →
         </a>
 
-        {/* Trust line: DM Mono 11px, flex-wrap, amber scarcity */}
+        {/* Trust line: DM Sans 11px, flex-wrap, amber scarcity */}
         {/* [BUG-FIX 10] Founding spots weight bumped to 600 for legibility */}
         <div style={{
           display: "flex",
@@ -458,10 +458,9 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           gap: "6px 10px",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 11,
           color: "#6B7A8C",
-          letterSpacing: "0.04em",
         }}>
           <span>No card required</span>
           <span style={{ color: "#E5E1D8" }}>·</span>
@@ -473,14 +472,13 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       </section>
 
       {/* ── Pricing anchor line ───────────────────────────────────────────── */}
-      {/* DM Mono 12px, centred, amber scarcity link to #pricing           */}
+      {/* DM Sans 12px, centred, amber scarcity link to #pricing           */}
       <div style={{
         textAlign: "center",
         padding: "0 20px 10px",
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'DM Sans', sans-serif",
         fontSize: 12,
         color: "#6B7A8C",
-        letterSpacing: "0.04em",
       }}>
         From £39/month for founding members.{" "}
         <a
@@ -500,7 +498,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         background: "#FFFFFF",
         border: "1px solid #E5E1D8",
         borderRadius: 14,
-        padding: 16,
+        padding: 14,
         boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 12px 32px rgba(11,22,40,0.08)",
       }}>
 
@@ -551,10 +549,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* Score block — vertical stack (score above band text) */}
         <div style={{ marginBottom: 10 }}>
-          {/* Score numeral: DM Mono 72px / 500 / teal / -0.045em / lh 0.9 */}
+          {/* Score numeral: DM Mono 54px / 500 / teal / -0.045em / lh 0.9 */}
           <div style={{
             fontFamily: "'DM Mono', monospace",
-            fontSize: 64,
+            fontSize: 54,
             color: "#1D9E75",
             lineHeight: 0.9,
             fontWeight: 500,
@@ -584,8 +582,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </div>
         </div>
 
-        {/* Sparkline: full-width, 48px tall, teal stroke + gradient fill + terminal halo */}
-        <div style={{ marginBottom: 10, height: 48 }}>
+        {/* Sparkline: full-width, 44px tall, teal stroke + gradient fill + terminal halo */}
+        <div style={{ marginBottom: 10, height: 44 }}>
           <svg
             width="100%"
             height="56"
@@ -699,7 +697,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             margin: "0 0 8px",
             textWrap: "balance" as never,
           }}>
-            Every signal, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>one inbox</em>
+            Every signal, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>one inbox</em>
           </h3>
           <p style={{
             fontFamily: "'DM Sans', sans-serif",
@@ -709,7 +707,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             maxWidth: "38ch",
             margin: "0 0 8px",
           }}>
-            Continuous coverage of every story that matters across ocean governance, sourced from a library of 10,000+ primary source documents. Tagged to entities and trackers, summarised in the platform, with the source one click away.
+            Continuous coverage from over 100 independent news outlets and primary source publishers. Tagged to entities and trackers, summarised in the platform, with the source one click away.
           </p>
           <a
             href="/platform/feed"
@@ -772,10 +770,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             The pulse
           </div>
           <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 8px", textWrap: "balance" as never }}>
-            Ten domains, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>scored weekly</em>
+            Ten domains, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>scored weekly</em>
           </h3>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.5, color: "#3A4A5C", maxWidth: "38ch", margin: "0 0 8px" }}>
-            A regulatory activity index calibrated against the historical record. Methodology published openly, including its failure modes.
+            Recognise when something might be coming so you can prepare. A regulatory activity index calibrated against the historical record, with the methodology published openly.
           </p>
           <a href="#methodology" className="mob-link-ghost" style={{ display: "inline-block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#0B1628", textDecoration: "none", borderBottom: "1px solid #0B1628", paddingBottom: 2, marginBottom: 14, transition: "color 0.15s, border-color 0.15s" }}>
             Read the methodology →
@@ -816,10 +814,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             The workspace
           </div>
           <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 8px", textWrap: "balance" as never }}>
-            Tag the project, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>the platform builds the file</em>
+            Choose what to follow. The platform <em style={{ fontStyle: "normal", color: "#1D9E75" }}>watches</em>.
           </h3>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.5, color: "#3A4A5C", maxWidth: "38ch", margin: "0 0 8px" }}>
-            Build situation reports, regulatory watches, briefing notes. Tag a project. Primary documents from the library and stories from the feed attach automatically.
+            Pick the entities, regulators, or companies you care about. Whenever they appear in the press, in a document, or in a regulatory filing, that information attaches itself to your active projects automatically.
           </p>
           <a href="#" className="mob-link-ghost" style={{ display: "inline-block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#0B1628", textDecoration: "none", borderBottom: "1px solid #0B1628", paddingBottom: 2, marginBottom: 14, transition: "color 0.15s, border-color 0.15s" }}>
             Tour the workspace →
@@ -878,13 +876,13 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           letterSpacing: "-0.015em",
           maxWidth: "34ch",
         }}>
-          Less than <em style={{ fontStyle: "italic", color: "#1D9E75" }}>£25 a week</em>. Less than a single billable hour.
+          <div>Less than <em style={{ fontStyle: "normal", color: "#1D9E75" }}>£25 a week</em>.</div>
+          <div>Less than a single billable hour.</div>
         </div>
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 11,
           color: "#6B7A8C",
-          letterSpacing: "0.06em",
           marginTop: 8,
         }}>
           7-day free trial · No card required
@@ -1004,52 +1002,38 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             margin: 0,
             textWrap: "balance" as never,
           }}>
-            Five sectors, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>one platform</em>
+            Five sectors, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>one platform</em>
           </h2>
         </div>
 
         <div style={{ borderTop: "1px solid #E5E1D8" }}>
           {[
-            { letter: "L", name: "Marine lawyers",         track: "Track regulatory changes across IMO, ISA, FAO, OSPAR.", get: "Cited regulatory briefs in minutes." },
-            { letter: "E", name: "ESG and blue finance",   track: "Track TNFD, BBNJ, blue bonds, ISA exposure.",          get: "Portfolio intelligence with citable sources." },
-            { letter: "S", name: "Shipping compliance",    track: "Track IMO MEPC, MARPOL, EU MRV, port state.",          get: "Compliance window awareness early." },
-            { letter: "N", name: "Conservation NGOs",      track: "Track 30x30, IUU, MPAs, consultations.",               get: "Replace six tabs and Google Alerts." },
-            { letter: "C", name: "Climate finance",        track: "Track ISA, debt-for-nature, sustainable finance.",      get: "Emerging market signal early." },
+            { name: "Marine lawyers",      track: "Track regulatory changes across IMO, ISA, FAO, OSPAR.", get: "Cited regulatory briefs in minutes." },
+            { name: "ESG and blue finance", track: "Track TNFD, BBNJ, blue bonds, ISA exposure.",          get: "Portfolio intelligence with citable sources." },
+            { name: "Shipping compliance",  track: "Track IMO MEPC, MARPOL, EU MRV, port state.",          get: "Compliance window awareness early." },
+            { name: "Conservation NGOs",    track: "Track 30x30, IUU, MPAs, consultations.",               get: "Replace six tabs and Google Alerts." },
+            { name: "Climate finance",      track: "Track ISA, debt-for-nature, sustainable finance.",     get: "Emerging market signal early." },
           ].map((seg) => (
             <div
-              key={seg.letter}
+              key={seg.name}
               style={{
-                padding: "10px 0",
+                padding: "14px 0",
                 borderBottom: "1px solid #E5E1D8",
-                display: "grid",
-                gridTemplateColumns: "28px 1fr",
-                gap: 10,
-                alignItems: "baseline",
               }}
             >
               <div style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 fontWeight: 700,
-                fontSize: 20,
-                color: "#1D9E75",
-                lineHeight: 1,
+                fontSize: 18,
+                color: "#0B1628",
+                marginBottom: 4,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.2,
               }}>
-                {seg.letter}
+                {seg.name}
               </div>
-              <div>
-                <div style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#0B1628",
-                  marginBottom: 3,
-                  lineHeight: 1.3,
-                  letterSpacing: "-0.01em",
-                }}>
-                  {seg.name}
-                </div>
-                <div style={{ fontSize: 12, color: "#3A4A5C", lineHeight: 1.5, marginBottom: 2 }}>{seg.track}</div>
-                <div style={{ fontSize: 12, color: "#6B7A8C", lineHeight: 1.5 }}>{seg.get}</div>
-              </div>
+              <div style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.5, marginBottom: 2 }}>{seg.track}</div>
+              <div style={{ fontSize: 14, color: "#6B7A8C", lineHeight: 1.5 }}>{seg.get}</div>
             </div>
           ))}
         </div>
@@ -1088,10 +1072,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             lineHeight: 1.2,
             margin: "0 0 6px",
           }}>
-            Every entity, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>in one place</em>
+            Every entity, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>in one place</em>
           </h4>
           <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.5, margin: "0 0 12px" }}>
-            928 entities across companies, regulators, contractors, and financial institutions. Star the ones that matter.
+            928 entities across companies, regulators, contractors, and financial institutions. Star the ones that matter. Don&apos;t see an entity you&apos;re looking for? Email us and we&apos;ll add it.
           </p>
           {/* Directory mini */}
           <div style={{ background: "#FAFAF7", border: "1px solid #E5E1D8", borderRadius: 10, padding: 12 }}>
@@ -1159,7 +1143,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             lineHeight: 1.2,
             margin: "0 0 6px",
           }}>
-            Personalised, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>before 7am</em>
+            Personalised, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>before 7am</em>
           </h4>
           <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.5, margin: "0 0 14px" }}>
             Every weekday morning, only the entities and domains you track. Sourced from the feed, scored against the trackers, quality-checked before it lands.
@@ -1191,18 +1175,30 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                   </div>
                   <div style={{ padding: "7px 0", borderTop: "1px solid #E5E1D8" }}>
                     <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 6, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 5, textTransform: "uppercase" }}>Your entities</div>
-                    {[
-                      { dot: "#1D9E75", name: "ACME Shipping",    status: "MEPC 83 papers reference fleet emissions." },
-                      { dot: "#C97A1A", name: "Pacific Minerals", status: "Council deferral affects timelines."       },
-                    ].map((e) => (
-                      <div key={e.name} style={{ display: "flex", gap: 5, marginBottom: 5 }}>
-                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: e.dot, marginTop: 2, flexShrink: 0 }} />
-                        <div>
-                          <div style={{ fontSize: 7, fontWeight: 600, color: "#0B1628", marginBottom: 1, fontFamily: "'DM Sans', sans-serif" }}>{e.name}</div>
-                          <div style={{ fontSize: 6.5, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans', sans-serif" }}>{e.status}</div>
-                        </div>
+                    {/* ACME Shipping — inline sparkline */}
+                  <div style={{ display: "flex", gap: 5, marginBottom: 5 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", marginTop: 2, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                        <div style={{ fontSize: 7, fontWeight: 600, color: "#0B1628", fontFamily: "'DM Sans', sans-serif" }}>ACME Shipping</div>
+                        <svg width="30" height="10" viewBox="0 0 30 10" style={{ flexShrink: 0 }}>
+                          <path d="M0 8 L5 6.5 L10 5 L15 3.5 L20 2.5 L25 1.5 L30 0.5" fill="none" stroke="#1D9E75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
-                    ))}
+                      <div style={{ fontSize: 6.5, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans', sans-serif" }}>MEPC 83 papers reference fleet emissions.</div>
+                    </div>
+                  </div>
+                  {/* Pacific Minerals — amber pulse badge */}
+                  <div style={{ display: "flex", gap: 5, marginBottom: 5 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C97A1A", marginTop: 2, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                        <div style={{ fontSize: 7, fontWeight: 600, color: "#0B1628", fontFamily: "'DM Sans', sans-serif" }}>Pacific Minerals</div>
+                        <span style={{ background: "#FBF3E5", color: "#C97A1A", fontSize: 5.5, padding: "1px 4px", borderRadius: 99, fontWeight: 600, letterSpacing: "0.03em", flexShrink: 0 }}>↑ 7.2</span>
+                      </div>
+                      <div style={{ fontSize: 6.5, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans', sans-serif" }}>ISA Pulse moved 6.4 → 7.2 overnight.</div>
+                    </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -1255,7 +1251,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               lineHeight: 1.2,
               margin: "0 0 8px",
             }}>
-              One founder. <em style={{ fontStyle: "italic", color: "#1D9E75" }}>No shortcuts</em>.
+              One founder. <em style={{ fontStyle: "normal", color: "#1D9E75" }}>No shortcuts</em>.
             </h3>
             <p style={{ fontSize: 14, lineHeight: 1.55, color: "#3A4A5C", margin: "0 0 10px" }}>
               Tideline is built by Luke McMillan, a sole founder with a decade in ocean policy. Every line of code, every scraper, every editorial decision passes through one set of hands. The methodology is published openly because the person responsible for it answers for it. Tideline was built from interviews with 32 ocean governance professionals across legal, ESG, shipping compliance, and conservation — before a single line of code was written.
@@ -1303,7 +1299,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             color: "#0B1628",
             margin: 0,
           }}>
-            One platform. <em style={{ fontStyle: "italic", color: "#1D9E75" }}>No tiers</em>.
+            One platform. <em style={{ fontStyle: "normal", color: "#1D9E75" }}>No tiers</em>.
           </h2>
         </div>
 
@@ -1314,7 +1310,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               sub: "Locked for life",
               price: "£39",
               per: "per month, forever",
-              features: ["Full platform access", "Personalised brief", "All trackers", "Workspace and library", "All future features included"],
+              features: ["Direct line to the founder. Shape what gets built next.", "Full platform access", "Personalised brief", "All trackers", "Workspace and library", "All future features included"],
               cta: "Start your 7-day free trial",
               featured: true,
               badge: "47 of 50 left",
@@ -1422,7 +1418,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           margin: "0 0 10px",
           textWrap: "balance" as never,
         }}>
-          Start <em style={{ fontStyle: "italic", color: "#1D9E75" }}>the trial</em>.
+          Start <em style={{ fontStyle: "normal", color: "#1D9E75" }}>the trial</em>.
         </h2>
         <p style={{
           fontSize: 15,
@@ -1453,10 +1449,9 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           Start your 7-day free trial
         </button>
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 11,
           color: "rgba(255,255,255,0.4)",
-          letterSpacing: "0.06em",
         }}>
           Cancel any time. Your data stays yours.
         </div>
