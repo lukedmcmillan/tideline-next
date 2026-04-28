@@ -1,0 +1,292 @@
+/* =============================================================
+   Tideline — Colors & Type
+   Source of truth: app/globals.css + landing inline styles +
+   MESSAGING_HOUSE.md + TIDELINE-CONTEXT.md (tideline-next repo).
+   ============================================================= */
+
+/* Plus Jakarta Sans — local brand font files (variable). */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* DM Sans + DM Mono — Google Fonts (no brand files supplied). */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300..700;1,300..700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+:root {
+  /* ---------- TYPOGRAPHY ---------- */
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'DM Mono', ui-monospace, monospace;
+
+  /* ---------- CORE PALETTE (locked) ---------- */
+  --navy:         #0B1628; /* primary ink, dark surfaces, hero / nav backgrounds */
+  --navy-deep:    #0A1628; /* legacy alias used in messaging house */
+  --navy-elev:    #0D1E35; /* dark card surface */
+  --navy-divider: #1A2C45; /* dark mode divider */
+  --navy-hover:   #19243A; /* navy CTA hover */
+
+  --teal:         #1D9E75; /* primary accent — CTAs, live, confirmed data */
+  --teal-hover:   #178a65;
+  --teal-soft:    #E6F4EF; /* dashboard light token */
+  --teal-bg:      #E8F4EE; /* outline-pill background on warm bg */
+  --teal-fade:    rgba(29, 158, 117, 0.08);
+  --teal-border:  rgba(29, 158, 117, 0.20);
+
+  --amber:        #C97A1A; /* warnings, scarcity, founding-spots, secondary alerts */
+  --amber-bright: #EF9F27; /* dashboard light token */
+  --amber-soft:   #FBF3E5;
+  --amber-soft-2: #FDF2DF; /* dashboard light token */
+  --amber-border: #E8C896;
+
+  --red:          #E24B4A; /* critical alerts only (treaty alert, paywall) */
+  --red-soft:     #FCEAEA;
+
+  /* ---------- WARM LIGHT (landing page) ---------- */
+  --bg-warm:        #FAFAF7; /* page background */
+  --bg-warm-deep:   #F4F2EC; /* section band, "without Tideline" cards */
+  --surface:        #FFFFFF;
+  --rule:           #E5E1D8; /* hairline border on warm surfaces */
+  --rule-soft:      #EDEAE3; /* internal divider on warm surfaces */
+
+  /* ---------- COOL LIGHT (dashboard /platform) ---------- */
+  --light-bg:             #F7F9FB;
+  --light-surface:        #FFFFFF;
+  --light-surface-alt:    #F2F5F8;
+  --light-border:         #E3E8EF;
+  --light-border-strong:  #D0D7E2;
+
+  /* ---------- TEXT ---------- */
+  --text-primary: #0B1628; /* on light */
+  --text-body:    #3A4A5C;
+  --text-muted:   #6B7A8C;
+  --text-dim:     #9AA8B8;
+  --text-faint:   #8BA0BC; /* dashboard light */
+
+  /* On dark navy */
+  --text-on-dark:        #FFFFFF;
+  --text-on-dark-soft:   rgba(255,255,255,0.85);
+  --text-on-dark-muted:  rgba(255,255,255,0.70);
+  --text-on-dark-dim:    rgba(255,255,255,0.45);
+
+  /* ---------- ELEVATION ---------- */
+  --shadow-card:  0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05);
+  --shadow-hero:  0 1px 2px rgba(11,22,40,0.04), 0 12px 32px rgba(11,22,40,0.08);
+  --shadow-pop:   0 12px 36px rgba(11,22,40,0.12);
+
+  /* ---------- RADII ---------- */
+  --radius-xs: 4px;   /* buttons in dashboard / workspace */
+  --radius-sm: 6px;   /* small cards, inputs */
+  --radius-md: 8px;   /* CTA buttons */
+  --radius-lg: 12px;  /* feed/pulse cards */
+  --radius-xl: 14px;  /* pricing, supporting cards */
+  --radius-pill: 999px;
+
+  /* ---------- SPACING ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 100px;
+
+  /* ---------- TYPE TOKENS ---------- */
+  /* Eyebrow / metadata (DM Mono uppercase letter-spaced) */
+  --eyebrow-size: 11px;
+  --eyebrow-tracking: 0.16em;
+
+  /* Headlines (Plus Jakarta Sans 800) */
+  --h1-size:  clamp(40px, 4vw, 56px);
+  --h1-line:  1.05;
+  --h1-track: -0.025em;
+
+  --h2-size:  clamp(32px, 3.6vw, 44px);
+  --h2-line:  1.05;
+  --h2-track: -0.025em;
+
+  --h3-size:  clamp(28px, 2.8vw, 36px);
+  --h3-line:  1.10;
+  --h3-track: -0.020em;
+
+  --h4-size: 22px;
+  --h4-line: 1.20;
+  --h4-track: -0.015em;
+
+  /* Body (DM Sans) */
+  --body-lg-size: 17px;
+  --body-md-size: 16px;
+  --body-sm-size: 14px;
+  --body-xs-size: 13px;
+  --body-line: 1.55;
+
+  /* Mono / data */
+  --mono-md-size: 14px;
+  --mono-sm-size: 12px;
+  --mono-xs-size: 10px;
+}
+
+/* =============================================================
+   SEMANTIC ELEMENT STYLES
+   ============================================================= */
+
+html, body {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+/* Headlines — Plus Jakarta Sans 800.
+   Pattern: single-colour navy with ONE teal italic accent on the key word.
+   Use <em> on the accent word; em is restyled to non-italic teal here
+   (the codebase uses font-style: normal; color: teal — counter-intuitive
+   but consistent with .tdl-headline-accent below). */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: var(--h1-track);
+  text-wrap: balance;
+}
+h1 { font-size: var(--h1-size); line-height: var(--h1-line); letter-spacing: var(--h1-track); }
+h2 { font-size: var(--h2-size); line-height: var(--h2-line); letter-spacing: var(--h2-track); }
+h3 { font-size: var(--h3-size); line-height: var(--h3-line); letter-spacing: var(--h3-track); }
+h4 { font-size: var(--h4-size); line-height: var(--h4-line); letter-spacing: var(--h4-track); font-weight: 700; }
+
+/* The accent inside a headline. Use as: <em class="tdl-accent">ocean governance</em> */
+.tdl-accent {
+  font-style: italic;
+  color: var(--teal);
+  font-weight: inherit;
+}
+
+/* Eyebrow: DM Mono uppercase tracked */
+.tdl-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--eyebrow-size);
+  color: var(--text-muted);
+  letter-spacing: var(--eyebrow-tracking);
+  text-transform: uppercase;
+}
+.tdl-eyebrow--teal { color: var(--teal); letter-spacing: 0.14em; }
+
+p, .tdl-body {
+  font-family: var(--font-body);
+  font-size: var(--body-md-size);
+  line-height: var(--body-line);
+  color: var(--text-body);
+}
+
+.tdl-body-lg { font-size: var(--body-lg-size); }
+.tdl-body-sm { font-size: var(--body-sm-size); }
+.tdl-body-xs { font-size: var(--body-xs-size); }
+
+.tdl-mono       { font-family: var(--font-mono); }
+.tdl-mono-meta  { font-family: var(--font-mono); font-size: var(--mono-sm-size); color: var(--text-muted); letter-spacing: 0.04em; }
+.tdl-mono-data  { font-family: var(--font-mono); font-weight: 500; color: var(--text-primary); }
+
+/* Brief block — the locked component from globals.css */
+.brief-block {
+  border-left: 3px solid var(--teal);
+  padding-left: 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
+/* Outline pill — the only badge style permitted (except for warnings) */
+.tdl-pill {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--rule);
+  background: var(--bg-warm);
+  color: var(--text-muted);
+}
+.tdl-pill--teal  { color: var(--teal);  background: var(--teal-bg);    border-color: transparent; }
+.tdl-pill--amber { color: var(--amber); background: var(--amber-soft); border-color: var(--amber-border); }
+
+/* Live dot — pulsing teal, "live" only — never decorative */
+.tdl-live-dot {
+  width: 6px; height: 6px;
+  background: var(--teal);
+  border-radius: 50%;
+  display: inline-block;
+  animation: tdl-pulse 2.5s ease-in-out infinite;
+}
+@keyframes tdl-pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: 0.45; transform: scale(0.85); }
+}
+
+/* Primary CTA — navy filled, 8px radius, DM Sans 600 */
+.tdl-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  background: var(--navy);
+  color: white;
+  padding: 13px 22px;
+  font-size: 15px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tdl-btn:hover { background: var(--navy-hover); }
+
+.tdl-btn--ghost {
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 0 2px;
+  border: none;
+  border-bottom: 1px solid var(--text-primary);
+  border-radius: 0;
+}
+.tdl-btn--ghost:hover { color: var(--teal); border-color: var(--teal); }
+
+/* Card surfaces */
+.tdl-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+.tdl-card--hero {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-hero);
+}
+.tdl-card--dark {
+  background: var(--navy-elev);
+  border: 1px solid var(--navy-divider);
+  color: var(--text-on-dark);
+}
