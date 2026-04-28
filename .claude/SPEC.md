@@ -179,6 +179,22 @@ Engineering:
 1. Remove `user_topics` dead code path — `getUserTrackedDomains()` queries a non-existent table, falls back to ALL_SLUGS silently
 2. Fix mojibake in `generateBandCrossingSignals` — live cron writes `â†'` instead of `→`
 
+## Completed this session (2026-04-27, continued)
+**Library document queue investigation + fix ✓**
+- Root cause confirmed: `document_queue` has 9,510 pending + 24 stuck-processing rows. No Vercel cron processes the queue — `scripts/processor-agent.ts` is manual-only. Last processor run was 2026-04-14.
+- Fix: added `--limit=N` flag to `processor-agent.ts` (defaults to Infinity = backwards compat). `--limit` implies loop mode automatically.
+- SQL reset for 24 stuck rows: `UPDATE document_queue SET status = 'pending' WHERE status = 'processing';`
+- Overnight run command: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/processor-agent.ts --limit=15000`
+- Estimated throughput: ~200 items/hour (sequential + 2s delay). Overnight run (~8h) = ~1,600 docs processed, ~930 new library documents.
+- Estimated cost: ~$23 USD for full 9,534-item backlog at Haiku 4.5 pricing.
+- **Bookmarked future task**: Build `app/api/cron/process-document-queue/route.ts`, schedule daily at 4am UTC after embed-documents 3am cron.
+
+**Prompt caching audit ✓**
+- Audited all 28 files with Claude API calls. 21 already cached.
+- Added `cache_control` to `app/lib/ocean-relevance-gate.ts` (highest-volume call: ~890/hr).
+- Documented in `CLAUDE_RULES.md`: velocity.ts, treaty-change, send-brief, generate-brief intentionally left uncached (too short / too low volume to benefit).
+- Note: current system prompts are ~250 tokens — below 1024-token minimum for caching to activate. Markers are in place for future use.
+
 ## Completed this session (2026-04-27)
 **Landing page v5 rebuild — COMPLETE ✓**
 - Full rebuild of `app/LandingClient.tsx` to match approved mockup-v5.html
@@ -188,7 +204,44 @@ Engineering:
 - `styles/landing.css` stripped from 1030 lines to ~52 lines (4 keyframes + reduced-motion + visibility utilities)
 - Key constraints honoured: light editorial palette, 7-day trial everywhere, 3-stat bar, no 4th stat, single-colour navy headlines with teal italic accent
 
-## What's next
+## WHAT WAS COMPLETED (2026-04-27 session)
+
+1. **Prompt caching audit** — Audited all 28 Claude API call sites. Added `cache_control` to `app/lib/ocean-relevance-gate.ts` (highest-volume: ~890 calls/hr). Documented 4 intentionally uncached files in `CLAUDE_RULES.md`. Markers are below 1024-token minimum; in place for future use.
+2. **Library queue investigation + processor fix** — Confirmed `document_queue` has 9,510 pending + 24 stuck rows (no Vercel cron drains it — processor-agent.ts is manual-only). Added `--limit=N` flag to `scripts/processor-agent.ts`. Overnight drain command ready: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/processor-agent.ts --limit=15000`
+3. **SQL reset for stuck rows** (user to run): `UPDATE document_queue SET status = 'pending' WHERE status = 'processing';`
+4. **LESSONS.md updated** — Added 5 new entries covering Supabase REST pagination, manual queue architecture, embed-documents cron window bug, prompt caching thresholds, and caching priority scoring.
+
+## NEW KNOWN ISSUES
+
+- **embed-documents cron window bug** — Only fetches 100 most-recently-created approved docs. Once those are embedded, it silently processes 0 forever. Fix: replace recency cap with `NOT IN (SELECT document_id FROM document_chunks)` pagination.
+- **embed-stories.ts uses short_summary** — Should prefer `description` (RSS original text) where >500 chars, fall back to `full_summary`. Change deferred from this session (interrupted).
+- **document_queue has no Vercel cron** — After overnight run, need to build `app/api/cron/process-document-queue/route.ts` (daily 4am UTC).
+
+## Completed this session (2026-04-28) — Mobile landing rebuild
+
+**Mobile landing page rebuilt from Claude Design handoff bundle — COMPLETE ✓**
+- New file: `app/LandingClientMobile.tsx` (~1,700 lines) — full mobile-first landing page
+- `app/LandingClient.tsx` modified with 3 lines: import + mob-show-block/mob-hide wrappers
+- `app/globals.css` reconciled with design tokens (4 conflicting tokens corrected; 20+ new tokens added)
+- `styles/landing.css` — 2 new keyframes added (tdl-pulse, tdl-slide-down)
+- All 10 documented bug fixes implemented (header collapse, score stacking, mid-CTA stack, stats single-col, not-strip dividers, built-for H2 26px, comparison close margin, pulse labels, H1 period, founding-spots weight)
+- Sections: Promo bar, Header+Drawer, Hero, Pulse Card, Stats, Showcase (Feed/Pulse/Workspace), Value band, Mid-CTA, Not-strip, Built-for, Supporting band (Directory+Brief+iPhone frame), Founder, Pricing (3 cards, amber badge), Final CTA, Footer
+- Comparison section dropped on mobile after smoke test (stacked vertical kills the value); closing line promoted to standalone band
+- Pricing anchor link added after hero trust line
+- Hamburger nav reordered: Platform → Pricing → Built for → Methodology
+- Founder credibility sentence added (32 interviews before code was written)
+- SSR-safe split: CSS mob-hide/mob-show-block at 768px — zero CLS
+
+## NEXT STEP
+
+**Run overnight library backlog drain:**
+1. In Supabase Studio: `UPDATE document_queue SET status = 'pending' WHERE status = 'processing';`
+2. In terminal: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/processor-agent.ts --limit=15000`
+3. Review results next session, then build `process-document-queue` Vercel cron.
+
+---
+
+## What's next (roadmap)
 **Fruit Machine Phase 5 (next session)**
 - `SignalFeed` component with pull-to-refresh gesture
 - After Phase 5: mobile is fully launch-ready
@@ -200,13 +253,15 @@ Engineering:
 - Step 13: Entity picker modal
 
 **Backlog**
-1. Triage all 34 failed RSS sources — Tier 1: FAO, IMO, CITES, IWC, CBD, DSCC
-2. Brief-reply webhook (reply-to-brief → AI answer)
-3. Corporate Stripe pricing tier
-4. Prompt caching on all API calls
-5. ESG/NGO/journalist briefing_type PDF variants
-6. Blue Economy market widget (opt-in, investor segment only)
-7. Mobile app (Expo shell strategy)
+1. Build `app/api/cron/process-document-queue/route.ts` — Vercel cron equivalent of processor-agent.ts. Schedule daily at 4am UTC after embed-documents 3am cron. (Bookmarked 2026-04-27 — defer until overnight processor run results are reviewed)
+2. Fix `embed-documents` cron window bug — will silently process 0 once newest 100 docs are embedded
+3. Update `embed-stories.ts` description-field embedding strategy (deferred, interrupted this session)
+4. Triage all 34 failed RSS sources — Tier 1: FAO, IMO, CITES, IWC, CBD, DSCC
+5. Brief-reply webhook (reply-to-brief → AI answer)
+6. Corporate Stripe pricing tier
+7. ESG/NGO/journalist briefing_type PDF variants
+8. Blue Economy market widget (opt-in, investor segment only)
+9. Mobile app (Expo shell strategy)
 
 ## Known gaps — RSS sources needing Jina scrapers (separate session)
 

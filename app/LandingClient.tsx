@@ -5,6 +5,7 @@ import "@/styles/landing.css";
 import EarlyAccessModal from "@/components/EarlyAccessModal";
 import LandingHeader from "@/components/LandingHeader";
 import HeroPulseCard from "@/components/HeroPulseCard";
+import LandingClientMobile from "@/app/LandingClientMobile";
 
 // Social proof data shape — fetched server-side in page.tsx, passed down as props.
 // Used by the social proof bar (Phase 3). Ignored by all other sections.
@@ -22,6 +23,14 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans','DM Sans',sans-serif", background: "#fff", color: "#202124", WebkitFontSmoothing: "antialiased", lineHeight: 1.5 }}>
+
+      {/* ── MOBILE (≤768px) ─────────────────────────────────────────────── */}
+      <div className="mob-show-block">
+        <LandingClientMobile socialProof={socialProof} />
+      </div>
+
+      {/* ── DESKTOP (>768px) ────────────────────────────────────────────── */}
+      <div className="mob-hide">
       {/* Promo bar */}
       <div style={{
         background: "#0B1628", color: "rgba(255,255,255,0.85)",
@@ -803,6 +812,8 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           </div>
         </div>
       </footer>
+
+      </div>{/* end .mob-hide desktop wrapper */}
 
       {showEarlyAccess && <EarlyAccessModal onClose={() => setShowEarlyAccess(false)} />}
     </div>

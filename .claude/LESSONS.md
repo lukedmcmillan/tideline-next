@@ -41,6 +41,16 @@
 - **Static marketing components ≠ live data mounts**: `HeroPulseCard` is curated content with CSS animations — not a `VelocityScore` mount. Comment makes this clear and prevents future refactor confusion.
 - **Dead code accumulates across phases**: after a major page rebuild, always do a final pass to grep for unused imports, unused state, and unused helper functions. In the v5 rebuild: `roles`, `formatVerifiedDate`, `PulseFallback`, `PulseErrorBoundary`, and 3 dead component imports survived all 8 build phases until a dedicated cleanup step.
 
+## Claude Design handoff workflow
+
+- **Design handoff README is the single source of truth, not the JSX refs**: the JSX files in `design/` are browser prototypes (Babel-standalone, inline styles for fidelity). Don't copy them. Read the README spec precisely — it documents measurements, hex codes, and copy independently of the JSX.
+- **Inline styles conflict with Tailwind instruction**: if a handoff prompt specifies Tailwind utilities but the codebase convention is inline styles, the codebase wins. `CLAUDE_RULES.md` is the tie-breaker. Confirm the pattern before writing a single component.
+- **Circular import from shared interface**: if component A imports from component B and B imports from A, inline the shared type in B rather than creating a third shared file. For a 6-field interface, a third file is over-engineering.
+- **CSS mob-hide/mob-show-block for SSR-safe mobile split**: prefer CSS class toggle at the breakpoint over JS `useEffect`/viewport detection. CSS is applied at parse time — zero CLS on first paint, no hydration gap.
+- **Comparison sections rarely translate to mobile**: side-by-side comparison columns depend on horizontal space for their value proposition. At 390px, stacked columns lose the contrast effect. On mobile, promote the closing value statement to a standalone band rather than keeping the full table.
+- **Design token reconciliation across files**: before adding new CSS custom properties, check globals.css for existing names at similar hex values. The handoff used `--bg-warm: #FAFAF7` which matched; `--navy: #0B1628` was spelled correctly but globals had a legacy alias `--navy-deep: #0A1628` with a different value — update the conflicting token, don't add a duplicate.
+- **`text-wrap: balance` TypeScript workaround**: TypeScript strict mode rejects `textWrap: "balance"` as not in `CSSProperties`. Cast as `as never` — it's a known gap between the TS DOM types and browser support. Do not suppress with `@ts-ignore` which is broader.
+
 ## Feature retirement
 
 - **Remove feature code AND its dead data flows**: when removing a UI feature (Related Stories), also remove the state variables, API fetch calls, type interfaces, and Promise.all entries that existed solely to feed it. Leaving dead fetches wastes bandwidth on every page load. In the IUU tracker, `Promise.all` went from 4 fetches to 3 after removing the stories fetch.
@@ -97,6 +107,17 @@
 - **`last_dashboard_view` should only update on explicit acknowledgment**: updating on every GET request conflates "I looked at the dashboard" with "I read everything up to this point." In v2, add a separate `acknowledged_at` column and only update it when the user takes an action (e.g. dismiss all, mark read).
 - **Two-table topic storage was a silent failure**: `users.topics` (jsonb array) and `user_topics` (separate table) co-existed. Code split across both with no warning: `getUserTrackedDomains()` queried the table (which didn't exist), failed silently, and returned ALL_SLUGS. `new-stories` API read the jsonb column correctly. A seed targeting one was invisible to the other. Lesson: pick one source of truth per concept and enforce it with a grep check in code review.
 - **Live diagnostic scripts over static code reading**: the signals "all quiet" bug was undiagnosable by reading code alone. A 40-line `scripts/diag-signals.mjs` replicated the exact API query server-side, revealed `since = 14 minutes ago` (not 3 hours), and identified the exact filter cutting all rows. Write a diagnostic before guessing.
+
+## Library / Document Pipeline
+
+- **document_queue is a manual-only pipeline**: `scripts/processor-agent.ts` drains the queue (scraper → documents table). No Vercel cron equivalent exists. If the script exits mid-run, items stay stuck in `processing` status — reset with `UPDATE document_queue SET status = 'pending' WHERE status = 'processing'` before re-running.
+- **embed-documents cron has a silent window bug**: fetches 100 most-recently-created approved docs, filters to those without chunks. Once the newest 100 are embedded, it silently processes 0 forever. Fix: use `NOT IN (SELECT document_id FROM document_chunks)` with pagination, not a recency cap.
+- **Supabase REST API returns max 1,000 rows regardless of limit**: Node scripts using `supabase.from(...).select(...).limit(5000)` will never get more than 1,000 rows. Use paginated fetches (`.range(0, 999)`, then `.range(1000, 1999)`, etc.) for full-table diagnostics.
+
+## Prompt Caching
+
+- **1024-token minimum for cache activation**: `cache_control: { type: "ephemeral" }` on a system prompt block below 1024 tokens does nothing — Anthropic ignores it. Add markers anyway as forward-proofing, but don't count on savings until prompts grow. Haiku 4.5 minimum is 2048 tokens.
+- **Call volume × prompt stability = caching priority**: ocean-relevance-gate (~890 calls/hour) with a ~250 token prompt is lower actual savings than a lower-volume route with a 2000+ token stable system prompt. Always multiply volume × prompt size to estimate real savings.
 
 ## Process
 
