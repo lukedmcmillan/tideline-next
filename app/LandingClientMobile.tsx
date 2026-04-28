@@ -672,57 +672,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
       </div>
 
-      {/* 16px breathing room before stats band */}
-      <div style={{ height: 16 }} />
-
-      {/* ── 5. Stats band ─────────────────────────────────────────────────── */}
-      {/* Padding: 32px vertical / 20px sides. #F4F2EC bg. Hairline rules top + bottom. */}
-      {/* [BUG-FIX 4] Single column — desktop 2-col orphaned the third number. */}
-      <section style={{
-        padding: "20px 20px",
-        background: "#F4F2EC",
-        borderTop: "1px solid #E5E1D8",
-        borderBottom: "1px solid #E5E1D8",
-      }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
-          {[
-            { value: "10,000+",                                     label: "primary source documents in the library" },
-            { value: socialProof.entities.toLocaleString("en-GB"),  label: "entities you can track"                  },
-            { value: String(socialProof.trackers),                  label: "regulatory pulse domains, scored weekly"  },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "100px 1fr",
-                gap: 12,
-                alignItems: "baseline",
-              }}
-            >
-              <div style={{
-                fontFamily: "'DM Mono', monospace",
-                fontWeight: 500,
-                fontSize: 30,
-                color: "#0B1628",
-                lineHeight: 1,
-                letterSpacing: "-0.025em",
-              }}>
-                {stat.value}
-              </div>
-              <div style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 13,
-                color: "#6B7A8C",
-                lineHeight: 1.4,
-              }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 6. Showcase ───────────────────────────────────────────────────── */}
+      {/* ── 5. Showcase ───────────────────────────────────────────────────── */}
       {/* Padding: 48px vertical / 20px sides. #FAFAF7 bg. */}
       {/* Three rows: eyebrow → H3 → body → link → visual card */}
       <section id="showcase" style={{ padding: "32px 20px", background: "#FAFAF7" }}>
@@ -759,7 +709,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             maxWidth: "38ch",
             margin: "0 0 8px",
           }}>
-            Continuous coverage of every story that matters across ocean governance. Tagged to entities and trackers, summarised in the platform, with the source one click away.
+            Continuous coverage of every story that matters across ocean governance, sourced from a library of 10,000+ primary source documents. Tagged to entities and trackers, summarised in the platform, with the source one click away.
           </p>
           <a
             href="/platform/feed"
