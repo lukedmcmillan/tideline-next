@@ -350,8 +350,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       `}</style>
 
       {/* ── 3. Hero ───────────────────────────────────────────────────────── */}
-      {/* Padding: 24px top / 20px sides / 36px bottom per spec */}
-      <section style={{ padding: "24px 20px 36px" }}>
+      {/* Padding: 24px top / 20px sides / 24px bottom — tightened */}
+      <section style={{ padding: "20px 20px 20px" }}>
 
         {/* Eyebrow: live dot + "Ocean intelligence · Live" */}
         <div style={{
@@ -363,7 +363,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           display: "inline-flex",
           alignItems: "center",
           gap: 8,
-          marginBottom: 18,
+          marginBottom: 14,
         }}>
           <span style={{
             width: 6,
@@ -386,9 +386,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           lineHeight: 1.05,
           letterSpacing: "-0.025em",
           color: "#0B1628",
-          marginBottom: 16,
           textWrap: "balance" as never,
-          margin: "0 0 16px",
+          margin: "0 0 12px",
         }}>
           The platform of record for{" "}
           <em style={{ fontStyle: "italic", color: "#1D9E75" }}>ocean governance</em>
@@ -401,7 +400,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           lineHeight: 1.55,
           color: "#3A4A5C",
           maxWidth: "32ch",
-          margin: "0 0 22px",
+          margin: "0 0 16px",
         }}>
           Watch entities, read primary sources, score regulatory activity, and receive a personalised brief before 7am.
         </p>
@@ -421,7 +420,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             borderRadius: 10,
             border: "none",
             cursor: "pointer",
-            marginBottom: 14,
+            marginBottom: 10,
             transition: "background 0.15s",
           }}
         >
@@ -444,7 +443,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             borderBottom: "1px solid #0B1628",
             paddingBottom: 2,
             width: "fit-content",
-            margin: "0 auto 18px",
+            margin: "0 auto 10px",
             transition: "color 0.15s, border-color 0.15s",
           }}
         >
@@ -477,7 +476,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* DM Mono 12px, centred, amber scarcity link to #pricing           */}
       <div style={{
         textAlign: "center",
-        padding: "0 20px 20px",
+        padding: "0 20px 10px",
         fontFamily: "'DM Mono', monospace",
         fontSize: 12,
         color: "#6B7A8C",
@@ -501,12 +500,12 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         background: "#FFFFFF",
         border: "1px solid #E5E1D8",
         borderRadius: 14,
-        padding: 20,
+        padding: 16,
         boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 12px 32px rgba(11,22,40,0.08)",
       }}>
 
         {/* Header row: eyebrow + title + multiplier pill */}
-        <div style={{ paddingBottom: 14, borderBottom: "1px solid #E5E1D8", marginBottom: 18 }}>
+        <div style={{ paddingBottom: 10, borderBottom: "1px solid #E5E1D8", marginBottom: 12 }}>
           <div style={{
             fontFamily: "'DM Mono', monospace",
             fontSize: 10,
@@ -551,16 +550,16 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         </div>
 
         {/* Score block — vertical stack (score above band text) */}
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 10 }}>
           {/* Score numeral: DM Mono 72px / 500 / teal / -0.045em / lh 0.9 */}
           <div style={{
             fontFamily: "'DM Mono', monospace",
-            fontSize: 72,
+            fontSize: 64,
             color: "#1D9E75",
             lineHeight: 0.9,
             fontWeight: 500,
             letterSpacing: "-0.045em",
-            marginBottom: 12,
+            marginBottom: 8,
           }}>
             7.2
           </div>
@@ -570,7 +569,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             fontSize: 11,
             color: "#1D9E75",
             letterSpacing: "0.16em",
-            marginBottom: 6,
+            marginBottom: 4,
             textTransform: "uppercase",
           }}>
             Elevated · Active conditions
@@ -585,8 +584,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </div>
         </div>
 
-        {/* Sparkline: full-width, 56px tall, teal stroke + gradient fill + terminal halo */}
-        <div style={{ marginBottom: 16, height: 56 }}>
+        {/* Sparkline: full-width, 48px tall, teal stroke + gradient fill + terminal halo */}
+        <div style={{ marginBottom: 10, height: 48 }}>
           <svg
             width="100%"
             height="56"
@@ -625,11 +624,11 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         <div style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "12px 16px",
-          padding: "14px 0",
+          gap: "8px 14px",
+          padding: "10px 0",
           borderTop: "1px solid #E5E1D8",
           borderBottom: "1px solid #E5E1D8",
-          marginBottom: 14,
+          marginBottom: 10,
         }}>
           {[
             { label: "Volume",   value: "8.2"   },
@@ -673,19 +672,19 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
       </div>
 
-      {/* 36px breathing room before stats band */}
-      <div style={{ height: 36 }} />
+      {/* 16px breathing room before stats band */}
+      <div style={{ height: 16 }} />
 
       {/* ── 5. Stats band ─────────────────────────────────────────────────── */}
       {/* Padding: 32px vertical / 20px sides. #F4F2EC bg. Hairline rules top + bottom. */}
       {/* [BUG-FIX 4] Single column — desktop 2-col orphaned the third number. */}
       <section style={{
-        padding: "32px 20px",
+        padding: "20px 20px",
         background: "#F4F2EC",
         borderTop: "1px solid #E5E1D8",
         borderBottom: "1px solid #E5E1D8",
       }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
           {[
             { value: "10,000+",                                     label: "primary source documents in the library" },
             { value: socialProof.entities.toLocaleString("en-GB"),  label: "entities you can track"                  },
@@ -695,8 +694,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               key={stat.label}
               style={{
                 display: "grid",
-                gridTemplateColumns: "120px 1fr",
-                gap: 16,
+                gridTemplateColumns: "100px 1fr",
+                gap: 12,
                 alignItems: "baseline",
               }}
             >
@@ -726,10 +725,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* ── 6. Showcase ───────────────────────────────────────────────────── */}
       {/* Padding: 48px vertical / 20px sides. #FAFAF7 bg. */}
       {/* Three rows: eyebrow → H3 → body → link → visual card */}
-      <section id="showcase" style={{ padding: "48px 20px", background: "#FAFAF7" }}>
+      <section id="showcase" style={{ padding: "32px 20px", background: "#FAFAF7" }}>
 
         {/* ── Row 1: The Feed ── */}
-        <div style={{ marginBottom: 56 }}>
+        <div style={{ marginBottom: 32 }}>
           <div style={{
             fontFamily: "'DM Mono', monospace",
             fontSize: 11,
@@ -743,22 +742,22 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           <h3 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontWeight: 800,
-            fontSize: 28,
+            fontSize: 26,
             lineHeight: 1.1,
             letterSpacing: "-0.02em",
             color: "#0B1628",
-            margin: "0 0 12px",
+            margin: "0 0 8px",
             textWrap: "balance" as never,
           }}>
             Every signal, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>one inbox</em>
           </h3>
           <p style={{
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: 15,
-            lineHeight: 1.55,
+            fontSize: 14,
+            lineHeight: 1.5,
             color: "#3A4A5C",
             maxWidth: "38ch",
-            margin: "0 0 12px",
+            margin: "0 0 8px",
           }}>
             Continuous coverage of every story that matters across ocean governance. Tagged to entities and trackers, summarised in the platform, with the source one click away.
           </p>
@@ -774,7 +773,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               textDecoration: "none",
               borderBottom: "1px solid #0B1628",
               paddingBottom: 2,
-              marginBottom: 22,
+              marginBottom: 14,
               transition: "color 0.15s, border-color 0.15s",
             }}
           >
@@ -786,15 +785,15 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             border: "1px solid #E5E1D8",
             borderRadius: 12,
             boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)",
-            padding: 16,
+            padding: 12,
           }}>
             <div style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              paddingBottom: 10,
+              paddingBottom: 8,
               borderBottom: "1px solid #E5E1D8",
-              marginBottom: 4,
+              marginBottom: 2,
             }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 14, color: "#0B1628", letterSpacing: "-0.01em" }}>Live feed</div>
               <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>12 min ago</div>
@@ -804,7 +803,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               { tracker: "BBNJ",     entity: "UN Treaty Collection", time: "4h", headline: "BBNJ ratification reaches 34 parties as Pacific bloc confirms support",  source: "UN Treaty Collection · Filing"                   },
               { tracker: "IMO MEPC", entity: "ACME Shipping",        time: "6h", headline: "MEPC 83 opens with revised CII corridor proposals on the table",         source: "IMO Documents · Working paper"                   },
             ].map((item, idx, arr) => (
-              <div key={item.tracker} style={{ padding: "12px 0", borderBottom: idx < arr.length - 1 ? "1px solid #EDEAE3" : "none" }}>
+              <div key={item.tracker} style={{ padding: "9px 0", borderBottom: idx < arr.length - 1 ? "1px solid #EDEAE3" : "none" }}>
                 <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase", color: "#1D9E75", background: "#E8F4EE" }}>{item.tracker}</span>
                   <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6B7A8C", border: "1px solid #E5E1D8", background: "#FAFAF7" }}>{item.entity}</span>
@@ -818,39 +817,39 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         </div>
 
         {/* ── Row 2: The Pulse ── */}
-        <div style={{ marginBottom: 56 }}>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12 }}>
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
             The pulse
           </div>
-          <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 28, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 12px", textWrap: "balance" as never }}>
+          <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 8px", textWrap: "balance" as never }}>
             Ten domains, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>scored weekly</em>
           </h3>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, lineHeight: 1.55, color: "#3A4A5C", maxWidth: "38ch", margin: "0 0 12px" }}>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.5, color: "#3A4A5C", maxWidth: "38ch", margin: "0 0 8px" }}>
             A regulatory activity index calibrated against the historical record. Methodology published openly, including its failure modes.
           </p>
-          <a href="#methodology" className="mob-link-ghost" style={{ display: "inline-block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#0B1628", textDecoration: "none", borderBottom: "1px solid #0B1628", paddingBottom: 2, marginBottom: 22, transition: "color 0.15s, border-color 0.15s" }}>
+          <a href="#methodology" className="mob-link-ghost" style={{ display: "inline-block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#0B1628", textDecoration: "none", borderBottom: "1px solid #0B1628", paddingBottom: 2, marginBottom: 14, transition: "color 0.15s, border-color 0.15s" }}>
             Read the methodology →
           </a>
           {/* PulseMini */}
-          <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)", padding: 18 }}>
-            <div style={{ paddingBottom: 14, borderBottom: "1px solid #E5E1D8", marginBottom: 16 }}>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)", padding: 14 }}>
+            <div style={{ paddingBottom: 10, borderBottom: "1px solid #E5E1D8", marginBottom: 12 }}>
               <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" }}>Updated Monday</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 16, color: "#0B1628", letterSpacing: "-0.01em" }}>BBNJ High Seas Treaty</div>
                 <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", border: "1px solid #E5E1D8", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", background: "#FAFAF7", whiteSpace: "nowrap", flexShrink: 0 }}>0.70x</div>
               </div>
             </div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 56, color: "#1D9E75", lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em", marginBottom: 8 }}>6.4</div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#1D9E75", letterSpacing: "0.14em", marginBottom: 3, textTransform: "uppercase" }}>Watch</div>
-            <div style={{ fontSize: 13, color: "#0B1628", marginBottom: 4 }}>Conditions developing</div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", marginBottom: 14 }}>↑ <span style={{ color: "#1D9E75" }}>+0.6 vs last week</span></div>
-            <svg viewBox="0 0 400 64" preserveAspectRatio="none" style={{ width: "100%", height: 50, display: "block", marginBottom: 14 }}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 48, color: "#1D9E75", lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em", marginBottom: 6 }}>6.4</div>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#1D9E75", letterSpacing: "0.14em", marginBottom: 2, textTransform: "uppercase" }}>Watch</div>
+            <div style={{ fontSize: 13, color: "#0B1628", marginBottom: 3 }}>Conditions developing</div>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", marginBottom: 10 }}>↑ <span style={{ color: "#1D9E75" }}>+0.6 vs last week</span></div>
+            <svg viewBox="0 0 400 64" preserveAspectRatio="none" style={{ width: "100%", height: 40, display: "block", marginBottom: 10 }}>
               <defs><linearGradient id="mob-ps-grad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1D9E75" stopOpacity={0.18} /><stop offset="100%" stopColor="#1D9E75" stopOpacity={0} /></linearGradient></defs>
               <path d="M 0 52 L 50 50 L 100 46 L 150 44 L 200 38 L 250 32 L 300 26 L 350 20 L 400 16 L 400 64 L 0 64 Z" fill="url(#mob-ps-grad)" />
               <path d="M 0 52 L 50 50 L 100 46 L 150 44 L 200 38 L 250 32 L 300 26 L 350 20 L 400 16" fill="none" stroke="#1D9E75" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
               <circle cx={400} cy={16} r={3.5} fill="#1D9E75" />
             </svg>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 14px", padding: "12px 0", borderTop: "1px solid #E5E1D8" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px 12px", padding: "8px 0", borderTop: "1px solid #E5E1D8" }}>
               {[{ l: "Volume", v: "7.4" }, { l: "Recency", v: "8.0" }, { l: "Decision", v: "5.5" }, { l: "Risk", v: "×0.70" }].map(c => (
                 <div key={c.l}>
                   <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.08em", marginBottom: 3, textTransform: "uppercase" }}>{c.l}</div>
@@ -863,16 +862,16 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* ── Row 3: The Workspace ── */}
         <div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12 }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
             The workspace
           </div>
-          <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 28, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 12px", textWrap: "balance" as never }}>
+          <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 8px", textWrap: "balance" as never }}>
             Tag the project, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>the platform builds the file</em>
           </h3>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, lineHeight: 1.55, color: "#3A4A5C", maxWidth: "38ch", margin: "0 0 12px" }}>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.5, color: "#3A4A5C", maxWidth: "38ch", margin: "0 0 8px" }}>
             Build situation reports, regulatory watches, briefing notes. Tag a project. Primary documents from the library and stories from the feed attach automatically.
           </p>
-          <a href="#" className="mob-link-ghost" style={{ display: "inline-block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#0B1628", textDecoration: "none", borderBottom: "1px solid #0B1628", paddingBottom: 2, marginBottom: 22, transition: "color 0.15s, border-color 0.15s" }}>
+          <a href="#" className="mob-link-ghost" style={{ display: "inline-block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#0B1628", textDecoration: "none", borderBottom: "1px solid #0B1628", paddingBottom: 2, marginBottom: 14, transition: "color 0.15s, border-color 0.15s" }}>
             Tour the workspace →
           </a>
           {/* WorkspaceMini */}
@@ -916,7 +915,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* ── 7. Value band (replaces full Comparison on mobile) ───────────── */}
       {/* Closing line lifted from Comparison, stands alone above mid-CTA.  */}
       <div style={{
-        padding: "32px 20px 24px",
+        padding: "20px 20px 14px",
         background: "#FAFAF7",
         borderTop: "1px solid #E5E1D8",
       }}>
@@ -945,10 +944,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* ── 8. Mid-CTA strip ──────────────────────────────────────────────── */}
       {/* Padding: 32/20. Navy panel, 14px radius, 28/22 inner. Vertical stack. */}
       {/* [BUG-FIX 3] Heading + button stack vertically; no desktop 2-col grid */}
-      <section style={{ padding: "0 20px 32px", background: "#FAFAF7" }}>
+      <section style={{ padding: "0 20px 24px", background: "#FAFAF7" }}>
         <div style={{
           background: "#0B1628",
-          padding: "28px 22px",
+          padding: "22px 18px",
           borderRadius: 14,
         }}>
           <div style={{
@@ -958,7 +957,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             lineHeight: 1.2,
             letterSpacing: "-0.015em",
             color: "white",
-            marginBottom: 6,
+            marginBottom: 4,
             textWrap: "balance" as never,
           }}>
             Try it free for 7 days. No card required.
@@ -966,7 +965,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           <div style={{
             fontSize: 13,
             color: "rgba(255,255,255,0.7)",
-            marginBottom: 18,
+            marginBottom: 14,
             lineHeight: 1.5,
           }}>
             Founding member pricing locked at £39/month for life. 47 spots left.
@@ -998,7 +997,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* [BUG-FIX 5] Rows separated by 1px solid #E5E1D8 (was 3 centred paras) */}
       <section style={{
         background: "#F4F2EC",
-        padding: "32px 20px",
+        padding: "20px 20px",
         borderTop: "1px solid #E5E1D8",
         borderBottom: "1px solid #E5E1D8",
       }}>
@@ -1010,7 +1009,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           <div
             key={item.h}
             style={{
-              padding: "14px 0",
+              padding: "10px 0",
               borderBottom: i < arr.length - 1 ? "1px solid #E5E1D8" : "none",
             }}
           >
@@ -1033,15 +1032,15 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* ── 10. Built for ─────────────────────────────────────────────────── */}
       {/* Padding: 48/20. #FAFAF7 bg. H2 at 26px. 5-row table. */}
       {/* [BUG-FIX 6] H2 reduced to 26px to stay ≤2 lines at 390px */}
-      <section id="built-for" style={{ padding: "48px 20px", background: "#FAFAF7" }}>
-        <div style={{ marginBottom: 28 }}>
+      <section id="built-for" style={{ padding: "32px 20px", background: "#FAFAF7" }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{
             fontFamily: "'DM Mono', monospace",
             fontSize: 11,
             color: "#6B7A8C",
             letterSpacing: "0.16em",
             textTransform: "uppercase",
-            marginBottom: 12,
+            marginBottom: 8,
           }}>
             Built for
           </div>
@@ -1070,18 +1069,18 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             <div
               key={seg.letter}
               style={{
-                padding: "20px 0",
+                padding: "10px 0",
                 borderBottom: "1px solid #E5E1D8",
                 display: "grid",
-                gridTemplateColumns: "36px 1fr",
-                gap: 16,
+                gridTemplateColumns: "28px 1fr",
+                gap: 10,
                 alignItems: "baseline",
               }}
             >
               <div style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontWeight: 700,
-                fontSize: 24,
+                fontSize: 20,
                 color: "#1D9E75",
                 lineHeight: 1,
               }}>
@@ -1089,17 +1088,17 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               </div>
               <div>
                 <div style={{
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: 700,
                   color: "#0B1628",
-                  marginBottom: 6,
+                  marginBottom: 3,
                   lineHeight: 1.3,
                   letterSpacing: "-0.01em",
                 }}>
                   {seg.name}
                 </div>
-                <div style={{ fontSize: 13, color: "#3A4A5C", lineHeight: 1.5, marginBottom: 4 }}>{seg.track}</div>
-                <div style={{ fontSize: 13, color: "#6B7A8C", lineHeight: 1.5 }}>{seg.get}</div>
+                <div style={{ fontSize: 12, color: "#3A4A5C", lineHeight: 1.5, marginBottom: 2 }}>{seg.track}</div>
+                <div style={{ fontSize: 12, color: "#6B7A8C", lineHeight: 1.5 }}>{seg.get}</div>
               </div>
             </div>
           ))}
@@ -1108,15 +1107,15 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
       {/* ── 11. Supporting band ───────────────────────────────────────────── */}
       {/* Stacked cards: Directory then Brief. #FAFAF7 bg, 48/20 padding.    */}
-      <section style={{ padding: "48px 20px", background: "#FAFAF7", borderTop: "1px solid #E5E1D8" }}>
+      <section style={{ padding: "32px 20px", background: "#FAFAF7", borderTop: "1px solid #E5E1D8" }}>
 
         {/* Directory card */}
         <div style={{
           background: "#FFFFFF",
           border: "1px solid #E5E1D8",
           borderRadius: 14,
-          padding: 24,
-          marginBottom: 20,
+          padding: 18,
+          marginBottom: 14,
           boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)",
         }}>
           <div style={{
@@ -1137,11 +1136,11 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             marginBottom: 8,
             letterSpacing: "-0.015em",
             lineHeight: 1.2,
-            margin: "0 0 8px",
+            margin: "0 0 6px",
           }}>
             Every entity, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>in one place</em>
           </h4>
-          <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.55, margin: "0 0 16px" }}>
+          <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.5, margin: "0 0 12px" }}>
             928 entities across companies, regulators, contractors, and financial institutions. Star the ones that matter.
           </p>
           {/* Directory mini */}
@@ -1188,7 +1187,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           background: "#FFFFFF",
           border: "1px solid #E5E1D8",
           borderRadius: 14,
-          padding: 24,
+          padding: 18,
           boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)",
         }}>
           <div style={{
@@ -1197,7 +1196,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             color: "#6B7A8C",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
-            marginBottom: 10,
+            marginBottom: 8,
           }}>
             The brief
           </div>
@@ -1206,14 +1205,13 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             fontWeight: 700,
             fontSize: 20,
             color: "#0B1628",
-            marginBottom: 8,
             letterSpacing: "-0.015em",
             lineHeight: 1.2,
-            margin: "0 0 8px",
+            margin: "0 0 6px",
           }}>
             Personalised, <em style={{ fontStyle: "italic", color: "#1D9E75" }}>before 7am</em>
           </h4>
-          <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.55, margin: "0 0 20px" }}>
+          <p style={{ fontSize: 14, color: "#3A4A5C", lineHeight: 1.5, margin: "0 0 14px" }}>
             Every weekday morning, only the entities and domains you track. Sourced from the feed, scored against the trackers, quality-checked before it lands.
           </p>
           {/* iPhone frame — 65% viewport width, centered */}
@@ -1264,7 +1262,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       </section>
 
       {/* ── 12. Founder ───────────────────────────────────────────────────── */}
-      <section style={{ padding: "48px 20px 40px", background: "#FAFAF7", borderTop: "1px solid #E5E1D8" }}>
+      <section style={{ padding: "32px 20px 24px", background: "#FAFAF7", borderTop: "1px solid #E5E1D8" }}>
         <div style={{
           fontFamily: "'DM Mono', monospace",
           fontSize: 11,
@@ -1276,7 +1274,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           Built by
         </div>
         {/* Photo + bio stacked vertically on mobile */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* 80px circle photo placeholder */}
           <div style={{
             width: 80,
@@ -1305,11 +1303,11 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               marginBottom: 12,
               letterSpacing: "-0.015em",
               lineHeight: 1.2,
-              margin: "0 0 12px",
+              margin: "0 0 8px",
             }}>
               One founder. <em style={{ fontStyle: "italic", color: "#1D9E75" }}>No shortcuts</em>.
             </h3>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: "#3A4A5C", margin: "0 0 12px" }}>
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: "#3A4A5C", margin: "0 0 10px" }}>
               Tideline is built by Luke McMillan, a sole founder with a decade in ocean policy. Every line of code, every scraper, every editorial decision passes through one set of hands. The methodology is published openly because the person responsible for it answers for it. Tideline was built from interviews with 32 ocean governance professionals across legal, ESG, shipping compliance, and conservation — before a single line of code was written.
             </p>
             <a
@@ -1334,8 +1332,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
       {/* ── 13. Pricing ───────────────────────────────────────────────────── */}
       {/* Padding: 48/20. #F4F2EC bg. 3 stacked cards. Founding member featured. */}
-      <section id="pricing" style={{ padding: "48px 20px", background: "#F4F2EC" }}>
-        <div style={{ marginBottom: 28 }}>
+      <section id="pricing" style={{ padding: "32px 20px", background: "#F4F2EC" }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{
             fontFamily: "'DM Mono', monospace",
             fontSize: 11,
@@ -1359,7 +1357,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
           {[
             {
               name: "Founding member",
@@ -1396,10 +1394,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                 background: "#FFFFFF",
                 border: tier.featured ? "1px solid #0B1628" : "1px solid #E5E1D8",
                 borderRadius: 14,
-                padding: "24px 22px",
+                padding: "18px 18px",
                 position: "relative",
                 boxShadow: tier.featured ? "0 12px 36px rgba(11,22,40,0.12)" : "0 1px 2px rgba(11,22,40,0.04)",
-                marginTop: tier.featured ? 12 : 0,
+                marginTop: tier.featured ? 8 : 0,
               }}
             >
               {tier.badge && (
@@ -1422,14 +1420,14 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                 </div>
               )}
               <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" }}>{tier.name}</div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: tier.featured ? "#C97A1A" : "#9AA8B8", letterSpacing: "0.1em", marginBottom: 14, textTransform: "uppercase" }}>{tier.sub}</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 18 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: tier.featured ? "#C97A1A" : "#9AA8B8", letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>{tier.sub}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 44, color: "#0B1628", lineHeight: 1, letterSpacing: "-0.035em" }}>{tier.price}</div>
                 <div style={{ fontSize: 13, color: "#6B7A8C" }}>{tier.per}</div>
               </div>
-              <ul style={{ listStyle: "none", marginBottom: 18, padding: 0 }}>
+              <ul style={{ listStyle: "none", marginBottom: 14, padding: 0 }}>
                 {tier.features.map((f) => (
-                  <li key={f} style={{ fontSize: 13, color: "#3A4A5C", padding: "5px 0", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <li key={f} style={{ fontSize: 13, color: "#3A4A5C", padding: "4px 0", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <span style={{ color: "#1D9E75", fontWeight: 700, flexShrink: 0 }}>✓</span>{f}
                   </li>
                 ))}
@@ -1460,7 +1458,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* Different copy from mid-CTA. #0B1628 bg, white button.            */}
       <section style={{
         background: "#0B1628",
-        padding: "56px 20px",
+        padding: "40px 20px",
         textAlign: "center",
         color: "white",
       }}>
@@ -1471,7 +1469,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           color: "white",
           lineHeight: 1.05,
           letterSpacing: "-0.025em",
-          margin: "0 0 14px",
+          margin: "0 0 10px",
           textWrap: "balance" as never,
         }}>
           Start <em style={{ fontStyle: "italic", color: "#1D9E75" }}>the trial</em>.
@@ -1479,7 +1477,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         <p style={{
           fontSize: 15,
           color: "rgba(255,255,255,0.7)",
-          margin: "0 0 28px",
+          margin: "0 0 20px",
           lineHeight: 1.5,
         }}>
           Seven days. Full platform access. No card required.
@@ -1498,7 +1496,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             borderRadius: 10,
             border: "none",
             cursor: "pointer",
-            marginBottom: 14,
+            marginBottom: 10,
             transition: "background 0.15s",
           }}
         >
@@ -1519,10 +1517,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       <footer style={{
         background: "#0B1628",
         color: "rgba(255,255,255,0.7)",
-        padding: "36px 20px 28px",
+        padding: "28px 20px 20px",
       }}>
         {/* Logo + wordmark + eyebrow */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <div style={{
             width: 28,
             height: 28,
@@ -1546,7 +1544,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         </div>
 
         {/* 2×2 link grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px 16px", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px 16px", marginBottom: 18 }}>
           {[
             { h: "Platform", l: ["Feed", "Trackers", "Workspace", "Library"] },
             { h: "Company",  l: ["Methodology", "Pricing", "Founder", "Contact"] },
