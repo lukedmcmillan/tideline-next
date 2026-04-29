@@ -1,5 +1,35 @@
 ﻿# Tideline — Live Project Status
 
+## Last completed: Entity dedup pass (2026-04-29)
+
+Foundation work — completed and verified:
+- mention_count integrity restored (8759 → 758, invariant SUM(mention_count) = COUNT(entity_mentions) holds)
+- Bug 2 fixed in lib/entity-matching.ts:213 (conditional increment, ignoreDuplicates: true)
+- Bug 2 verified by automated test: __tests__/entity-matching.idempotency.test.ts (passing)
+- Bug 3 migration applied: entities.mention_count DEFAULT 0
+- 7 entity merges executed (US three-way, UN, Trump, PLOS, ESA, Drones, Oceana)
+- 7 noise entities deleted (US convenience store giant + 6 off-topic)
+- 5 individual-type rows normalised to person
+- 8 new aliases backfilled (11 already existed from seed loader)
+- entity_review_queue migration applied
+- findOrCreateEntity 5-pass helper installed in lib/entity-matching.ts
+- Legacy lib/entities.ts deleted (orphaned since c351d8c)
+- Vitest test framework installed and configured
+
+Final entity table state: 942 entities, 688 aliases, 758 mentions, 0 'individual' type rows.
+
+Known follow-ups (not blocking):
+- 0 of 942 entities have embeddings — matcher's third semantic pass is dead. NEXT-PRIORITY: generate embeddings for all entities (use embeddings:stories pattern). High leverage — unlocks WTO, Indian Ocean Commission, and ~459 other zero-mention seeded entities.
+- RSS source maintenance from April 20 still unapplied (NOAA parent feed, DG MARE, UK MMO, HELCOM, DFO Canada to add; dead NOAA Fisheries entries to remove). 30-min PR.
+- 21 npm vulnerabilities reported by vitest install — do not run npm audit fix --force, leave alone unless one of the 2 highs is in production code.
+
+Next session priorities (in order):
+1. Generate entity embeddings — scripts/embed-entities.ts following the embed-stories pattern
+2. RSS source maintenance PR
+3. Resume morning brief pipeline (priority 1 from TIDELINE-CONTEXT.md)
+
+---
+
 ## What's built and live
 - Daily brief (89 sources) ✓
 - BBNJ tracker (live data) ✓

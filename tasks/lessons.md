@@ -66,3 +66,27 @@
 ### Entity Dedup — Read git log Before Scoping
 
 - **`git log --stat` against feature files surfaces scripts and audit docs that aren't in the investigation context** — Before the dedup pass, `git log --stat lib/entity-matching.ts` would have revealed 11 scripts and 2 audit documents added in c351d8c that were not visible from the original issue report. Reading the commit log first prevents re-discovering work that already exists and scoping fixes that are already partially done.
+
+### Entity Dedup — Schema Assumptions
+
+- **Schema drift assumptions waste investigation time** — Use `information_schema.columns` or read the migration file before writing queries against tables not recently inspected. Tideline uses semantic naming (`first_seen_at`, `alias_text`) not ORM defaults (`created_at`, `alias`). A column that "should" exist may have a different name or not exist at all.
+
+### Entity Dedup — Markdown and SQL Safety
+
+- **Markdown auto-linking corrupts dotted identifiers** — SQL fragments and code containing `process.env.NEXT_PUBLIC_X`, `ea.alias_text`, `e.id` etc. are mangled by markdown renderers. Always wrap in fenced code blocks when sharing in chat; always paste through a plain-text intermediate before copying out of chat into an editor.
+
+### Entity Dedup — UUID Test Fixtures
+
+- **UUIDs are hex-only** — Postgres silently rejects test fixture IDs like `'00000000-test-0000-0000-entity-idem'` at insert time, causing tests to run against missing data with misleading downstream errors. Always use `00000000-0000-0000-0000-000000000001`-style fixture IDs or `crypto.randomUUID()`.
+
+### Entity Dedup — Vitest Config
+
+- **Vitest needs explicit path alias config** — Next.js `tsconfig.json` paths are not auto-detected by Vitest. Add `vitest.config.ts` with `resolve.alias: { '@': path.resolve(__dirname, './') }` to use `@/` imports in tests. Without this, all `@/lib/...` imports fail at test runtime.
+
+### Entity Dedup — Unapplied Recommendations
+
+- **Check for unapplied recommendations when re-entering a feature area** — Two audit outputs from April 20 (tier1-second-pass.md RSS sources, three-tier matching SQL from cleanup-entities.ts) sat unapplied for 8 days. Drift between "recommendation made" and "recommendation applied" is hidden debt. At the start of any investigation, grep the feature directory for `.md` audit files and check git log for script output that was never acted on.
+
+### Entity Dedup — LLM Write-Path Call Order
+
+- **LLM-written write paths need causal-order review, not just correctness review** — The Bug 2 root cause was `increment_entity_count` being called before the mention insert it was meant to count: narrative order (count it, then record it) rather than causal order (record it, then count if recorded). This is a repeatable LLM failure mode — narrative coherence overrides causal correctness. When reviewing any LLM-written write path that updates a counter, verify the order of calls against the causal dependency, not just whether each call looks individually correct.

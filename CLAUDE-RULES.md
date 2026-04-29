@@ -29,11 +29,15 @@ Any write path that updates a denormalised counter (e.g. `entities.mention_count
 2. Have an idempotency test that calls the write path **twice** with identical input and asserts the counter is incremented exactly **once**. First-call correctness is not sufficient.
 3. Include a verification step that asserts `SUM(counter) = COUNT(source_table)` at the end of any bulk recalculation.
 
+For any write path that updates a denormalised counter, the verification step must include calling the path twice with identical input and asserting the counter is incremented exactly once. First-call correctness is not sufficient.
+
 ## Section 5 — Ad-Hoc Script Accumulation
 
 - If you have already shipped **two or more** ad-hoc scripts for the same class of problem (e.g. `fix-entities.ts`, `cleanup-entities.ts`), the next iteration **must** be a structural fix — not another script.
 - Structural fixes include: a pre-insert dedup helper, a review queue table, an idempotent migration, or a recurring cron. A third ad-hoc script is never the right answer.
 - The `fix-X.ts` pattern is a signal, not a solution. Treat two such scripts as a trigger to design the structural fix.
+
+Exception to ship-ugly: if you have shipped two or more ad-hoc fixes for the same class of problem (fix-X.ts, cleanup-X.ts, debug-X.ts), the next iteration must be a structural fix, not another ad-hoc script. Accumulated fix scripts dated close together is the signature of debt that needs structural treatment.
 
 ## Section 6 — Entity Write Rules
 
