@@ -68,6 +68,12 @@
 - **OCEAN_DEDICATED_SOURCES fast-lane bypass is a double-edged sword**: misconfigured sources in this list skip the keyword filter safety net entirely. Misconfigured fast-lane sources are more dangerous than misconfigured standard sources.
 - **"Built" ≠ "shipped"**: always check `git status` and verify the Vercel deploy SHA matches the latest commit before calling a feature live. A feature in local code that hasn't deployed is not live.
 
+## Entity dedup
+
+- **Unique constraint (name, entity_type) blocks setType-before-delete in merges**: When merging entity A (org) ← entity B (ngo) with `setType='ngo'` on A, attempting to set the type before deleting B causes a constraint violation because A-as-ngo duplicates B. Fix: delete FK-dependent children first, then delete B, then setType on A. Always check for `parent_entity_id` FK children before deleting an entity row.
+- **Truncated UUIDs in specs cause "not found" failures**: The dedup workflow spec used 8-char UUID prefixes (e.g. `a0e62d32`). Always resolve to full UUIDs via a lookup query before running merge scripts. Scripts should fail loudly on "not found" rather than silently skipping.
+- **Entity ID lookup script pattern**: `supabase.from('entities').select('id,name').in('name', [...])` in a one-off tsx file is the fastest way to resolve names to UUIDs before a bulk operation.
+
 ## Entity matching
 
 - **extractEntities vs matchEntitiesToStory**: extractEntities (old) discovered new entities via Claude Haiku and wrote mentions without scores. matchEntitiesToStory (new) matches against seeded taxonomy using 3 passes and writes match_score, match_method, confidence. Never mix — one creates entities, one matches them.

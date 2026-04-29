@@ -232,9 +232,31 @@ Engineering:
 - Founder credibility sentence added (32 interviews before code was written)
 - SSR-safe split: CSS mob-hide/mob-show-block at 768px — zero CLS
 
+## Completed this session (2026-04-29) — Entity dedup pass
+
+**Entity dedup audit — COMPLETE ✓ (commit 03ea317)**
+
+- mention_count integrity restored: 8,759 → 758 (recalc from entity_mentions truth, 488 rows fixed)
+- Bug 2 fixed in `lib/entity-matching.ts`: `increment_entity_count` now only fires when a new mention row was actually inserted (ignoreDuplicates: true + check returned rows > 0)
+- Bug 3 migration: `entities.mention_count` DEFAULT changed from 1 → 0
+- 7 entity merges executed: United States (absorbed U.S. + US), United Nations (absorbed UN), Trump, PLOS ONE, Endangered Species Act, Drones, Oceana (type set to 'ngo'; Oceana US child entity re-pointed to keep)
+- 7 noise entities deleted (ADHD, God Squad, public hospital, QMN Framework x2, TNGSG panel, US convenience store giant)
+- 5 entity_type 'individual' → 'person' normalised (Aaron Longton, Bad Bunny, Jim Skea, Zain Smith, Dr. Phadtaya Poemnamthip)
+- 19 aliases backfilled (IMO, EC, FAO, WTO, BBNJ, ISA, IOTC, IOC, USCG, NOAA etc.)
+- `entity_review_queue` table migration written (2026-04-29 — apply in Supabase Studio)
+- `findOrCreateEntity()` helper added to `lib/entity-matching.ts` (5-pass dedup: exact → alias → normalised-key → trigram > 0.85 → insert)
+- Idempotency test written at `__tests__/entity-matching.idempotency.test.ts` (requires `npm install -D vitest` to run)
+- `lib/entities.ts` deleted (confirmed zero imports)
+- `CLAUDE-RULES.md` created with Sections 4 (counter integrity) and 5 (fix-X.ts anti-pattern)
+- Final state: 942 entities, 0 'individual' type, SUM(mention_count) = 758 = COUNT(entity_mentions) ✓
+
 ## NEXT STEP
 
-**Run overnight library backlog drain:**
+**Apply two pending migrations in Supabase Studio:**
+1. `supabase/migrations/20260428_entity_mention_count_default_zero.sql` — sets DEFAULT 0 on mention_count
+2. `supabase/migrations/20260429_entity_review_queue.sql` — creates entity_review_queue table
+
+**Then run overnight library backlog drain:**
 1. In Supabase Studio: `UPDATE document_queue SET status = 'pending' WHERE status = 'processing';`
 2. In terminal: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/processor-agent.ts --limit=15000`
 3. Review results next session, then build `process-document-queue` Vercel cron.
