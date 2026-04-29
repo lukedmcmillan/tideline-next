@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "npx @dotenvx/dotenvx run -f .env.local -- vitest",
+    "test:run": "npx @dotenvx/dotenvx run -f .env.local -- vitest run",
     "seed:events": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-tracker-events.ts",
     "seed:alerts": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/seed-alert-preferences.ts",
     "backfill:multipliers": "npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-multipliers.ts",
@@ -69,10 +71,12 @@
     "@types/nodemailer": "^7.0.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^4.1.5",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   }
 }

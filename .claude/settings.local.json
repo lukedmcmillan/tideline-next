@@ -141,7 +141,27 @@
       "Bash(git:*)",
       "mcp__claude_ai_Vercel__get_runtime_logs",
       "Bash(rtk git:*)",
-      "Bash(rtk grep:*)"
+      "Bash(rtk grep:*)",
+      "Bash(timeout 20 bash -c 'until curl -sf http://localhost:3000/api/velocity/isa > /dev/null 2>&1; do sleep 1; done')",
+      "Bash(rtk cat:*)",
+      "Bash(rtk curl:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(rtk npm:*)",
+      "Bash(rtk npx:*)",
+      "Bash(node_modules/.bin/dotenvx run:*)",
+      "Bash(rtk read:*)",
+      "Bash(rtk ls:*)",
+      "Bash(python scripts/replace_showcase.py)",
+      "Bash(python scripts/replace_pricing.py)",
+      "Bash(rm scripts/replace_pricing.py)",
+      "Bash(rtk find:*)",
+      "Bash(rtk wc:*)",
+      "Bash(rtk tsc:*)",
+      "Bash(./node_modules/.bin/tsx scripts/_user-onboarding-count.ts)",
+      "Bash(dotenvx run:*)",
+      "Bash(./node_modules/.bin/dotenvx run:*)",
+      "Bash(cmd.exe /c \"npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/merge-entity-duplicates.ts --dry-run\")"
     ]
   }
 }

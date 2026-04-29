@@ -179,7 +179,8 @@ export const authOptions = {
         !!user ||
         trigger === 'update' ||
         token.subscription_status === undefined ||
-        token.subscription_status === null
+        token.subscription_status === null ||
+        token.onboarded_at === undefined
 
       if (shouldRefresh && token.email) {
         try {
@@ -193,6 +194,7 @@ export const authOptions = {
             token.trial_ends_at = u.trial_ends_at ?? null
             token.tier = u.tier ?? 'free'
             token.onboarding_completed = !!u.onboarded_at || u.onboarding_completed || false
+            token.onboarded_at = u.onboarded_at ?? null
             token.role = u.role ?? null
           } else {
             // User not in public.users yet. Set safe defaults so middleware never sees undefined.
@@ -200,6 +202,7 @@ export const authOptions = {
             token.trial_ends_at = token.trial_ends_at ?? null
             token.tier = token.tier ?? 'free'
             token.onboarding_completed = token.onboarding_completed ?? false
+            token.onboarded_at = token.onboarded_at ?? null
             token.role = token.role ?? null
           }
         } catch (err) {
@@ -217,6 +220,7 @@ export const authOptions = {
         session.user.trial_ends_at = token.trial_ends_at
         session.user.tier = token.tier
         session.user.onboarding_completed = token.onboarding_completed
+        session.user.onboarded_at = token.onboarded_at
         session.user.role = token.role
       }
       return session

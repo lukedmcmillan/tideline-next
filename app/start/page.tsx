@@ -145,7 +145,7 @@ export default function StartPage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: MUTED, marginBottom: 8, fontFamily: SANS }}>Your intelligence areas</div>
           <div style={{ fontSize: 13, color: NAVY, fontFamily: SANS, lineHeight: 1.6 }}>{selectedTopicSummary(selTopics)}</div>
         </div>
-        <a href="/platform/feed" style={{ display: "block", padding: "14px", background: BLUE, color: WHITE, fontSize: 15, fontWeight: 700, borderRadius: 3, textDecoration: "none", fontFamily: SANS, letterSpacing: "-0.01em" }}>
+        <a href="/sign-in?callbackUrl=/onboarding" style={{ display: "block", padding: "14px", background: BLUE, color: WHITE, fontSize: 15, fontWeight: 700, borderRadius: 3, textDecoration: "none", fontFamily: SANS, letterSpacing: "-0.01em" }}>
           Open your feed →
         </a>
         <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 20, fontFamily: SANS, lineHeight: 1.6 }}>

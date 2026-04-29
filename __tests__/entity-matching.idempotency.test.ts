@@ -7,12 +7,10 @@
  * This test MUST FAIL on code with Bug 2 (ignoreDuplicates: false + unconditional
  * increment_entity_count) and PASS after the fix.
  *
- * Run after installing vitest:
- *   npm install -D vitest
- *   npx @dotenvx/dotenvx run -f .env.local -- npx vitest run __tests__/entity-matching.idempotency.test.ts
+ * Run:
+ *   npm run test:run -- __tests__/entity-matching.idempotency.test.ts
  */
-
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { matchEntitiesToStory } from "@/lib/entity-matching";
 
@@ -21,22 +19,24 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Test fixtures — cleaned up in afterEach
-const TEST_STORY_ID = "00000000-test-0000-0000-entity-idem";
-const TEST_ENTITY_ID = "00000000-test-0000-0000-entity-test";
+// Valid UUIDs (hex only) for test fixtures
+const TEST_STORY_ID = "00000000-0000-0000-0000-000000000001";
+const TEST_ENTITY_ID = "00000000-0000-0000-0000-000000000002";
 const TEST_ENTITY_NAME = "__test_idem_entity__";
 
 async function seedFixtures() {
-  // Insert a deterministic test entity with a unique name
-  await supabase.from("entities").upsert({
+  // Clean any leftover from previous failed runs
+  await cleanupFixtures();
+
+  const { error: entityErr } = await supabase.from("entities").insert({
     id: TEST_ENTITY_ID,
     name: TEST_ENTITY_NAME,
     entity_type: "organisation",
     mention_count: 0,
   });
+  if (entityErr) throw new Error(`Failed to seed entity: ${entityErr.message}`);
 
-  // Insert a test story whose title contains the entity name (triggers exact match)
-  await supabase.from("stories").upsert({
+  const { error: storyErr } = await supabase.from("stories").insert({
     id: TEST_STORY_ID,
     title: `Report on ${TEST_ENTITY_NAME} activities`,
     short_summary: `Summary mentioning ${TEST_ENTITY_NAME} in context.`,
@@ -45,29 +45,31 @@ async function seedFixtures() {
     topic: "governance",
     fetched_at: new Date().toISOString(),
   });
+  if (storyErr) throw new Error(`Failed to seed story: ${storyErr.message}`);
 }
 
 async function getEntityMentionCount(): Promise<number> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("entities")
     .select("mention_count")
     .eq("id", TEST_ENTITY_ID)
     .single();
+  if (error) throw new Error(`Failed to read mention_count: ${error.message}`);
   return data?.mention_count ?? 0;
 }
 
 async function cleanupFixtures() {
   await supabase.from("entity_mentions").delete().eq("story_id", TEST_STORY_ID);
+  await supabase.from("entity_mentions").delete().eq("entity_id", TEST_ENTITY_ID);
   await supabase.from("stories").delete().eq("id", TEST_STORY_ID);
   await supabase.from("entities").delete().eq("id", TEST_ENTITY_ID);
 }
 
 describe("matchEntitiesToStory — idempotency", () => {
+  beforeEach(seedFixtures);
   afterEach(cleanupFixtures);
 
   it("increments mention_count exactly once when called twice with same story", async () => {
-    await seedFixtures();
-
     // First call — should match and increment
     const result1 = await matchEntitiesToStory(TEST_STORY_ID);
     expect(result1.entityIds).toContain(TEST_ENTITY_ID);
@@ -75,11 +77,11 @@ describe("matchEntitiesToStory — idempotency", () => {
     const countAfterFirst = await getEntityMentionCount();
     expect(countAfterFirst).toBe(1);
 
-    // Second call — same story, same entity — should NOT increment again
+    // Second call — same story, same entity — must NOT increment again
     const result2 = await matchEntitiesToStory(TEST_STORY_ID);
     expect(result2.entityIds).toContain(TEST_ENTITY_ID);
 
     const countAfterSecond = await getEntityMentionCount();
-    expect(countAfterSecond).toBe(1); // Must still be 1, not 2
+    expect(countAfterSecond).toBe(1); // Idempotency invariant
   }, 30000);
 });

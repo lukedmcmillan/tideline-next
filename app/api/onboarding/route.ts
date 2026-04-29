@@ -39,11 +39,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Valid job_type required" }, { status: 400 });
   }
 
-  // Validate entities (min 3 from starter + custom combined)
+  // Allow fewer than 3 entities — user can add more from /platform/directory later
   const allEntityIds = [...(entity_ids || []), ...(custom_entity_ids || [])];
-  if (allEntityIds.length < 3) {
-    return NextResponse.json({ error: "Select at least 3 entities" }, { status: 400 });
-  }
 
   // Validate brief_time format (HH:MM)
   if (!brief_time || !/^\d{2}:\d{2}$/.test(brief_time)) {
@@ -95,7 +92,6 @@ export async function POST(req: NextRequest) {
       timezone,
       topics: topics.length > 0 ? topics : undefined,
       onboarded_at: new Date().toISOString(),
-      onboarding_completed: true,
     })
     .eq("email", email);
 

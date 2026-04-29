@@ -1,0 +1,93 @@
+[
+  {
+    "keepId": "a0e62d32-730d-459f-808f-366067536f26",
+    "keepName": "United States",
+    "removeId": "03bf3fba-e62c-44a1-a779-b35d07188f59",
+    "mentionsMoved": 6,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 9,
+    "errors": []
+  },
+  {
+    "keepId": "a0e62d32-730d-459f-808f-366067536f26",
+    "keepName": "United States",
+    "removeId": "5530fac0-90e3-4c2f-a6bc-0e0a7ebc1caf",
+    "mentionsMoved": 7,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 16,
+    "errors": []
+  },
+  {
+    "keepId": "f7d84bee-ac7b-4504-bfdb-3a5e11b44883",
+    "keepName": "United Nations",
+    "removeId": "472f85d1-8c3c-4ad3-aa20-14117844ba60",
+    "mentionsMoved": 21,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 24,
+    "errors": []
+  },
+  {
+    "keepId": "bf370a39-bc2f-4831-8a42-8b57e7fa1d8f",
+    "keepName": "Trump",
+    "removeId": "d01b5df0-00ab-4bc3-a183-d597d1cb7ee7",
+    "mentionsMoved": 0,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 11,
+    "errors": []
+  },
+  {
+    "keepId": "d5a11e50-f67f-4de7-90eb-d53ea7c67a9f",
+    "keepName": "PLOS ONE",
+    "removeId": "5f5be252-725c-4575-baf2-efa56efb3f4a",
+    "mentionsMoved": 3,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 7,
+    "errors": []
+  },
+  {
+    "keepId": "cefe0575-1a59-4090-9e19-46230b01eac2",
+    "keepName": "Endangered Species Act",
+    "removeId": "c552ca2d-e7b1-4e0b-b860-3445b92772cb",
+    "mentionsMoved": 0,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 1,
+    "errors": []
+  },
+  {
+    "keepId": "885d88ab-da92-4b8a-a29b-37d2e43dc130",
+    "keepName": "Drones",
+    "removeId": "cbd567f7-d9c4-41e7-a9e1-7ccdcfc2b092",
+    "mentionsMoved": 1,
+    "userEntitiesMoved": 0,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 2,
+    "errors": []
+  },
+  {
+    "keepId": "96a3fb5e-edd3-4d9f-ba26-1fa539db87a9",
+    "keepName": "Oceana",
+    "removeId": "0c278c98-575a-48e4-adac-d737ac917b19",
+    "mentionsMoved": 0,
+    "userEntitiesMoved": 1,
+    "aliasesInserted": 1,
+    "aliasesMoved": 0,
+    "mentionCountAfter": 1,
+    "errors": [
+      "setType: duplicate key value violates unique constraint \"entities_name_entity_type_key\"",
+      "delete entity: update or delete on table \"entities\" violates foreign key constraint \"entities_parent_entity_id_fkey\" on table \"entities\""
+    ]
+  }
+]

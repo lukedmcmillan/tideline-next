@@ -30,6 +30,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Onboarding gate: explicit null = new user who hasn't onboarded yet.
+  // undefined = old JWT without the field (treat as onboarded — avoids false redirect on rollout).
+  if (pathname.startsWith('/platform') && token.onboarded_at === null) {
+    return NextResponse.redirect(new URL('/onboarding', request.url))
+  }
+
   // Paywall enforcement for /platform/* only (tracker stays auth-only)
   if (pathname.startsWith('/platform') && !PAYWALL_EXEMPT.some(p => pathname.startsWith(p))) {
     const status = token.subscription_status as string | undefined

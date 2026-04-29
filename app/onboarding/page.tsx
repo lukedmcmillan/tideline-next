@@ -16,7 +16,7 @@ const TEAL_DIM = "rgba(29,158,117,0.12)";
 const TEAL_HOVER = "#178a65";
 const RED = "#E24B4A";
 const F = "'DM Sans', system-ui, sans-serif";
-const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
+const DISPLAY = "'DM Sans', system-ui, sans-serif";
 const M = "'DM Mono', monospace";
 
 const JOB_TYPES = [
@@ -89,7 +89,7 @@ export default function OnboardingPage() {
       .then((r) => r.json())
       .then((d) => {
         if (!d.needsOnboarding) {
-          window.location.href = "/platform/feed";
+          window.location.href = "/platform/directory";
         }
       })
       .catch(() => {})
@@ -189,7 +189,7 @@ export default function OnboardingPage() {
         setSubmitting(false);
         return;
       }
-      window.location.href = "/platform/feed";
+      window.location.href = "/platform/directory";
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);
@@ -215,7 +215,7 @@ export default function OnboardingPage() {
   return (
     <div style={{ minHeight: "100vh", background: BG, fontFamily: F }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .ob2-job:hover { border-color: ${BORDER2} !important; }
         .ob2-job.selected:hover { border-color: ${TEAL} !important; }
