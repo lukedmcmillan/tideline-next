@@ -90,3 +90,7 @@
 ### Entity Dedup — LLM Write-Path Call Order
 
 - **LLM-written write paths need causal-order review, not just correctness review** — The Bug 2 root cause was `increment_entity_count` being called before the mention insert it was meant to count: narrative order (count it, then record it) rather than causal order (record it, then count if recorded). This is a repeatable LLM failure mode — narrative coherence overrides causal correctness. When reviewing any LLM-written write path that updates a counter, verify the order of calls against the causal dependency, not just whether each call looks individually correct.
+
+### Shell Cross-Terminal Paste Corruption
+
+- **Never paste multi-line commands across terminal types (PowerShell → bash)** — Three corrupted files named `ntent scripts<filename>.ts` (~2,822 bytes each) were silently created in the repo when bash interpreted a multi-line PowerShell paste as redirect-to-file operations. They passed linting but caused Vercel build failures on deploy. Lesson: run `git status` after every Claude Code session before committing; anything with a space in the filename or non-alphanumeric prefix is almost certainly a paste artifact. Delete before staging.

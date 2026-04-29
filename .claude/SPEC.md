@@ -14,7 +14,8 @@ Foundation work — completed and verified:
 - entity_review_queue migration applied
 - findOrCreateEntity 5-pass helper installed in lib/entity-matching.ts
 - Legacy lib/entities.ts deleted (orphaned since c351d8c)
-- Vitest test framework installed and configured
+- Vitest framework installed and configured (vitest.config.ts with @/ alias, dotenvx-wrapped test:run and test:watch scripts)
+- Three corrupted shell-paste artifact files removed from repo (were blocking Vercel build; named 'ntent scripts*.ts', created by bash misinterpreting PowerShell paste)
 
 Final entity table state: 942 entities, 688 aliases, 758 mentions, 0 'individual' type rows.
 
