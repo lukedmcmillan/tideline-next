@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 /* ── Design tokens (matches platform shell) ──────────────── */
 const BG = "#0B1628";
@@ -78,6 +79,9 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Used to refresh JWT after onboarding DB write (fixes middleware staleness loop)
+  const { update } = useSession();
+
   // Detect timezone on mount, check if onboarding already done
   useEffect(() => {
     try {
@@ -87,8 +91,17 @@ export default function OnboardingPage() {
 
     fetch("/api/subscription-status")
       .then((r) => r.json())
-      .then((d) => {
+      .then(async (d) => {
         if (!d.needsOnboarding) {
+          // JWT may be stale if middleware bounced us here after a failed update()
+          // in handleFinish. Refresh it before navigating. 5s timeout so a hung
+          // update() never strands the user on the loading screen.
+          try {
+            await Promise.race([
+              update({}),
+              new Promise((_, reject) => setTimeout(() => reject(), 5000)),
+            ]);
+          } catch {}
           window.location.href = "/platform/directory";
         }
       })
@@ -189,6 +202,16 @@ export default function OnboardingPage() {
         setSubmitting(false);
         return;
       }
+      // DB write committed. Refresh JWT so middleware sees onboarded_at set.
+      // trigger='update' → jwt callback → DB re-read → cookie updated.
+      // 3s timeout: if update() hangs, we navigate anyway and let the mount
+      // skip check handle the JWT refresh on any middleware bounce.
+      try {
+        await Promise.race([
+          update({}),
+          new Promise((_, reject) => setTimeout(() => reject(), 3000)),
+        ]);
+      } catch {}
       window.location.href = "/platform/directory";
     } catch {
       setError("Something went wrong. Please try again.");

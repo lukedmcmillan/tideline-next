@@ -91,6 +91,20 @@
 
 - **LLM-written write paths need causal-order review, not just correctness review** — The Bug 2 root cause was `increment_entity_count` being called before the mention insert it was meant to count: narrative order (count it, then record it) rather than causal order (record it, then count if recorded). This is a repeatable LLM failure mode — narrative coherence overrides causal correctness. When reviewing any LLM-written write path that updates a counter, verify the order of calls against the causal dependency, not just whether each call looks individually correct.
 
+### pgvector Function Signature Verification
+
+- **`pg_get_function_identity_arguments` is unreliable for pgvector functions** — The metadata view displays all pgvector arguments as untyped `vector` regardless of the actual declared dimension (e.g. `vector(768)` vs `vector(1536)`). Chasing this phantom costs multiple debug rounds. Use a **runtime test** instead: `SELECT * FROM match_entity_embeddings(array_fill(0.1::real, ARRAY[768])::vector, 0.5::double precision, 10)` — if it returns 0 rows (not an error), the function accepts `vector(768)`. Trust the runtime, not the metadata view.
+
+### Entity Embeddings — Dimension Mismatch
+
+- **`entities.embedding` was declared `vector(1536)` but the app uses Jina v2 (768 dims)** — `story_chunks.embedding` was explicitly migrated from 1536→768 in `20260331_alter_embedding_dimension.sql`. The entity column and its RPC were added later (`20260418_entity_tracking_v2.sql`, `20260421_match_entity_embeddings_rpc.sql`) and incorrectly copied the original 1536 dim. The matcher's Pass 3 would have thrown a dimension error at runtime for every story, not just returned 0 results. Fix: migration `20260429_entity_embedding_to_768.sql` drops/re-adds column at vector(768) and updates the RPC. Lesson: when adding a new vector column, check the dimension used by the existing embedding infrastructure before declaring.
+
+### Entity Embeddings — Backfill Recovery
+
+- **Baseline unmentioned count was wrong before backfill** — `count-unmentioned.ts` initially fetched `entity_mentions` without pagination and hit the Supabase 1000-row cap. The displayed "458 unmentioned" was an undercount of entity_mentions, producing an inflated unmentioned number. Always paginate diagnostic queries against tables that grow without bound. Fixed in the script using `.range()` loops.
+- **Post-embedding + post-backfill result: 265 unmentioned entities (out of 942)** — After running `embed-entities.ts` (942/942 embedded, 0 failed) and draining the backfill queue (182 stories across 11 runs, avg 5.3 matches/story), 677 entities have at least one story mention. Pass 3 (semantic) confirmed live: `[exact, semantic]` fired on first test. The 265 still-unmentioned entities are likely very niche/seeded entities that haven't appeared in story text yet — this is expected and will resolve as the feed runs.
+- **backfill-entity-matching.ts caps at 20 stories per run** — Run in a loop (`for i in $(seq 1 N)`) to drain the queue. Queue drains when it prints "No unmatched stories found". It uses `entities_extracted IS NULL or false` to track which stories have been processed.
+
 ### Shell Cross-Terminal Paste Corruption
 
 - **Never paste multi-line commands across terminal types (PowerShell → bash)** — Three corrupted files named `ntent scripts<filename>.ts` (~2,822 bytes each) were silently created in the repo when bash interpreted a multi-line PowerShell paste as redirect-to-file operations. They passed linting but caused Vercel build failures on deploy. Lesson: run `git status` after every Claude Code session before committing; anything with a space in the filename or non-alphanumeric prefix is almost certainly a paste artifact. Delete before staging.
