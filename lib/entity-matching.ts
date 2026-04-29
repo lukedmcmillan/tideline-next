@@ -193,7 +193,7 @@ export async function matchEntitiesToStory(
 
   if (!dryRun) {
     for (const match of finalMatches) {
-      await supabase
+      const { data: insertedRows } = await supabase
         .from("entity_mentions")
         .upsert(
           {
@@ -206,13 +206,17 @@ export async function matchEntitiesToStory(
           },
           {
             onConflict: "entity_id,story_id",
-            ignoreDuplicates: false,
+            ignoreDuplicates: true,
           }
-        );
+        )
+        .select();
 
-      await supabase.rpc("increment_entity_count", {
-        entity_id: match.entityId,
-      });
+      // Only increment if a new row was actually inserted (not a duplicate)
+      if (insertedRows && insertedRows.length > 0) {
+        await supabase.rpc("increment_entity_count", {
+          entity_id: match.entityId,
+        });
+      }
     }
   }
 
@@ -256,6 +260,113 @@ export async function matchEntitiesBatch(
     totalMatches,
     avgMatchesPerStory: avg,
   };
+}
+
+// ─── findOrCreateEntity ───────────────────────────────────────────────────────
+
+/**
+ * Finds an existing entity or creates a new one.
+ *
+ * Resolution order:
+ * 1. Exact name match (case-insensitive)
+ * 2. Alias match (exact alias_text)
+ * 3. Normalised-key match (strip non-alphanumeric, lowercase)
+ * 4. Trigram similarity > 0.85 → returns match + logs to entity_review_queue
+ * 5. No match → inserts new entity row
+ *
+ * This replaces the fix-X.ts / cleanup-X.ts ad-hoc script pattern.
+ * Call this from every entity insertion path going forward.
+ */
+export async function findOrCreateEntity(
+  name: string,
+  entityType: string,
+  sourceContext?: string
+): Promise<{ entityId: string; created: boolean }> {
+  const nameLower = name.toLowerCase().trim();
+
+  // Pass 1: Exact name match (case-insensitive)
+  const { data: exactMatch } = await supabase
+    .from("entities")
+    .select("id")
+    .ilike("name", name.trim())
+    .limit(1)
+    .single();
+
+  if (exactMatch) return { entityId: exactMatch.id, created: false };
+
+  // Pass 2: Alias match
+  const { data: aliasMatch } = await supabase
+    .from("entity_aliases")
+    .select("entity_id")
+    .ilike("alias_text", name.trim())
+    .limit(1)
+    .single();
+
+  if (aliasMatch) return { entityId: aliasMatch.entity_id, created: false };
+
+  // Pass 3: Normalised-key match (strip non-alphanumeric)
+  const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const nameKey = normalise(name);
+
+  const { data: allEntities } = await supabase
+    .from("entities")
+    .select("id, name");
+
+  const normMatch = (allEntities ?? []).find(
+    (e) => normalise(e.name) === nameKey
+  );
+  if (normMatch) return { entityId: normMatch.id, created: false };
+
+  // Pass 4: Trigram similarity > 0.85 → log to entity_review_queue, return match
+  let bestSim = 0;
+  let bestMatch: { id: string; name: string } | null = null;
+
+  for (const e of allEntities ?? []) {
+    const sim = trigramSimilarity(nameLower, e.name.toLowerCase());
+    if (sim > bestSim) {
+      bestSim = sim;
+      bestMatch = e;
+    }
+  }
+
+  if (bestSim > 0.85 && bestMatch) {
+    // Log to review queue (fire-and-forget — don't block entity creation)
+    supabase
+      .from("entity_review_queue")
+      .insert({
+        proposed_name: name.trim(),
+        proposed_type: entityType,
+        matched_entity_id: bestMatch.id,
+        matched_name: bestMatch.name,
+        similarity_score: Math.round(bestSim * 1000) / 1000,
+        source_context: sourceContext ?? null,
+      })
+      .then(({ error }) => {
+        if (error) {
+          console.warn(`[entity-match] review queue insert failed: ${error.message}`);
+        }
+      });
+
+    return { entityId: bestMatch.id, created: false };
+  }
+
+  // Pass 5: No match — insert new entity
+  const { data: newEntity, error: insertErr } = await supabase
+    .from("entities")
+    .insert({
+      name: name.trim(),
+      entity_type: entityType,
+      mention_count: 0,
+    })
+    .select("id")
+    .single();
+
+  if (insertErr || !newEntity) {
+    console.error(`[entity-match] failed to create entity "${name}":`, insertErr?.message);
+    throw new Error(`findOrCreateEntity: insert failed for "${name}"`);
+  }
+
+  return { entityId: newEntity.id, created: true };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
