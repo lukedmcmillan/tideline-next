@@ -1,6 +1,17 @@
 ﻿# Tideline — Live Project Status
 
-## Last completed: Entity dedup pass (2026-04-29)
+## Last completed: Onboarding v2 fix pass (2026-04-29, NOT pushed to main)
+
+Phase 1 — 5 pre-flight fixes: complete ✓
+Phase 2a — JWT callback + onboarded_at on session: complete ✓
+Phase 2b — Middleware onboarding gate: complete ✓
+Phase 2c — CTA + /start success link: complete ✓
+
+**Next session first task — Phase 4**: local E2E smoke test + brief delivery proof before pushing to main.
+
+---
+
+## Previous: Entity dedup pass (2026-04-29)
 
 Foundation work — completed and verified:
 - mention_count integrity restored (8759 → 758, invariant SUM(mention_count) = COUNT(entity_mentions) holds)

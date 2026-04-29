@@ -68,6 +68,12 @@
 - **OCEAN_DEDICATED_SOURCES fast-lane bypass is a double-edged sword**: misconfigured sources in this list skip the keyword filter safety net entirely. Misconfigured fast-lane sources are more dangerous than misconfigured standard sources.
 - **"Built" ≠ "shipped"**: always check `git status` and verify the Vercel deploy SHA matches the latest commit before calling a feature live. A feature in local code that hasn't deployed is not live.
 
+## Onboarding / Entity data quality
+
+- **Lloyd's Register apostrophe inconsistency**: DB canonical name is `"Lloyds Register"` (no apostrophe). Alias `"Lloyd's Register"` was backfilled. Future cleanup: normalise canonical name to include apostrophe and update alias accordingly. Low priority but will cause silent mismatch if code does exact name comparisons.
+- **BLUE constant in /start page is legacy debt**: `/start` is v1 and receives no new traffic since EarlyAccessModal replaced it. The BLUE violation auto-resolves when `/start` is deleted. Check Vercel analytics after 30 days — if zero traffic, delete `/start` route and `/api/trial-signup` endpoint together.
+- **Onboarding starter set: verify by canonical name AND alias before declaring entities missing**: `starter-sets.ts` config names are matched against `entities.name` (exact). If a config name is an alias rather than the canonical name, the entity is silently skipped. Diagnosis must check both `entities.name` and `entity_aliases.alias_text` before concluding an entity doesn't exist in the DB.
+
 ## Entity dedup
 
 - **Unique constraint (name, entity_type) blocks setType-before-delete in merges**: When merging entity A (org) ← entity B (ngo) with `setType='ngo'` on A, attempting to set the type before deleting B causes a constraint violation because A-as-ngo duplicates B. Fix: delete FK-dependent children first, then delete B, then setType on A. Always check for `parent_entity_id` FK children before deleting an entity row.
