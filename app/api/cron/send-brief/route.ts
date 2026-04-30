@@ -69,7 +69,7 @@ function fallbackHtml(dateStr: string): string {
 
 async function generateSubjectLine(htmlContent: string): Promise<string | null> {
   try {
-    // Extract story titles from the HTML to give Sonnet context
+    // Extract story titles from the HTML to give Haiku context
     const titleMatches = htmlContent.match(
       /style="font-[^"]*font-size:15px;font-weight:600;color:#0B1628[^"]*"[^>]*>([^<]+)/g
     );
@@ -98,6 +98,30 @@ async function generateSubjectLine(htmlContent: string): Promise<string | null> 
     console.error("[send-brief] Subject line generation failed:", err);
     return null;
   }
+}
+
+const TOPIC_LABELS: Record<string, string> = {
+  governance: "Governance",
+  dsm: "Deep-Sea Mining",
+  bluefinance: "Blue Finance",
+  climate: "Climate",
+  iuu: "IUU",
+  mpa: "30x30",
+  fisheries: "Fisheries",
+  science: "Science",
+  shipping: "Shipping",
+};
+
+function subjectFromStories(
+  stories: { title: string; topic: string }[]
+): string | null {
+  if (stories.length === 0) return null;
+  const top = stories[0];
+  const label = TOPIC_LABELS[top.topic] || top.topic;
+  // Trim title to ~8 words
+  const words = top.title.replace(/&amp;/g, "&").replace(/&#39;/g, "'").split(/\s+/);
+  const trimmed = words.length > 9 ? words.slice(0, 8).join(" ") + "…" : top.title;
+  return `${label}: ${trimmed}`;
 }
 
 function injectPreheader(html: string, preheader: string): string {
@@ -181,9 +205,11 @@ export async function GET(request: Request) {
     let storyCount = 0;
     let trackerSlug: string | null = null;
 
+    let briefStories: { title: string; topic: string }[] = [];
+
     const { data: todayBrief } = await supabase
       .from("brief_buffer")
-      .select("subject_line, html_content, story_count, tracker_data")
+      .select("subject_line, html_content, story_count, tracker_data, stories")
       .eq("date", todayDate)
       .single();
 
@@ -193,10 +219,11 @@ export async function GET(request: Request) {
       html = todayBrief.html_content;
       storyCount = todayBrief.story_count || 0;
       trackerSlug = todayBrief.tracker_data?.tracker_slug || null;
+      briefStories = (todayBrief.stories as { title: string; topic: string }[]) || [];
     } else {
       const { data: yesterdayBrief } = await supabase
         .from("brief_buffer")
-        .select("subject_line, html_content, story_count, tracker_data")
+        .select("subject_line, html_content, story_count, tracker_data, stories")
         .eq("date", yesterdayDate)
         .single();
 
@@ -206,6 +233,7 @@ export async function GET(request: Request) {
         html = yesterdayBrief.html_content;
         storyCount = yesterdayBrief.story_count || 0;
         trackerSlug = yesterdayBrief.tracker_data?.tracker_slug || null;
+        briefStories = (yesterdayBrief.stories as { title: string; topic: string }[]) || [];
       }
     }
 
@@ -251,16 +279,16 @@ export async function GET(request: Request) {
     const testEmail = process.env.TEST_EMAIL;
     const isTestMode = !!testEmail;
 
-    let subscribers: { id: string; email: string; unsubscribe_token: string | null }[];
+    let subscribers: { id: string; email: string; unsubscribe_token: string | null; topics: string[] | null }[];
 
     if (isTestMode) {
-      subscribers = [{ id: "test", email: testEmail!, unsubscribe_token: null }];
+      subscribers = [{ id: "test", email: testEmail!, unsubscribe_token: null, topics: null }];
     } else {
       const { data: users, error: subError } = await supabase
         .from("users")
-        .select("id, email, unsubscribe_token")
+        .select("id, email, unsubscribe_token, topics")
         .in("subscription_status", ["active", "trialing"])
-        .is("onboarded_at", null);
+        .not("onboarded_at", "is", null);
 
       if (subError || !users || users.length === 0) {
         return NextResponse.json({
@@ -269,7 +297,10 @@ export async function GET(request: Request) {
           error: subError?.message || "No subscribers found",
         });
       }
-      subscribers = users;
+      subscribers = users.map(u => ({
+        ...u,
+        topics: Array.isArray(u.topics) ? u.topics as string[] : null,
+      }));
     }
 
     // ── 5. Send to each subscriber ──
@@ -281,12 +312,35 @@ export async function GET(request: Request) {
     for (const sub of subscribers) {
       if (!sub.email) continue;
 
+      // ── Per-user topic filtering ──
+      const userTopics = sub.topics;
+      let filteredStories = briefStories;
+      if (userTopics && userTopics.length > 0 && briefStories.length > 0) {
+        filteredStories = briefStories.filter(s => userTopics.includes(s.topic));
+      }
+
+      // Skip send if user has explicit topics but none match today's brief
+      if (!isTestMode && userTopics && userTopics.length > 0 && filteredStories.length === 0) {
+        supabase.from("brief_sends").insert({
+          user_id: sub.id,
+          email: sub.email,
+          story_count: 0,
+          tracker_slug: trackerSlug,
+          send_type: "skip_no_topics",
+          brief_date: todayDate,
+        }).then(() => {});
+        continue;
+      }
+
+      // Personalised subject line from filtered stories (falls back to AI-generated or base subject)
+      const userSubject = subjectFromStories(filteredStories) || subject;
+
       // Inject per-user unsubscribe link
       const userHtml = sub.unsubscribe_token
         ? injectUnsubscribeLink(html, sub.unsubscribe_token)
         : html;
 
-      const ok = await sendEmail(sub.email, subject, userHtml);
+      const ok = await sendEmail(sub.email, userSubject, userHtml);
       if (ok) {
         sent++;
         // Update last_brief_sent
@@ -318,7 +372,6 @@ export async function GET(request: Request) {
       sent,
       total: subscribers.length,
       source,
-      subject,
       test_mode: isTestMode,
       errors: errors.length > 0 ? errors : undefined,
     });

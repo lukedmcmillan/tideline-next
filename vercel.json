@@ -35,6 +35,8 @@
     {"path": "/api/cron/generate-connections", "schedule": "0 7 * * *"},
     {"path": "/api/cron/threshold-alerts", "schedule": "0 8 * * *"},
     {"path": "/api/cron/embed-documents", "schedule": "0 3 * * *"},
-    {"path": "/api/cron/source-health", "schedule": "0 5 * * 1"}
+    {"path": "/api/cron/source-health", "schedule": "0 5 * * 1"},
+    {"path": "/api/cron/generate-brief", "schedule": "30 6 * * *"},
+    {"path": "/api/cron/send-brief", "schedule": "0 7 * * *"}
   ]
 }
