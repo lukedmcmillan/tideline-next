@@ -108,3 +108,15 @@
 ### Shell Cross-Terminal Paste Corruption
 
 - **Never paste multi-line commands across terminal types (PowerShell → bash)** — Three corrupted files named `ntent scripts<filename>.ts` (~2,822 bytes each) were silently created in the repo when bash interpreted a multi-line PowerShell paste as redirect-to-file operations. They passed linting but caused Vercel build failures on deploy. Lesson: run `git status` after every Claude Code session before committing; anything with a space in the filename or non-alphanumeric prefix is almost certainly a paste artifact. Delete before staging.
+
+## 2026-04-30
+
+### RSS Source Verification
+
+- **RSS verification must check both that the feed returns valid XML AND that the items are actually about the expected topic** — The April 20 audit verified DG MARE returned HTTP 200 + valid XML + recent items, but did not verify the items were maritime/fisheries content. They were generic EU Commission press releases — the `?c=Maritime+Affairs+and+Fisheries` parameter is a category tag applied to the press release, not a filter that scopes feed output. Re-verification 9 days later caught this because we sampled actual item titles. Lesson: when adding a new RSS source, check 5 random item titles match the expected domain before committing. URL liveness is necessary but not sufficient.
+
+- **SPEC.md "still unapplied" notes can go stale** — SPEC.md written on 2026-04-29 stated "RSS source maintenance from April 20 still unapplied" but all 4 valid source changes (NOAA parent, UK MMO, HELCOM, DFO Canada) were applied in commits on April 20 itself. At session start, cross-check SPEC.md known follow-ups against `git log --follow` on the relevant file before scoping the work — the changes may already be done.
+
+### Supabase Count Queries
+
+- **Supabase JS client count queries silently cap at 1,000 rows** — A `COUNT(column)` query or `select('*', { count: 'exact' })` without `head: true` on a table with >1,000 rows can return wrong results if the underlying query returns rows rather than the aggregate. Today, a diagnostic script suggested "96.9% of stories missing summaries, pipeline broken for 3 weeks" — the real number was 19.6% missing with a clean explanation (post-RSS-source-addition backlog). The fault was a count query hitting the row cap and producing a meaningless ratio. Lesson: when a count looks suspiciously high or low, verify directly in Supabase Studio (no row limit) before drawing conclusions. For programmatic counts in the JS client, always use `.select('*', { count: 'exact', head: true })` — `head: true` returns only the count, not rows, and bypasses the row cap.

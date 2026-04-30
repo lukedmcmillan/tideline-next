@@ -73,6 +73,7 @@
 - **Lloyd's Register apostrophe inconsistency**: DB canonical name is `"Lloyds Register"` (no apostrophe). Alias `"Lloyd's Register"` was backfilled. Future cleanup: normalise canonical name to include apostrophe and update alias accordingly. Low priority but will cause silent mismatch if code does exact name comparisons.
 - **BLUE constant in /start page is legacy debt**: `/start` is v1 and receives no new traffic since EarlyAccessModal replaced it. The BLUE violation auto-resolves when `/start` is deleted. Check Vercel analytics after 30 days — if zero traffic, delete `/start` route and `/api/trial-signup` endpoint together.
 - **Onboarding starter set: verify by canonical name AND alias before declaring entities missing**: `starter-sets.ts` config names are matched against `entities.name` (exact). If a config name is an alias rather than the canonical name, the entity is silently skipped. Diagnosis must check both `entities.name` and `entity_aliases.alias_text` before concluding an entity doesn't exist in the DB.
+- **ngo_campaigner starter set revision pending**: 10-entity list finalised in chat (2026-04-29) but NOT applied to `starter-sets.ts`. Do not touch that file until the list is pasted in explicitly next session. See conversation transcript for the 10 entities.
 
 ## Entity dedup
 
@@ -136,6 +137,10 @@
 
 - **1024-token minimum for cache activation**: `cache_control: { type: "ephemeral" }` on a system prompt block below 1024 tokens does nothing — Anthropic ignores it. Add markers anyway as forward-proofing, but don't count on savings until prompts grow. Haiku 4.5 minimum is 2048 tokens.
 - **Call volume × prompt stability = caching priority**: ocean-relevance-gate (~890 calls/hour) with a ~250 token prompt is lower actual savings than a lower-volume route with a 2000+ token stable system prompt. Always multiply volume × prompt size to estimate real savings.
+
+## NextAuth / session
+
+- **`useSession()` fails at runtime, not compile time**: the error only surfaces when the page loads. Pre-flight check before adding any `useSession` import: `grep -rn "SessionProvider" app/ components/` to confirm a provider is mounted above the target component. In this codebase, `SessionProvider` is scoped to `app/platform/(shell)/layout.tsx` — non-platform routes (`/onboarding`, `/sign-in`, trackers) have no provider and will throw. Fix: create a scoped `layout.tsx` wrapping the target route with `SessionProvider`, rather than adding it to root layout.
 
 ## Process
 

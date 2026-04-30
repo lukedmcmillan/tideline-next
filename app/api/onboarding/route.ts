@@ -100,48 +100,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to save preferences" }, { status: 500 });
   }
 
-  // 4. Schedule first morning brief for tomorrow at chosen time in user timezone
-  try {
-    const [hours, minutes] = brief_time.split(":").map(Number);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Build a date string in the user's timezone, then convert to UTC
-    const year = tomorrow.getFullYear();
-    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
-    const day = String(tomorrow.getDate()).padStart(2, "0");
-    const localDateStr = `${year}-${month}-${day}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
-
-    // Use Intl to compute the UTC offset for the target timezone
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: timezone,
-      timeZoneName: "shortOffset",
-    });
-    const parts = formatter.formatToParts(tomorrow);
-    const offsetPart = parts.find((p) => p.type === "timeZoneName");
-    // Parse offset like "GMT+1" or "GMT-5:30" into minutes
-    let offsetMinutes = 0;
-    if (offsetPart?.value) {
-      const match = offsetPart.value.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
-      if (match) {
-        const sign = match[1] === "+" ? 1 : -1;
-        offsetMinutes = sign * (parseInt(match[2]) * 60 + parseInt(match[3] || "0"));
-      }
-    }
-
-    // Create UTC timestamp: local time minus offset
-    const scheduledFor = new Date(localDateStr + "Z");
-    scheduledFor.setMinutes(scheduledFor.getMinutes() - offsetMinutes);
-
-    await supabase.from("morning_brief_queue").insert({
-      user_id: userId,
-      scheduled_for: scheduledFor.toISOString(),
-      status: "pending",
-    });
-  } catch (err) {
-    // Non-blocking: log but don't fail onboarding
-    console.error("[onboarding] brief queue insert error:", err);
-  }
-
   return NextResponse.json({ success: true });
 }

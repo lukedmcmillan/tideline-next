@@ -276,7 +276,7 @@ export async function GET(request: Request) {
     .select('id, title, link, source_name, description')
     .is('short_summary', null)
     .order('published_at', { ascending: false })
-    .limit(20)
+    .limit(50)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -350,6 +350,13 @@ export async function GET(request: Request) {
       console.error(`Failed to summarise story ${story.id}:`, err)
     }
   }
+
+  await supabase.from('cron_log').insert({
+    agent_name: 'summarise-pending',
+    stories_processed: pending.length,
+    events_created: summarised,
+    errors: errors.length > 0 ? errors.join('; ') : null,
+  })
 
   return NextResponse.json({
     summarised,

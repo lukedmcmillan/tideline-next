@@ -1,6 +1,6 @@
 # Project Index: tideline-next
 
-Generated: 2026-04-29
+Generated: 2026-04-30
 
 ## Project
 
@@ -38,8 +38,26 @@ Stack: Next.js 16, React 19, TypeScript 5, Tailwind v4 (inline styles only), Sup
 | `/platform/(shell)/research` | app/platform/(shell)/research/page.tsx |
 | `/platform/(shell)/projects` | app/platform/(shell)/projects/page.tsx |
 | `/platform/(shell)/projects/[id]` | app/platform/(shell)/projects/[id]/page.tsx |
+| `/platform/(shell)/projects/[id]/draft` | app/platform/(shell)/projects/[id]/draft/page.tsx |
 | `/platform/(shell)/lp-briefing` | app/platform/(shell)/lp-briefing/page.tsx |
+| `/platform/(shell)/library` | app/platform/(shell)/library/page.tsx |
+| `/platform/(shell)/library/submit` | app/platform/(shell)/library/submit/page.tsx |
+| `/platform/(shell)/settings/topics` | app/platform/(shell)/settings/topics/page.tsx |
+| `/platform/(shell)/story/[id]` | app/platform/(shell)/story/[id]/page.tsx |
+| `/platform/(shell)/trackers` | app/platform/(shell)/trackers/page.tsx |
 | `/platform/(shell)/tracker/governance` | app/platform/(shell)/tracker/governance/page.tsx |
+| `/platform/(shell)/tracker/bbnj` | app/platform/(shell)/tracker/bbnj/page.tsx |
+| `/platform/(shell)/tracker/30x30` | app/platform/(shell)/tracker/30x30/page.tsx |
+| `/platform/(shell)/tracker/iuu` | app/platform/(shell)/tracker/iuu/page.tsx |
+| `/platform/(shell)/tracker/blue-finance` | app/platform/(shell)/tracker/blue-finance/page.tsx |
+| `/platform/(shell)/tracker/isa` | app/platform/(shell)/tracker/isa/page.tsx |
+| `/platform/(shell)/tracker/imo-shipping` | app/platform/(shell)/tracker/imo-shipping/page.tsx |
+| `/platform/(shell)/tracker/offshore-wind` | app/platform/(shell)/tracker/offshore-wind/page.tsx |
+| `/platform/(shell)/tracker/cites-marine` | app/platform/(shell)/tracker/cites-marine/page.tsx |
+| `/platform/(shell)/tracker/wto-fisheries` | app/platform/(shell)/tracker/wto-fisheries/page.tsx |
+| `/platform/(shell)/tracker/plastics` | app/platform/(shell)/tracker/plastics/page.tsx |
+| `/platform/(shell)/workspace` | app/platform/(shell)/workspace/page.tsx |
+| `/platform/(shell)/directory` | app/platform/(shell)/directory/page.tsx |
 | `/platform/(shell)/admin/library` | app/platform/(shell)/admin/library/page.tsx |
 
 ---
@@ -92,6 +110,9 @@ Stack: Next.js 16, React 19, TypeScript 5, Tailwind v4 (inline styles only), Sup
 - `research/inline` — inline AI research assistant
 - `ask` — general AI Q&A endpoint
 - `search` — semantic search (embeddings)
+
+### Entities
+- `entities/search` — entity search endpoint
 
 ### Projects & Documents
 - `projects` — CRUD for user projects
@@ -146,7 +167,7 @@ Stack: Next.js 16, React 19, TypeScript 5, Tailwind v4 (inline styles only), Sup
 | `cron/summarise-pending` | Every 2h (+15min) | Claude summarise new stories |
 | `cron/project-populate` | Every 2h (+30min) | Populate user projects with new stories |
 | `cron/harvest-scraped-sources` | Daily 6:30am | Non-RSS scrapers (IMO, ISA, FAO, IUCN, CBD, CITES, UN BBNJ) |
-| `cron/generate-embeddings` | Daily 1am | Story vector embeddings |
+| `cron/generate-embeddings` | Daily 1am | Story vector embeddings (768-dim) |
 | `cron/score-significance` | Daily 3:30am | Significance scoring |
 | `cron/generate-connections` | Daily 7am | Story connections |
 | `cron/threshold-alerts` | Daily 8am | Velocity threshold email alerts |
@@ -175,10 +196,17 @@ Vercel function config: 512MB/60s default, embed-documents gets 1024MB/300s.
 | `lib/lp-briefing-pdf.ts` | PDFKit LP briefing PDF generation |
 | `lib/emails/onboarding-day3.ts` | Day 3 onboarding email template |
 | `app/lib/auth.ts` | `getEmailFromSession()` — extracts email from NextAuth JWT for API routes |
-| `app/lib/embeddings.ts` | Vector embedding helpers |
+| `app/lib/embeddings.ts` | Vector embedding helpers (768-dim, text-embedding-3-small) |
 | `app/lib/search.ts` | Semantic search over embeddings |
 | `app/lib/subscription.ts` | Subscription status helpers |
 | `app/lib/tracker-metadata.ts` | Tracker page metadata (BBNJ, 30x30, IUU, Blue Finance) |
+| `app/lib/entity-brief.ts` | Entity brief generation logic (Material>=25, Watch 10-24 thresholds) |
+| `app/lib/velocity.ts` | Velocity score calculation |
+| `app/lib/ocean-relevance-gate.ts` | Ocean relevance classifier gate |
+| `app/lib/signal-generation.ts` | Signal event generation |
+| `app/lib/jina.ts` | Jina API wrapper |
+| `app/lib/sources.ts` | RSS source list and config |
+| `app/lib/constants.ts` | Shared constants |
 
 ---
 
@@ -192,16 +220,21 @@ Key tables in `public`:
 - `governance_bodies` — 10 intergovernmental bodies with scrape URLs
 - `governance_events` — meetings/deadlines with source_id (dedup), expected decisions
 - `expected_decisions` — per-event: description, type, expected_outcome, audience_tags
-- `entities` — ocean entities with mention_count (denormalised — see CLAUDE-RULES Section 4)
+- `entities` — ocean entities with mention_count (denormalised — see CLAUDE-RULES Section 4), embedding (768-dim)
 - `entity_mentions` — story->entity links
 - `entity_aliases` — canonical name aliases
-- `entity_review_queue` — near-matches for human review
+- `entity_review_queue` — near-matches for human review (do not suppress)
 - `lp_portfolios` — LP portfolio records
 - `subscriptions` — Stripe subscription state
 - `calendar_subscriptions` — personal iCal subscriptions with filters
 - `trial_signups` — email, topics, signed_up_at, status
 - `magic_links` — email, token, expires_at, used
 - `velocity_scores` — entity velocity over time
+- `story_embeddings` — 768-dim story vectors (replaces old `embeddings` table dropped 2026-04-27)
+
+Pending Studio migrations (as of 2026-04-30):
+- `20260429_entity_review_queue.sql`
+- `20260429_entity_embedding_to_768.sql`
 
 Schema `next_auth`: NextAuth session management.
 
@@ -213,10 +246,11 @@ Schema `next_auth`: NextAuth session management.
 - **Auth**: NextAuth v4 JWT strategy. Middleware protects `/platform/*` and `/tracker/*`. `getEmailFromSession()` in `app/lib/auth.ts`.
 - **AI model split**: Internal bulk ops -> `claude-haiku-4-5`. Never Opus/Sonnet for scrapers/summaries/morning brief.
 - **Entity writes**: Always via `findOrCreateEntity()` in `lib/entity-matching.ts`. Never write directly to entities tables.
-- **Denormalised counters**: Idempotency required — call write path twice, counter must increment exactly once.
+- **Denormalised counters**: Idempotency required — call write path twice, counter must increment exactly once (CLAUDE-RULES Section 4).
 - **Migrations**: Apply via Supabase Studio manually, verify with diagnostic query before marking complete.
 - **Scripts**: Run via `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/<file>.ts`
 - **Path alias**: `@/*` maps to project root.
+- **Embeddings**: 768-dim (text-embedding-3-small). Entity embeddings use `match_entity_embeddings` RPC. Old 1536-dim `embeddings` table dropped.
 
 ---
 
@@ -229,7 +263,7 @@ Schema `next_auth`: NextAuth session management.
 
 ## Admin Scripts (scripts/)
 
-Entity: `backfill-entity-matching.ts`, `backfill-entity-aliases.ts`, `recalc-entity-mention-counts.ts`, `merge-entity-duplicates.ts`, `delete-noise-entities.ts`, `verify-mentions.ts`, `run-full-backfill.ts`, `check-unmatched.ts`, `cleanup-entities.ts`, `fix-entities.ts`, `test-entity-matching.ts`, `test-entity-brief.ts`
+Entity: `backfill-entity-matching.ts`, `backfill-entity-aliases.ts`, `recalc-entity-mention-counts.ts`, `merge-entity-duplicates.ts`, `delete-noise-entities.ts`, `verify-mentions.ts`, `run-full-backfill.ts`, `check-unmatched.ts`, `cleanup-entities.ts`, `fix-entities.ts`, `test-entity-matching.ts`, `test-entity-brief.ts`, `embed-entities.ts`
 
 Scrapers: `scraper-playwright.ts`, `scraper-informea.ts`, `scraper-openalex.ts`, `scraper-ngo-reports.ts`, `scraper-agent.ts`, `scraper-un-library.ts`, `import-faolex.ts`
 

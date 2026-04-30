@@ -68,7 +68,7 @@ export async function GET(request: Request) {
       .from("users")
       .select("id, email, timezone, brief_time")
       .not("onboarded_at", "is", null)
-      .in("subscription_status", ["active", "trialing"]);
+      .in("subscription_status", ["active", "trial", "trialing"]);
 
     if (usersErr) {
       console.error("[generate-entity-briefs] Users fetch error:", usersErr.message);

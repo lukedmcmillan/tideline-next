@@ -1,13 +1,14 @@
 ﻿# Tideline — Live Project Status
 
-## Last completed: Onboarding v2 fix pass (2026-04-29, NOT pushed to main)
+## Last completed: Entity embeddings + semantic match activation (2026-04-29, commit 1b6951e)
 
-Phase 1 — 5 pre-flight fixes: complete ✓
-Phase 2a — JWT callback + onboarded_at on session: complete ✓
-Phase 2b — Middleware onboarding gate: complete ✓
-Phase 2c — CTA + /start success link: complete ✓
-
-**Next session first task — Phase 4**: local E2E smoke test + brief delivery proof before pushing to main.
+- Migration `20260429_entity_embedding_to_768.sql`: entities.embedding changed from vector(1536) → vector(768) to match Jina v2; RPC signature updated; ivfflat index recreated (lists=31)
+- `scripts/embed-entities.ts`: mirrors embed-stories.ts pattern, 942/942 entities embedded via Jina, 0 failures (~2 min)
+- `package.json`: `embeddings:entities` npm script added
+- `matchEntitiesToStory` Pass 3 (semantic) confirmed live: `[exact, semantic]` firing
+- Backfill run (182 stories, 11 loop iterations): 677/942 entities now have >= 1 story mention; 265 unmentioned remain (niche/not-yet-in-feed — expected)
+- `app/onboarding/page.tsx`: JWT refresh via `useSession().update()` before redirect when `needsOnboarding=false` (fixes middleware staleness loop)
+- Paste artifact cleanup: 6 shell-paste artifact files deleted before commit
 
 ---
 
@@ -31,14 +32,17 @@ Foundation work — completed and verified:
 Final entity table state: 942 entities, 688 aliases, 758 mentions, 0 'individual' type rows.
 
 Known follow-ups (not blocking):
-- 0 of 942 entities have embeddings — matcher's third semantic pass is dead. NEXT-PRIORITY: generate embeddings for all entities (use embeddings:stories pattern). High leverage — unlocks WTO, Indian Ocean Commission, and ~459 other zero-mention seeded entities.
-- RSS source maintenance from April 20 still unapplied (NOAA parent feed, DG MARE, UK MMO, HELCOM, DFO Canada to add; dead NOAA Fisheries entries to remove). 30-min PR.
+- 265 of 942 entities still have 0 story mentions — these are niche/seeded entities not yet covered by the feed. Will reduce naturally as cron runs with Pass 3 active.
+- RSS source maintenance from April 20: APPLIED (verified 2026-04-30). NOAA, UK MMO, HELCOM, DFO Canada all in sources.ts since April 20 commits. Dead NOAA Fisheries/EEA URLs also removed April 20. DG MARE skipped — `?c=` parameter does not filter content; deferred (see below).
 - 21 npm vulnerabilities reported by vitest install — do not run npm audit fix --force, leave alone unless one of the 2 highs is in production code.
+- `backfill-entity-matching.ts` only processes stories with `entities_extracted IS NULL/false`. Stories previously marked `entities_extracted=true` were not re-run through Pass 3. Future cron runs will cover new stories going forward.
+
+Deferred (medium priority):
+- **DG MARE RSS endpoint** — Press Corner `?c=Maritime+Affairs+and+Fisheries` does not filter feed content; returns generic EU Commission press releases. Investigate correctly-scoped endpoint or scrape `https://oceans-and-fisheries.ec.europa.eu/news_en` directly via Jina.
 
 Next session priorities (in order):
-1. Generate entity embeddings — scripts/embed-entities.ts following the embed-stories pattern
-2. RSS source maintenance PR
-3. Resume morning brief pipeline (priority 1 from TIDELINE-CONTEXT.md)
+1. Resume morning brief pipeline (priority 1 from TIDELINE-CONTEXT.md)
+2. Morning brief: personalised 7am email, pulls from stories + velocity_scores filtered by user_topics, quality-gated, via Resend
 
 ---
 
