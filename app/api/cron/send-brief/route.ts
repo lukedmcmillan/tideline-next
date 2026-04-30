@@ -100,28 +100,82 @@ async function generateSubjectLine(htmlContent: string): Promise<string | null> 
   }
 }
 
-const TOPIC_LABELS: Record<string, string> = {
-  governance: "Governance",
-  dsm: "Deep-Sea Mining",
-  bluefinance: "Blue Finance",
-  climate: "Climate",
-  iuu: "IUU",
-  mpa: "30x30",
-  fisheries: "Fisheries",
-  science: "Science",
-  shipping: "Shipping",
+// Maps tracker slugs (user.topics) → story content topic categories
+const TRACKER_TO_TOPICS: Record<string, string[]> = {
+  "bbnj": ["governance"],
+  "isa": ["dsm"],
+  "imo-shipping": ["shipping"],
+  "30x30": ["conservation"],
+  "mpa": ["conservation"],
+  "iuu": ["fisheries"],
+  "wto-fisheries": ["fisheries"],
+  "cites-marine": ["conservation", "science"],
+  "blue-finance": ["bluefinance"],
+  "bluefinance": ["bluefinance"],
+  "plastics": ["governance"],
+  "offshore-wind": ["climate"],
+  // identity mappings for users who onboarded with content topic names
+  "governance": ["governance"],
+  "fisheries": ["fisheries"],
+  "shipping": ["shipping"],
+  "dsm": ["dsm"],
+  "climate": ["climate"],
+  "science": ["science"],
 };
 
+// Display labels keyed by tracker slug or content topic
+const TOPIC_LABELS: Record<string, string> = {
+  "bbnj": "BBNJ",
+  "isa": "Deep-Sea Mining",
+  "imo-shipping": "Shipping",
+  "30x30": "30x30",
+  "mpa": "30x30",
+  "iuu": "IUU",
+  "wto-fisheries": "Fisheries",
+  "cites-marine": "Marine Species",
+  "blue-finance": "Blue Finance",
+  "plastics": "Plastics Treaty",
+  "offshore-wind": "Offshore Wind",
+  "governance": "Governance",
+  "fisheries": "Fisheries",
+  "dsm": "Deep-Sea Mining",
+  "bluefinance": "Blue Finance",
+  "climate": "Climate",
+  "science": "Science",
+  "shipping": "Shipping",
+  "conservation": "30x30",
+};
+
+function cleanTitle(raw: string): string {
+  const decoded = raw
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"');
+  // Strip leading category prefixes when 2+ colons present
+  const parts = decoded.split(":");
+  const text = parts.length >= 3 ? parts[parts.length - 1].trim() : decoded.trim();
+  // Capitalize first letter
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 function subjectFromStories(
-  stories: { title: string; topic: string }[]
+  stories: { title: string; topic: string }[],
+  userTopics: string[] | null
 ): string | null {
   if (stories.length === 0) return null;
   const top = stories[0];
-  const label = TOPIC_LABELS[top.topic] || top.topic;
-  // Trim title to ~8 words
-  const words = top.title.replace(/&amp;/g, "&").replace(/&#39;/g, "'").split(/\s+/);
-  const trimmed = words.length > 9 ? words.slice(0, 8).join(" ") + "…" : top.title;
-  return `${label}: ${trimmed}`;
+
+  // Derive label: prefer the matching tracker slug label, fall back to content topic
+  let label = TOPIC_LABELS[top.topic] || top.topic;
+  if (userTopics && userTopics.length > 0) {
+    const matchingTracker = userTopics.find(t =>
+      (TRACKER_TO_TOPICS[t] || [t]).includes(top.topic)
+    );
+    if (matchingTracker) label = TOPIC_LABELS[matchingTracker] || matchingTracker;
+  }
+
+  const headline = cleanTitle(top.title);
+  return `${label}: ${headline}`;
 }
 
 function injectPreheader(html: string, preheader: string): string {
@@ -316,7 +370,9 @@ export async function GET(request: Request) {
       const userTopics = sub.topics;
       let filteredStories = briefStories;
       if (userTopics && userTopics.length > 0 && briefStories.length > 0) {
-        filteredStories = briefStories.filter(s => userTopics.includes(s.topic));
+        filteredStories = briefStories.filter(s =>
+          userTopics.some(t => (TRACKER_TO_TOPICS[t] || [t]).includes(s.topic))
+        );
       }
 
       // Skip send if user has explicit topics but none match today's brief
@@ -332,8 +388,8 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Personalised subject line from filtered stories (falls back to AI-generated or base subject)
-      const userSubject = subjectFromStories(filteredStories) || subject;
+      // Personalised subject line from matched stories (falls back to AI-generated or base subject)
+      const userSubject = subjectFromStories(filteredStories, userTopics) || subject;
 
       // Inject per-user unsubscribe link
       const userHtml = sub.unsubscribe_token
