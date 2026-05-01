@@ -20,7 +20,7 @@ const T4     = "#9AA0A6";
 const BORDER = "#DADCE0";
 const BLT    = "#E8EAED";
 const F      = "'DM Sans', -apple-system, sans-serif";
-const M      = "var(--font-mono), 'DM Mono', monospace";
+const M      = "var(--font-sans), 'DM Sans', sans-serif";
 
 // ── Icons (inline SVG) ────────────────────────────────────────────────────
 const IcFeed = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>;
@@ -558,6 +558,7 @@ function RightPanel() {
   const isProjects = path?.startsWith("/platform/projects") || false;
 
   if (path === "/platform") return null;
+  if (path === "/platform/welcome") return null;
   if (path?.startsWith("/platform/tracker")) return null;
   if (path?.startsWith("/platform/directory")) return null;
   if (isCalendar) return <CalendarRightPanel />;
@@ -815,7 +816,7 @@ function WorkspaceBreadcrumb({ projectData }: { projectData: ProjectData[] }) {
   }
 
   const FSANS = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-  const MONO = "var(--font-mono), 'DM Mono', monospace";
+  const MONO = "var(--font-sans), 'DM Sans', sans-serif";
 
   return (
     <div ref={ref} style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, position: "relative" }}>

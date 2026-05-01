@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { entityTypeLabel } from "@/app/lib/entity-type-label";
 import { useSearchParams, useRouter } from "next/navigation";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ const BORDER  = "#DADCE0";
 const BLT     = "#E8EAED";
 const MINT_BG = "#F4FBF7";
 const F       = "'DM Sans', system-ui, sans-serif";
-const M       = "'DM Mono', monospace";
+const M       = "'DM Sans', sans-serif";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface EntityItem {
@@ -94,14 +95,7 @@ function truncateUrl(url: string): string {
   }
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  country: "Country", organization: "Org", company: "Company",
-  treaty: "Treaty", person: "Person", body: "Body",
-  fund: "Fund", vessel: "Vessel",
-};
-function typeLabel(t: string): string {
-  return TYPE_LABELS[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
-}
+const typeLabel = entityTypeLabel;
 
 const TRACKER_LABELS: Record<string, string> = {
   "isa": "ISA", "bbnj": "BBNJ", "iuu": "IUU", "30x30": "30x30",
