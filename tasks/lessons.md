@@ -17,6 +17,10 @@
 
 - **Node script + .env.local is sufficient for DB diagnostics** — No Docker or Supabase CLI needed. `npx @dotenvx/dotenvx run -f .env.local -- node -e "..."` gives a live DB read in seconds.
 
+### Entity Type Data Quality
+
+- **entity_type column has architectural debt** — At least 15 distinct values across three casing conventions (lowercase, UPPERCASE, mixed). Both `organization` and `organisation` exist as separate values. Future cleanup pass needed: normalise to lowercase singular, merge spelling variants, add CHECK constraint. Today's label mapper (`app/lib/entity-type-label.ts`) is a display-layer fix only — it does not address the underlying data inconsistency.
+
 ## 2026-04-28
 
 ### Onboarding Deploy
@@ -108,6 +112,34 @@
 ### Shell Cross-Terminal Paste Corruption
 
 - **Never paste multi-line commands across terminal types (PowerShell → bash)** — Three corrupted files named `ntent scripts<filename>.ts` (~2,822 bytes each) were silently created in the repo when bash interpreted a multi-line PowerShell paste as redirect-to-file operations. They passed linting but caused Vercel build failures on deploy. Lesson: run `git status` after every Claude Code session before committing; anything with a space in the filename or non-alphanumeric prefix is almost certainly a paste artifact. Delete before staging.
+
+## 2026-05-01
+
+### Morning Brief — LLM Prompt Voice
+
+- **LLM-generated copy needs explicit banned phrase lists, not just tone descriptions** — Haiku defaulted to consulting-firm-prose ('face expanded documentation requirements', 'bifurcating compliance requirements') until banned phrases were listed explicitly. The brief needed two prompt revisions: first to remove consultant-voice, second to remove epistemic-hedging tic ('specifics are unclear from the source'). When telling an LLM to be restrained, give it explicit alternative content to write instead — otherwise it narrates its own constraints.
+
+- **Brief content fails in two opposite directions** — Overreach: claiming regulatory change where the source says guidance. Underreach: narrating that the source is thin instead of writing what IS clear. Both undermine trust. The prompt must hold both rails: never escalate (guidance stays guidance), AND never apologise for source brevity (write what is there, stop).
+
+### Morning Brief — Content Selection
+
+- **selectEvidence needs a dedup pass** — Two near-identical stories about the same event made it into the same brief because selection ranked only by significance. Rule: same topic + 3+ overlapping headline words + published within 7 days = duplicate. Keep higher significance.
+
+- **Architecture: pre-summarise once, render per-user** — Haiku cost is O(pool_size) not O(pool × subscribers). Trivial difference at one subscriber, material at scale. Generate-brief summarises and stores JSONB; send-brief reads and renders.
+
+- **48-hour candidate window was too narrow** — At current ingestion volume, 48h produced 0-1 stories for low-volume topics. 7-day window yields ~3x candidate density. Sort by significance desc within the window — most-significant 7-day story beats most-recent empty brief.
+
+### Morning Brief — Architecture
+
+- **Significance is relative within topic, not absolute across topics** — governance averages 13/100, dsm 29.5, iuu 4.5. Absolute thresholds useless. Three-mode selectLead (story-led >=50, hybrid <50, state-led empty) handles this gracefully.
+
+- **TRACKER_LABELS must not conflate tracker slugs with topic values** — A single 19-entry map with both velocity_scores.tracker_slug keys and stories.topic keys does double duty silently. Any *_LABELS or *_LOOKUP map where the same value appears under multiple key types needs splitting. Split into TRACKER_LABELS (10 tracker slugs) and TOPIC_LABELS (9 topic values).
+
+### Morning Brief — Mobile UX
+
+- **Subject line truncation is mobile-critical** — Gmail and iOS Mail truncate at ~77 chars in notification preview. Long titles (100+ char BBNJ treaty names) need word-boundary truncation. Reserve 12-15 chars for the data-point appendix ('· Pulse 6.1'), leaving ~63-65 for headline.
+
+- **Architecture tests do not catch content quality** — vitest passes and API returns 200 does not mean the brief reads well. After every prompt change, run TEST_EMAIL and read it as a paying subscriber: consultant voice, hedge language, factual overreach, repetition. Build content-quality verification into the brief shipping process.
 
 ## 2026-04-30
 

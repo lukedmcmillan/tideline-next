@@ -1,6 +1,38 @@
 ﻿# Tideline — Live Project Status
 
-## Last completed: Entity embeddings + semantic match activation (2026-04-29, commit 1b6951e)
+## Last completed: Morning brief world-class rebuild (2026-05-01, commit 1c586b1)
+
+- New mobile-first brief shipped end-to-end. Cream background (#FAFAF7), system font stack, no DM Sans, no em dashes, no Plus Jakarta Sans.
+- Architectural shift: generate-brief now structures candidate pool (60 stories, 7-day window, 10 trackers, 14-day events). send-brief now per-user renders via compileBriefHtml.
+- Phase 1-4 complete and committed. Phase 4c TEST_EMAIL verified end-to-end with two distinct user topic sets (lukedmcmillan@gmail.com 7-topic, lukedmcmillan+prodtest2@gmail.com 3-topic). Per-user filtering confirmed working: different leads, conditions, evidence, across-sector content per user.
+- Subject line format: '[Cleaned headline] · [Pulse score OR event day-label]'. Double-Pulse guard prevents 'Pulse 5.9 ... · Pulse 5.6' repeats.
+- Quick Ask rotating library shipped: 10 weekday variants (5 days x A/B) + 3 edge cases (first_brief, high_significance_week, quiet_week).
+- Sign-off is day-aware: Mon-Thu 'Have a good [day]. I'll see you tomorrow at 7am.' Fri 'Have a good weekend. I'll see you Monday morning.'
+- TRACKER_LABELS split from TOPIC_LABELS — tracker slugs (10 entries) and story topic values (9 entries) are now separate maps. Vitest 48/48 passing.
+- selectEvidence dedup: same-topic stories with 3+ overlapping headline words within 7 days collapse to the higher-significance story.
+- Action signal tiebreaker: within 10 significance points, prefers stories with action keywords (ratif, adopt, enforc, sanction, decision, resolution, agreement, signed, implement, deadline, mandate, binding, consultation, vote). ACTION_SIGNAL_KEYWORDS exported from utils.ts.
+- ConditionRow.interpretation field added: populated from velocity_scores.interpretation (truncated 80 chars) or rule-based band fallback (ELEVATED/WATCH/LOW). Renders 11px muted below the score row.
+- Haiku SUMMARY_SYSTEM_PROMPT rewritten twice: first for operator voice + epistemic restraint (removes consultant-voice), then refined to remove 'narrating ignorance' tic. Final prompt: 4-priority sentence 2 logic (named concrete change > next event > named entity > one additional fact). Banned phrases include 'remain unclear from source', 'not detailed in available text', any hedge on writer's knowledge. 0/45 summaries flagged on final scan.
+- generate-brief writes structured JSONB to brief_buffer.stories: { candidate_stories, all_tracker_scores, all_events, work_revealed_count, generated_at }. html_content set NULL.
+- send-brief detects legacy Array format and skips with 200 + log (no 422 errors).
+- Subscription filter for brief eligibility: 'active', 'trial', 'trialing'.
+- vercel.json schedules confirmed weekday-only (1-5) for both generate-brief and send-brief.
+
+Pending follow-ups (NOT blocking — monitor first production week):
+- TRACKER_TO_TOPICS is coarse: plastics, bbnj, 30x30 all map to 'governance'. selectLead may surface BBNJ stories to plastics-tracker subscribers. Fix paths: (a) granular AI topic tagging, (b) substring keyword filter post-topic-match. Revisit after first week of real subscriber data.
+- velocity_scores returned 10 trackers in cron run; confirm whether all 11 expected slugs are scoring.
+- BBNJ tracker reads 1.2 LOW despite governance topic having content — attribution path issue or genuine low BBNJ activity. Investigate.
+- Dual summarisation debt: generate-brief and summarise-pending both call Haiku for the same stories with different output formats. Haiku cost doubled. Consolidate when brief is stable in production.
+- TIDELINE-CONTEXT.md is UTF-16 encoded, garbled in terminal. Convert to UTF-8 and recommit.
+- ngo_campaigner starter set revision pending: 10-entity list (regulators + treaties + watchdogs, no peer NGOs). Drafted in chat. Apply before more subscribers sign up under that job_type.
+- Welcome screen build (/platform/welcome): investigation complete, build pending. Top 3 entities by 30-day mention count; rule-based 'why it matters' lines; cold-start caveat.
+- lukedmcmillan@gmail.com topics: confirm current 7-topic state is real preference or revert.
+
+Next session priority: monitor production morning brief for one full week. Watch open rates, Quick Ask reply rates, churn signals. Then prioritise: (a) ngo_campaigner starter set, (b) welcome screen build, (c) divergence detection (spec deferred).
+
+---
+
+## Previous: Entity embeddings + semantic match activation (2026-04-29, commit 1b6951e)
 
 - Migration `20260429_entity_embedding_to_768.sql`: entities.embedding changed from vector(1536) → vector(768) to match Jina v2; RPC signature updated; ivfflat index recreated (lists=31)
 - `scripts/embed-entities.ts`: mirrors embed-stories.ts pattern, 942/942 entities embedded via Jina, 0 failures (~2 min)
