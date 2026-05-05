@@ -10,6 +10,16 @@
 - **Verification checklist before "ship it"**: caught 5 issues that would have shipped: badge colour mismatch, untracked backup file, missing sidebar logo, 2 reduced-motion gaps.
 - **ui-ux-pro-max skill integration**: locked design tokens override works when explicitly fenced in the prompt with "CRITICAL OVERRIDES" section. Without fencing, the skill's own palettes leak in.
 
+## Database patterns (2026-05-05 additions)
+
+- **Supabase SQL Editor closes transactions silently between query submissions**: BEGIN/COMMIT must be in a single paste submission — do not pause between BEGIN and COMMIT to run a verification SELECT. That SELECT runs outside the transaction and the transaction is silently discarded. Pattern: submit all DML inside BEGIN/COMMIT as one paste; run verification SELECT as a separate submission after COMMIT; write forward corrections if verification shows residual rows (data is already committed, no rollback available).
+
+## Auth patterns (2026-05-05)
+
+- **NextAuth `getToken()` cookie name mismatch on Vercel serverless**: middleware runs on Vercel Edge where `req.url` is the real HTTPS URL. Serverless API routes get an internal `http://` URL. `getToken()` auto-detects cookie name from URL scheme: HTTPS → `__Secure-next-auth.session-token`, HTTP → `next-auth.session-token`. The cookie was set with the Secure prefix, so API routes return null. Fix: pass `secureCookie: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false` explicitly to `getToken`.
+- **Hardcoded email fallbacks are a security bug, not a dev convenience**: any API route with `if (!email) email = "owner@example.com"` will silently execute writes under the owner's account for any unauthenticated request. These should be treated as security vulnerabilities. The correct pattern is `if (!email) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })`.
+- **Staged auth fix deployment**: when fixing auth that previously had fallbacks, always deploy the cookie-fix first with fallbacks still in place, verify authenticated requests resolve correctly in Vercel logs, then deploy the fallback removal as a second commit. Never bundle the two changes.
+
 ## Technical patterns
 
 - **Next.js 16 dark-mode-on-one-page**: set background on the page component, not the layout. Keeps other /platform routes untouched.

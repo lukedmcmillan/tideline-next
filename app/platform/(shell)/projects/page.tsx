@@ -171,12 +171,93 @@ function NewProjectCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (name: string, type: string, description: string) => void }) {
+function NewProjectModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (name: string) => void }) {
+  const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("situation_report");
+  const [entityQuery, setEntityQuery] = useState("");
+  const [entityResults, setEntityResults] = useState<{ id: string; name: string; entity_type: string }[]>([]);
+  const [selectedEntities, setSelectedEntities] = useState<{ id: string; name: string }[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setStep(1); setName(""); setDescription(""); setType("situation_report");
+      setEntityQuery(""); setEntityResults([]); setSelectedEntities([]); setCreating(false); setError(null);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (entityQuery.trim().length < 2) { setEntityResults([]); return; }
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/entities/search?q=${encodeURIComponent(entityQuery.trim())}`);
+        if (r.ok) {
+          const d = await r.json();
+          const selIds = new Set(selectedEntities.map(e => e.id));
+          setEntityResults((d.entities || []).filter((e: { id: string }) => !selIds.has(e.id)).slice(0, 8));
+        }
+      } catch {}
+    }, 300);
+    return () => clearTimeout(t);
+  }, [entityQuery, selectedEntities]);
+
   if (!open) return null;
-  const canCreate = name.trim().length > 0;
+
+  const canProceed = name.trim().length > 0;
+  const canSubmit = selectedEntities.length >= 1;
+
+  const addEntity = (e: { id: string; name: string }) => {
+    if (selectedEntities.length >= 10) return;
+    setSelectedEntities(prev => [...prev, e]);
+    setEntityQuery("");
+    setEntityResults([]);
+  };
+
+  const removeEntity = (id: string) => setSelectedEntities(prev => prev.filter(e => e.id !== id));
+
+  const handleSubmit = async () => {
+    if (!canSubmit || creating) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const r = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), project_type: type, description: description.trim() }),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setError((d as { error?: string }).error || "Failed to create project.");
+        setCreating(false);
+        return;
+      }
+      const { project_id } = await r.json() as { project_id: string };
+
+      const results = await Promise.allSettled(
+        selectedEntities.map(e =>
+          fetch("/api/project-entities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ project_id, entity_id: e.id }),
+          }).then(res => { if (!res.ok) throw new Error(); })
+        )
+      );
+      const failures = results.filter(r => r.status === "rejected").length;
+      if (failures > 0) {
+        setError("Workspace created but some entities failed to attach. Open it to add them manually.");
+        setTimeout(() => onCreated(name.trim()), 1500);
+      } else {
+        onCreated(name.trim());
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setCreating(false);
+    }
+  };
+
   const types = [
     { id: "situation_report", label: "Situation", desc: "What is happening with a topic right now" },
     { id: "investigation", label: "Investigation", desc: "Build a case file on a developing story" },
@@ -184,36 +265,99 @@ function NewProjectModal({ open, onClose, onCreate }: { open: boolean; onClose: 
     { id: "briefing_note", label: "Briefing", desc: "Prepare to speak or present" },
     { id: "deal_monitor", label: "Deal", desc: "Track a transaction" },
   ];
+
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={e => e.stopPropagation()} style={{ width: 520, background: "#FFFFFF", borderRadius: 12, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
-          <div style={{ fontFamily: FUI, fontSize: 17, fontWeight: 800, color: T1, letterSpacing: "-0.3px" }}>New project</div>
+          <div>
+            <div style={{ fontFamily: FUI, fontSize: 17, fontWeight: 800, color: T1, letterSpacing: "-0.3px" }}>New project</div>
+            <div style={{ fontFamily: F, fontSize: 11, color: T4, marginTop: 2 }}>Step {step} of 2</div>
+          </div>
           <button onClick={onClose} style={{ width: 28, height: 28, background: "none", border: "none", color: T3, fontSize: 16, cursor: "pointer", lineHeight: 1 }}>x</button>
         </div>
-        <div style={{ padding: "16px 24px 20px" }}>
-          <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginBottom: 8 }}>Project name</div>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Name your project" style={{ width: "100%", padding: "10px 14px", fontFamily: FUI, fontSize: 14, fontWeight: 600, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box" }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
-          <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 4 }}>What is this project about?</div>
-          <div style={{ fontFamily: F, fontSize: 11, color: T4, marginBottom: 8 }}>One sentence, this becomes the card summary and helps Tideline match the right intelligence.</div>
-          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project tracking?" rows={2} style={{ width: "100%", padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5 }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
-          <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 8 }}>Project type</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-            {types.map(t => {
-              const sel = type === t.id;
-              return (
-                <div key={t.id} onClick={() => setType(t.id)} style={{ border: `1.5px solid ${sel ? TEAL : BD}`, background: sel ? "rgba(29,158,117,0.08)" : "#FFFFFF", borderRadius: 8, padding: "10px 12px", textAlign: "center", cursor: "pointer" }}>
-                  <div style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 4 }}>{t.label}</div>
-                  <div style={{ fontFamily: F, fontSize: 10, color: T3, lineHeight: 1.3 }}>{t.desc}</div>
+
+        {step === 1 ? (
+          <>
+            <div style={{ padding: "16px 24px 20px" }}>
+              <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginBottom: 8 }}>Project name</div>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Name your project" autoFocus style={{ width: "100%", padding: "10px 14px", fontFamily: FUI, fontSize: 14, fontWeight: 600, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box" }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
+              <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 4 }}>What is this project about?</div>
+              <div style={{ fontFamily: F, fontSize: 11, color: T4, marginBottom: 8 }}>One sentence, this becomes the card summary and helps Tideline match the right intelligence.</div>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project tracking?" rows={2} style={{ width: "100%", padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5 }} onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }} onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }} />
+              <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginTop: 18, marginBottom: 8 }}>Project type</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {types.map(t => {
+                  const sel = type === t.id;
+                  return (
+                    <div key={t.id} onClick={() => setType(t.id)} style={{ border: `1.5px solid ${sel ? TEAL : BD}`, background: sel ? "rgba(29,158,117,0.08)" : "#FFFFFF", borderRadius: 8, padding: "10px 12px", textAlign: "center", cursor: "pointer" }}>
+                      <div style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T1, marginBottom: 4 }}>{t.label}</div>
+                      <div style={{ fontFamily: F, fontSize: 10, color: T3, lineHeight: 1.3 }}>{t.desc}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
+              <button onClick={onClose} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T3, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => { if (canProceed) setStep(2); }} disabled={!canProceed} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: canProceed ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: canProceed ? "pointer" : "not-allowed" }}>{"Next \u203a"}</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ padding: "16px 24px 20px" }}>
+              <div style={{ fontFamily: M, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T4, marginBottom: 4 }}>Track entities</div>
+              <div style={{ fontFamily: F, fontSize: 11, color: T4, marginBottom: 12 }}>Tideline will file new stories automatically when any tracked entity appears. At least 1 required, max 10.</div>
+
+              {selectedEntities.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                  {selectedEntities.map(e => (
+                    <span key={e.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", fontFamily: F, fontSize: 12, fontWeight: 500, color: T1, border: `1px solid ${BD}`, borderRadius: 20, background: "#FFFFFF" }}>
+                      {e.name}
+                      <button onClick={() => removeEntity(e.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, color: T4, fontSize: 14, display: "flex", alignItems: "center" }}>{"×"}</button>
+                    </span>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
-          <button onClick={onClose} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T3, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, cursor: "pointer" }}>Cancel</button>
-          <button onClick={() => { if (canCreate) onCreate(name.trim(), type, description.trim()); }} disabled={!canCreate} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: canCreate ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: canCreate ? "pointer" : "not-allowed" }}>{"Create project \u203a"}</button>
-        </div>
+              )}
+
+              <div style={{ position: "relative" }}>
+                <input
+                  value={entityQuery}
+                  onChange={e => setEntityQuery(e.target.value)}
+                  placeholder={selectedEntities.length >= 10 ? "Max 10 entities reached" : "Search for an organisation, country, treaty..."}
+                  disabled={selectedEntities.length >= 10}
+                  autoFocus
+                  style={{ width: "100%", padding: "10px 14px", fontFamily: F, fontSize: 13, color: T1, border: `1px solid ${BD}`, borderRadius: 7, outline: "none", boxSizing: "border-box", background: selectedEntities.length >= 10 ? "#F8F9FA" : "#FFFFFF" }}
+                  onFocus={e => { (e.target as HTMLElement).style.borderColor = TEAL; }}
+                  onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }}
+                />
+                {entityResults.length > 0 && (
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", zIndex: 10, overflow: "hidden" }}>
+                    {entityResults.map((e, i) => (
+                      <div key={e.id} onMouseDown={() => addEntity({ id: e.id, name: e.name })} style={{ padding: "9px 14px", fontFamily: F, fontSize: 13, color: T1, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, borderBottom: i < entityResults.length - 1 ? `1px solid ${BD}` : "none" }}>
+                        <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase" as const, color: T4, letterSpacing: "0.05em", minWidth: 56 }}>{e.entity_type}</span>
+                        {e.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div style={{ marginTop: 10, fontFamily: F, fontSize: 13, color: "#E24B4A" }}>{error}</div>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", borderTop: `1px solid ${BD}` }}>
+              <button onClick={() => { setStep(1); setError(null); }} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T3, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, cursor: "pointer" }}>Back</button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={onClose} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 500, color: T3, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, cursor: "pointer" }}>Cancel</button>
+                <button onClick={handleSubmit} disabled={!canSubmit || creating} style={{ height: 34, padding: "0 16px", fontFamily: FUI, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: canSubmit && !creating ? TEAL : "#BDC1C6", border: "none", borderRadius: 7, cursor: canSubmit && !creating ? "pointer" : "not-allowed" }}>
+                  {creating ? "Creating..." : "Create project"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -243,14 +387,9 @@ export default function ProjectsIndexPage() {
     return label === filter;
   });
 
-  const handleCreate = async (name: string, type: string, description: string) => {
-    try {
-      const r = await fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, project_type: type, description }) });
-      if (r.ok) {
-        setShowNewModal(false);
-        router.push(`/platform/projects/${encodeURIComponent(name)}`);
-      }
-    } catch {}
+  const handleCreate = (name: string) => {
+    setShowNewModal(false);
+    router.push(`/platform/projects/${encodeURIComponent(name)}`);
   };
 
   return (
@@ -314,7 +453,7 @@ export default function ProjectsIndexPage() {
           <NewProjectCard onClick={() => setShowNewModal(true)} />
         </div>
       </div>
-      <NewProjectModal open={showNewModal} onClose={() => setShowNewModal(false)} onCreate={handleCreate} />
+      <NewProjectModal open={showNewModal} onClose={() => setShowNewModal(false)} onCreated={handleCreate} />
     </div>
   );
 }

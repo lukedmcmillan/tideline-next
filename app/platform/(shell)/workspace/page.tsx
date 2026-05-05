@@ -386,7 +386,9 @@ interface AutoEntry {
   id: string;
   story_id: string;
   entry_type: string;
-  content: string;
+  content: string | null;
+  matched_entity_id: string | null;
+  matched_entity_name: string | null;
   reviewed: boolean;
   accepted: boolean;
   dismissed: boolean;
@@ -901,9 +903,38 @@ function NewSinceLastVisitBanner({ updates = [] }: { updates?: { text: string; t
 // -- Right sidebar tabs -----------------------------------------------------------
 // Source type badge mapping for workspace
 const SOURCE_TYPE_TIER: Record<string, string> = { gov: "Official", reg: "Official", ngo: "Wire", res: "Original", media: "Wire", esg: "Wire" };
+const AMBER = "#EF9F27";
 
-function SourcesTabContent({ stories, docs }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[] }) {
+interface ProjectEntity {
+  id: string;
+  entity_id: string;
+  entities: { id: string; name: string; entity_type: string } | null;
+}
+interface EntitySearchResult { id: string; name: string; entity_type: string; mention_count: number }
+
+function SourcesTabContent({
+  stories, docs, autoEntries, newCount, prevViewedAt, projectEntities, entityError,
+  onAddEntity, onRemoveEntity,
+}: {
+  stories: SourceStory[];
+  docs: { id: string; title: string; updated_at: string }[];
+  autoEntries: AutoEntry[];
+  newCount: number;
+  prevViewedAt: string | null;
+  projectEntities: ProjectEntity[];
+  entityError: string | null;
+  onAddEntity: (entityId: string) => Promise<void>;
+  onRemoveEntity: (entityId: string) => Promise<void>;
+}) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<EntitySearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
+
   const totalCount = stories.length + docs.length;
+  const prevTime = prevViewedAt ? new Date(prevViewedAt).getTime() : 0;
+
   const tierColors: Record<string, { bg: string; color: string; border: string }> = {
     Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
     Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
@@ -914,13 +945,106 @@ function SourcesTabContent({ stories, docs }: { stories: SourceStory[]; docs: { 
     URL: { bg: "#DBEAFE", color: "#1D4ED8" },
     Doc: { bg: "#F0FDF4", color: "#22C55E" },
   };
+
+  const runSearch = async (q: string) => {
+    if (q.length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const r = await fetch(`/api/entities/search?q=${encodeURIComponent(q)}`);
+      if (r.ok) { const d = await r.json(); setSearchResults(d.entities || []); }
+    } catch {}
+    setSearchLoading(false);
+  };
+
+  const handleAddEntity = async (entityId: string) => {
+    setAdding(entityId);
+    await onAddEntity(entityId);
+    setAdding(null);
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
   return (
     <div>
-      <div style={{ background: "rgba(29,158,117,0.04)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
-        <span style={{ fontFamily: F, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{totalCount}</span>
+      {/* ── Entity chips panel ──────────────────────────────────── */}
+      <div style={{ borderBottom: `1px solid ${BD}`, padding: "10px 12px" }}>
+        <div style={{ fontFamily: F, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: T4, marginBottom: 8 }}>Tracked entities</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          {projectEntities.map(pe => (
+            <span key={pe.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: F, fontSize: 11, color: T1, border: `1px solid ${BD}`, borderRadius: 999, padding: "3px 8px 3px 10px", background: WHITE }}>
+              {pe.entities?.name ?? "Unknown"}
+              <button onClick={() => onRemoveEntity(pe.entity_id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, color: T4, fontSize: 13, display: "flex", alignItems: "center" }} title="Remove">{"\u00D7"}</button>
+            </span>
+          ))}
+          <button onClick={() => { setSearchOpen(s => !s); setSearchQuery(""); setSearchResults([]); }} style={{ fontFamily: F, fontSize: 11, color: TEAL, border: `1px solid ${TEAL}`, borderRadius: 999, padding: "3px 10px", background: WHITE, cursor: "pointer" }}>
+            {searchOpen ? "Cancel" : "+ Add entity"}
+          </button>
+        </div>
+        {searchOpen && (
+          <div style={{ marginTop: 8 }}>
+            <input
+              autoFocus value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); runSearch(e.target.value); }}
+              placeholder="Search entities..."
+              style={{ width: "100%", padding: "6px 10px", fontFamily: F, fontSize: 12, border: `1px solid ${BD}`, borderRadius: 4, outline: "none", boxSizing: "border-box" }}
+            />
+            {searchLoading && <div style={{ fontFamily: F, fontSize: 11, color: T4, padding: "6px 2px" }}>Searching...</div>}
+            {searchResults.length > 0 && (
+              <div style={{ marginTop: 4, border: `1px solid ${BD}`, borderRadius: 4, overflow: "hidden" }}>
+                {searchResults.map(e => (
+                  <button key={e.id} onClick={() => handleAddEntity(e.id)} disabled={adding === e.id}
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 10px", fontFamily: F, fontSize: 12, color: T1, background: adding === e.id ? BG : WHITE, border: "none", borderBottom: `1px solid ${BD}`, cursor: "pointer" }}>
+                    {e.name}<span style={{ fontFamily: F, fontSize: 10, color: T4, marginLeft: 6 }}>{e.entity_type}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {entityError && <div style={{ fontFamily: F, fontSize: 13, color: "#E24B4A", marginTop: 5 }}>{entityError}</div>}
+          </div>
+        )}
       </div>
+
+      {/* ── 'N new since your last visit' badge ─────────────────── */}
+      {newCount > 0 && (
+        <div style={{ borderLeft: `3px solid ${AMBER}`, margin: "10px 12px 0", padding: "7px 10px" }}>
+          <span style={{ fontFamily: F, fontSize: 12, color: T2, fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{newCount}</span>{" "}
+            {newCount === 1 ? "new since your last visit" : "new since your last visit"}
+          </span>
+        </div>
+      )}
+
+      <div style={{ background: "rgba(29,158,117,0.04)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+        <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
+        <span style={{ fontFamily: F, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{totalCount + autoEntries.length}</span>
+      </div>
+
       <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Auto-attached entity_match entries -- amber border if new */}
+        {autoEntries.map(e => {
+          const isNew = prevViewedAt !== null && new Date(e.inserted_at).getTime() > prevTime;
+          // Abbreviate entity name to fit the 20x20 badge: use up to 4 chars uppercase.
+          // Most ocean governance entities have 2-4 char acronyms (ISA, IMO, BBNJ, OSPAR).
+          const entityBadge = e.matched_entity_name
+            ? e.matched_entity_name.replace(/[^A-Z]/g, "").slice(0, 4) ||
+              e.matched_entity_name.slice(0, 4).toUpperCase()
+            : "AUTO";
+          return (
+            <div key={e.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderLeft: isNew ? `3px solid ${AMBER}` : `1px solid ${BD}`, borderRadius: 7, background: WHITE }}>
+              <span style={{ width: 20, height: 20, borderRadius: 3, background: "rgba(239,159,39,0.10)", color: AMBER, fontFamily: F, fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, letterSpacing: "0.04em" }}>{entityBadge}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.story_title ?? "Untitled"}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+                  {e.story_source && <span style={{ fontFamily: F, fontSize: 9.5, color: T4 }}>{e.story_source}</span>}
+                  {e.story_date && <span style={{ fontFamily: F, fontSize: 9.5, color: T4 }}>{fmtDate(e.story_date)}</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Manually attached stories */}
         {stories.map(s => {
           const tierLabel = SOURCE_TYPE_TIER[s.source_type || ""] || "Wire";
           const tier = tierColors[tierLabel] || tierColors.Wire;
@@ -951,7 +1075,7 @@ function SourcesTabContent({ stories, docs }: { stories: SourceStory[]; docs: { 
             </div>
           );
         })}
-        {totalCount === 0 && (
+        {totalCount === 0 && autoEntries.length === 0 && (
           <div style={{ padding: "24px 12px", textAlign: "center" }}>
             <div style={{ fontFamily: F, fontSize: 12, color: T4, lineHeight: 1.6 }}>No sources attached yet. Save stories from the feed or upload documents to build your project library.</div>
           </div>
@@ -1131,8 +1255,69 @@ function LiveTabContent() {
   );
 }
 
-function RightSidebar({ stories, docs, onDraft }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; onDraft?: () => void }) {
+function RightSidebar({ stories, docs, projectId, onDraft }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; projectId: string | null; onDraft?: () => void }) {
   const [tab, setTab] = useState<"sources" | "intel" | "people" | "live">("sources");
+  const [autoEntries, setAutoEntries] = useState<AutoEntry[]>([]);
+  const [newCount, setNewCount] = useState(0);
+  const [prevViewedAt, setPrevViewedAt] = useState<string | null>(null);
+  const [projectEntities, setProjectEntities] = useState<ProjectEntity[]>([]);
+  const [entityError, setEntityError] = useState<string | null>(null);
+
+  // Fetch auto-entries + project entities whenever the active project changes
+  useEffect(() => {
+    if (!projectId) {
+      setAutoEntries([]); setNewCount(0); setPrevViewedAt(null); setProjectEntities([]);
+      return;
+    }
+    // Entries (also atomically updates last_viewed_at via touch_project_viewed)
+    fetch(`/api/project-entries/${projectId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return;
+        // Only show entity_match rows in Sources tab; other types belong in Intel
+        const entityRows = (d.entries || []).filter((e: AutoEntry) => e.entry_type === "entity_match");
+        setAutoEntries(entityRows);
+        setNewCount(d.new_count ?? 0);
+        setPrevViewedAt(d.prev_viewed_at ?? null);
+      })
+      .catch(() => {});
+
+    // Tracked entities (for chips panel)
+    fetch(`/api/project-entities?project_id=${projectId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setProjectEntities(d.project_entities || []); })
+      .catch(() => {});
+  }, [projectId]);
+
+  const addEntity = async (entityId: string) => {
+    setEntityError(null);
+    if (!projectId) return;
+    const r = await fetch("/api/project-entities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: projectId, entity_id: entityId }),
+    });
+    if (r.status === 422) { setEntityError("Max 10 entities per workspace"); return; }
+    if (r.status === 409) { setEntityError("Already tracking this entity"); return; }
+    if (!r.ok) { setEntityError("Failed to add entity"); return; }
+    // Refresh chips
+    fetch(`/api/project-entities?project_id=${projectId}`)
+      .then(r2 => r2.ok ? r2.json() : null)
+      .then(d => { if (d) setProjectEntities(d.project_entities || []); })
+      .catch(() => {});
+  };
+
+  const removeEntity = async (entityId: string) => {
+    setEntityError(null);
+    if (!projectId) return;
+    await fetch("/api/project-entities", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: projectId, entity_id: entityId }),
+    });
+    setProjectEntities(prev => prev.filter(pe => pe.entity_id !== entityId));
+  };
+
   const tabs = [
     { id: "sources" as const, label: "Sources", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="9" height="9" rx="1"/><path d="M4 5h5M4 7h5M4 9h3"/></svg> },
     { id: "intel" as const, label: "Intel", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M6.5 4v3l2 1"/></svg> },
@@ -1160,7 +1345,14 @@ function RightSidebar({ stories, docs, onDraft }: { stories: SourceStory[]; docs
         })}
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {tab === "sources" && <SourcesTabContent stories={stories} docs={docs} />}
+        {tab === "sources" && (
+          <SourcesTabContent
+            stories={stories} docs={docs}
+            autoEntries={autoEntries} newCount={newCount} prevViewedAt={prevViewedAt}
+            projectEntities={projectEntities} entityError={entityError}
+            onAddEntity={addEntity} onRemoveEntity={removeEntity}
+          />
+        )}
         {tab === "intel" && <IntelTabContent onDraft={onDraft} />}
         {tab === "people" && <PeopleTabContent />}
         {tab === "live" && <LiveTabContent />}
@@ -1973,7 +2165,7 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <RightSidebar stories={projectStories} docs={projectDocs} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
+      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
       {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} onSourcesFound={(src) => { const unique = src.filter((s, i, arr) => arr.findIndex(x => x.document_id === s.document_id) === i); setAskLibrarySources(unique); }} />}

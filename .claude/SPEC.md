@@ -1,40 +1,43 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-05 — Threshold alert email template complete
+## Last session: 2026-05-05 — Active project watcher + auth bug diagnosis
 
-WHAT SHIPPED (committed locally, NOT yet pushed):
-- New files: `emails/threshold-alert.tsx`, `lib/email/sparkline.ts`,
-  `lib/email/alert-data.ts`, `scripts/test-alert-email.tsx`
-- Modified: `app/api/cron/threshold-alerts/route.ts` — `buildEmail()` and
-  Resend payload only; detection logic and cron schedule untouched
-- Migrations applied to production:
-  - `alert_sends.interpretation` (text, nullable)
-  - `alert_sends.velocity_calculated_at` (timestamptz, nullable)
+WHAT SHIPPED:
+- Active project watcher Phases A-E complete (code written, NOT yet verified end-to-end):
+  - `supabase/migrations/20260505_project_entities.sql` — applied to production
+  - `supabase/migrations/20260505_matched_entity_id.sql` — written, needs Studio apply
+  - `app/api/project-entities/route.ts` — GET/POST/DELETE with ownership gate
+  - `app/api/project-entries/[id]/route.ts` — updated: entity enrichment, new_count, touch_project_viewed RPC
+  - `lib/entity-matching.ts` — auto-attach hook: matched stories → project_auto_entries
+  - `app/platform/(shell)/workspace/page.tsx` — Sources tab: entity chips, new-item badge, amber highlight
+  - `app/platform/(shell)/projects/page.tsx` — two-step NewProjectModal with entity picker
 
-KEY DESIGN DECISIONS:
-- Cache key for Haiku interpretation: `(tracker_slug, velocity_calculated_at)`
-  — one crossing event = one Haiku call, no time-window reuse
-- Sparkline y-axis hardcoded 0–10 (not auto-scaled to input range)
-- Direction arrow colour: teal ▲ for up, red ▼ for down, regardless of
-  destination band
-- `trackedEntities` footer: `[domainName]` placeholder; per-user entity
-  lookup deferred (requires extra joins not yet in the alert pipeline)
-- Band colours in this template only: LOW=#E24B4A, WATCH=#EF9F27,
-  ELEVATED+HIGH=#1D9E75
+ACTIVE BUG — Phase E entity attaches return 401:
+- Root cause: `getEmailFromSession` uses `next-auth/jwt` `getToken()` without `secureCookie` option
+- Vercel serverless API routes see HTTP URL internally; `getToken` looks for `next-auth.session-token` but cookie is `__Secure-next-auth.session-token`
+- Result: all API routes returning 401 for authenticated users; 6 routes have hardcoded `lukedmcmillan@hotmail.com` fallback masking this
+- Fix planned: Part A (secureCookie fix in auth.ts) then Part B (remove 6 fallbacks)
 
-VISUAL VERIFICATION:
-- Both test variants (WATCH→ELEVATED, HIGH→ELEVATED) rendered and confirmed
-  in Gmail web via Resend sends (ids: 3a85383a, c7c59077)
-- Arrow colour checks PASS in rendered HTML
+DATABASE STATE:
+- Orphan migration (consolidate hotmail → gmail user_id across 13 tables) was attempted but COMMIT never landed (Supabase SQL Editor closes transactions silently between submissions)
+- 14 projects: 8 under c652... (gmail), 6 under 05f3... (hotmail) — both same person, no corruption
+- All data intact in original state
 
-RESEND API KEY ROTATED: Key accidentally printed to terminal during
-diagnosis. Rotate at resend.com/api-keys before next production send.
+NEXTAUTH_SECRET ROTATED in .env.local tonight. Must confirm Vercel production matches before any deploy.
 
-NEXT SESSION FIRST ACTIONS:
-1. Rotate Resend API key + update .env.local + Vercel env
-2. Commit all new files (emails/, lib/email/, scripts/test-alert-email.tsx,
-   cron route, migrations)
-3. Push to origin/main and verify Vercel build
+NEXT SESSION — IN ORDER:
+1. PRE-FLIGHT: confirm NEXTAUTH_SECRET and NEXTAUTH_URL in Vercel production env vars match .env.local
+2. ORPHAN MIGRATION: re-run as single BEGIN/COMMIT submission in Supabase Studio SQL editor
+3. PART A: add `secureCookie: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false` to getToken in app/lib/auth.ts + temporary console.log. Deploy. Verify email resolves in Vercel logs.
+4. PART B (only after Part A verified): remove 6 hardcoded fallbacks in projects, project-entries, documents routes. Replace with if (!email) return 401. Remove console.log. Deploy.
+5. VERIFY: create workspace with 2 entities, confirm 2 rows in project_entities.
+
+Files with hardcoded fallbacks to remove in Part B:
+- app/api/projects/route.ts:12
+- app/api/projects/[id]/route.ts:12
+- app/api/project-entries/[id]/route.ts:15 and :111
+- app/api/documents/route.ts:12
+- app/api/documents/[id]/route.ts:12
 
 ---
 

@@ -218,6 +218,54 @@ export async function matchEntitiesToStory(
         });
       }
     }
+
+    // ── Auto-attach to projects that track any of the matched entities ────────
+    // Single query across all matched entity IDs — one round trip.
+    // Wrapped in try/catch: auto-attach is a side effect of matching; any
+    // failure here must not abort the parent matchEntitiesToStory() call.
+    const matchedEntityIds = finalMatches.map((m) => m.entityId);
+    try {
+      const { data: projectLinks } = await supabase
+        .from("project_entities")
+        .select("project_id, entity_id")
+        .in("entity_id", matchedEntityIds);
+
+      if (projectLinks && projectLinks.length > 0) {
+        // For each project, take the first matched entity as the attribution label.
+        // If multiple tracked entities matched the same story, the first wins.
+        const projectEntityMap = new Map<string, string>();
+        for (const link of projectLinks as { project_id: string; entity_id: string }[]) {
+          if (!projectEntityMap.has(link.project_id)) {
+            projectEntityMap.set(link.project_id, link.entity_id);
+          }
+        }
+
+        for (const [projectId, matchedEntityId] of projectEntityMap.entries()) {
+          const { error: upsertErr } = await supabase
+            .from("project_auto_entries")
+            .upsert(
+              {
+                project_id: projectId,
+                story_id: storyId,
+                entry_type: "entity_match",
+                content: null,
+                matched_entity_id: matchedEntityId,
+                auto_inserted: true,
+                reviewed: false,
+                inserted_at: new Date().toISOString(),
+              },
+              { onConflict: "project_id,story_id", ignoreDuplicates: true }
+            );
+          if (upsertErr) throw new Error(`upsert failed for project ${projectId}: ${upsertErr.message}`);
+        }
+
+        console.log(
+          `[entity-match] auto-attached story ${storyId} to ${projectIds.length} project(s)`
+        );
+      }
+    } catch (err) {
+      console.error(`[entity-match] auto-attach failed for story ${storyId}:`, err);
+    }
   }
 
   const entityIds = finalMatches.map((m) => m.entityId);
