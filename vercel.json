@@ -27,8 +27,6 @@
     {"path": "/api/cron/scrape-isa", "schedule": "0 5 * * 2"},
     {"path": "/api/cron/scrape-psma", "schedule": "0 8 * * 3"},
     {"path": "/api/cron/score-significance", "schedule": "30 3 * * *"},
-    {"path": "/api/cron/generate-entity-briefs", "schedule": "0 * * * *"},
-    {"path": "/api/cron/send-entity-briefs", "schedule": "*/30 * * * *"},
     {"path": "/api/cron/conversion-triggers", "schedule": "0 9 * * *"},
     {"path": "/api/cron/monitor-sources", "schedule": "0 7 * * 1"},
     {"path": "/api/cron/velocity-scores", "schedule": "0 6 */4 * *"},
