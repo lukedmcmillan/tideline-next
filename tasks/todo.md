@@ -63,3 +63,77 @@ at insert time on Vercel edge.
 Low — cosmetic only, signals display correctly otherwise.
 
 ---
+
+## TICKET: Commit PULSE_SCORE_METHODOLOGY.md to repo root
+
+**Priority:** Low
+**Discovered:** 2026-05-05
+
+### Problem
+`PULSE_SCORE_METHODOLOGY.md` is referenced in multiple specs and the Haiku
+prompt for alert interpretations but has never been committed to the repo
+root. It only exists in `.claude/` or chat context.
+
+### Work needed
+- Commit `PULSE_SCORE_METHODOLOGY.md` to repo root
+- Verify all spec cross-references use the correct path
+
+---
+
+## TICKET: Upgrade alert preheader to show real session date
+
+**Priority:** Low
+**Discovered:** 2026-05-05
+
+### Problem
+Alert email preheader currently shows only `"Score moved from X to Y."` —
+the spec called for `"N days to next known session."` but this was deferred
+because no live session date data is wired into the alert pipeline.
+
+### Work needed
+- Wire governance_events lookup into `getOrCreateInterpretation` or the
+  cron pre-loop to find the next event for the tracker's governing body
+- Add `days_to_next_session` to the preheader when a future event exists
+  within 90 days; fall back to current plain text when none found
+
+---
+
+## TICKET: Confirm test-alert-email.tsx recipient before wider test traffic
+
+**Priority:** Medium
+**Discovered:** 2026-05-05
+
+### Problem
+`scripts/test-alert-email.tsx` has `to: "lukedmcmillan@gmail.com"` hardcoded.
+This is fine for dev testing but must not be used as a template for any
+production send path or load test.
+
+### Work needed
+- Before any wider test traffic: confirm production cron uses each user's
+  email from `user_alert_preferences` → `users.email` join, not this script
+- Add a comment in the script header: `// DEV ONLY — recipient hardcoded`
+
+---
+
+## TICKET: Reconcile two-band-system conflict
+
+**Priority:** Low
+**Discovered:** 2026-05-05 during threshold alert email planning
+
+### Problem
+Two incompatible band systems exist in the codebase:
+- `bandFor()` in `app/api/cron/threshold-alerts/route.ts` — uses LOW/WATCH/ELEVATED/HIGH with thresholds <4, <7, <=8.5, >8.5
+- `alertBand()` in `app/lib/tracker-metadata.ts` — uses QUIET/WATCH/ELEVATED/HIGH with thresholds <3, <5, <7, >=7
+
+They disagree on band names, thresholds, and offshore-wind score shifting. `bandColor()` in tracker-metadata.ts maps to alertBand values (not the cron's LOW band).
+
+### Work needed
+- Decide which system is canonical
+- Migrate the other to match
+- Update `bandColor()` to handle whichever band names are canonical
+- Audit all callers of both functions
+
+### Risk
+Medium — existing alert sends use the threshold-alerts cron's system. Changing thresholds could suppress or trigger alerts for users already enrolled.
+
+---

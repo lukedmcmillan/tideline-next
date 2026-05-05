@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { DOMAIN_NAMES, PREP_HORIZON } from "@/app/lib/tracker-metadata";
+import * as React from "react";
+import { render as renderEmail } from "@react-email/render";
+import { DOMAIN_NAMES } from "@/app/lib/tracker-metadata";
+import { ThresholdAlertEmail } from "@/emails/threshold-alert";
+import { buildSparkline } from "@/lib/email/sparkline";
+import {
+  fetchSparklineScores,
+  fetchRecentStory,
+  getOrCreateInterpretation,
+} from "@/lib/email/alert-data";
+import type { RecentStory } from "@/lib/email/alert-data";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,13 +33,12 @@ const SHORT_TO_LONG: Record<string, string> = {
 
 const SHORT_SLUGS = Object.keys(SHORT_TO_LONG);
 
-const DEDUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const DEDUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const SEND_DELAY_MS = 100;
 
 type Band = "LOW" | "WATCH" | "ELEVATED" | "HIGH";
 
 // Per spec: <4 LOW, 4 ≤ s < 7 WATCH, 7 ≤ s ≤ 8.5 ELEVATED, s > 8.5 HIGH.
-// Boundaries: 8.5 = ELEVATED, 8.6 = HIGH. No offshore-wind shift.
 function bandFor(score: number): Band {
   if (score < 4) return "LOW";
   if (score < 7) return "WATCH";
@@ -41,6 +50,13 @@ function directionLabel(d: string | null | undefined): string {
   if (d === "accelerating") return "Accelerating";
   if (d === "decelerating") return "Decelerating";
   return "Stable";
+}
+
+// Band colour for sparkline stroke — matches template's bandColor()
+function emailBandColorFor(band: Band): string {
+  if (band === "LOW") return "#E24B4A";
+  if (band === "WATCH") return "#EF9F27";
+  return "#1D9E75"; // ELEVATED + HIGH
 }
 
 function sleep(ms: number) {
@@ -74,7 +90,6 @@ async function fetchLastTwoScores(shortSlug: string): Promise<VelocityRow[] | nu
 }
 
 async function fetchRecipients(longSlug: string): Promise<RecipientRow[]> {
-  // Two-step: alert_preferences (alerts_enabled=true) → users (active|trial only).
   const { data: prefs, error: prefErr } = await supabase
     .from("user_alert_preferences")
     .select("user_id")
@@ -119,8 +134,7 @@ async function alreadyAlerted(
     .limit(1);
   if (error) {
     console.error(`[threshold-alerts] dedup check failed:`, error.message);
-    // Fail open: skip rather than risk duplicate sends if the table is unreachable.
-    return true;
+    return true; // fail open: skip rather than risk duplicate send
   }
   return (data ?? []).length > 0;
 }
@@ -130,10 +144,19 @@ async function logSend(
   longSlug: string,
   bandFrom: Band,
   bandTo: Band,
+  interpretation: string,
+  velocityCalculatedAt: string,
 ): Promise<boolean> {
   const { error } = await supabase
     .from("alert_sends")
-    .insert({ user_id: userId, tracker_slug: longSlug, band_from: bandFrom, band_to: bandTo });
+    .insert({
+      user_id: userId,
+      tracker_slug: longSlug,
+      band_from: bandFrom,
+      band_to: bandTo,
+      interpretation,
+      velocity_calculated_at: velocityCalculatedAt,
+    });
   if (error) {
     console.error(`[threshold-alerts] alert_sends insert failed:`, error.message);
     return false;
@@ -141,39 +164,59 @@ async function logSend(
   return true;
 }
 
-function buildEmail(args: {
+async function buildEmail(args: {
   shortSlug: string;
   bandFrom: Band;
   bandTo: Band;
   score: number;
   direction: string | null | undefined;
-  interpretation: string | null;
-}): { subject: string; text: string } {
+  emailInterpretation: string;
+  sparklineSvg: string;
+  story: RecentStory | null;
+}): Promise<{ subject: string; text: string; html: string }> {
   const domainName = DOMAIN_NAMES[args.shortSlug] ?? args.shortSlug;
-  const horizon = PREP_HORIZON[args.shortSlug] ?? "horizon not specified";
   const host = process.env.NEXTAUTH_URL ?? "https://thetideline.co";
-  const link = `${host.replace(/\/$/, "")}/platform/tracker/${args.shortSlug}`;
-  const interpretation = (args.interpretation ?? "").trim() ||
-    `${domainName} activity has crossed a band threshold.`;
+  const ctaUrl = `${host.replace(/\/$/, "")}/platform/tracker/${args.shortSlug}`;
 
-  const subject = `${domainName} just moved to ${args.bandTo}`;
-  const text =
-`The ${domainName} Pulse Score has crossed from ${args.bandFrom} to ${args.bandTo}.
+  const subject = `${domainName} just crossed ${args.bandTo}`;
 
-Current score: ${args.score.toFixed(1)} / 10
-Direction: ${directionLabel(args.direction)}
+  // Plain text fallback for clients that don't render HTML
+  const text = [
+    `The ${domainName} Pulse Score has crossed from ${args.bandFrom} to ${args.bandTo}.`,
+    ``,
+    `Current score: ${args.score.toFixed(1)} / 10`,
+    `Direction: ${directionLabel(args.direction)}`,
+    ``,
+    args.emailInterpretation,
+    ``,
+    `View tracker: ${ctaUrl}`,
+  ].join("\n");
 
-${interpretation}
+  const html = await renderEmail(
+    React.createElement(ThresholdAlertEmail, {
+      trackerName: domainName,
+      prevBand: args.bandFrom,
+      newBand: args.bandTo,
+      score: args.score,
+      direction: args.direction as "accelerating" | "stable" | "decelerating" | null,
+      sparklineSvg: args.sparklineSvg,
+      story: args.story,
+      interpretation: args.emailInterpretation,
+      ctaUrl,
+      trackedEntities: [domainName],
+      preheaderText: `Score moved from ${args.bandFrom} to ${args.bandTo}.`,
+    }),
+  );
 
-Typical preparation horizon for this domain: ${horizon}.
-
-View tracker: ${link}
-`;
-
-  return { subject, text };
+  return { subject, text, html };
 }
 
-async function sendPlainEmail(to: string, subject: string, text: string): Promise<boolean> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+): Promise<boolean> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -187,6 +230,7 @@ async function sendPlainEmail(to: string, subject: string, text: string): Promis
         to,
         subject,
         text,
+        html,
       }),
     });
     if (!res.ok) {
@@ -252,13 +296,29 @@ export async function GET(request: Request) {
       continue;
     }
 
-    const { subject, text } = buildEmail({
+    // ── Fetch shared email data once per crossing, before the per-user loop ──
+    const domainName = DOMAIN_NAMES[shortSlug] ?? shortSlug;
+    const sparklineScores = await fetchSparklineScores(shortSlug).catch(() => []);
+    const sparklineSvg = buildSparkline(sparklineScores, emailBandColorFor(bandTo));
+    const story = await fetchRecentStory(longSlug).catch(() => null);
+    const emailInterpretation = await getOrCreateInterpretation(
+      longSlug,
+      bandFrom,
+      bandTo,
+      shortSlug,
+      domainName,
+      current.calculated_at,
+    ).catch(() => `${domainName} activity has crossed into ${bandTo} territory.`);
+
+    const { subject, text, html } = await buildEmail({
       shortSlug,
       bandFrom,
       bandTo,
       score: Number(current.score),
       direction: current.momentum_direction,
-      interpretation: current.interpretation,
+      emailInterpretation,
+      sparklineSvg,
+      story,
     });
 
     for (const r of recipients) {
@@ -267,14 +327,20 @@ export async function GET(request: Request) {
         totalSkipped += 1;
         continue;
       }
-      const ok = await sendPlainEmail(r.email, subject, text);
+      const ok = await sendEmail(r.email, subject, text, html);
       if (ok) {
-        const logged = await logSend(r.user_id, longSlug, bandFrom, bandTo);
+        const logged = await logSend(
+          r.user_id,
+          longSlug,
+          bandFrom,
+          bandTo,
+          emailInterpretation,
+          current.calculated_at,
+        );
         if (logged) {
           summary.emails_sent += 1;
           totalSent += 1;
         } else {
-          // Send succeeded but log failed — count as failed so it shows up in the summary.
           summary.emails_failed += 1;
           totalFailed += 1;
         }

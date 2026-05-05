@@ -1,6 +1,46 @@
 ﻿# Tideline — Live Project Status
 
-## Last completed: Morning brief world-class rebuild (2026-05-01, commit 1c586b1)
+## Last session: 2026-05-05 — Threshold alert email template complete
+
+WHAT SHIPPED (committed locally, NOT yet pushed):
+- New files: `emails/threshold-alert.tsx`, `lib/email/sparkline.ts`,
+  `lib/email/alert-data.ts`, `scripts/test-alert-email.tsx`
+- Modified: `app/api/cron/threshold-alerts/route.ts` — `buildEmail()` and
+  Resend payload only; detection logic and cron schedule untouched
+- Migrations applied to production:
+  - `alert_sends.interpretation` (text, nullable)
+  - `alert_sends.velocity_calculated_at` (timestamptz, nullable)
+
+KEY DESIGN DECISIONS:
+- Cache key for Haiku interpretation: `(tracker_slug, velocity_calculated_at)`
+  — one crossing event = one Haiku call, no time-window reuse
+- Sparkline y-axis hardcoded 0–10 (not auto-scaled to input range)
+- Direction arrow colour: teal ▲ for up, red ▼ for down, regardless of
+  destination band
+- `trackedEntities` footer: `[domainName]` placeholder; per-user entity
+  lookup deferred (requires extra joins not yet in the alert pipeline)
+- Band colours in this template only: LOW=#E24B4A, WATCH=#EF9F27,
+  ELEVATED+HIGH=#1D9E75
+
+VISUAL VERIFICATION:
+- Both test variants (WATCH→ELEVATED, HIGH→ELEVATED) rendered and confirmed
+  in Gmail web via Resend sends (ids: 3a85383a, c7c59077)
+- Arrow colour checks PASS in rendered HTML
+
+RESEND API KEY ROTATED: Key accidentally printed to terminal during
+diagnosis. Rotate at resend.com/api-keys before next production send.
+
+NEXT SESSION FIRST ACTIONS:
+1. Rotate Resend API key + update .env.local + Vercel env
+2. Commit all new files (emails/, lib/email/, scripts/test-alert-email.tsx,
+   cron route, migrations)
+3. Push to origin/main and verify Vercel build
+
+---
+
+## Previous: 2026-05-01 — incomplete commit cycle (resolved)
+
+## Previous: Morning brief world-class rebuild (2026-05-01, commit 1c586b1)
 
 - New mobile-first brief shipped end-to-end. Cream background (#FAFAF7), system font stack, no DM Sans, no em dashes, no Plus Jakarta Sans.
 - Architectural shift: generate-brief now structures candidate pool (60 stories, 7-day window, 10 trackers, 14-day events). send-brief now per-user renders via compileBriefHtml.

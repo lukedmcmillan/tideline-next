@@ -1,5 +1,31 @@
 # Lessons Learned
 
+## 2026-05-05
+
+### Fonts
+
+- **DM Mono removed 2026-04-30.** Never reference it in any spec, including email templates. Use DM Sans with `font-variant-numeric: tabular-nums` inline for numerals (scores, dates, counts).
+
+### AI-generated content caching
+
+- **Cache keys for AI-generated content must be the triggering event's stable identifier, not a tuple of attributes.** Keying interpretation cache on `(tracker_slug, band_from, band_to)` over a 7-day window reuses one interpretation across multiple distinct crossings that happen to share the same transition. Use the specific row's timestamp or primary key (`velocity_calculated_at` here) so each unique event gets its own generation.
+
+### Haiku prompt hygiene
+
+- **Map internal type codes to plain English before injecting into prompts.** Injecting `"Type 2 (Mixed architecture)"` into a "no jargon" prompt results in the jargon being parroted or silently preserved. Maintain a `PLAIN_INST_TYPE` map and transform at the call site — never let schema/type identifiers enter prompt text directly.
+
+### Sparkline y-axis
+
+- **Hardcode the y-axis to the data's known range, not the input min/max.** Auto-scaling to the input range makes a flat tracker (6.0–6.2) look as dramatic as a ramping one (3.2→7.4). For Pulse Scores the range is always 0–10. Hardcoded range preserves visual truthfulness across trackers with different activity levels.
+
+### Direction arrow colours
+
+- **Direction arrows should use direction-appropriate colour (red for down, teal for up), independent of the destination band's colour.** The crossing direction is the alarming signal. A HIGH→ELEVATED downward crossing should show a red ▼ even though the ELEVATED band colour is teal.
+
+### Test email recipient
+
+- **Always confirm the actual recipient before chasing "email not arriving" as a code bug.** A hardcoded address in a test script that the developer doesn't actively monitor causes wasted diagnosis time. The Resend API returned `last_event: suppressed` for `luke@thetideline.co` — the address was suppressed, not a code failure. Check the Resend status first, and verify the `to:` field in the payload before reading logs.
+
 ## 2026-04-27
 
 ### Library / Document Pipeline
