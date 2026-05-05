@@ -458,5 +458,5 @@ export async function fetchUpcomingEvents(
     .limit(20);
 
   if (error) throw new Error(`fetchUpcomingEvents: ${error.message}`);
-  return (data ?? []) as GovernanceEventRow[];
+  return (data ?? []) as unknown as GovernanceEventRow[];
 }
