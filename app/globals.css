@@ -4,8 +4,8 @@
 :root {
   /* ── TYPOGRAPHY ──────────────────────────────────────────── */
   --font-ui:   'Plus Jakarta Sans', -apple-system, sans-serif;
-  --font-mono: 'DM Mono', monospace;
   --font-sans: 'DM Sans', -apple-system, sans-serif;
+  /* Single typeface system: DM Sans for all UI, prose, and data readouts (scores, timestamps, labels). No monospace anywhere. */
 
   /* ── CORE PALETTE ────────────────────────────────────────── */
   --navy:         #0B1628;   /* primary ink + dark surfaces */

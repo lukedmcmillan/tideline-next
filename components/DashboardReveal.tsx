@@ -8,7 +8,7 @@ const TEAL = "#1D9E75";
 const TEXT = "#E8EDF4";
 const TEXT_DIM = "#5B6F8C";
 const SANS = "'DM Sans', -apple-system, sans-serif";
-const MONO = "'DM Mono', ui-monospace, monospace";
+const MONO = "'DM Sans', ui-monospace, monospace";
 
 const DISMISS_KEY_PREFIX = "tideline_overnight_dismissed_";
 const CACHE_FETCHED_KEY = "tideline_reveal_last_fetched";

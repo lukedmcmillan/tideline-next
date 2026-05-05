@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const SANS = "'DM Sans', -apple-system, sans-serif";
-const MONO = "'DM Mono', ui-monospace, monospace";
+const MONO = "'DM Sans', ui-monospace, monospace";
 const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', sans-serif";
 const BG2 = "#0D1E35";
 const BG3 = "#122845";

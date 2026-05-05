@@ -401,13 +401,13 @@ export default function StoryPage() {
           .story-source-tag {
             background: #F1F3F4 !important;
             color: #5F6368 !important;
-            font-family: 'DM Mono', monospace !important;
+            font-family: 'DM Sans', sans-serif !important;
             font-size: 11px !important;
           }
           .story-source-type {
             background: #F1F3F4 !important;
             color: #5F6368 !important;
-            font-family: 'DM Mono', monospace !important;
+            font-family: 'DM Sans', sans-serif !important;
             font-size: 11px !important;
           }
           .story-headline {

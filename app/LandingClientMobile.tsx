@@ -218,7 +218,7 @@ function MobileHeader({ onCta, onLogin }: { onCta: () => void; onLogin: () => vo
                 {item.label}
                 <span style={{
                   color: "#9AA8B8",
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "'DM Sans', sans-serif",
                   fontSize: 16,
                   flexShrink: 0,
                 }}>
@@ -229,7 +229,7 @@ function MobileHeader({ onCta, onLogin }: { onCta: () => void; onLogin: () => vo
 
             {/* Account section */}
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: 10,
               color: "#6B7A8C",
               letterSpacing: "0.14em",
@@ -285,7 +285,7 @@ function MobileHeader({ onCta, onLogin }: { onCta: () => void; onLogin: () => vo
               Start your 7-day free trial
             </button>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: 11,
               color: "#6B7A8C",
               letterSpacing: "0.04em",
@@ -323,7 +323,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         color: "rgba(255,255,255,0.85)",
         padding: "8px 16px",
         textAlign: "center",
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'DM Sans', sans-serif",
         fontSize: 11,
         letterSpacing: "0.04em",
         lineHeight: 1.6,
@@ -355,7 +355,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* Eyebrow: live dot + "Ocean intelligence · Live" */}
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 11,
           color: "#1D9E75",
           letterSpacing: "0.14em",
@@ -505,7 +505,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         {/* Header row: eyebrow + title + multiplier pill */}
         <div style={{ paddingBottom: 10, borderBottom: "1px solid #E5E1D8", marginBottom: 12 }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 10,
             color: "#6B7A8C",
             letterSpacing: "0.1em",
@@ -531,7 +531,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             </div>
             {/* Outline pill aligned right */}
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: 10,
               color: "#6B7A8C",
               border: "1px solid #E5E1D8",
@@ -549,9 +549,9 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* Score block — vertical stack (score above band text) */}
         <div style={{ marginBottom: 10 }}>
-          {/* Score numeral: DM Mono 54px / 500 / teal / -0.045em / lh 0.9 */}
+          {/* Score numeral: DM Sans 54px / 500 / teal / -0.045em / lh 0.9 */}
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 54,
             color: "#1D9E75",
             lineHeight: 0.9,
@@ -563,7 +563,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </div>
           {/* Band label */}
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 11,
             color: "#1D9E75",
             letterSpacing: "0.16em",
@@ -574,7 +574,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </div>
           {/* Delta */}
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 11,
             color: "#6B7A8C",
           }}>
@@ -636,7 +636,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           ].map((c) => (
             <div key={c.label}>
               <div style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'DM Sans', sans-serif",
                 fontSize: 9,
                 color: "#9AA8B8",
                 letterSpacing: "0.08em",
@@ -646,7 +646,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                 {c.label}
               </div>
               <div style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'DM Sans', sans-serif",
                 fontSize: 16,
                 color: "#0B1628",
                 fontWeight: 500,
@@ -659,7 +659,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* Disclosure footer */}
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 10,
           color: "#6B7A8C",
           lineHeight: 1.5,
@@ -678,7 +678,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
         {/* ── Row 1: The Feed ── */}
         <div style={{ marginBottom: 32 }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 11,
             color: "#6B7A8C",
             letterSpacing: "0.16em",
@@ -744,7 +744,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
               marginBottom: 2,
             }}>
               <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 14, color: "#0B1628", letterSpacing: "-0.01em" }}>Live feed</div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>12 min ago</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>12 min ago</div>
             </div>
             {[
               { tracker: "ISA",      entity: "Pacific Minerals",     time: "2h", headline: "ISA council defers vote on mining code amid scientific objections",      source: "International Seabed Authority · Press release" },
@@ -753,12 +753,12 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             ].map((item, idx, arr) => (
               <div key={item.tracker} style={{ padding: "9px 0", borderBottom: idx < arr.length - 1 ? "1px solid #EDEAE3" : "none" }}>
                 <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase", color: "#1D9E75", background: "#E8F4EE" }}>{item.tracker}</span>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6B7A8C", border: "1px solid #E5E1D8", background: "#FAFAF7" }}>{item.entity}</span>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#9AA8B8", marginLeft: "auto" }}>{item.time}</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase", color: "#1D9E75", background: "#E8F4EE" }}>{item.tracker}</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6B7A8C", border: "1px solid #E5E1D8", background: "#FAFAF7" }}>{item.entity}</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#9AA8B8", marginLeft: "auto" }}>{item.time}</span>
                 </div>
                 <div style={{ fontSize: 14, lineHeight: 1.4, color: "#0B1628", fontWeight: 500, marginBottom: 4 }}>{item.headline}</div>
-                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C" }}>{item.source}</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#6B7A8C" }}>{item.source}</div>
               </div>
             ))}
           </div>
@@ -766,7 +766,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* ── Row 2: The Pulse ── */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
             The pulse
           </div>
           <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 8px", textWrap: "balance" as never }}>
@@ -781,16 +781,16 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           {/* PulseMini */}
           <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)", padding: 14 }}>
             <div style={{ paddingBottom: 10, borderBottom: "1px solid #E5E1D8", marginBottom: 12 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" }}>Updated Monday</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" }}>Updated Monday</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 16, color: "#0B1628", letterSpacing: "-0.01em" }}>BBNJ High Seas Treaty</div>
-                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", border: "1px solid #E5E1D8", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", background: "#FAFAF7", whiteSpace: "nowrap", flexShrink: 0 }}>0.70x</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#6B7A8C", border: "1px solid #E5E1D8", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", background: "#FAFAF7", whiteSpace: "nowrap", flexShrink: 0 }}>0.70x</div>
               </div>
             </div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 48, color: "#1D9E75", lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em", marginBottom: 6 }}>6.4</div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#1D9E75", letterSpacing: "0.14em", marginBottom: 2, textTransform: "uppercase" }}>Watch</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 48, color: "#1D9E75", lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em", marginBottom: 6 }}>6.4</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#1D9E75", letterSpacing: "0.14em", marginBottom: 2, textTransform: "uppercase" }}>Watch</div>
             <div style={{ fontSize: 13, color: "#0B1628", marginBottom: 3 }}>Conditions developing</div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#6B7A8C", marginBottom: 10 }}>↑ <span style={{ color: "#1D9E75" }}>+0.6 vs last week</span></div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#6B7A8C", marginBottom: 10 }}>↑ <span style={{ color: "#1D9E75" }}>+0.6 vs last week</span></div>
             <svg viewBox="0 0 400 64" preserveAspectRatio="none" style={{ width: "100%", height: 40, display: "block", marginBottom: 10 }}>
               <defs><linearGradient id="mob-ps-grad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1D9E75" stopOpacity={0.18} /><stop offset="100%" stopColor="#1D9E75" stopOpacity={0} /></linearGradient></defs>
               <path d="M 0 52 L 50 50 L 100 46 L 150 44 L 200 38 L 250 32 L 300 26 L 350 20 L 400 16 L 400 64 L 0 64 Z" fill="url(#mob-ps-grad)" />
@@ -800,8 +800,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px 12px", padding: "8px 0", borderTop: "1px solid #E5E1D8" }}>
               {[{ l: "Volume", v: "7.4" }, { l: "Recency", v: "8.0" }, { l: "Decision", v: "5.5" }, { l: "Risk", v: "×0.70" }].map(c => (
                 <div key={c.l}>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.08em", marginBottom: 3, textTransform: "uppercase" }}>{c.l}</div>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 15, color: "#0B1628", fontWeight: 500 }}>{c.v}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.08em", marginBottom: 3, textTransform: "uppercase" }}>{c.l}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, color: "#0B1628", fontWeight: 500 }}>{c.v}</div>
                 </div>
               ))}
             </div>
@@ -810,7 +810,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* ── Row 3: The Workspace ── */}
         <div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
             The workspace
           </div>
           <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", margin: "0 0 8px", textWrap: "balance" as never }}>
@@ -825,34 +825,34 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           {/* WorkspaceMini */}
           <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)", overflow: "hidden" }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E1D8" }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#1D9E75", background: "#E8F4EE", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", marginBottom: 6, display: "inline-block", textTransform: "uppercase" }}>Regulatory watch</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "#1D9E75", background: "#E8F4EE", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", marginBottom: 6, display: "inline-block", textTransform: "uppercase" }}>Regulatory watch</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 14, color: "#0B1628", letterSpacing: "-0.01em" }}>BBNJ Ratification Tracker</div>
-                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#9AA8B8", whiteSpace: "nowrap" }}>12 · 3 new</div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#9AA8B8", whiteSpace: "nowrap" }}>12 · 3 new</div>
               </div>
             </div>
             <div style={{ padding: "14px 16px" }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" }}>Attached</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" }}>Attached</div>
               {[
                 { tag: "Primary · Library", tagColor: "#1D9E75", title: "PIF Communiqué on BBNJ ratification commitments",      meta: "PIF Secretariat · 12 Mar 2026"       },
                 { tag: "Primary · Library", tagColor: "#1D9E75", title: "UN Treaty Collection: BBNJ signatories deposited",     meta: "UN Treaty Collection · 18 Apr"       },
                 { tag: "Secondary · Feed",  tagColor: "#C97A1A", title: "BBNJ ratification reaches 34 parties",                 meta: "Reuters · 4h ago"                    },
               ].map((item, i, arr) => (
                 <div key={i} style={{ padding: "9px 0", borderBottom: i < arr.length - 1 ? "1px solid #EDEAE3" : "none" }}>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.1em", marginBottom: 3, textTransform: "uppercase", color: item.tagColor }}>{item.tag}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, letterSpacing: "0.1em", marginBottom: 3, textTransform: "uppercase", color: item.tagColor }}>{item.tag}</div>
                   <div style={{ color: "#0B1628", fontSize: 13, lineHeight: 1.4, marginBottom: 3 }}>{item.title}</div>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#9AA8B8" }}>{item.meta}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "#9AA8B8" }}>{item.meta}</div>
                 </div>
               ))}
             </div>
             <div style={{ padding: "14px 16px", background: "#FAFAF7", borderTop: "1px solid #E5E1D8", position: "relative" }}>
-              <div style={{ position: "absolute", top: 14, right: 16, fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#C97A1A", border: "1px solid #E8C896", background: "#FBF3E5", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.08em", textTransform: "uppercase" }}>Q3 2026</div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" }}>Ask Tideline</div>
+              <div style={{ position: "absolute", top: 14, right: 16, fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "#C97A1A", border: "1px solid #E8C896", background: "#FBF3E5", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.08em", textTransform: "uppercase" }}>Q3 2026</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" }}>Ask Tideline</div>
               <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 8, padding: "10px 12px", marginBottom: 10, fontSize: 12, color: "#0B1628", fontWeight: 500, lineHeight: 1.45 }}>
                 What did Pacific bloc states commit to at PrepCom III?
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.6, color: "#3A4A5C" }}>
-                The Pacific Islands Forum bloc collectively committed to depositing instruments before the second BBNJ COP<sup style={{ color: "#1D9E75", fontFamily: "'DM Mono', monospace", fontSize: 9, fontWeight: 500 }}>¹</sup>. Fiji, Palau, and the Marshall Islands have since deposited<sup style={{ color: "#1D9E75", fontFamily: "'DM Mono', monospace", fontSize: 9, fontWeight: 500 }}>²</sup>.
+                The Pacific Islands Forum bloc collectively committed to depositing instruments before the second BBNJ COP<sup style={{ color: "#1D9E75", fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 500 }}>¹</sup>. Fiji, Palau, and the Marshall Islands have since deposited<sup style={{ color: "#1D9E75", fontFamily: "'DM Sans', sans-serif", fontSize: 9, fontWeight: 500 }}>²</sup>.
               </div>
             </div>
           </div>
@@ -983,7 +983,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       <section id="built-for" style={{ padding: "32px 20px", background: "#FAFAF7" }}>
         <div style={{ marginBottom: 16 }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 11,
             color: "#6B7A8C",
             letterSpacing: "0.16em",
@@ -1053,7 +1053,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)",
         }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 10,
             color: "#6B7A8C",
             letterSpacing: "0.14em",
@@ -1079,7 +1079,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </p>
           {/* Directory mini */}
           <div style={{ background: "#FAFAF7", border: "1px solid #E5E1D8", borderRadius: 10, padding: 12 }}>
-            <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#9AA8B8" }}>
+            <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#9AA8B8" }}>
               ⌕  Search 928 entities…
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -1104,10 +1104,10 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                     <div style={{ position: "absolute", top: 8, right: 8, color: "#1D9E75", fontSize: 11 }}>★</div>
                   )}
                   <div style={{ fontSize: 11, color: "#0B1628", fontWeight: 600, marginBottom: 4, paddingRight: card.starred ? 14 : 0, lineHeight: 1.3 }}>{card.name}</div>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" }}>{card.type}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" }}>{card.type}</div>
                   <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
                     {card.tags.map((tag) => (
-                      <span key={tag.l} style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: tag.c, background: tag.bg, letterSpacing: "0.04em", textTransform: "uppercase" }}>{tag.l}</span>
+                      <span key={tag.l} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: tag.c, background: tag.bg, letterSpacing: "0.04em", textTransform: "uppercase" }}>{tag.l}</span>
                     ))}
                   </div>
                 </div>
@@ -1125,7 +1125,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           boxShadow: "0 1px 2px rgba(11,22,40,0.04), 0 8px 24px rgba(11,22,40,0.05)",
         }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 10,
             color: "#6B7A8C",
             letterSpacing: "0.14em",
@@ -1165,16 +1165,16 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                 <div style={{ padding: "28px 12px 14px", fontSize: 9 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: "#0B1628", marginBottom: 5, fontFamily: "'DM Sans', sans-serif" }}>Tideline · 6:47</div>
                   <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 10, color: "#0B1628", lineHeight: 1.25, marginBottom: 9, letterSpacing: "-0.01em" }}>Friday · 4 entities moved overnight</div>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 7, color: "#1D9E75", letterSpacing: "0.12em", paddingBottom: 6, borderBottom: "1px solid #E5E1D8", marginBottom: 7, textTransform: "uppercase" }}>Friday 25 April</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 7, color: "#1D9E75", letterSpacing: "0.12em", paddingBottom: 6, borderBottom: "1px solid #E5E1D8", marginBottom: 7, textTransform: "uppercase" }}>Friday 25 April</div>
                   <div style={{ fontSize: 8, fontWeight: 600, color: "#0B1628", marginBottom: 2, fontFamily: "'DM Sans', sans-serif" }}>Good morning.</div>
                   <div style={{ fontSize: 7.5, color: "#3A4A5C", lineHeight: 1.4, marginBottom: 9, fontFamily: "'DM Sans', sans-serif" }}>All 4 of your tracked entities moved yesterday.</div>
                   <div style={{ padding: "7px 0", borderTop: "1px solid #E5E1D8" }}>
-                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 6, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 3, textTransform: "uppercase" }}>The watch</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 6, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 3, textTransform: "uppercase" }}>The watch</div>
                     <div style={{ fontSize: 7.5, fontWeight: 600, color: "#0B1628", lineHeight: 1.3, marginBottom: 2, fontFamily: "'DM Sans', sans-serif" }}>ISA defers vote on mining code</div>
                     <div style={{ fontSize: 7, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans', sans-serif" }}>Council postponed following ITLOS objections.</div>
                   </div>
                   <div style={{ padding: "7px 0", borderTop: "1px solid #E5E1D8" }}>
-                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 6, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 5, textTransform: "uppercase" }}>Your entities</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 6, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 5, textTransform: "uppercase" }}>Your entities</div>
                     {/* ACME Shipping — inline sparkline */}
                   <div style={{ display: "flex", gap: 5, marginBottom: 5 }}>
                     <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", marginTop: 2, flexShrink: 0 }} />
@@ -1210,7 +1210,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       {/* ── 12. Founder ───────────────────────────────────────────────────── */}
       <section style={{ padding: "32px 20px 24px", background: "#FAFAF7", borderTop: "1px solid #E5E1D8" }}>
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 11,
           color: "#6B7A8C",
           letterSpacing: "0.16em",
@@ -1232,7 +1232,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
             alignItems: "flex-end",
             justifyContent: "center",
             padding: 8,
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 7,
             color: "rgba(11,22,40,0.4)",
             letterSpacing: "0.08em",
@@ -1281,7 +1281,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
       <section id="pricing" style={{ padding: "32px 20px", background: "#F4F2EC" }}>
         <div style={{ marginBottom: 16 }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: 11,
             color: "#6B7A8C",
             letterSpacing: "0.16em",
@@ -1353,7 +1353,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                   left: 22,
                   background: "#C97A1A",
                   color: "white",
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "'DM Sans', sans-serif",
                   fontSize: 10,
                   letterSpacing: "0.1em",
                   padding: "4px 10px",
@@ -1365,8 +1365,8 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
                   {tier.badge}
                 </div>
               )}
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" }}>{tier.name}</div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: tier.featured ? "#C97A1A" : "#9AA8B8", letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>{tier.sub}</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" }}>{tier.name}</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: tier.featured ? "#C97A1A" : "#9AA8B8", letterSpacing: "0.1em", marginBottom: 10, textTransform: "uppercase" }}>{tier.sub}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
                 <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 44, color: "#0B1628", lineHeight: 1, letterSpacing: "-0.035em" }}>{tier.price}</div>
                 <div style={{ fontSize: 13, color: "#6B7A8C" }}>{tier.per}</div>
@@ -1484,7 +1484,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           </div>
           <div>
             <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 18, color: "white", letterSpacing: "-0.015em" }}>Tideline</div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.55)", letterSpacing: "0.18em", textTransform: "uppercase", marginTop: 2 }}>Ocean Intelligence</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.55)", letterSpacing: "0.18em", textTransform: "uppercase", marginTop: 2 }}>Ocean Intelligence</div>
           </div>
         </div>
 
@@ -1498,7 +1498,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
           ].map((col) => (
             <div key={col.h}>
               <div style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "'DM Sans', sans-serif",
                 fontSize: 10,
                 color: "rgba(255,255,255,0.45)",
                 letterSpacing: "0.14em",
@@ -1529,7 +1529,7 @@ export default function LandingClientMobile({ socialProof }: { socialProof: Soci
 
         {/* Copyright */}
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 10,
           color: "rgba(255,255,255,0.45)",
           letterSpacing: "0.04em",

@@ -19,7 +19,7 @@ const T4      = "#9AA0A6";
 const BORDER  = "#DADCE0";
 const BLT     = "#E8EAED";
 const F       = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M       = "var(--font-mono), 'DM Mono', monospace";
+const M       = "var(--font-sans), 'DM Sans', sans-serif";
 
 const ANSWER = `Enforcement of MARPOL Annex VI has intensified measurably since Q3 2025, with port state control detentions for air emissions violations rising 34% year-on-year according to the Tokyo MOU annual report`;
 const ANSWER_B = `. The IMO\u2019s Carbon Intensity Indicator framework, which entered into force in January 2026, has created a new category of compliance exposure. Ships rated D or E for three consecutive years now face mandatory corrective action plans`;

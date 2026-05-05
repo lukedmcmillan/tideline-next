@@ -46,7 +46,7 @@ export function TidelineLogo({ size = 'md', theme = 'dark' }: TidelineLogoProps)
         </div>
         <div
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: 'var(--font-sans)',
             fontSize: 9,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',

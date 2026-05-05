@@ -11,7 +11,7 @@ const TEXT_MUTED = "#8BA0BC";
 const TEXT_DIM = "#5B6F8C";
 const TEAL = "#1D9E75";
 const SANS = "'DM Sans', -apple-system, sans-serif";
-const MONO = "'DM Mono', ui-monospace, monospace";
+const MONO = "'DM Sans', ui-monospace, monospace";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface Signal {

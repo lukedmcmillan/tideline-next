@@ -19,7 +19,7 @@ const AMBER = "#EF9F27";
 const RED = "#E24B4A";
 const F = "'DM Sans', system-ui, sans-serif";
 const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
-const M = "'DM Mono', monospace";
+const M = "'DM Sans', sans-serif";
 
 function sc(v: number) { return v >= 7 ? TEAL_BRIGHT : v >= 4 ? AMBER : RED; }
 function daysUntil(ds: string) { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(ds); d.setHours(0,0,0,0); return Math.ceil((d.getTime()-t.getTime())/(864e5)); }

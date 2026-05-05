@@ -35,7 +35,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
       <div style={{
         background: "#0B1628", color: "rgba(255,255,255,0.85)",
         padding: "9px 0", textAlign: "center",
-        fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: "0.04em",
+        fontFamily: "'DM Sans',sans-serif", fontSize: 12, letterSpacing: "0.04em",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
           47 founding member spots remaining{" \u00B7 "}{"\u00A3"}39/month, locked for life{" \u00B7 "}
@@ -65,7 +65,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             <div>
               {/* Eyebrow */}
               <div style={{
-                fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#1D9E75",
+                fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#1D9E75",
                 letterSpacing: "0.14em", textTransform: "uppercase",
                 display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 20,
               }}>
@@ -157,7 +157,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           {/* Row 1: Feed */}
           <div className="lp-sc-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center", marginBottom: 80 }}>
             <div className="lp-sc-text-order">
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The feed</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The feed</div>
               <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(28px,2.8vw,36px)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", marginBottom: 14 }}>
                 Every signal, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>one inbox</em>.
               </h3>
@@ -170,7 +170,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 8px 24px rgba(11,22,40,0.05)", padding: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 12, borderBottom: "1px solid #E5E1D8", marginBottom: 4 }}>
                   <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 15, color: "#0B1628", letterSpacing: "-0.01em" }}>Live feed</div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>Updated 12 min ago</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>Updated 12 min ago</div>
                 </div>
                 {[
                   { tracker: "ISA", entity: "Pacific Minerals", time: "2h ago", headline: "ISA council defers vote on mining code amid scientific objections", source: "International Seabed Authority \u00B7 Press release" },
@@ -179,12 +179,12 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 ].map((item, idx, arr) => (
                   <div key={item.tracker} style={{ padding: "14px 0", borderBottom: idx < arr.length - 1 ? "1px solid #EDEAE3" : "none" }}>
                     <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "#1D9E75", background: "#E8F4EE" }}>{item.tracker}</span>
-                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "#6B7A8C", border: "1px solid #E5E1D8", background: "#FAFAF7" }}>{item.entity}</span>
-                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#9AA8B8", marginLeft: "auto" }}>{item.time}</span>
+                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "#1D9E75", background: "#E8F4EE" }}>{item.tracker}</span>
+                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, padding: "3px 8px", borderRadius: 99, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "#6B7A8C", border: "1px solid #E5E1D8", background: "#FAFAF7" }}>{item.entity}</span>
+                      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9AA8B8", marginLeft: "auto" }}>{item.time}</span>
                     </div>
                     <div style={{ fontSize: 14, lineHeight: 1.4, color: "#0B1628", fontWeight: 500, marginBottom: 4 }}>{item.headline}</div>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C" }}>{item.source}</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C" }}>{item.source}</div>
                   </div>
                 ))}
               </div>
@@ -197,17 +197,17 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 8px 24px rgba(11,22,40,0.05)", padding: 22 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 18, borderBottom: "1px solid #E5E1D8", marginBottom: 22 }}>
                   <div>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" as const }}>Updated Monday</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" as const }}>Updated Monday</div>
                     <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 19, color: "#0B1628", letterSpacing: "-0.01em" }}>BBNJ High Seas Treaty</div>
                   </div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", border: "1px solid #E5E1D8", padding: "4px 9px", borderRadius: 99, letterSpacing: "0.06em", background: "#FAFAF7", whiteSpace: "nowrap" }}>Multilateral \u00B7 0.70x</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", border: "1px solid #E5E1D8", padding: "4px 9px", borderRadius: 99, letterSpacing: "0.06em", background: "#FAFAF7", whiteSpace: "nowrap" }}>Multilateral \u00B7 0.70x</div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 22, alignItems: "center", marginBottom: 18 }}>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 68, color: "#1D9E75", lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em" }}>6.4</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 68, color: "#1D9E75", lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em" }}>6.4</div>
                   <div>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#1D9E75", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" as const }}>Watch</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#1D9E75", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" as const }}>Watch</div>
                     <div style={{ fontSize: 14, color: "#0B1628", marginBottom: 6 }}>Conditions developing</div>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C" }}>{"\u2191"} <span style={{ color: "#1D9E75" }}>+0.6 vs last week</span></div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C" }}>{"\u2191"} <span style={{ color: "#1D9E75" }}>+0.6 vs last week</span></div>
                   </div>
                 </div>
                 <div style={{ marginBottom: 16, height: 60 }}>
@@ -226,15 +226,15 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, padding: "14px 0", borderTop: "1px solid #E5E1D8", borderBottom: "1px solid #E5E1D8" }}>
                   {[{ l: "Volume", v: "7.4" }, { l: "Recency", v: "8.0" }, { l: "Decision", v: "5.5" }, { l: "Risk", v: "\u00D70.70" }].map(c => (
                     <div key={c.l}>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.08em", marginBottom: 4, textTransform: "uppercase" as const }}>{c.l}</div>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 16, color: "#0B1628", fontWeight: 500 }}>{c.v}</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.08em", marginBottom: 4, textTransform: "uppercase" as const }}>{c.l}</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 16, color: "#0B1628", fontWeight: 500 }}>{c.v}</div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
             <div className="lp-sc-text-order">
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The pulse</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The pulse</div>
               <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(28px,2.8vw,36px)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", marginBottom: 14 }}>
                 Ten domains, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>scored weekly</em>.
               </h3>
@@ -248,7 +248,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           {/* Row 3: Workspace */}
           <div className="lp-sc-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
             <div className="lp-sc-text-order">
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The workspace</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>The workspace</div>
               <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(28px,2.8vw,36px)", lineHeight: 1.1, letterSpacing: "-0.02em", color: "#0B1628", marginBottom: 14 }}>
                 Choose what to follow. The platform <em style={{ fontStyle: "normal", color: "#1D9E75" }}>watches</em>.
               </h3>
@@ -261,34 +261,34 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 12, boxShadow: "0 8px 24px rgba(11,22,40,0.05)", overflow: "hidden" }}>
                 <div style={{ padding: "14px 20px", borderBottom: "1px solid #E5E1D8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#1D9E75", background: "#E8F4EE", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", marginBottom: 4, display: "inline-block", textTransform: "uppercase" as const }}>Regulatory watch</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#1D9E75", background: "#E8F4EE", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.06em", marginBottom: 4, display: "inline-block", textTransform: "uppercase" as const }}>Regulatory watch</div>
                     <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 15, color: "#0B1628", letterSpacing: "-0.01em" }}>BBNJ Ratification Tracker</div>
                   </div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>12 items {"\u00B7"} 3 new</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9AA8B8", letterSpacing: "0.04em" }}>12 items {"\u00B7"} 3 new</div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: 300 }}>
                   <div style={{ padding: "16px 20px", borderRight: "1px solid #E5E1D8" }}>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" as const }}>Attached</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" as const }}>Attached</div>
                     {[
                       { tag: "Primary \u00B7 Library", tagColor: "#1D9E75", title: "PIF Communiqu\u00E9 on BBNJ ratification commitments", meta: "PIF Secretariat \u00B7 12 Mar 2026" },
                       { tag: "Primary \u00B7 Library", tagColor: "#1D9E75", title: "UN Treaty Collection: BBNJ signatories deposited", meta: "UN Treaty Collection \u00B7 18 Apr" },
                       { tag: "Secondary \u00B7 Feed", tagColor: "#C97A1A", title: "BBNJ ratification reaches 34 parties", meta: "Reuters \u00B7 4h ago" },
                     ].map((item, i, arr) => (
                       <div key={i} style={{ padding: "9px 0", borderBottom: i < arr.length - 1 ? "1px solid #EDEAE3" : "none" }}>
-                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: "0.1em", marginBottom: 3, textTransform: "uppercase" as const, color: item.tagColor }}>{item.tag}</div>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, letterSpacing: "0.1em", marginBottom: 3, textTransform: "uppercase" as const, color: item.tagColor }}>{item.tag}</div>
                         <div style={{ color: "#0B1628", fontSize: 12, lineHeight: 1.4, marginBottom: 3 }}>{item.title}</div>
-                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#9AA8B8" }}>{item.meta}</div>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#9AA8B8" }}>{item.meta}</div>
                       </div>
                     ))}
                   </div>
                   <div style={{ padding: "16px 20px", background: "#FAFAF7", position: "relative" }}>
-                    <div style={{ position: "absolute", top: 14, right: 14, fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#C97A1A", border: "1px solid #E8C896", background: "#FBF3E5", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>Q3 2026</div>
-                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" as const }}>Ask Tideline</div>
+                    <div style={{ position: "absolute", top: 14, right: 14, fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#C97A1A", border: "1px solid #E8C896", background: "#FBF3E5", padding: "3px 8px", borderRadius: 99, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>Q3 2026</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 10, textTransform: "uppercase" as const }}>Ask Tideline</div>
                     <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 8, padding: "10px 12px", margin: "14px 0 12px", fontSize: 12, color: "#0B1628", fontWeight: 500, lineHeight: 1.45 }}>
                       What did Pacific bloc states commit to at PrepCom III?
                     </div>
                     <div style={{ fontSize: 12, lineHeight: 1.6, color: "#3A4A5C" }}>
-                      The Pacific Islands Forum bloc collectively committed to depositing instruments before the second BBNJ COP<sup style={{ color: "#1D9E75", fontFamily: "'DM Mono',monospace", fontSize: 10, fontWeight: 500 }}>{"\u00B9"}</sup>. Fiji, Palau, and the Marshall Islands have since deposited<sup style={{ color: "#1D9E75", fontFamily: "'DM Mono',monospace", fontSize: 10, fontWeight: 500 }}>{"\u00B2"}</sup>. The bloc represents 8 of 34 ratifications.
+                      The Pacific Islands Forum bloc collectively committed to depositing instruments before the second BBNJ COP<sup style={{ color: "#1D9E75", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 500 }}>{"\u00B9"}</sup>. Fiji, Palau, and the Marshall Islands have since deposited<sup style={{ color: "#1D9E75", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 500 }}>{"\u00B2"}</sup>. The bloc represents 8 of 34 ratifications.
                     </div>
                   </div>
                 </div>
@@ -324,7 +324,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
             {/* Before */}
             <div style={{ borderRadius: 14, padding: "32px 28px", border: "1px solid #E5E1D8", background: "#F4F2EC" }}>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#B8A89A", marginBottom: 24, paddingBottom: 14, borderBottom: "1px solid #E5E1D8" }}>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#B8A89A", marginBottom: 24, paddingBottom: 14, borderBottom: "1px solid #E5E1D8" }}>
                 Without Tideline
               </div>
               {[
@@ -335,7 +335,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 { time: "Fri 09:00", text: "Pulse on ISA crossed into elevated. You won't hear about it until next week." },
               ].map((line, i, arr) => (
                 <div key={line.time + "b"} style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 16, padding: "14px 0", borderBottom: i < arr.length - 1 ? "1px solid #EDEAE3" : "none", alignItems: "baseline" }}>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#C5B8AC" }}>{line.time}</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#C5B8AC" }}>{line.time}</div>
                   <div style={{ fontSize: 15, lineHeight: 1.5, color: "#8A7A6E" }}>{line.text}</div>
                 </div>
               ))}
@@ -343,7 +343,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
             {/* After */}
             <div style={{ borderRadius: 14, padding: "32px 28px", border: "1px solid #0B1628", background: "#FFFFFF", boxShadow: "0 12px 36px rgba(11,22,40,0.1)" }}>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#1D9E75", marginBottom: 24, paddingBottom: 14, borderBottom: "1px solid #E5E1D8" }}>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#1D9E75", marginBottom: 24, paddingBottom: 14, borderBottom: "1px solid #E5E1D8" }}>
                 With Tideline
               </div>
               {[
@@ -354,7 +354,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                 { time: "Fri 09:00", text: "Pulse on ISA crossed into elevated. You'll see it Monday morning." },
               ].map((line, i, arr) => (
                 <div key={line.time + "a"} style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 16, padding: "14px 0", borderBottom: i < arr.length - 1 ? "1px solid #EDEAE3" : "none", alignItems: "baseline" }}>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#1D9E75" }}>{line.time}</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#1D9E75" }}>{line.time}</div>
                   <div style={{ fontSize: 15, lineHeight: 1.5, color: "#0B1628" }}>{line.text}</div>
                 </div>
               ))}
@@ -419,7 +419,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             {/* Directory card */}
             <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 14, padding: 28, display: "flex", flexDirection: "column", gap: 18, boxShadow: "0 8px 24px rgba(11,22,40,0.05)" }}>
               <div>
-                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", textTransform: "uppercase" as const, marginBottom: 10 }}>The directory</div>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", textTransform: "uppercase" as const, marginBottom: 10 }}>The directory</div>
                 <h4 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 22, color: "#0B1628", marginBottom: 8, letterSpacing: "-0.015em", lineHeight: 1.2 }}>
                   Every entity, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>in one place</em>.
                 </h4>
@@ -430,7 +430,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <div style={{ flex: 1, minHeight: 280, display: "flex", alignItems: "stretch" }}>
                 {/* Directory mini */}
                 <div style={{ background: "#FAFAF7", border: "1px solid #E5E1D8", borderRadius: 10, padding: 14, width: "100%" }}>
-                  <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#9AA8B8" }}>
+                  <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#9AA8B8" }}>
                     ⌕  Search 928 entities…
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -438,35 +438,35 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                     <div style={{ background: "white", border: "1px solid #1D9E75", borderRadius: 6, padding: 10, position: "relative", boxShadow: "0 0 0 2px rgba(29,158,117,0.12)" }}>
                       <div style={{ position: "absolute", top: 8, right: 8, color: "#1D9E75", fontSize: 11 }}>★</div>
                       <div style={{ fontSize: 11, color: "#0B1628", fontWeight: 600, marginBottom: 4, paddingRight: 14, lineHeight: 1.3 }}>Pacific Minerals Ltd</div>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Contractor</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Contractor</div>
                       <div style={{ display: "flex", gap: 3, flexWrap: "wrap" as const }}>
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#C97A1A", background: "#FBF3E5", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>ISA</span>
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#1D9E75", background: "#E8F4EE", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>Active</span>
+                        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#C97A1A", background: "#FBF3E5", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>ISA</span>
+                        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#1D9E75", background: "#E8F4EE", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>Active</span>
                       </div>
                     </div>
                     {/* Card 2 */}
                     <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: 10 }}>
                       <div style={{ fontSize: 11, color: "#0B1628", fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>ACME Shipping Ltd</div>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Operator</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Operator</div>
                       <div style={{ display: "flex", gap: 3 }}>
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#1D9E75", background: "#E8F4EE", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>MEPC 83</span>
+                        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#1D9E75", background: "#E8F4EE", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>MEPC 83</span>
                       </div>
                     </div>
                     {/* Card 3 */}
                     <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: 10 }}>
                       <div style={{ fontSize: 11, color: "#0B1628", fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>Intl Seabed Authority</div>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Regulator</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Regulator</div>
                       <div style={{ display: "flex", gap: 3 }}>
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#1D9E75", background: "#E8F4EE", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>2 stories</span>
+                        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#1D9E75", background: "#E8F4EE", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>2 stories</span>
                       </div>
                     </div>
                     {/* Card 4: starred */}
                     <div style={{ background: "white", border: "1px solid #E5E1D8", borderRadius: 6, padding: 10, position: "relative" }}>
                       <div style={{ position: "absolute", top: 8, right: 8, color: "#1D9E75", fontSize: 11 }}>★</div>
                       <div style={{ fontSize: 11, color: "#0B1628", fontWeight: 600, marginBottom: 4, paddingRight: 14, lineHeight: 1.3 }}>BlackRock Blue Bond</div>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Investor</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#9AA8B8", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" as const }}>Investor</div>
                       <div style={{ display: "flex", gap: 3 }}>
-                        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#C97A1A", background: "#FBF3E5", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>TNFD</span>
+                        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, padding: "2px 6px", borderRadius: 99, color: "#C97A1A", background: "#FBF3E5", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>TNFD</span>
                       </div>
                     </div>
                   </div>
@@ -477,7 +477,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             {/* Brief card */}
             <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 14, padding: 28, display: "flex", flexDirection: "column", gap: 18, boxShadow: "0 8px 24px rgba(11,22,40,0.05)" }}>
               <div>
-                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", textTransform: "uppercase" as const, marginBottom: 10 }}>The brief</div>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", textTransform: "uppercase" as const, marginBottom: 10 }}>The brief</div>
                 <h4 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 22, color: "#0B1628", marginBottom: 8, letterSpacing: "-0.015em", lineHeight: 1.2 }}>
                   Personalised, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>before 7am</em>.
                 </h4>
@@ -495,18 +495,18 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
                     <div style={{ padding: "32px 14px 16px", fontSize: 9 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: "#0B1628", marginBottom: 6, fontFamily: "'DM Sans',sans-serif" }}>Tideline · 6:47</div>
                       <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 11, color: "#0B1628", lineHeight: 1.25, marginBottom: 10, letterSpacing: "-0.01em" }}>Friday · 4 entities moved overnight</div>
-                      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 7, color: "#1D9E75", letterSpacing: "0.12em", paddingBottom: 6, borderBottom: "1px solid #E5E1D8", marginBottom: 8, textTransform: "uppercase" as const }}>Friday 25 April</div>
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 7, color: "#1D9E75", letterSpacing: "0.12em", paddingBottom: 6, borderBottom: "1px solid #E5E1D8", marginBottom: 8, textTransform: "uppercase" as const }}>Friday 25 April</div>
                       <div style={{ fontSize: 9, fontWeight: 600, color: "#0B1628", marginBottom: 2, fontFamily: "'DM Sans',sans-serif" }}>Good morning.</div>
                       <div style={{ fontSize: 8, color: "#3A4A5C", lineHeight: 1.4, marginBottom: 10, fontFamily: "'DM Sans',sans-serif" }}>All 4 of your tracked entities moved yesterday.</div>
                       {/* The watch */}
                       <div style={{ padding: "8px 0", borderTop: "1px solid #E5E1D8" }}>
-                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 6.5, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" as const }}>The watch</div>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 6.5, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase" as const }}>The watch</div>
                         <div style={{ fontSize: 8, fontWeight: 600, color: "#0B1628", lineHeight: 1.3, marginBottom: 3, fontFamily: "'DM Sans',sans-serif" }}>ISA defers vote on mining code</div>
                         <div style={{ fontSize: 7.5, color: "#3A4A5C", lineHeight: 1.4, fontFamily: "'DM Sans',sans-serif" }}>Council postponed following ITLOS objections.</div>
                       </div>
                       {/* Your entities */}
                       <div style={{ padding: "8px 0", borderTop: "1px solid #E5E1D8" }}>
-                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 6.5, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Your entities</div>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 6.5, color: "#9AA8B8", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Your entities</div>
                         {/* ACME Shipping — inline sparkline */}
                         <div style={{ display: "flex", gap: 5, marginBottom: 6 }}>
                           <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", marginTop: 3, flexShrink: 0 }} />
@@ -564,7 +564,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
       <section style={{ padding: "80px 0", background: "#FAFAF7" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase" as const, marginBottom: 14 }}>Built for</div>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase" as const, marginBottom: 14 }}>Built for</div>
             <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(32px,3.6vw,44px)", lineHeight: 1.05, letterSpacing: "-0.025em", color: "#0B1628", marginBottom: 0 }}>
               Five sectors, <em style={{ fontStyle: "normal", color: "#1D9E75" }}>one platform</em>.
             </h2>
@@ -601,7 +601,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
           {/* Head */}
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase" as const, marginBottom: 14 }}>Pricing</div>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase" as const, marginBottom: 14 }}>Pricing</div>
             <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "clamp(32px,3.6vw,44px)", lineHeight: 1.05, letterSpacing: "-0.025em", color: "#0B1628" }}>
               One platform. <em style={{ fontStyle: "normal", color: "#1D9E75" }}>No tiers</em>.
             </h2>
@@ -612,11 +612,11 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
             {/* Founding Member — featured */}
             <div style={{ background: "#FFFFFF", border: "1px solid #0B1628", borderRadius: 14, padding: "32px 28px", display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 12px 36px rgba(11,22,40,0.12)" }}>
               {/* Badge */}
-              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#C97A1A", color: "white", fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: "0.1em", padding: "4px 12px", borderRadius: 99, textTransform: "uppercase" as const, fontWeight: 500, whiteSpace: "nowrap" }}>
+              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#C97A1A", color: "white", fontFamily: "'DM Sans',sans-serif", fontSize: 10, letterSpacing: "0.1em", padding: "4px 12px", borderRadius: 99, textTransform: "uppercase" as const, fontWeight: 500, whiteSpace: "nowrap" }}>
                 47 of 50 left
               </div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Founding member</div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#C97A1A", letterSpacing: "0.1em", marginBottom: 14, textTransform: "uppercase" as const }}>Locked for life</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Founding member</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#C97A1A", letterSpacing: "0.1em", marginBottom: 14, textTransform: "uppercase" as const }}>Locked for life</div>
               <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: 48, color: "#0B1628", lineHeight: 1, marginBottom: 6, letterSpacing: "-0.035em" }}>&pound;39</div>
               <div style={{ fontSize: 13, color: "#6B7A8C", marginBottom: 24 }}>per month, forever</div>
               <div style={{ borderTop: "1px solid #E5E1D8", marginBottom: 18 }} />
@@ -630,12 +630,12 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <button onClick={() => setShowEarlyAccess(true)} style={{ width: "100%", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, background: "#0B1628", color: "white", padding: "13px", fontSize: 14, borderRadius: 8, border: "none", cursor: "pointer", marginBottom: 10 }}>
                 Start your 7-day free trial
               </button>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#9AA8B8", textAlign: "center", letterSpacing: "0.06em" }}>No card required</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9AA8B8", textAlign: "center", letterSpacing: "0.06em" }}>No card required</div>
             </div>
 
             {/* Individual */}
             <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 14, padding: "32px 28px", display: "flex", flexDirection: "column", position: "relative" }}>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Individual</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Individual</div>
               <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: 48, color: "#0B1628", lineHeight: 1, marginBottom: 6, letterSpacing: "-0.035em" }}>&pound;99</div>
               <div style={{ fontSize: 13, color: "#6B7A8C", marginBottom: 24 }}>per month</div>
               <div style={{ borderTop: "1px solid #E5E1D8", marginBottom: 18 }} />
@@ -649,12 +649,12 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <button onClick={() => setShowEarlyAccess(true)} style={{ width: "100%", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, background: "transparent", color: "#0B1628", padding: "12px", fontSize: 14, borderRadius: 8, border: "1px solid #0B1628", cursor: "pointer", marginBottom: 10 }}>
                 Start your 7-day free trial
               </button>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#9AA8B8", textAlign: "center", letterSpacing: "0.06em" }}>No card required</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9AA8B8", textAlign: "center", letterSpacing: "0.06em" }}>No card required</div>
             </div>
 
             {/* Team */}
             <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 14, padding: "32px 28px", display: "flex", flexDirection: "column", position: "relative" }}>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Team</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 6, textTransform: "uppercase" as const }}>Team</div>
               <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: 48, color: "#0B1628", lineHeight: 1, marginBottom: 6, letterSpacing: "-0.035em" }}>&pound;699</div>
               <div style={{ fontSize: 13, color: "#6B7A8C", marginBottom: 24 }}>per month &middot; 10 seats</div>
               <div style={{ borderTop: "1px solid #E5E1D8", marginBottom: 18 }} />
@@ -668,7 +668,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
               <button onClick={() => setShowEarlyAccess(true)} style={{ width: "100%", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, background: "transparent", color: "#0B1628", padding: "12px", fontSize: 14, borderRadius: 8, border: "1px solid #0B1628", cursor: "pointer", marginBottom: 10 }}>
                 Start with team plan
               </button>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#9AA8B8", textAlign: "center", letterSpacing: "0.06em" }}>We&apos;ll set up your seats</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9AA8B8", textAlign: "center", letterSpacing: "0.06em" }}>We&apos;ll set up your seats</div>
             </div>
 
           </div>
@@ -681,12 +681,12 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           <div className="lp-founder-grid">
 
             {/* Photo placeholder — TODO: replace with real <img> when photo is ready */}
-            <div style={{ aspectRatio: "1", borderRadius: "100%", background: "radial-gradient(circle at 30% 30%, #D8D4C8, #B8B4A8 70%)", border: "1px solid #E5E1D8", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 12, fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(11,22,40,0.4)", letterSpacing: "0.08em", maxWidth: 160 }}>
+            <div style={{ aspectRatio: "1", borderRadius: "100%", background: "radial-gradient(circle at 30% 30%, #D8D4C8, #B8B4A8 70%)", border: "1px solid #E5E1D8", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 12, fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(11,22,40,0.4)", letterSpacing: "0.08em", maxWidth: 160 }}>
               FOUNDER
             </div>
 
             <div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase" as const, marginBottom: 10 }}>Built by</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6B7A8C", letterSpacing: "0.16em", textTransform: "uppercase" as const, marginBottom: 10 }}>Built by</div>
               <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 22, color: "#0B1628", marginBottom: 12, letterSpacing: "-0.015em", lineHeight: 1.2 }}>
                 One founder. <em style={{ fontStyle: "normal", color: "#1D9E75" }}>No shortcuts</em>.
               </h3>
@@ -749,7 +749,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
             {/* Product */}
             <div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 14, textTransform: "uppercase" as const }}>Product</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 14, textTransform: "uppercase" as const }}>Product</div>
               <ul className="lp-footer-list">
                 <li><a href="#showcase">Platform</a></li>
                 <li><a href="#pricing">Pricing</a></li>
@@ -760,7 +760,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
             {/* Company */}
             <div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 14, textTransform: "uppercase" as const }}>Company</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 14, textTransform: "uppercase" as const }}>Company</div>
               <ul className="lp-footer-list">
                 <li><a href="#">About</a></li>
                 <li><a href="/methodology">Methodology</a></li>
@@ -771,7 +771,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
 
             {/* Stay in touch */}
             <div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 14, textTransform: "uppercase" as const }}>Stay in touch</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#6B7A8C", letterSpacing: "0.14em", marginBottom: 14, textTransform: "uppercase" as const }}>Stay in touch</div>
               <ul className="lp-footer-list">
                 <li><a href="https://oceanrising.substack.com" target="_blank" rel="noopener noreferrer">Ocean Rising (Substack)</a></li>
                 <li><a href="https://linkedin.com/company/thetideline" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
@@ -781,7 +781,7 @@ export default function LandingClient({ socialProof }: { socialProof: SocialProo
           </div>
 
           {/* Bottom rule */}
-          <div style={{ paddingTop: 20, borderTop: "1px solid #E5E1D8", fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#9AA8B8", letterSpacing: "0.04em", textAlign: "center" }}>
+          <div style={{ paddingTop: 20, borderTop: "1px solid #E5E1D8", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#9AA8B8", letterSpacing: "0.04em", textAlign: "center" }}>
             &copy; 2026 Tideline &middot; Built and maintained from the United Kingdom
           </div>
         </div>

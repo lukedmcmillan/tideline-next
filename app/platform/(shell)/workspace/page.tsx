@@ -25,7 +25,7 @@ const RED   = "#EF4444";
 const R     = 6;
 const FUI   = "var(--font-ui), 'Plus Jakarta Sans', -apple-system, sans-serif";
 const F     = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M     = "var(--font-mono), 'DM Mono', monospace";
+const M     = "var(--font-sans), 'DM Sans', sans-serif";
 
 interface SourceStory { id: string; title: string; source_name: string; published_at: string; short_summary: string | null; source_type?: string }
 interface AskSource { document_id: string | null; title: string; source_organisation: string | null; published_date: string | null; file_url: string | null }

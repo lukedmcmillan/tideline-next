@@ -393,7 +393,7 @@ export default function DraftEditorPage() {
         >
           <option value="Inter">Inter</option>
           <option value="Georgia">Georgia</option>
-          <option value="DM Mono">DM Mono</option>
+          <option value="DM Sans">DM Sans</option>
         </select>
         <Sep />
 

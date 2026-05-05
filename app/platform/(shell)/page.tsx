@@ -22,7 +22,7 @@ const AMBER_SOFT   = "#FDF2DF";
 const RED          = "#E24B4A";
 const RED_SOFT     = "#FCEAEA";
 const SANS         = "'DM Sans', -apple-system, sans-serif";
-const MONO         = "'DM Mono', ui-monospace, monospace";
+const MONO         = "'DM Sans', ui-monospace, monospace";
 
 // ── Desktop-only tokens ───────────────────────────────────────────────────────
 const NAVY_SHELL   = "#0B1628";

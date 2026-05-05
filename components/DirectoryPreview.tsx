@@ -4,7 +4,7 @@
 // this component to match. Key design tokens must stay in sync.
 
 const F  = "'DM Sans', system-ui, sans-serif";
-const M  = "'DM Mono', monospace";
+const M  = "'DM Sans', sans-serif";
 const T1 = "#202124";
 const T4 = "#9AA0A6";
 const B  = "#DADCE0";

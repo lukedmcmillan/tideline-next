@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 const TEAL = "#1D9E75";
 const T4 = "#9AA0A6";
 

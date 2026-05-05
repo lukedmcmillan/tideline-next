@@ -1,7 +1,7 @@
 "use client";
 
 const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 
 export default function ConversionModal({ onDismiss }: { onDismiss: () => void }) {
   const handleDismiss = () => {

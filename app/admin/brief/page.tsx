@@ -18,7 +18,7 @@ const T4 = "#9AA0A6";
 const BD = "#DADCE0";
 const AMBER = "#F9AB00";
 const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 
 function fmtDate(d: string | Date | null): string {
   if (!d) return "";

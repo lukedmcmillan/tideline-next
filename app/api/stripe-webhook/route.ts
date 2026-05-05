@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
                 html: `
                   <div style="max-width:520px;margin:40px auto;font-family:'DM Sans',Arial,sans-serif;">
                     <div style="background:#0A1628;padding:20px 32px;">
-                      <span style="font-size:14px;font-weight:500;color:#ffffff;letter-spacing:0.18em;text-transform:uppercase;font-family:'DM Mono',monospace;">TIDELINE</span>
+                      <span style="font-size:14px;font-weight:500;color:#ffffff;letter-spacing:0.18em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">TIDELINE</span>
                     </div>
                     <div style="padding:40px 32px;background:#ffffff;border:1px solid #E4E4E4;">
                       <h1 style="font-size:22px;color:#202124;margin:0 0 16px;font-family:'DM Sans',Arial,sans-serif;font-weight:700;">Payment failed</h1>

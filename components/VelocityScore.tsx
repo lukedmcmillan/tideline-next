@@ -306,7 +306,7 @@ export default function VelocityScore({ slug }: { slug: string }) {
 
             {/* The equation */}
             <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: M, marginTop: 16, marginBottom: 8, display: "block" }}>THE EQUATION</span>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#202124", background: "#F8F9FA", borderRadius: 6, padding: "12px 16px", lineHeight: 1.8, whiteSpace: "pre" }}>{"BASE SCORE =\n  (Volume Trend    \u00D7 0.40) +\n  (Recency         \u00D7 0.35) +\n  (Decision Signals \u00D7 0.25)\n\nADJUSTED SCORE =\n  Base Score \u00D7 Institutional Risk Multiplier"}</div>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#202124", background: "#F8F9FA", borderRadius: 6, padding: "12px 16px", lineHeight: 1.8, whiteSpace: "pre" }}>{"BASE SCORE =\n  (Volume Trend    \u00D7 0.40) +\n  (Recency         \u00D7 0.35) +\n  (Decision Signals \u00D7 0.25)\n\nADJUSTED SCORE =\n  Base Score \u00D7 Institutional Risk Multiplier"}</div>
 
             {/* Three signals */}
             <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: M, marginTop: 16, marginBottom: 10, display: "block" }}>THE THREE SIGNALS</span>

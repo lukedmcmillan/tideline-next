@@ -21,7 +21,7 @@ const TEXT_DIM   = "rgba(232,237,244,0.28)";
 const DIVIDER    = "rgba(255,255,255,0.07)";
 const TEAL       = "#1D9E75";
 const AMBER      = "#EF9F27";
-const LABEL_FONT = "'DM Mono',monospace";
+const LABEL_FONT = "'DM Sans',sans-serif";
 const BODY_FONT  = "'DM Sans',sans-serif";
 
 const LABEL_STYLE: React.CSSProperties = {

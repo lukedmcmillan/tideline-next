@@ -18,7 +18,7 @@ const BORDER  = "#DADCE0";
 const BLT     = "#E8EAED";
 const ROW_BG  = "#F1F3F4";
 const F       = "'DM Sans', system-ui, sans-serif";
-const M       = "'DM Mono', monospace";
+const M       = "'DM Sans', sans-serif";
 
 // ── Icons ────────────────────────────────────────────────────────────────
 const IcFeed = () => <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>;

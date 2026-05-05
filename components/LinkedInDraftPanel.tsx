@@ -10,7 +10,7 @@ const BLT = "#E8EAED";
 const TEAL_H = "#0E7C86";
 const RED_OVER = "#C0392B";
 const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 
 const ANGLES = [
   { key: "implications", label: "What this means for your sector" },

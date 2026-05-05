@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 const TEAL = "#1D9E75";
 const T1 = "#202124";
 const T3 = "#5F6368";

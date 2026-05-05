@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function MethodologyPage() {
   const F = "'DM Sans', sans-serif";
-  const MONO = "'DM Mono', monospace";
+  const MONO = "'DM Sans', sans-serif";
   const NAVY = "#0B1628";
   const BODY = "#5F6368";
   const SEC = "#9AA0A6";
@@ -71,7 +71,7 @@ export default function MethodologyPage() {
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100vh", fontFamily: F }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 80px" }}>
 

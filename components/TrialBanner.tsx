@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 const TEAL = "#1D9E75";
 const SS_KEY = "tideline_trial_banner_dismissed";
 

@@ -8,7 +8,7 @@ const T3 = "#6B7280";
 const T4 = "#9CA3AF";
 const BD = "#E8EAED";
 const F = "var(--font-sans), 'DM Sans', system-ui, sans-serif";
-const M = "var(--font-mono), 'DM Mono', monospace";
+const M = "var(--font-sans), 'DM Sans', sans-serif";
 
 interface Props {
   projectId: string | null;

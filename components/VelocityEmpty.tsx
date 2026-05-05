@@ -37,7 +37,7 @@ export default function VelocityEmpty({ slug }: Props) {
         <div style={{ fontSize: 13, color: M, lineHeight: 1.6 }}>
           Pulse score not yet calculated for this domain.
         </div>
-        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#C5C5C5", marginTop: 8 }}>
+        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#C5C5C5", marginTop: 8 }}>
           Next update Monday 06:00 UTC
         </div>
       </div>

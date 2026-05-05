@@ -17,7 +17,7 @@ const AMBER = "#EF9F27";
 const TEXT = "#E8EDF4";
 const TEXT_MUTED = "#8BA0BC";
 const TEXT_DIM = "#5B6F8C";
-const MONO = "'DM Mono', ui-monospace, monospace";
+const MONO = "'DM Sans', ui-monospace, monospace";
 
 // Micro-pill matching .hero-chip from mockup
 const PILL_BASE: React.CSSProperties = {

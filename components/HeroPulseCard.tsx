@@ -39,7 +39,7 @@ export default function HeroPulseCard() {
         paddingBottom: 18, borderBottom: `1px solid ${RULE}`, marginBottom: 22,
       }}>
         <div>
-          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: MUTED, letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" }}>
+          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: MUTED, letterSpacing: "0.1em", marginBottom: 4, textTransform: "uppercase" }}>
             Live tracker
           </div>
           <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 19, color: NAVY, letterSpacing: "-0.01em" }}>
@@ -47,7 +47,7 @@ export default function HeroPulseCard() {
           </div>
         </div>
         <div style={{
-          fontFamily: "'DM Mono',monospace", fontSize: 10, color: MUTED,
+          fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: MUTED,
           border: `1px solid ${RULE}`, padding: "4px 9px", borderRadius: 99,
           letterSpacing: "0.06em", background: "#FAFAF7", whiteSpace: "nowrap",
         }}>
@@ -59,7 +59,7 @@ export default function HeroPulseCard() {
       <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 22, alignItems: "center", marginBottom: 18 }}>
         {/* Animated score number */}
         <div style={{
-          fontFamily: "'DM Mono',monospace", fontSize: 68, color: TEAL,
+          fontFamily: "'DM Sans',sans-serif", fontSize: 68, color: TEAL,
           lineHeight: 0.95, fontWeight: 500, letterSpacing: "-0.04em",
           opacity: 0,
           animation: "lp-score-in 1s cubic-bezier(0.2,0.8,0.3,1) 0.3s forwards",
@@ -68,7 +68,7 @@ export default function HeroPulseCard() {
         </div>
         <div>
           <div style={{
-            fontFamily: "'DM Mono',monospace", fontSize: 10, color: TEAL,
+            fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: TEAL,
             letterSpacing: "0.14em", marginBottom: 4, textTransform: "uppercase",
             opacity: 0, animation: "lp-fade-in 0.6s ease 0.7s forwards",
           }}>
@@ -81,7 +81,7 @@ export default function HeroPulseCard() {
             Active conditions · prepare
           </div>
           <div style={{
-            fontFamily: "'DM Mono',monospace", fontSize: 11, color: MUTED,
+            fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: MUTED,
             opacity: 0, animation: "lp-fade-in 0.6s ease 1s forwards",
           }}>
             ↑ <span style={{ color: TEAL }}>+0.4 vs last week</span>
@@ -134,12 +134,12 @@ export default function HeroPulseCard() {
         {components.map((c) => (
           <div key={c.label}>
             <div style={{
-              fontFamily: "'DM Mono',monospace", fontSize: 9, color: DIM,
+              fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: DIM,
               letterSpacing: "0.08em", marginBottom: 4, textTransform: "uppercase",
             }}>
               {c.label}
             </div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 16, color: NAVY, fontWeight: 500 }}>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 16, color: NAVY, fontWeight: 500 }}>
               {c.val}
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function HeroPulseCard() {
 
       {/* Disclosure — fades in last */}
       <div style={{
-        fontFamily: "'DM Mono',monospace", fontSize: 10, color: MUTED, lineHeight: 1.5,
+        fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: MUTED, lineHeight: 1.5,
         opacity: 0, animation: "lp-fade-in 0.8s ease 2.3s forwards",
       }}>
         <span style={{ color: AMBER, marginRight: 6, fontWeight: 500 }}>Disclosure</span>

@@ -22,14 +22,14 @@
   font-display: swap;
 }
 
-/* DM Sans + DM Mono — Google Fonts (no brand files supplied). */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300..700;1,300..700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+/* DM Sans + DM Sans — Google Fonts (no brand files supplied). */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300..700;1,300..700&display=swap');
 
 :root {
   /* ---------- TYPOGRAPHY ---------- */
   --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:    'DM Mono', ui-monospace, monospace;
+  --font-mono:    'DM Sans', ui-monospace, monospace;
 
   /* ---------- CORE PALETTE (locked) ---------- */
   --navy:         #0B1628; /* primary ink, dark surfaces, hero / nav backgrounds */
@@ -111,7 +111,7 @@
   --space-24: 100px;
 
   /* ---------- TYPE TOKENS ---------- */
-  /* Eyebrow / metadata (DM Mono uppercase letter-spaced) */
+  /* Eyebrow / metadata (DM Sans uppercase letter-spaced) */
   --eyebrow-size: 11px;
   --eyebrow-tracking: 0.16em;
 
@@ -182,9 +182,9 @@ h4 { font-size: var(--h4-size); line-height: var(--h4-line); letter-spacing: var
   font-weight: inherit;
 }
 
-/* Eyebrow: DM Mono uppercase tracked */
+/* Eyebrow: DM Sans uppercase tracked */
 .tdl-eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--eyebrow-size);
   color: var(--text-muted);
   letter-spacing: var(--eyebrow-tracking);
@@ -203,9 +203,9 @@ p, .tdl-body {
 .tdl-body-sm { font-size: var(--body-sm-size); }
 .tdl-body-xs { font-size: var(--body-xs-size); }
 
-.tdl-mono       { font-family: var(--font-mono); }
-.tdl-mono-meta  { font-family: var(--font-mono); font-size: var(--mono-sm-size); color: var(--text-muted); letter-spacing: 0.04em; }
-.tdl-mono-data  { font-family: var(--font-mono); font-weight: 500; color: var(--text-primary); }
+.tdl-mono       { font-family: var(--font-sans); }
+.tdl-mono-meta  { font-family: var(--font-sans); font-size: var(--mono-sm-size); color: var(--text-muted); letter-spacing: 0.04em; }
+.tdl-mono-data  { font-family: var(--font-sans); font-weight: 500; color: var(--text-primary); }
 
 /* Brief block — the locked component from globals.css */
 .brief-block {
@@ -221,7 +221,7 @@ p, .tdl-body {
 /* Outline pill — the only badge style permitted (except for warnings) */
 .tdl-pill {
   display: inline-flex; align-items: center;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 9px;
   letter-spacing: 0.04em;
   text-transform: uppercase;

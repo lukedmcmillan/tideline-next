@@ -4,7 +4,7 @@ import type { HeroSignalData } from "@/app/lib/types/dashboard";
 import Sparkline from "@/components/Sparkline";
 
 const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', sans-serif";
-const MONO = "'DM Mono', ui-monospace, monospace";
+const MONO = "'DM Sans', ui-monospace, monospace";
 const TEAL = "#1D9E75";
 const TEAL_BRIGHT = "#27C893";
 const TEXT = "#E8EDF4";

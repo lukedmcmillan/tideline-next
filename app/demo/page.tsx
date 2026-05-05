@@ -35,7 +35,7 @@ export default function DemoPage() {
               <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"#FF5F57"}}/>
               <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"#FEBC2E"}}/>
               <div style={{width:"10px",height:"10px",borderRadius:"50%",background:"#28C840"}}/>
-              <div style={{background:"#0F172A",borderRadius:"6px",padding:"5px 12px",fontFamily:"'DM Mono',monospace",fontSize:"11px",color:"#94A3B8",marginLeft:"12px"}}>thetideline.co/platform/feed</div>
+              <div style={{background:"#0F172A",borderRadius:"6px",padding:"5px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:"#94A3B8",marginLeft:"12px"}}>thetideline.co/platform/feed</div>
             </div>
             <img src="/platform-screenshot.png" alt="Tideline live feed" style={{width:"100%",display:"block"}} />
           </div>
