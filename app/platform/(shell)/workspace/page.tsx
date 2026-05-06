@@ -451,7 +451,7 @@ function IntelligencePanel({ editor, topics, projectId }: {
     editor.chain().focus("end").insertContent({
       type: "paragraph",
       content: [
-        { type: "text", marks: [{ type: "bold" }], text: entry.content },
+        { type: "text", marks: [{ type: "bold" }], text: entry.content ?? undefined },
       ],
     }).insertContent({
       type: "paragraph",
