@@ -176,13 +176,6 @@ function buildSummary(signals: Signal[]): string {
 }
 
 // ── Desktop helpers ───────────────────────────────────────────────────────────
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
-}
-
 function fmtLastChecked(sinceIso: string | null): string {
   if (!sinceIso) return "a while";
   const h = (Date.now() - new Date(sinceIso).getTime()) / 3600000;
@@ -471,6 +464,12 @@ export default function DashboardPage() {
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState(false);
   const [expanded, setExpanded]           = useState(false);
+  const [greeting, setGreeting]           = useState<string>("afternoon");
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "morning" : h < 17 ? "afternoon" : "evening");
+  }, []);
 
   useEffect(() => {
     // Wait for session to resolve before firing auth-gated requests
@@ -707,7 +706,7 @@ export default function DashboardPage() {
                 {fmtDate()} · you last checked {fmtLastChecked(since)} ago
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: TEXT, lineHeight: 1.25 }}>
-                Good {greeting()}, {firstName}
+                Good {greeting}, {firstName}
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", paddingTop: 4 }}>

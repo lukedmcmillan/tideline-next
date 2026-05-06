@@ -135,16 +135,24 @@ function trackerColor(t: TrackerData): string {
 
 // ── Sidebar Datetime ──────────────────────────────────────────────────────
 function SidebarDatetime() {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(id);
   }, []);
-  const dayName = now.toLocaleDateString("en-GB", { weekday: "long" });
+
+  if (!now) {
+    return (
+      <div style={{ borderTop: "1px solid #1A2A44", borderBottom: "1px solid #1A2A44", padding: "14px 24px", margin: "0 0 4px", minHeight: 87 }} />
+    );
+  }
+
+  const dayName  = now.toLocaleDateString("en-GB", { weekday: "long" });
   const fullDate = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  const clock = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const tzShort = now.toLocaleTimeString("en-GB", { timeZoneName: "short" }).split(" ").pop() || "UTC";
+  const clock    = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const tzShort  = now.toLocaleTimeString("en-GB", { timeZoneName: "short" }).split(" ").pop() || "UTC";
+
   return (
     <div style={{ borderTop: "1px solid #1A2A44", borderBottom: "1px solid #1A2A44", padding: "14px 24px", margin: "0 0 4px" }}>
       <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", fontWeight: 700, fontSize: 16, color: "#E8EDF4", letterSpacing: "-0.01em" }}>{dayName}</div>

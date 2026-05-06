@@ -73,8 +73,8 @@ const PLACEHOLDERS: Record<string, string[]> = {
 const DEF_PH = ["What changed in ocean governance this week?", "Summarise the ISA moratorium debate"];
 
 function getPlaceholder(topics: string[]): string {
-  for (const t of topics) { if (PLACEHOLDERS[t]) return PLACEHOLDERS[t][Math.floor(Math.random() * 2)]; }
-  return DEF_PH[Math.floor(Math.random() * 2)];
+  for (const t of topics) { if (PLACEHOLDERS[t]) return PLACEHOLDERS[t][0]; }
+  return DEF_PH[0];
 }
 
 // -- Button styles ---------------------------------------------------------------

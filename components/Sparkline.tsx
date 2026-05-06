@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 const TEAL_BRIGHT = "#27C893";
 const AMBER = "#EF9F27";
 const RED = "#E24B4A";
@@ -32,6 +34,9 @@ export default function Sparkline({
   fillOpacity?: number;
   size?: "compact" | "expanded";
 }) {
+  const id = useId();
+  const gradientId = `spark-grad-${id}`;
+
   if (!history || history.length < 2) return null;
 
   const color = strokeColor(score);
@@ -68,8 +73,6 @@ export default function Sparkline({
 
   const polyline = coords.map(p => `${p.x},${p.y}`).join(" ");
   const fillPath = `M${coords[0].x},${coords[0].y} ${coords.slice(1).map(p => `L${p.x},${p.y}`).join(" ")} L${w},${h} L0,${h} Z`;
-  const gradientId = `spark-grad-${Math.random().toString(36).slice(2, 8)}`;
-
   // Last point for endpoint dot
   const last = coords[coords.length - 1];
   const dotR = expanded ? 3.5 : 0;
