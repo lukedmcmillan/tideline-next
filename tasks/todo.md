@@ -2,6 +2,143 @@
 
 ---
 
+## BUG (PRIORITY 1 — next session): Workspace creation modal does not persist
+
+**Priority:** P1
+**Discovered:** 2026-05-06
+
+### Problem
+New workspace creation flow did not persist any project. No 'auth-test' row in `projects` table; most recent row is 'weh' from 2026-05-05 under gmail user_id `c652fd7f-20eb-4ab6-9841-aa7908057dea`.
+
+### Reproduction
+1. Open New Workspace modal from workspace page
+2. Fill in title and entities
+3. Submit
+4. Observe: no row created in `projects` table
+
+### Diagnostic steps
+1. Browser DevTools Network tab — does `POST /api/projects` fire? What status does it return?
+2. Check that the title field captures typed text (controlled input wiring)
+3. Check that the submit button onClick is wired to the POST handler
+4. Note: most recent projects under `c652fd7f-...` are all from April or earlier ('weh' from 2026-05-05)
+
+---
+
+## TICKET: End-to-end test active project watcher (blocked on modal fix)
+
+**Priority:** P2 (after modal fix)
+**Discovered:** 2026-05-06
+
+### Work needed
+1. Fix workspace creation modal (see BUG above)
+2. Create workspace with 2 entities via modal
+3. Confirm 2 rows written to `project_entities` for `c652fd7f-...`
+4. Trigger `fetch-feeds` cron with ISA or BBNJ story
+5. Confirm `project_auto_entries` row is auto-inserted via entity-matching auto-attach hook
+
+---
+
+## TICKET: Investigate 'weh' workspace — isa/bbnj chips visible but topic_tags=[] in DB
+
+**Priority:** Low
+**Discovered:** 2026-05-06
+
+### Problem
+The 'weh' workspace shows isa and bbnj entity chips in the UI but `projects.topic_tags = []` in the DB. Either the chips are rendered from `project_entities` (not `topic_tags`), or there is a stale cache.
+
+### Work needed
+- Confirm which field drives the entity chips in `workspace/page.tsx`
+- If `project_entities` table — expected behaviour, `topic_tags` is not the source of truth
+- If stale cache — identify the cache key and invalidation point
+
+---
+
+## TICKET: Clean up untracked junk files in repo root
+
+**Priority:** Low
+**Discovered:** 2026-05-06
+
+### Problem
+Untracked files with clearly corrupt names exist in the repo root (paste artifacts from terminal cross-contamination):
+- `1`, `10)`, `20%`, `console.error(e))`
+
+### Work needed
+```bash
+git clean -n   # preview — confirm only junk files listed
+git clean -f   # delete
+```
+
+---
+
+## TICKET: Remove debug console.log lines in app/api/documents/route.ts
+
+**Priority:** Low
+**Discovered:** 2026-05-05
+
+Two debug `console.log` lines remain in the POST handler:
+- `console.log("[documents POST] Looking up email:", email);`
+- `console.log("[documents POST] User found:", user?.id || "NOT FOUND");`
+
+These log PII (email, user ID) to Vercel logs. Remove both.
+
+---
+
+## TICKET: Disable next-auth debug mode in production
+
+**Priority:** Medium
+**Discovered:** 2026-05-06
+
+### Work needed
+- Confirm `NEXTAUTH_DEBUG` is not set in Vercel production env vars
+- Confirm `debug: false` (or absent) in `app/api/auth/[...nextauth]/route.ts` NextAuth config
+- Check Vercel logs — if `[next-auth]` debug lines appear in production, find and remove the debug flag
+
+---
+
+## TICKET: Link Supabase CLI to project
+
+**Priority:** Low
+**Discovered:** 2026-05-06
+
+### Work needed
+1. `supabase link --project-ref [ref]` (get ref from Supabase dashboard → project settings)
+2. Add `DATABASE_URL` to `.env.local`
+3. Verify `supabase gen types typescript --local > app/lib/types/supabase.ts` produces current schema
+4. Note: types may be stale (entities.embedding was vector(1536), now vector(768); project_entities and touch_project_viewed are new)
+
+---
+
+## TICKET: Batch-insert optimisation in entity-matching.ts auto-attach loop
+
+**Priority:** Low
+**Discovered:** 2026-05-06
+
+### Problem
+`lib/entity-matching.ts` auto-attach loop runs a sequential upsert per project. With many projects this is O(n) round trips to Supabase.
+
+### Work needed
+- Replace sequential upsert loop with a single `supabase.from("project_auto_entries").upsert([...rows])` batch call
+- Verify `ignoreDuplicates: true` handles the unique constraint correctly at batch scale
+
+---
+
+## TICKET: Decide fate of hotmail users row
+
+**Priority:** Low
+**Discovered:** 2026-05-06
+
+### Problem
+`lukedmcmillan@hotmail.com` users row (`05f3...`) is no longer the canonical user. The gmail row (`c652fd7f-...`) is canonical. The hotmail row still exists with 6 orphaned projects and legacy data.
+
+### Options
+1. Archive: set `subscription_status = 'cancelled'`, add `archived_at` timestamp
+2. Delete: cascade delete all hotmail-owned rows (high blast radius, irreversible)
+3. Leave: harmless, no new writes to this row after user_id migration
+
+Recommended: Option 1 (archive). Decide before any billing or compliance audit.
+
+---
+
 ## TICKET: Remove user_topics dead code path
 
 **Priority:** Medium

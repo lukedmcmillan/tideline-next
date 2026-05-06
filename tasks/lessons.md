@@ -167,6 +167,43 @@
 
 - **Architecture tests do not catch content quality** — vitest passes and API returns 200 does not mean the brief reads well. After every prompt change, run TEST_EMAIL and read it as a paying subscriber: consultant voice, hedge language, factual overreach, repetition. Build content-quality verification into the brief shipping process.
 
+## 2026-05-06
+
+### Auth & Session Cookies
+
+- **next-auth `getToken()` does not auto-detect cookie name — pass `secureCookie` explicitly.** Edge middleware sees the HTTPS request URL; serverless API routes see an HTTP internal URL. Without `secureCookie: true`, `getToken` looks for `next-auth.session-token` but Vercel sets `__Secure-next-auth.session-token`. Fix: derive from `NEXTAUTH_URL?.startsWith("https://")`.
+- **Two-stage auth deploys reduce blast radius.** Stage 1: fix the underlying bug WITH the fallback still in place (deploy and verify sessions resolve). Stage 2: remove fallbacks once stage 1 is verified in production. Never remove a safety net in the same deploy that introduces a behavioural change.
+- **Hardcoded user-id fallbacks in API routes are auth holes AND mask real bugs.** `if (!email) email = "lukedmcmillan@hotmail.com"` meant authenticated users always got data even when the session resolved wrong. The fallback was the reason the auth bug was invisible for weeks. Fail closed on null session: return 401.
+- **Returning empty arrays on auth failure is misleading — return 401.** The frontend can handle session-expired state; returning `{ projects: [] }` when auth fails makes the UI silently show an empty state rather than prompting re-login.
+- **'Shipped' = verified in production with a real request, not 'committed and pushed'.** Three times this session a deploy was described as done before verifying in Vercel logs. A commit on origin/main is not a shipped feature.
+- **Run `npm run build` LOCALLY before commit/push.** Three failed deploys this session all would have been caught by a local build. The build takes 35s and is mandatory before any push.
+- **Reviewing a diff in chat is not the same as verifying it compiles.** A diff shown in chat is a plan. Apply, build, push are three separate verifiable steps. Approving a diff does not mean it has been applied.
+- **A diff in chat is not a diff on disk.** After showing diffs and receiving approval, the edits must still be applied with Edit tool calls. Check `git status` to confirm.
+
+### Supabase
+
+- **Every Supabase SQL Editor migration block must end with a verification SELECT.** Without a result set, silent failures are invisible — the statement ran but the data may not have changed.
+- **Supabase SQL Editor closes transactions silently between submissions.** `BEGIN` and `COMMIT` must be pasted as one block, not as separate submissions. A partial transaction committed as a COMMIT-less block leaves the DB in an indeterminate state.
+- **`SECURITY DEFINER` functions bypass RLS; route handler must do explicit ownership check before calling the RPC.** `touch_project_viewed` is SECURITY DEFINER — it will run against any project_id it's given. The ownership `SELECT` must precede the RPC call, not follow it.
+- **404 vs 403 for ownership failures: pick one. 404 is safer.** Returning 404 for "project not found for this user" avoids leaking whether the resource exists at all.
+- **Supabase JS `.upsert()` with `ignoreDuplicates` does not throw on conflict — it returns the error in the response object.** Check `data` (rows inserted) to determine if the upsert was a no-op; don't rely on absence of error.
+- **Cross-table user_id migrations: probe for unique constraints first, DELETE-then-UPDATE for preference tables, blind UPDATE for activity logs.** A `UPDATE ... SET user_id = X WHERE user_id = Y` against a table with a `UNIQUE(user_id, entity_id)` constraint will fail if the target user already has the same row.
+
+### API Design
+
+- **Fallbacks appropriate for side-effect operations are a bug for primary operations.** A fallback email on auth failure is appropriate for a fire-and-forget notification; it is a security hole for a data-returning API route.
+- **Removing one bug can expose adjacent bugs the masking was hiding.** Part B (removing fallbacks) immediately revealed the workspace creation modal flow doesn't persist — the fallback was serving real data and masking the modal's broken POST path.
+
+### Vocabulary & Schema
+
+- **Workspace/project vocabulary split is intentional.** "Workspace" is the UI-facing term; "project" is the DB table name. Never rename one to match the other in code.
+- **Project columns are `name` not `title`; entity columns are `name` not `canonical_name`.**
+
+### Development Workflow
+
+- **End-of-session UI debugging is the highest-risk activity in a session — defer to fresh eyes the next day.** Low blood sugar + accumulated context = increased chance of making the problem worse or missing an obvious cause. Stop at a known-good state.
+- **NEVER paste secret values in chat; rotate immediately if leaked.** `.mcp.json` is gitignored but Supabase service role keys and NEXTAUTH_SECRET pasted in chat are visible in conversation history. Rotate if exposed.
+
 ## 2026-04-30
 
 ### RSS Source Verification
