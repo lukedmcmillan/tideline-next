@@ -39,6 +39,18 @@ For any write path that updates a denormalised counter, the verification step mu
 
 Exception to ship-ugly: if you have shipped two or more ad-hoc fixes for the same class of problem (fix-X.ts, cleanup-X.ts, debug-X.ts), the next iteration must be a structural fix, not another ad-hoc script. Accumulated fix scripts dated close together is the signature of debt that needs structural treatment.
 
+## Section 7 — Session Discipline
+
+Last commands every session (mandatory):
+`/sc:save` → update SPEC.md and LESSONS.md → update PROJECT_INDEX.md → `/sc:git` commit and push
+
+When updating PROJECT_INDEX.md at session end, reflect:
+- Any new cron jobs added (path, schedule, purpose)
+- Any new DB tables or significant schema changes
+- Any new `app/lib/` modules
+- Updated 'active issues' list pulled from tasks/todo.md
+- Keep the file under 5KB
+
 ## Section 6 — Entity Write Rules
 
 - Never write directly to `entities`, `entity_mentions`, or `entity_aliases` without going through `findOrCreateEntity()` (lib/entity-matching.ts).
