@@ -252,6 +252,96 @@ production send path or load test.
 
 ---
 
+## TICKET: Verify story auto-attach pipeline end-to-end
+
+**Priority:** P1
+**Discovered:** 2026-05-06
+
+### Work needed
+1. Trigger `fetch-feeds` cron manually (or wait for next hourly run)
+2. Confirm a new ISA or BBNJ story is ingested
+3. Confirm `project_auto_entries` row auto-inserted for 'auth-test-2' workspace via entity-matching auto-attach hook
+4. If no row: check `lib/entity-matching.ts` auto-attach loop, check `project_entities` rows for auth-test-2, check story `entities_extracted` flag
+
+---
+
+## TICKET: Entity picker — dropdown overflow + acronym search
+
+**Priority:** P2
+**Discovered:** 2026-05-06
+
+### Problem
+Two UX issues in the NewProjectModal entity picker:
+1. Dropdown overflows its container on narrow screens
+2. Typing short acronyms (iwc, isa, bbnj) returns no results — the search does not match against `entity_aliases.alias_text`
+
+### Work needed
+- Fix: search should query `entity_aliases` in addition to `entities.name`
+- Fix: dropdown should have `max-height` + `overflow-y: auto` to stay within modal bounds
+
+---
+
+## TICKET: Apply pending migration 20260505_matched_entity_id.sql
+
+**Priority:** P2
+**Discovered:** 2026-05-05
+
+### Work needed
+- Open Supabase Studio SQL Editor
+- Run `supabase/migrations/20260505_matched_entity_id.sql`
+- Verify with a SELECT confirming the new column or index exists
+
+---
+
+## TICKET: WorkspaceBreadcrumb typeof window branch — assess and remove if dead
+
+**Priority:** Low
+**Discovered:** 2026-05-06
+
+### Problem
+`app/platform/(shell)/layout.tsx` contains a `typeof window !== 'undefined'` branch in `WorkspaceBreadcrumb`. This is a common hydration anti-pattern. The branch may be dead code introduced when routing was server-side.
+
+### Work needed
+- Read the branch and determine if the `typeof window` check is necessary
+- If dead code: remove
+- If live: replace with `useEffect` pattern
+
+---
+
+## TICKET: Tags/Entities design unification — decide on single source of truth
+
+**Priority:** Medium
+**Discovered:** 2026-05-06
+
+### Problem
+Two overlapping systems exist for associating topics with workspaces:
+- `projects.topic_tags` (string array) — set at creation time
+- `project_entities` table (FK to entities) — set via entity picker
+
+The 'weh' workspace has entity chips rendered from `project_entities` but `topic_tags = []` in DB.
+
+### Work needed
+- Decide: `project_entities` is the source of truth for the workspace entity watcher; `topic_tags` is either deprecated or a separate concept
+- If deprecated: stop writing to `topic_tags` on workspace creation; strip from UI
+- If separate: document the distinction in CLAUDE.md
+
+---
+
+## TICKET: ISA tracker_tag data audit
+
+**Priority:** Medium
+**Discovered:** 2026-05-06
+
+### Problem
+ISA entities may not have `tracker_tag = 'isa'` set, which would prevent the auto-attach hook from routing ISA stories to projects watching ISA entities.
+
+### Work needed
+- `SELECT name, tracker_tag FROM entities WHERE name ILIKE '%ISA%' OR name ILIKE '%Seabed Authority%'`
+- Confirm `tracker_tag` is set correctly for canonical ISA entity
+- If missing: `UPDATE entities SET tracker_tag = 'isa' WHERE ...`
+
+---
+
 ## TICKET: Reconcile two-band-system conflict
 
 **Priority:** Low

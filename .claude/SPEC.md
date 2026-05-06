@@ -1,37 +1,35 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-06 — Auth fix Parts A & B + workspace modal bug deferred
+## Last session: 2026-05-06 — Hydration fix shipped + all P1 paths verified
 
-WHAT SHIPPED:
-- **Auth fix Part A** — `app/lib/auth.ts`: `getToken()` now passes `secureCookie: true` when `NEXTAUTH_URL` starts with `https://`. Resolves 401s on all Vercel serverless routes. VERIFIED in production (Vercel logs confirm `hasEmail: true`).
-- **Auth fix Part B** — 6 hardcoded `lukedmcmillan@hotmail.com` fallbacks removed from:
-  - `app/api/projects/route.ts`
-  - `app/api/projects/[id]/route.ts`
-  - `app/api/project-entries/[id]/route.ts` (two locations)
-  - `app/api/documents/route.ts`
-  - `app/api/documents/[id]/route.ts`
-  All now return 401 on null session. VERIFIED in production (incognito → 401, authenticated → 200 with correct gmail user_id).
+WHAT SHIPPED (commit e5dc826):
+- **React hydration fix** — 4 sources of hydration mismatch resolved on all `/platform/*` pages:
+  1. `SidebarDatetime` in `layout.tsx`: `useState(new Date())` → `useState(null)` + `useEffect`; SSR renders stable empty placeholder; client populates after mount. Vercel (UTC) vs browser (BST) timezone mismatch eliminated.
+  2. `greeting()` in `page.tsx`: module-scope function using `new Date().getHours()` at render → moved to `useState("afternoon")` + `useEffect`. SSR fallback "Good afternoon" stable.
+  3. `Sparkline.tsx`: `Math.random()` gradient ID at render → `useId()` from React (stable SSR/client).
+  4. `workspace/page.tsx`: `Math.random()` in `getPlaceholder()` → deterministic index `[0]`.
+- VERIFIED: console clean on `/platform/feed`, `/platform/workspace`; no #418 errors.
+
+- **Auth fix Part A** — `getToken()` passes `secureCookie` derived from `NEXTAUTH_URL`. VERIFIED.
+- **Auth fix Part B** — 6 hardcoded email fallbacks removed; all routes return 401 on null session. VERIFIED.
 - **Threshold alert email upgrade** — React Email template shipped.
-- **Active project watcher code** (Phases A-E) — code shipped in prior session:
+- **Active project watcher code** (Phases A-E) — code shipped + VERIFIED:
   - `supabase/migrations/20260505_project_entities.sql` applied
   - `app/api/project-entities/route.ts`, updated `project-entries/[id]/route.ts`
   - `lib/entity-matching.ts` auto-attach hook
   - Workspace UI: entity chips, new-item badge, amber highlight
   - `projects/page.tsx` two-step NewProjectModal with entity picker
-- **User_id consolidation** — gmail user_id (`c652fd7f-...`) is canonical; hotmail row deprecated.
-
-ACTIVE BUG — workspace creation modal does not persist:
-- Reproducer: open New Workspace modal, fill title + entities, submit — no project row created
-- No 'auth-test' row in projects table; most recent row is 'weh' from 2026-05-05
-- Diagnostic: (1) DevTools Network — does POST /api/projects fire? What status? (2) title field captures text? (3) submit button wired?
-- Deferred to next session (priority 1)
+  - **Workspace modal NOW WORKS** — 'auth-test-2' workspace created; 3 `project_entities` rows confirmed for BBNJ Agreement, ISA Secretariat, IWC.
 
 PENDING MIGRATIONS:
 - `supabase/migrations/20260505_matched_entity_id.sql` — needs Studio apply
 
+STILL UNVERIFIED:
+- Story auto-attach pipeline: `fetch-feeds` cron → `project_auto_entries` row for 'auth-test-2'. Not yet triggered/confirmed.
+
 NEXT SESSION — IN ORDER:
-1. **PRIORITY 1**: diagnose workspace creation modal flow — trace POST /api/projects in DevTools Network, check title binding, check submit wiring
-2. **PRIORITY 2**: once modal fixed, end-to-end test active project watcher (project_entities rows, auto-attach on ISA/BBNJ story)
+1. **PRIORITY 1**: verify story auto-attach end-to-end — trigger `fetch-feeds` cron with ISA or BBNJ story; confirm `project_auto_entries` row inserted for auth-test-2 workspace
+2. **PRIORITY 2**: entity picker UX — dropdown overflow + acronym search (iwc, isa, bbnj not matching)
 3. **PRIORITY 3**: RAG embeddings
 
 ---

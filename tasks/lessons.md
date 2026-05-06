@@ -204,6 +204,17 @@
 - **End-of-session UI debugging is the highest-risk activity in a session — defer to fresh eyes the next day.** Low blood sugar + accumulated context = increased chance of making the problem worse or missing an obvious cause. Stop at a known-good state.
 - **NEVER paste secret values in chat; rotate immediately if leaked.** `.mcp.json` is gitignored but Supabase service role keys and NEXTAUTH_SECRET pasted in chat are visible in conversation history. Rotate if exposed.
 
+## 2026-05-06 (continued — hydration diagnosis)
+
+### React Hydration
+
+- **`new Date()` and `Math.random()` at render scope are guaranteed hydration mismatches.** Server (Vercel, UTC) and client (user's TZ) produce different values. Fix pattern: `useState(null)` initialiser + `useEffect(() => { setState(new Date()) }, [])`. SSR renders the `null` fallback (stable, same on server and client); client hydrates without mismatch, then populates after mount.
+- **React #418 manifests as silent UI failure, not a visible crash.** The hydration tear-down kills event handlers attached during the mismatched render. Result: buttons do nothing, modals don't open. The symptom (e.g. workspace creation not persisting) looks like a backend bug but is actually a frontend render issue. Always check the browser console for `#418` before chasing API logs.
+- **`useId()` is the correct tool for SVG/DOM IDs in React components — never `Math.random()`.** `Math.random()` at render scope produces different values server-side vs client-side → hydration mismatch. `useId()` is stable across server and client renders. Must be called before any early return (Rules of Hooks).
+- **Bug masking chains are real and compounding.** This session: hardcoded email fallback → masked auth cookie bug → masked hydration error (killed click handlers) → modal appeared broken → appeared to be a backend/modal POST bug. When the fallback was removed (Part B) the hydration error surfaced; fixing hydration fixed the modal. Never assume the bug is where the symptom appears.
+- **Auth API fix ≠ platform shipped.** Browser DevTools / console is load-bearing verification. A clean Vercel log showing `hasEmail: true` does not prove the platform UI works. Open the page, open DevTools, exercise the failing path, confirm console is clean, confirm the network request fires. This is the only valid shipping proof for UI-facing auth fixes.
+- **"Tracking 0 everywhere" and silent empty states always mean look upstream of the data layer.** Three sessions of this pattern (signals, workspace modal, entity chips): the data layer is fine; the auth layer, hydration layer, or wire-up between them is broken. When data reads "0" or "nothing", suspect the delivery path (auth → hydration → event handlers), not the data itself.
+
 ## 2026-04-30
 
 ### RSS Source Verification

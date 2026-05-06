@@ -157,16 +157,25 @@ tideline-next/
 
 ## 🔑 Active Issues (2026-05-06)
 
-1. **WORKSPACE MODAL BUG** — New workspace creation flow does not persist a project row. POST /api/projects may not be firing. Priority 1 next session.
-2. **PENDING MIGRATION** — `supabase/migrations/20260505_matched_entity_id.sql` needs Studio apply.
-3. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
-4. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
+1. **AUTO-ATTACH UNVERIFIED** — `project_auto_entries` row not yet confirmed. Need to trigger `fetch-feeds` cron with ISA/BBNJ story and confirm auto-match for 'auth-test-2'. Priority 1 next session.
+2. **ENTITY PICKER UX** — Dropdown overflow on narrow screens; acronym search (iwc, isa, bbnj) not matching — partial-string search not hitting abbreviated names.
+3. **PENDING MIGRATION** — `supabase/migrations/20260505_matched_entity_id.sql` needs Studio apply.
+4. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
+5. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
 
-### New endpoints (2026-05-05/06)
+### Hydration fixes shipped (e5dc826 — 2026-05-06)
+- `layout.tsx` `SidebarDatetime`: `useState(null)` + `useEffect` — eliminates UTC/BST mismatch on Vercel
+- `page.tsx` `greeting()`: `useState("afternoon")` + `useEffect` — stable SSR fallback
+- `components/Sparkline.tsx`: `useId()` replaces `Math.random()` for gradient ID
+- `workspace/page.tsx` `getPlaceholder()`: deterministic `[0]` index replaces `Math.random()`
+
+### New endpoints / tables (2026-05-05/06)
 - `GET /api/project-entities` — list entities for a project (ownership-gated)
 - `POST /api/project-entities` — attach entity to project
 - `DELETE /api/project-entities` — detach entity from project
 - `touch_project_viewed` RPC — SECURITY DEFINER; updates `projects.last_viewed_at`, returns previous value
+- `public.project_entities` — entities attached to projects (watcher config)
+- `public.project_auto_entries` — stories auto-matched to projects via entity matching
 
 ---
 
