@@ -260,7 +260,7 @@ export async function matchEntitiesToStory(
         }
 
         console.log(
-          `[entity-match] auto-attached story ${storyId} to ${projectIds.length} project(s)`
+          `[entity-match] auto-attached story ${storyId} to ${projectEntityMap.size} project(s)`
         );
       }
     } catch (err) {
