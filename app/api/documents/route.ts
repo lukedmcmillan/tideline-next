@@ -8,8 +8,8 @@ const supabase = createClient(
 );
 
 export async function POST(req: NextRequest) {
-  let email = await getEmailFromSession(req);
-  if (!email) email = "lukedmcmillan@hotmail.com";
+  const email = await getEmailFromSession(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   console.log("[documents POST] Looking up email:", email);
 
   const { data: user } = await supabase.from("users").select("id").eq("email", email).single();

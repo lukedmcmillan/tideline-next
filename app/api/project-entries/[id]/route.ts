@@ -11,8 +11,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id: projectId } = await params;
 
   // 1. Auth — resolve caller identity
-  let email = await getEmailFromSession(req);
-  if (!email) email = "lukedmcmillan@hotmail.com";
+  const email = await getEmailFromSession(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   const { data: user } = await supabase.from("users").select("id").eq("email", email).single();
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -107,8 +107,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params;
 
-  let email = await getEmailFromSession(req);
-  if (!email) email = "lukedmcmillan@hotmail.com";
+  const email = await getEmailFromSession(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   const body = await req.json();
   const { entry_id } = body;
