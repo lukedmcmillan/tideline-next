@@ -3,8 +3,21 @@ import { getToken } from "next-auth/jwt";
 import { createClient } from "@supabase/supabase-js";
 
 export async function getEmailFromSession(req: NextRequest): Promise<string | null> {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  return token?.email as string | null;
+  const secureCookie = process.env.NEXTAUTH_URL?.startsWith("https://") ?? false;
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie,
+  });
+  const email = token?.email as string | null;
+  // Temp log — remove in Part B once fix is verified
+  console.log("[auth] getEmailFromSession resolved:", {
+    hasEmail: !!email,
+    emailLength: email?.length ?? 0,
+    nextauthUrl: process.env.NEXTAUTH_URL,
+    hasSecureCookie: secureCookie,
+  });
+  return email;
 }
 
 const supabase = createClient(
