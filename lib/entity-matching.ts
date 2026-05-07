@@ -241,22 +241,26 @@ export async function matchEntitiesToStory(
         }
 
         for (const [projectId, matchedEntityId] of projectEntityMap.entries()) {
-          const { error: upsertErr } = await supabase
+          const { error: insertErr } = await supabase
             .from("project_auto_entries")
-            .upsert(
-              {
-                project_id: projectId,
-                story_id: storyId,
-                entry_type: "entity_match",
-                content: null,
-                matched_entity_id: matchedEntityId,
-                auto_inserted: true,
-                reviewed: false,
-                inserted_at: new Date().toISOString(),
-              },
-              { onConflict: "project_id,story_id", ignoreDuplicates: true }
-            );
-          if (upsertErr) throw new Error(`upsert failed for project ${projectId}: ${upsertErr.message}`);
+            .insert({
+              project_id: projectId,
+              story_id: storyId,
+              entry_type: "entity_match",
+              content: null,
+              matched_entity_id: matchedEntityId,
+              auto_inserted: true,
+              reviewed: false,
+              inserted_at: new Date().toISOString(),
+            });
+          if (insertErr) {
+            if (insertErr.code === "23505") {
+              // Duplicate — story already attached to this project via partial unique index.
+              // No-op: the existing row is correct, matched_entity_id already set.
+            } else {
+              throw new Error(`insert failed for project ${projectId}: ${insertErr.message}`);
+            }
+          }
         }
 
         console.log(
