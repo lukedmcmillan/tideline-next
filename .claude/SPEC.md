@@ -1,34 +1,34 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-07 — Auto-attach pipeline verified end-to-end
+## Last session: 2026-05-07 (close-out) — Citation flow shipped, workspace design locked
 
-WHAT SHIPPED (2026-05-07):
+WHAT SHIPPED (2026-05-07 — this session):
 
 - **`supabase/migrations/20260505_matched_entity_id.sql` applied to production** — `matched_entity_id uuid REFERENCES entities(id)` column added to `project_auto_entries`. Verified with `information_schema.columns` SELECT inside transaction.
-- **`lib/entity-matching.ts` ON CONFLICT bug fixed** (commit `f34a1cb`) — Replaced `.upsert(..., { onConflict: "project_id,story_id" })` with plain `.insert()` + `error.code === "23505"` catch. Root cause: partial unique index (`WHERE story_id IS NOT NULL`) cannot be resolved by Supabase JS `onConflict` syntax.
-- **Auto-attach pipeline VERIFIED end-to-end** — Synthetic test: PASS (story `1e86bce2` → `project_auto_entries` row for auth-test-2, `matched_entity_id = BBNJ Agreement`). Real-data replay: 4 stories auto-attached to auth-test-2 (2× BBNJ Agreement, 2× International Whaling Commission).
-- **Entity picker dropdown overflow fix** (commit `3b0818e`) — `overflow: hidden` → `maxHeight: 280, overflowY: "auto"` in `NewProjectModal` results container.
+- **`lib/entity-matching.ts` ON CONFLICT bug fixed** — Replaced `.upsert()` with plain `.insert()` + `error.code === "23505"` catch. Root cause: partial unique index with WHERE predicate cannot be resolved by Supabase JS `onConflict`.
+- **Auto-attach pipeline VERIFIED end-to-end** — Synthetic test PASS. Real-data replay: 4 stories auto-attached to auth-test-2.
+- **Entity picker dropdown overflow fix** — `maxHeight: 280, overflowY: "auto"` in `NewProjectModal`.
+- **Workspace reading drawer SHIPPED** (commits a847b4b, a8c432f) — Click any auto-attached source card → `StoryDrawer` opens with title, summary, source, date.
+- **Full citation flow SHIPPED** — In-drawer highlight → floating Cite button → blockquote inserted. "Quote from this story" → pending-cite banner → paste from clipboard → citation with attribution. Publication date included in attribution (`— OSPAR, 14 March 2026 · Read source`). "View original" upgraded to bordered button row.
+- **Active Project Watcher is functionally complete** on the substrate→notes flow: stories auto-attach, user can cite from drawer or from external source via clipboard, citations preserve provenance through to TipTap editor.
+- **Workspace design locked** in `.claude/DESIGN-WORKSPACE-COLUMN.md` — highlight-and-add architecture confirmed; Intel column drop recommended pending user research.
 
 WHAT WAS ALREADY SHIPPED (2026-05-06):
-- **React hydration fix** (commit e5dc826) — 4 mismatch sources resolved: `SidebarDatetime`, `greeting()`, `Sparkline` gradient ID, workspace placeholder. Console clean on all `/platform/*` routes; no #418 errors.
-- **Auth fix Part A** — `getToken()` passes `secureCookie` derived from `NEXTAUTH_URL`. VERIFIED.
-- **Auth fix Part B** — 6 hardcoded email fallbacks removed; all routes return 401 on null session. VERIFIED.
-- **Threshold alert email upgrade** — React Email template shipped.
-- **Active project watcher** (Phases A-E) — `project_entities` migration, route handlers, entity-matching auto-attach hook, workspace UI (entity chips, new-item badge, amber highlight), two-step `NewProjectModal`.
-- **User_id consolidation** — gmail `c652fd7f-...` is canonical; all preference/activity tables migrated.
+- React hydration fix, auth fix Parts A+B, threshold alert email upgrade, active project watcher (Phases A-E), user_id consolidation.
 
 PENDING MIGRATIONS:
 - None. All migrations from 2026-05-05/06/07 applied and verified.
 
-OPEN PRODUCT QUESTION (deferred for user research):
-- What do users DO with auto-attached stories? Workspace product theory needs grounding in real conversations before building further interaction features (story detail view, dismiss, accept, draft export).
+OPEN QUESTIONS:
+- User research round: validate workspace product theory with 2 marine lawyers + 1 ESG analyst. See `.claude/DESIGN-WORKSPACE-COLUMN.md`.
+- Intel column: drop or restructure as fact-extraction with sources. Defer pending user research.
 
 NEXT PRIORITIES (in order):
-1. **BUG (P1)**: Auto-attached stories not clickable — need story detail modal or link to `/platform/story/[id]`
-2. **BUG (high)**: Entity picker acronym search — typing `iwc`, `isa`, `bbnj` returns no results; need alias-aware search
-3. **DESIGN**: Workspace product theory — 2-3 user conversations before building more interaction features
-4. **INVESTIGATE**: ISA Secretariat tracker_tag = null; audit and backfill
-5. **DESIGN**: Unify Tags vs Tracked Entities (two parallel systems: topic_tags + project_entities)
+1. **FEATURE (P1)**: Entity picker acronym search — `entities.aliases text[]` with GIN index; picker matches name OR aliases
+2. **FEATURE**: Per-entity dossier page — click entity card anywhere → dossier view (layout differs by entity_type)
+3. **USER RESEARCH**: Workspace product theory validation — 2 marine lawyers + 1 ESG analyst, 30-min calls
+4. **DESIGN DECISION**: Drop Intel column definitively (after user research confirms)
+5. **DATA**: ISA Secretariat `tracker_tag = null` — audit and backfill
 
 ---
 

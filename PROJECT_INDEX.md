@@ -155,19 +155,22 @@ tideline-next/
 
 ---
 
-## 🔑 Active Issues (2026-05-07)
+## 🔑 Active Issues (2026-05-07 close-out)
 
-1. **AUTO-ATTACHED STORIES NOT CLICKABLE** — No story detail modal or link from workspace auto-entries. P1 UX bug; hit by founder within 30 seconds of first seeing the feature work.
-2. **ENTITY PICKER ACRONYM SEARCH** — Typing `iwc`, `isa`, `bbnj` returns no results. Picker searches `entities.name` only; does not query `entity_aliases`. Affects both picker UX and entity matching for short-name entities.
-3. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
-4. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
-5. **ISA Secretariat tracker_tag = null** — May prevent correct routing of ISA stories through auto-attach. Needs audit.
+1. **ENTITY PICKER ACRONYM SEARCH** — Typing `iwc`, `isa`, `bbnj` returns no results. Picker searches `entities.name` only; does not query `entity_aliases`. Next session P1.
+2. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
+3. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
+4. **ISA Secretariat tracker_tag = null** — May prevent correct routing of ISA stories through auto-attach. Needs audit.
+5. **StoryDrawer fetch race** — Fast clicks on different story cards can race; drawer may show wrong content. Fix: AbortController keyed to storyId.
 
-### Shipped 2026-05-07
+### Shipped 2026-05-07 (this session)
 - `matched_entity_id` column applied to production (`project_auto_entries`)
 - `lib/entity-matching.ts` ON CONFLICT bug fixed → plain insert + 23505 catch
 - Auto-attach pipeline VERIFIED: synthetic PASS + 4 real stories auto-attached to auth-test-2
 - Entity picker dropdown overflow fixed (`maxHeight: 280, overflowY: auto`)
+- **Workspace reading drawer** — `StoryDrawer` component in `workspace/page.tsx`; click auto-attached source card → drawer with title, summary, source, date
+- **Full citation flow** — `buildCitationBlock()` module-level helper; `pendingCitation` state + ref pattern; paste handler on `editor.view.dom`; floating Cite button on text selection; "Quote from this story" button; publication date in attribution; `@tiptap/extension-link` added
+- **Workspace design locked** — `.claude/DESIGN-WORKSPACE-COLUMN.md` is authoritative for right-column design
 
 ### Shipped 2026-05-06
 - React hydration fix (e5dc826): `SidebarDatetime`, `greeting()`, `Sparkline` gradient ID, workspace placeholder

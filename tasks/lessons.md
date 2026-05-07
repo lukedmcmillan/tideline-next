@@ -1,5 +1,19 @@
 # Lessons Learned
 
+## 2026-05-07
+
+- **Migration tracking**: Migration files marked 'pending Studio apply' need to be tracked and verified applied — `matched_entity_id` was committed but not run, leaving auto-attach silently broken in production. Always verify migration applied before testing the feature it supports.
+- **Silent swallow patterns**: `matchEntitiesToStory` had inner try/catch swallowing upsert failures and returning success-shaped result objects. `fetch-feeds` saw `matched > 0` and reported success while `project_auto_entries` got nothing. Don't trust `matched: N` returns from functions with internal error handling — verify against the database.
+- **Postgres partial unique index + ON CONFLICT**: `ON CONFLICT` requires the target to match a unique index exactly, including any WHERE predicate. Partial unique indexes (e.g. `WHERE story_id IS NOT NULL`) cannot be matched by Supabase JS `.upsert()` with simple `onConflict` syntax. Use plain `.insert()` and catch `error.code === '23505'` for duplicate-as-no-op semantics.
+- **Two parallel implementations**: Two parallel implementations of the same concept (project tags vs project entities) running simultaneously is a sign of an incomplete migration. Don't remove either side without auditing all read/write paths first. The grep audit prevented a destructive UI change that day.
+- **Synthetic vs real-data replay cleanup**: Synthetic tests need cleanup queries printed but not executed; review the data created before deleting it. Real-data replays are different — the data they create is real intelligence content and shouldn't be cleaned up.
+- **TipTap stale closure**: Handlers captured at `useEditor` call time read stale state. Solve via a ref pattern — `useState` + `useRef` + `useEffect` to sync `ref.current`. Existing `slashMenuRef` pattern in the codebase is the model. Used for `pendingCitationRef` this session.
+- **Clipboard paste defensive guards**: When the AI acts on user-typed content (paste handler reading clipboard), defensive guards are essential: empty clipboard, image paste, non-text content all return strings or empty values that would create broken UI if not guarded.
+- **TipTap custom nodes vs built-in**: Custom TipTap nodes are heavier than reusing built-in StarterKit nodes. Phase C originally needed a custom CitedQuote node; investigation revealed StarterKit's Blockquote with structured content was sufficient. Always check what the framework already provides before designing custom extensions.
+- **'Describe the diff' is not 'show the diff'**: Three times today Claude Code presented authoritative summaries instead of code. Each time, asking for the literal file bytes caught issues a summary review would have missed. Repeat lesson from previous session.
+- **End-of-day product design**: End-of-day product design conversations (personas exercise, workspace product theory) are higher-leverage than end-of-day debugging. Open product questions deserve fresh-head time but they don't have to wait until the next morning if the energy is for thinking, not debugging.
+- **Citations need provenance minimum**: Citations need three things minimum to be load-bearing for professional use: source name, source URL, publication date. Anything less is decorative. The attribution row of the citation block is real product surface, not styling.
+
 ## 2026-05-05
 
 ### Fonts
