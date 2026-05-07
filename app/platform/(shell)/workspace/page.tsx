@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 import IntelligenceThread from "@/components/workspace/IntelligenceThread";
@@ -1032,7 +1033,7 @@ function SourcesTabContent({
               e.matched_entity_name.slice(0, 4).toUpperCase()
             : "AUTO";
           return (
-            <div key={e.id} onClick={() => { console.log("[drawer] card clicked, story_id:", e.story_id); onStoryOpen(e.story_id); }} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderLeft: isNew ? `3px solid ${AMBER}` : `1px solid ${BD}`, borderRadius: 7, background: WHITE, cursor: "pointer" }}>
+            <div key={e.id} onClick={() => onStoryOpen(e.story_id)} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderLeft: isNew ? `3px solid ${AMBER}` : `1px solid ${BD}`, borderRadius: 7, background: WHITE, cursor: "pointer" }}>
               <span style={{ width: 20, height: 20, borderRadius: 3, background: "rgba(239,159,39,0.10)", color: AMBER, fontFamily: F, fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, letterSpacing: "0.04em" }}>{entityBadge}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.story_title ?? "Untitled"}</div>
@@ -1573,6 +1574,26 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, 
   );
 }
 
+// -- Citation block builder (shared by in-drawer cite and paste handler) ---------
+function buildCitationBlock(text: string, sourceName: string, sourceUrl: string) {
+  return {
+    type: "blockquote",
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", marks: [{ type: "italic" }], text }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          { type: "text", marks: [{ type: "bold" }], text: `\u2014 ${sourceName} \u00B7 ` },
+          { type: "text", marks: [{ type: "link", attrs: { href: sourceUrl, target: "_blank", rel: "noopener noreferrer", class: null } }], text: "Read source" },
+        ],
+      },
+    ],
+  };
+}
+
 // -- Story reading drawer ---------------------------------------------------------
 function StoryDrawer({
   storyId,
@@ -1586,7 +1607,18 @@ function StoryDrawer({
   const [story, setStory] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [citeButtonPos, setCiteButtonPos] = useState<{ x: number; y: number; text: string } | null>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseUp = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !drawerRef.current) { setCiteButtonPos(null); return; }
+    if (!drawerRef.current.contains(sel.anchorNode)) { setCiteButtonPos(null); return; }
+    const text = sel.toString().trim();
+    if (!text) { setCiteButtonPos(null); return; }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    setCiteButtonPos({ x: rect.left + rect.width / 2, y: rect.top, text });
+  };
 
   useEffect(() => {
     if (!storyId) { setStory(null); setError(""); return; }
@@ -1603,8 +1635,6 @@ function StoryDrawer({
       .catch(() => setError("Could not load story."))
       .finally(() => setLoading(false));
   }, [storyId]);
-
-  console.log("[drawer] StoryDrawer render with storyId:", storyId);
 
   if (!storyId) return null;
 
@@ -1635,8 +1665,34 @@ function StoryDrawer({
         </button>
       </div>
 
-      {/* Scrollable content — drawerRef lives here for Phase C selection check */}
-      <div ref={drawerRef} style={{ padding: "20px 24px 40px" }}>
+      {/* Floating Cite button — appears above text selection */}
+      {citeButtonPos && story && (
+        <button
+          onMouseDown={e => {
+            e.preventDefault(); // don't lose selection before we read it
+            onCite(citeButtonPos.text, story.source_name, story.link);
+            setCiteButtonPos(null);
+            window.getSelection()?.removeAllRanges();
+          }}
+          style={{
+            position: "fixed",
+            left: citeButtonPos.x,
+            top: citeButtonPos.y - 40,
+            transform: "translateX(-50%)",
+            zIndex: 300,
+            background: NAVY, color: WHITE,
+            fontFamily: F, fontSize: 12, fontWeight: 600,
+            padding: "5px 12px", border: "none", borderRadius: 6,
+            cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Cite
+        </button>
+      )}
+
+      {/* Scrollable content — drawerRef lives here for selection check */}
+      <div ref={drawerRef} onMouseUp={handleMouseUp} style={{ padding: "20px 24px 40px" }}>
         {loading && (
           <div style={{ fontFamily: F, fontSize: 13, color: T4, paddingTop: 40, textAlign: "center" }}>
             Loading...
@@ -1700,19 +1756,37 @@ function StoryDrawer({
               </div>
             )}
 
-            {/* View original */}
-            <a
-              href={story.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: F, fontSize: 13, color: TEAL,
-                textDecoration: "none", display: "inline-flex",
-                alignItems: "center", gap: 4,
-              }}
-            >
-              View original {"\u2197"}
-            </a>
+            {/* Actions row — View original + Quote from this story */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
+              <a
+                href={story.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: F, fontSize: 13, fontWeight: 500, color: T2,
+                  textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "6px 14px", border: `1px solid ${BD}`, borderRadius: R,
+                  background: WHITE,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T3; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = BD; }}
+              >
+                View original {"\u2197"}
+              </a>
+              <button
+                onClick={() => onCite("", story.source_name, story.link)}
+                style={{
+                  fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL,
+                  background: "none", border: `1px solid rgba(29,158,117,0.35)`,
+                  borderRadius: R, padding: "6px 14px", cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = TEAL_LIGHT; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+              >
+                Quote from this story
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -1744,6 +1818,11 @@ function WorkspaceContent() {
   const [exportOpen, setExportOpen] = useState(false);
   const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
   const [drawerStoryId, setDrawerStoryId] = useState<string | null>(null);
+  const [pendingCitation, setPendingCitation] = useState<{ text: string; sourceName: string; sourceUrl: string } | null>(null);
+  const pendingCitationRef = useRef(pendingCitation);
+  useEffect(() => { pendingCitationRef.current = pendingCitation; }, [pendingCitation]);
+  // Unmount cleanup — prevent stale pending-cite state surviving navigation
+  useEffect(() => () => { setPendingCitation(null); }, []);
   const [askLibrarySources, setAskLibrarySources] = useState<AskSource[]>([]);
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -1766,6 +1845,16 @@ function WorkspaceContent() {
 
   const insertIntoNotes = (text: string) => {
     editor?.chain().focus("end").insertContent(`\n\n${text}`).run();
+  };
+
+  const handleCite = (text: string, sourceName: string, sourceUrl: string) => {
+    if (text.trim()) {
+      // Text already selected in drawer — insert immediately
+      editor?.chain().focus("end").insertContent(buildCitationBlock(text, sourceName, sourceUrl)).run();
+    } else {
+      // No selection — user will paste a passage; show banner and wait for paste
+      setPendingCitation({ text: "", sourceName, sourceUrl });
+    }
   };
 
   const handleUploaded = (dest: "private" | "network") => {
@@ -1934,7 +2023,7 @@ function WorkspaceContent() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit, Placeholder.configure({ placeholder: "Add notes, evidence, or draft content here..." }), Typography],
+    extensions: [StarterKit, Link.configure({ openOnClick: false }), Placeholder.configure({ placeholder: "Add notes, evidence, or draft content here..." }), Typography],
     editorProps: {
       attributes: { style: `outline:none;min-height:200px;font-family:${F};font-size:14px;line-height:1.7;color:${T1};` },
       handleKeyDown: (_view, event) => {
@@ -2009,6 +2098,26 @@ function WorkspaceContent() {
       editor.commands.setContent(notes as Parameters<typeof editor.commands.setContent>[0]);
     }
   }, [docContent, editor]);
+
+  // C4 — paste handler: intercepts when pending-cite banner is active
+  useEffect(() => {
+    const el = editor?.view?.dom;
+    if (!el) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const pending = pendingCitationRef.current;
+      if (!pending) return;
+      const text = (e.clipboardData?.getData("text/plain") ?? "").trim();
+      if (!text) return; // clipboard guard — empty clipboard → fall through, keep banner open
+      e.preventDefault();
+      e.stopPropagation();
+      editor?.chain().focus("end").insertContent(
+        buildCitationBlock(text, pending.sourceName, pending.sourceUrl)
+      ).run();
+      setPendingCitation(null);
+    };
+    el.addEventListener("paste", onPaste);
+    return () => el.removeEventListener("paste", onPaste);
+  }, [editor]);
 
   const saveTitle = (val: string) => {
     if (isLocal || !docId) return;
@@ -2167,6 +2276,18 @@ function WorkspaceContent() {
               </div>
             </div>
 
+            {/* Pending-cite banner */}
+            {pendingCitation && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", background: "rgba(29,158,117,0.06)", border: `1px solid rgba(29,158,117,0.25)`, borderRadius: 7, marginBottom: 10 }}>
+                <span style={{ fontFamily: F, fontSize: 12, color: T2 }}>
+                  Copy a passage from <strong>{pendingCitation.sourceName}</strong>, then paste here to cite it
+                </span>
+                <button onClick={() => setPendingCitation(null)} style={{ fontFamily: F, fontSize: 11, color: T4, background: "none", border: "none", cursor: "pointer", padding: "0 0 0 12px", flexShrink: 0 }}>
+                  Cancel
+                </button>
+              </div>
+            )}
+
             {/* Tiptap notes editor */}
             <EditorContent editor={editor} />
 
@@ -2315,12 +2436,12 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} onStoryOpen={(id) => { console.log("[drawer] WorkspaceContent received story id:", id); setDrawerStoryId(id); }} />
+      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} onStoryOpen={setDrawerStoryId} />
 
       <StoryDrawer
         storyId={drawerStoryId}
         onClose={() => setDrawerStoryId(null)}
-        onCite={() => {}}
+        onCite={handleCite}
       />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />

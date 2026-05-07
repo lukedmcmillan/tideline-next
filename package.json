@@ -29,6 +29,7 @@
     "@stripe/stripe-js": "^8.11.0",
     "@supabase/supabase-js": "^2.99.2",
     "@tiptap/extension-bubble-menu": "^3.21.0",
+    "@tiptap/extension-link": "^3.21.0",
     "@tiptap/extension-color": "^3.22.3",
     "@tiptap/extension-font-family": "^3.22.3",
     "@tiptap/extension-highlight": "^3.22.3",
