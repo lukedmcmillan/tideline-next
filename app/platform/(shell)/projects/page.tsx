@@ -332,7 +332,7 @@ function NewProjectModal({ open, onClose, onCreated }: { open: boolean; onClose:
                   onBlur={e => { (e.target as HTMLElement).style.borderColor = BD; }}
                 />
                 {entityResults.length > 0 && (
-                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", zIndex: 10, overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#FFFFFF", border: `1px solid ${BD}`, borderRadius: 7, boxShadow: "0 4px 12px rgba(0,0,0,0.08)", zIndex: 10, maxHeight: 280, overflowY: "auto" }}>
                     {entityResults.map((e, i) => (
                       <div key={e.id} onMouseDown={() => addEntity({ id: e.id, name: e.name })} style={{ padding: "9px 14px", fontFamily: F, fontSize: 13, color: T1, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, borderBottom: i < entityResults.length - 1 ? `1px solid ${BD}` : "none" }}>
                         <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase" as const, color: T4, letterSpacing: "0.05em", minWidth: 56 }}>{e.entity_type}</span>
