@@ -1575,7 +1575,11 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, 
 }
 
 // -- Citation block builder (shared by in-drawer cite and paste handler) ---------
-function buildCitationBlock(text: string, sourceName: string, sourceUrl: string) {
+function buildCitationBlock(text: string, sourceName: string, sourceUrl: string, sourceDate?: string | null) {
+  const dateStr = sourceDate
+    ? `, ${new Date(sourceDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`
+    : "";
+  const attribution = `\u2014 ${sourceName}${dateStr} \u00B7 `;
   return {
     type: "blockquote",
     content: [
@@ -1586,7 +1590,7 @@ function buildCitationBlock(text: string, sourceName: string, sourceUrl: string)
       {
         type: "paragraph",
         content: [
-          { type: "text", marks: [{ type: "bold" }], text: `\u2014 ${sourceName} \u00B7 ` },
+          { type: "text", marks: [{ type: "bold" }], text: attribution },
           { type: "text", marks: [{ type: "link", attrs: { href: sourceUrl, target: "_blank", rel: "noopener noreferrer", class: null } }], text: "Read source" },
         ],
       },
@@ -1602,7 +1606,7 @@ function StoryDrawer({
 }: {
   storyId: string | null;
   onClose: () => void;
-  onCite: (text: string, sourceName: string, sourceUrl: string) => void;
+  onCite: (text: string, sourceName: string, sourceUrl: string, sourceDate?: string | null) => void;
 }) {
   const [story, setStory] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -1670,7 +1674,7 @@ function StoryDrawer({
         <button
           onMouseDown={e => {
             e.preventDefault(); // don't lose selection before we read it
-            onCite(citeButtonPos.text, story.source_name, story.link);
+            onCite(citeButtonPos.text, story.source_name, story.link, story.published_at);
             setCiteButtonPos(null);
             window.getSelection()?.removeAllRanges();
           }}
@@ -1774,7 +1778,7 @@ function StoryDrawer({
                 View original {"\u2197"}
               </a>
               <button
-                onClick={() => onCite("", story.source_name, story.link)}
+                onClick={() => onCite("", story.source_name, story.link, story.published_at)}
                 style={{
                   fontFamily: F, fontSize: 13, fontWeight: 500, color: TEAL,
                   background: "none", border: `1px solid rgba(29,158,117,0.35)`,
@@ -1818,7 +1822,7 @@ function WorkspaceContent() {
   const [exportOpen, setExportOpen] = useState(false);
   const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
   const [drawerStoryId, setDrawerStoryId] = useState<string | null>(null);
-  const [pendingCitation, setPendingCitation] = useState<{ text: string; sourceName: string; sourceUrl: string } | null>(null);
+  const [pendingCitation, setPendingCitation] = useState<{ text: string; sourceName: string; sourceUrl: string; sourceDate?: string | null } | null>(null);
   const pendingCitationRef = useRef(pendingCitation);
   useEffect(() => { pendingCitationRef.current = pendingCitation; }, [pendingCitation]);
   // Unmount cleanup — prevent stale pending-cite state surviving navigation
@@ -1847,13 +1851,13 @@ function WorkspaceContent() {
     editor?.chain().focus("end").insertContent(`\n\n${text}`).run();
   };
 
-  const handleCite = (text: string, sourceName: string, sourceUrl: string) => {
+  const handleCite = (text: string, sourceName: string, sourceUrl: string, sourceDate?: string | null) => {
     if (text.trim()) {
       // Text already selected in drawer — insert immediately
-      editor?.chain().focus("end").insertContent(buildCitationBlock(text, sourceName, sourceUrl)).run();
+      editor?.chain().focus("end").insertContent(buildCitationBlock(text, sourceName, sourceUrl, sourceDate)).run();
     } else {
       // No selection — user will paste a passage; show banner and wait for paste
-      setPendingCitation({ text: "", sourceName, sourceUrl });
+      setPendingCitation({ text: "", sourceName, sourceUrl, sourceDate });
     }
   };
 
@@ -2111,7 +2115,7 @@ function WorkspaceContent() {
       e.preventDefault();
       e.stopPropagation();
       editor?.chain().focus("end").insertContent(
-        buildCitationBlock(text, pending.sourceName, pending.sourceUrl)
+        buildCitationBlock(text, pending.sourceName, pending.sourceUrl, pending.sourceDate)
       ).run();
       setPendingCitation(null);
     };
