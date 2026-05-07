@@ -215,6 +215,28 @@
 - **Auth API fix ≠ platform shipped.** Browser DevTools / console is load-bearing verification. A clean Vercel log showing `hasEmail: true` does not prove the platform UI works. Open the page, open DevTools, exercise the failing path, confirm console is clean, confirm the network request fires. This is the only valid shipping proof for UI-facing auth fixes.
 - **"Tracking 0 everywhere" and silent empty states always mean look upstream of the data layer.** Three sessions of this pattern (signals, workspace modal, entity chips): the data layer is fine; the auth layer, hydration layer, or wire-up between them is broken. When data reads "0" or "nothing", suspect the delivery path (auth → hydration → event handlers), not the data itself.
 
+## 2026-05-07 (auto-attach pipeline verification)
+
+### Migration Tracking
+
+- **Migration files marked 'pending Studio apply' must be tracked until confirmed applied.** `supabase/migrations/20260505_matched_entity_id.sql` was committed to the repo but never run in production, leaving auto-attach silently broken for 24+ hours. After applying any migration in Studio, run a verification SELECT immediately and update SPEC.md with the confirmed date.
+
+### Silent Swallow Anti-Pattern
+
+- **Don't trust "matched: N" from functions with internal error handling — verify against the database.** `matchEntitiesToStory` had an inner try/catch that swallowed upsert failures and returned a success-shaped result. `fetch-feeds` saw `matched > 0` and set `entities_extracted: true`, while `project_auto_entries` got nothing. The function logged `console.error` inside the catch, but the outer caller never saw the failure. When a pipeline step claims success, verify the downstream table directly.
+
+### Postgres ON CONFLICT and Partial Unique Indexes
+
+- **Postgres `ON CONFLICT` requires the target to match a unique index exactly, including its WHERE predicate.** A partial unique index (`UNIQUE(project_id, story_id) WHERE story_id IS NOT NULL`) cannot be resolved by Supabase JS `.upsert()` with `onConflict: "project_id,story_id"` — Postgres rejects it with "there is no unique or exclusion constraint matching the ON CONFLICT specification". Fix: use plain `.insert()` and catch `error.code === "23505"` as a no-op for duplicates.
+
+### Parallel Implementation Debt
+
+- **Two parallel implementations of the same concept running simultaneously signals an incomplete migration.** Project entity association ran through both `projects.topic_tags` (string array, legacy) and `project_entities` table (new). Neither was fully deprecated. Before shipping new features in this area, audit all read/write paths for both systems.
+
+### Synthetic Test Discipline
+
+- **Synthetic test cleanup queries must be printed but not auto-executed.** Print the DELETE SQL at the end of the script, run it manually after reviewing the created data. Auto-executing rollbacks defeats the purpose of verifying what was created.
+
 ## 2026-04-30
 
 ### RSS Source Verification

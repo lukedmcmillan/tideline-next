@@ -1,36 +1,34 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-06 — Hydration fix shipped + all P1 paths verified
+## Last session: 2026-05-07 — Auto-attach pipeline verified end-to-end
 
-WHAT SHIPPED (commit e5dc826):
-- **React hydration fix** — 4 sources of hydration mismatch resolved on all `/platform/*` pages:
-  1. `SidebarDatetime` in `layout.tsx`: `useState(new Date())` → `useState(null)` + `useEffect`; SSR renders stable empty placeholder; client populates after mount. Vercel (UTC) vs browser (BST) timezone mismatch eliminated.
-  2. `greeting()` in `page.tsx`: module-scope function using `new Date().getHours()` at render → moved to `useState("afternoon")` + `useEffect`. SSR fallback "Good afternoon" stable.
-  3. `Sparkline.tsx`: `Math.random()` gradient ID at render → `useId()` from React (stable SSR/client).
-  4. `workspace/page.tsx`: `Math.random()` in `getPlaceholder()` → deterministic index `[0]`.
-- VERIFIED: console clean on `/platform/feed`, `/platform/workspace`; no #418 errors.
+WHAT SHIPPED (2026-05-07):
 
+- **`supabase/migrations/20260505_matched_entity_id.sql` applied to production** — `matched_entity_id uuid REFERENCES entities(id)` column added to `project_auto_entries`. Verified with `information_schema.columns` SELECT inside transaction.
+- **`lib/entity-matching.ts` ON CONFLICT bug fixed** (commit `f34a1cb`) — Replaced `.upsert(..., { onConflict: "project_id,story_id" })` with plain `.insert()` + `error.code === "23505"` catch. Root cause: partial unique index (`WHERE story_id IS NOT NULL`) cannot be resolved by Supabase JS `onConflict` syntax.
+- **Auto-attach pipeline VERIFIED end-to-end** — Synthetic test: PASS (story `1e86bce2` → `project_auto_entries` row for auth-test-2, `matched_entity_id = BBNJ Agreement`). Real-data replay: 4 stories auto-attached to auth-test-2 (2× BBNJ Agreement, 2× International Whaling Commission).
+- **Entity picker dropdown overflow fix** (commit `3b0818e`) — `overflow: hidden` → `maxHeight: 280, overflowY: "auto"` in `NewProjectModal` results container.
+
+WHAT WAS ALREADY SHIPPED (2026-05-06):
+- **React hydration fix** (commit e5dc826) — 4 mismatch sources resolved: `SidebarDatetime`, `greeting()`, `Sparkline` gradient ID, workspace placeholder. Console clean on all `/platform/*` routes; no #418 errors.
 - **Auth fix Part A** — `getToken()` passes `secureCookie` derived from `NEXTAUTH_URL`. VERIFIED.
 - **Auth fix Part B** — 6 hardcoded email fallbacks removed; all routes return 401 on null session. VERIFIED.
 - **Threshold alert email upgrade** — React Email template shipped.
-- **Active project watcher code** (Phases A-E) — code shipped + VERIFIED:
-  - `supabase/migrations/20260505_project_entities.sql` applied
-  - `app/api/project-entities/route.ts`, updated `project-entries/[id]/route.ts`
-  - `lib/entity-matching.ts` auto-attach hook
-  - Workspace UI: entity chips, new-item badge, amber highlight
-  - `projects/page.tsx` two-step NewProjectModal with entity picker
-  - **Workspace modal NOW WORKS** — 'auth-test-2' workspace created; 3 `project_entities` rows confirmed for BBNJ Agreement, ISA Secretariat, IWC.
+- **Active project watcher** (Phases A-E) — `project_entities` migration, route handlers, entity-matching auto-attach hook, workspace UI (entity chips, new-item badge, amber highlight), two-step `NewProjectModal`.
+- **User_id consolidation** — gmail `c652fd7f-...` is canonical; all preference/activity tables migrated.
 
 PENDING MIGRATIONS:
-- `supabase/migrations/20260505_matched_entity_id.sql` — needs Studio apply
+- None. All migrations from 2026-05-05/06/07 applied and verified.
 
-STILL UNVERIFIED:
-- Story auto-attach pipeline: `fetch-feeds` cron → `project_auto_entries` row for 'auth-test-2'. Not yet triggered/confirmed.
+OPEN PRODUCT QUESTION (deferred for user research):
+- What do users DO with auto-attached stories? Workspace product theory needs grounding in real conversations before building further interaction features (story detail view, dismiss, accept, draft export).
 
-NEXT SESSION — IN ORDER:
-1. **PRIORITY 1**: verify story auto-attach end-to-end — trigger `fetch-feeds` cron with ISA or BBNJ story; confirm `project_auto_entries` row inserted for auth-test-2 workspace
-2. **PRIORITY 2**: entity picker UX — dropdown overflow + acronym search (iwc, isa, bbnj not matching)
-3. **PRIORITY 3**: RAG embeddings
+NEXT PRIORITIES (in order):
+1. **BUG (P1)**: Auto-attached stories not clickable — need story detail modal or link to `/platform/story/[id]`
+2. **BUG (high)**: Entity picker acronym search — typing `iwc`, `isa`, `bbnj` returns no results; need alias-aware search
+3. **DESIGN**: Workspace product theory — 2-3 user conversations before building more interaction features
+4. **INVESTIGATE**: ISA Secretariat tracker_tag = null; audit and backfill
+5. **DESIGN**: Unify Tags vs Tracked Entities (two parallel systems: topic_tags + project_entities)
 
 ---
 

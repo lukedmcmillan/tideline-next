@@ -364,3 +364,88 @@ They disagree on band names, thresholds, and offshore-wind score shifting. `band
 Medium — existing alert sends use the threshold-alerts cron's system. Changing thresholds could suppress or trigger alerts for users already enrolled.
 
 ---
+
+## DESIGN (HIGHEST PRIORITY — blocks further workspace work): Workspace product theory
+
+Auto-attach is shipped and produces real artefacts but the workspace UI gives users no mode-specific affordances for what to *do* with attached stories. Before building more workspace features, articulate: who uses workspaces, for what end deliverable, what's the smallest set of actions that turns attached stories into that deliverable. 2-3 user conversations recommended before designing.
+
+---
+
+## BUG (tomorrow): Auto-attached stories not clickable
+
+**Priority:** P1
+**Discovered:** 2026-05-07
+
+Auto-attached stories in the workspace view have no link or detail modal. Founder hit this within 30 seconds of seeing the feature work. Need story-detail modal/side-panel or link to `/platform/story/[id]`.
+
+---
+
+## FEATURE: Dismiss button on auto-attached stories
+
+PATCH `project_auto_entries.dismissed = true`, hide from default workspace view. Lets users prune irrelevant auto-attaches without deleting the row.
+
+---
+
+## BUG (high): Entity picker search does not match acronyms
+
+Typing `iwc`, `isa`, `bbnj` in the entity picker returns no results. The search queries `entities.name` only; it does not query `entity_aliases`. Fix:
+- Add alias-aware search to `/api/entities/search` (join `entity_aliases` on `alias_text ILIKE %query%`)
+- Update picker component to use the updated endpoint
+The matcher and the picker share this limitation — fixing aliases benefits both.
+
+---
+
+## DATA (medium): ISA Secretariat tracker_tag = null
+
+ISA Secretariat (id `c14591bb-b23a-4f5d-873c-08e9174f9245`) has `tracker_tag = null`. Audit all canonical entities and backfill `tracker_tag` where appropriate. May affect auto-attach routing for ISA stories.
+
+SQL to check:
+```sql
+SELECT id, name, tracker_tag FROM entities
+WHERE name ILIKE '%Seabed Authority%' OR name ILIKE '%ISA%';
+```
+
+---
+
+## DESIGN (multi-session): Unify Tags and Tracked Entities
+
+Two parallel systems running:
+- Tag-driven via `project-populate` cron (reads `projects.topic_tags`)
+- Entity-driven via `matchEntitiesToStory` (reads `project_entities`)
+
+Plan: verify entity path stable for ~1 week, migrate writers (processor-agent, scrapers, admin upload) to also write entities, retire `project-populate` cron, remove `topic_tags` from workspace UI. Library may need to keep `topic_tags` as a separate concept.
+
+---
+
+## DESIGN (medium): One-row-per-(project,story) auto-attach attribution
+
+Currently a story matching N tracked entities produces 1 auto-entry attributed to whichever entity matched first. Decide: keep as-is (simple, avoids duplicate rows) or change unique constraint to `(project_id, story_id, matched_entity_id)` for richer multi-entity attribution. Product question, not code question.
+
+---
+
+## INVESTIGATE: WorkspaceBreadcrumb typeof window branch
+
+`app/platform/(shell)/layout.tsx` around line 813 — `typeof window` branch reads `window.location.search`. Possibly dead code introduced when routing was server-side. Grep callers; if dead, remove; if live, replace with `useEffect` pattern.
+
+---
+
+## Carried over from prior sessions
+
+- Remove debug `console.log` lines in `app/api/documents/route.ts` (logs PII: email + user_id)
+- Disable next-auth debug mode in production (`debug: false` in NextAuth config — currently logging `[next-auth][warn][DEBUG_ENABLED]`)
+- Reconcile `alertBand()` vs `bandColor()` in `tracker-metadata.ts` (two incompatible band systems)
+- Commit `PULSE_SCORE_METHODOLOGY.md` to repo root
+- Update `TIDELINE-CONTEXT.md` priority list
+- Threshold alert preheader upgrade when session date data wired
+- Link Supabase CLI (`supabase link --project-ref [ref]`) and add `DATABASE_URL` to `.env.local`
+- `test-alert-email.ts` hardcoded recipient — confirm before wider testing
+- Sequential upsert loop in `entity-matching.ts` auto-attach could be batch insert
+- Run `supabase gen types typescript` (types may be stale: `project_entities`, `matched_entity_id` are new)
+- Directory entity detail page does not exist
+- Decide fate of hotmail users row (no longer used by code)
+- `git clean -n` preview then `git clean -f` for repo root junk files
+- Investigate 'weh' workspace shows isa/bbnj chips in UI but `topic_tags=[]` in DB
+- Update `supabase/migrations/20260505_matched_entity_id.sql` to include `ON DELETE SET NULL` on the FK (production has it; migration file lacks it)
+- Cleanup test workspaces: aa, ss, zz, cc, Test (clutter under `c652fd7f-...` user)
+
+---

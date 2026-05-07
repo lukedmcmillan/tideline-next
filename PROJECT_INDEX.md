@@ -155,27 +155,34 @@ tideline-next/
 
 ---
 
-## 🔑 Active Issues (2026-05-06)
+## 🔑 Active Issues (2026-05-07)
 
-1. **AUTO-ATTACH UNVERIFIED** — `project_auto_entries` row not yet confirmed. Need to trigger `fetch-feeds` cron with ISA/BBNJ story and confirm auto-match for 'auth-test-2'. Priority 1 next session.
-2. **ENTITY PICKER UX** — Dropdown overflow on narrow screens; acronym search (iwc, isa, bbnj) not matching — partial-string search not hitting abbreviated names.
-3. **PENDING MIGRATION** — `supabase/migrations/20260505_matched_entity_id.sql` needs Studio apply.
-4. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
-5. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
+1. **AUTO-ATTACHED STORIES NOT CLICKABLE** — No story detail modal or link from workspace auto-entries. P1 UX bug; hit by founder within 30 seconds of first seeing the feature work.
+2. **ENTITY PICKER ACRONYM SEARCH** — Typing `iwc`, `isa`, `bbnj` returns no results. Picker searches `entities.name` only; does not query `entity_aliases`. Affects both picker UX and entity matching for short-name entities.
+3. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
+4. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
+5. **ISA Secretariat tracker_tag = null** — May prevent correct routing of ISA stories through auto-attach. Needs audit.
 
-### Hydration fixes shipped (e5dc826 — 2026-05-06)
-- `layout.tsx` `SidebarDatetime`: `useState(null)` + `useEffect` — eliminates UTC/BST mismatch on Vercel
-- `page.tsx` `greeting()`: `useState("afternoon")` + `useEffect` — stable SSR fallback
-- `components/Sparkline.tsx`: `useId()` replaces `Math.random()` for gradient ID
-- `workspace/page.tsx` `getPlaceholder()`: deterministic `[0]` index replaces `Math.random()`
+### Shipped 2026-05-07
+- `matched_entity_id` column applied to production (`project_auto_entries`)
+- `lib/entity-matching.ts` ON CONFLICT bug fixed → plain insert + 23505 catch
+- Auto-attach pipeline VERIFIED: synthetic PASS + 4 real stories auto-attached to auth-test-2
+- Entity picker dropdown overflow fixed (`maxHeight: 280, overflowY: auto`)
 
-### New endpoints / tables (2026-05-05/06)
-- `GET /api/project-entities` — list entities for a project (ownership-gated)
-- `POST /api/project-entities` — attach entity to project
-- `DELETE /api/project-entities` — detach entity from project
+### Shipped 2026-05-06
+- React hydration fix (e5dc826): `SidebarDatetime`, `greeting()`, `Sparkline` gradient ID, workspace placeholder
+- Auth fix Parts A + B: `secureCookie` derivation + 6 hardcoded email fallbacks removed → 401
+- Threshold alert email upgrade (React Email template)
+- Active project watcher (Phases A-E): `project_entities` migration, route handlers, auto-attach hook, workspace UI
+- User_id consolidation: gmail `c652fd7f-...` canonical
+
+### New endpoints / tables (2026-05-05/06/07)
+- `GET/POST/DELETE /api/project-entities` — entity watcher management (ownership-gated)
 - `touch_project_viewed` RPC — SECURITY DEFINER; updates `projects.last_viewed_at`, returns previous value
 - `public.project_entities` — entities attached to projects (watcher config)
-- `public.project_auto_entries` — stories auto-matched to projects via entity matching
+- `public.project_auto_entries.matched_entity_id` — FK to entities, set on auto-attach rows
+- `scripts/test-auto-attach.ts` — synthetic e2e test for auto-attach pipeline
+- `scripts/replay-recent-matches.ts` — bounded historical replay with confirmation prompt
 
 ---
 
