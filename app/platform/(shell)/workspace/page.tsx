@@ -914,7 +914,7 @@ interface EntitySearchResult { id: string; name: string; entity_type: string; me
 
 function SourcesTabContent({
   stories, docs, autoEntries, newCount, prevViewedAt, projectEntities, entityError,
-  onAddEntity, onRemoveEntity,
+  onAddEntity, onRemoveEntity, onStoryOpen,
 }: {
   stories: SourceStory[];
   docs: { id: string; title: string; updated_at: string }[];
@@ -925,6 +925,7 @@ function SourcesTabContent({
   entityError: string | null;
   onAddEntity: (entityId: string) => Promise<void>;
   onRemoveEntity: (entityId: string) => Promise<void>;
+  onStoryOpen: (storyId: string) => void;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1031,7 +1032,7 @@ function SourcesTabContent({
               e.matched_entity_name.slice(0, 4).toUpperCase()
             : "AUTO";
           return (
-            <div key={e.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderLeft: isNew ? `3px solid ${AMBER}` : `1px solid ${BD}`, borderRadius: 7, background: WHITE }}>
+            <div key={e.id} onClick={() => { console.log("[drawer] card clicked, story_id:", e.story_id); onStoryOpen(e.story_id); }} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: 8, border: `1px solid ${BD}`, borderLeft: isNew ? `3px solid ${AMBER}` : `1px solid ${BD}`, borderRadius: 7, background: WHITE, cursor: "pointer" }}>
               <span style={{ width: 20, height: 20, borderRadius: 3, background: "rgba(239,159,39,0.10)", color: AMBER, fontFamily: F, fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, letterSpacing: "0.04em" }}>{entityBadge}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: T1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.story_title ?? "Untitled"}</div>
@@ -1255,7 +1256,7 @@ function LiveTabContent() {
   );
 }
 
-function RightSidebar({ stories, docs, projectId, onDraft }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; projectId: string | null; onDraft?: () => void }) {
+function RightSidebar({ stories, docs, projectId, onDraft, onStoryOpen }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; projectId: string | null; onDraft?: () => void; onStoryOpen: (storyId: string) => void }) {
   const [tab, setTab] = useState<"sources" | "intel" | "people" | "live">("sources");
   const [autoEntries, setAutoEntries] = useState<AutoEntry[]>([]);
   const [newCount, setNewCount] = useState(0);
@@ -1351,6 +1352,7 @@ function RightSidebar({ stories, docs, projectId, onDraft }: { stories: SourceSt
             autoEntries={autoEntries} newCount={newCount} prevViewedAt={prevViewedAt}
             projectEntities={projectEntities} entityError={entityError}
             onAddEntity={addEntity} onRemoveEntity={removeEntity}
+            onStoryOpen={onStoryOpen}
           />
         )}
         {tab === "intel" && <IntelTabContent onDraft={onDraft} />}
@@ -1571,6 +1573,153 @@ function FloatingDraftPanel({ onClose, sourceCount, insertIntoNotes, projectId, 
   );
 }
 
+// -- Story reading drawer ---------------------------------------------------------
+function StoryDrawer({
+  storyId,
+  onClose,
+  onCite,
+}: {
+  storyId: string | null;
+  onClose: () => void;
+  onCite: (text: string, sourceName: string, sourceUrl: string) => void;
+}) {
+  const [story, setStory] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!storyId) { setStory(null); setError(""); return; }
+    setLoading(true);
+    setError("");
+    setStory(null);
+    fetch(`/api/stories?id=${storyId}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const s = d.story || (d.stories && d.stories[0]);
+        if (!s) throw new Error("not found");
+        setStory(s);
+      })
+      .catch(() => setError("Could not load story."))
+      .finally(() => setLoading(false));
+  }, [storyId]);
+
+  console.log("[drawer] StoryDrawer render with storyId:", storyId);
+
+  if (!storyId) return null;
+
+  return (
+    <div style={{
+      position: "fixed", right: 0, top: 0, bottom: 0, width: 400,
+      background: WHITE, borderLeft: `1px solid ${BD}`, zIndex: 200,
+      overflowY: "auto", boxShadow: "-4px 0 16px rgba(0,0,0,0.08)",
+    }}>
+      {/* Header row with close button */}
+      <div style={{
+        position: "sticky", top: 0, background: WHITE,
+        borderBottom: `1px solid ${BD}`, padding: "10px 16px",
+        display: "flex", alignItems: "center", justifyContent: "flex-end", zIndex: 1,
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            width: 32, height: 32, background: "none", border: "none",
+            cursor: "pointer", color: T3, fontSize: 20, lineHeight: 1,
+            display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = BG; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+          aria-label="Close"
+        >
+          {"\u00D7"}
+        </button>
+      </div>
+
+      {/* Scrollable content — drawerRef lives here for Phase C selection check */}
+      <div ref={drawerRef} style={{ padding: "20px 24px 40px" }}>
+        {loading && (
+          <div style={{ fontFamily: F, fontSize: 13, color: T4, paddingTop: 40, textAlign: "center" }}>
+            Loading...
+          </div>
+        )}
+        {error && (
+          <div style={{ fontFamily: F, fontSize: 13, color: "#D93025", paddingTop: 40, textAlign: "center" }}>
+            {error}
+          </div>
+        )}
+        {story && (
+          <>
+            {/* Source badge */}
+            <div style={{
+              fontFamily: M, fontSize: 10, fontWeight: 600,
+              textTransform: "uppercase", letterSpacing: "0.08em",
+              color: T4, marginBottom: 10,
+            }}>
+              {story.source_name}
+            </div>
+
+            {/* Title — DM Sans 700, matches story/[id] page */}
+            <h2 style={{
+              fontFamily: F, fontSize: 22, fontWeight: 700, lineHeight: 1.3,
+              color: T1, margin: "0 0 10px", letterSpacing: "-0.02em",
+            }}>
+              {story.title}
+            </h2>
+
+            {/* Date */}
+            <div style={{ fontFamily: M, fontSize: 11, color: T4, marginBottom: 20 }}>
+              {story.published_at
+                ? new Date(story.published_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })
+                : ""}
+            </div>
+
+            {/* Tideline brief block — teal-bordered, matches story/[id] page pattern */}
+            {(story.short_summary || story.full_summary) ? (
+              <div style={{
+                background: WHITE, border: `1px solid ${BD}`,
+                borderLeft: `3px solid ${TEAL}`, borderRadius: 10,
+                padding: "18px 20px", marginBottom: 20,
+              }}>
+                <p style={{ fontFamily: F, fontSize: 14, lineHeight: 1.7, color: T1, margin: 0 }}>
+                  {story.short_summary || story.full_summary}
+                </p>
+                {story.short_summary && story.full_summary && (
+                  <p style={{
+                    fontFamily: F, fontSize: 14, lineHeight: 1.7, color: T2,
+                    margin: "14px 0 0", paddingTop: 14, borderTop: `1px solid ${BD}`,
+                  }}>
+                    {story.full_summary}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div style={{ fontFamily: F, fontSize: 14, color: T4, marginBottom: 20 }}>
+                Summary pending.
+              </div>
+            )}
+
+            {/* View original */}
+            <a
+              href={story.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: F, fontSize: 13, color: TEAL,
+                textDecoration: "none", display: "inline-flex",
+                alignItems: "center", gap: 4,
+              }}
+            >
+              View original {"\u2197"}
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // -- Main page --------------------------------------------------------------------
 function WorkspaceContent() {
   const searchParams = useSearchParams();
@@ -1594,6 +1743,7 @@ function WorkspaceContent() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [dockPanel, setDockPanel] = useState<"none" | "ask" | "draft">("none");
+  const [drawerStoryId, setDrawerStoryId] = useState<string | null>(null);
   const [askLibrarySources, setAskLibrarySources] = useState<AskSource[]>([]);
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -2165,7 +2315,13 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
+      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} onStoryOpen={(id) => { console.log("[drawer] WorkspaceContent received story id:", id); setDrawerStoryId(id); }} />
+
+      <StoryDrawer
+        storyId={drawerStoryId}
+        onClose={() => setDrawerStoryId(null)}
+        onCite={() => {}}
+      />
 
       <FloatingDock onUpload={() => setUploadOpen(true)} onAsk={() => setDockPanel(p => p === "ask" ? "none" : "ask")} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} />
       {dockPanel === "ask" && <FloatingAskPanel onClose={() => setDockPanel("none")} insertIntoNotes={insertIntoNotes} onSourcesFound={(src) => { const unique = src.filter((s, i, arr) => arr.findIndex(x => x.document_id === s.document_id) === i); setAskLibrarySources(unique); }} />}
