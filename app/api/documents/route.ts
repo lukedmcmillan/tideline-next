@@ -10,10 +10,7 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   const email = await getEmailFromSession(req);
   if (!email) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  console.log("[documents POST] Looking up email:", email);
-
   const { data: user } = await supabase.from("users").select("id").eq("email", email).single();
-  console.log("[documents POST] User found:", user?.id || "NOT FOUND");
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const { project_name, title } = await req.json();

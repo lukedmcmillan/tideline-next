@@ -120,7 +120,7 @@ export const authOptions = {
     verifyRequest: '/sign-in?verify=1',
     error: '/sign-in',
   },
-  debug: true,
+  debug: process.env.NODE_ENV !== 'production',
   session: {
     strategy: 'jwt' as const,
   },

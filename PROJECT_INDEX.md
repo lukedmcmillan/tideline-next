@@ -1,224 +1,183 @@
 # Project Index: Tideline
 
-Generated: 2026-05-06 | Next.js 16 · React 19 · TypeScript · Supabase · Tailwind v4
+Generated: 2026-05-08
+
+## Stack
+
+Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4 (inline styles only), Supabase, Stripe, Resend, Anthropic API, Jina, Vercel
 
 ---
 
-## 📁 Directory Structure
+## Public Routes (app/)
 
-```
-tideline-next/
-├── app/
-│   ├── api/              # Route handlers (100+ endpoints)
-│   │   ├── cron/         # 20 scheduled jobs (Vercel cron)
-│   │   ├── admin/        # Admin-only routes
-│   │   ├── webhooks/     # Supabase/Stripe event receivers
-│   │   └── ...           # Feature endpoints
-│   ├── lib/              # Shared server-side modules
-│   │   ├── brief/        # Morning brief pipeline (select, template, utils, quick-asks)
-│   │   ├── onboarding/   # Starter sets per job_type
-│   │   ├── types/        # Shared TypeScript types
-│   │   └── welcome/      # Welcome screen data/rules
-│   └── platform/(shell)/ # Authenticated pages (layout with sidebar)
-├── scripts/              # Manual one-off scripts (embed, backfill, scrape)
-├── supabase/migrations/  # 50+ SQL migration files
-├── __tests__/            # Vitest tests (1 file: entity-matching idempotency)
-└── components/           # Shared React components (Header, etc.)
-```
-
----
-
-## 🚀 Entry Points
-
-| Route | Description |
-|-------|-------------|
-| `/` | Marketing landing page (LandingClient + LandingClientMobile) |
+| Path | Purpose |
+|------|---------|
+| `/` | Marketing homepage — PROTECTED, do not modify |
 | `/login` | Magic link sign-in |
-| `/onboarding` | 4-step onboarding (job type → entities → brief time → confirm) |
+| `/sign-in` | Google OAuth sign-in |
+| `/start` | Trial signup flow |
+| `/onboarding` | Topic + timezone setup |
 | `/subscribe` | Stripe Elements checkout |
-| `/platform/feed` | Main authenticated feed |
-| `/platform/workspace` | Workspace with projects + entity watcher |
-| `/platform/projects/[id]` | Project detail + draft editor (TipTap) |
-| `/platform/tracker/*` | 11 tracker pages (BBNJ, ISA, IMO, 30x30, etc.) |
-| `/platform/library` | Community document library |
-| `/platform/research` | RAG-powered research interface |
-| `/platform/lp-briefing` | LP Portfolio Intelligence Briefing |
+| `/upgrade` | Upgrade prompt |
+| `/pricing` | Pricing page |
+| `/demo` | Demo page |
+| `/survey` | User survey |
+| `/reports` | Reports |
+| `/methodology` | Methodology explanation |
+| `/workspace` | Workspace list |
+| `/workspace/[id]` | Individual workspace |
+
+## Platform Routes (auth-protected, /platform/...)
+
+feed, story/[id], trackers, tracker/bbnj, tracker/governance, tracker/isa, tracker/iuu, tracker/30x30, tracker/blue-finance, tracker/imo-shipping, tracker/offshore-wind, tracker/cites-marine, tracker/wto-fisheries, tracker/plastics, research, threads, projects, projects/[id], projects/[id]/draft, library, library/submit, lp-briefing, calendar, workspace, directory, settings/topics, welcome, admin/library
 
 ---
 
-## 📦 Core Modules (`app/lib/`)
+## API Routes (app/api/)
 
-| Module | Purpose |
-|--------|---------|
-| `auth.ts` | `getEmailFromSession()` — JWT extraction via `getToken()` with `secureCookie` derivation from `NEXTAUTH_URL` |
-| `brief/select.ts` | Story selection for morning brief (selectLead, selectEvidence, selectTrackers) |
-| `brief/template.ts` | HTML email renderer (`compileBriefHtml`) |
-| `brief/utils.ts` | Score formatting, label maps, dedup logic |
-| `brief/quick-asks.ts` | Rotating 10-question library for brief footer |
-| `sources.ts` | 89 RSS sources + 14 Jina scrapers |
-| `velocity.ts` | Pulse score computation from story significance |
-| `signal-generation.ts` | 4 signal generators (band_crossing, countdown, convergence_spike, high_sig_story) |
-| `ocean-relevance-gate.ts` | Haiku classifier for feed quality (~25-28% quarantine rate) |
-| `entity-matching.ts` | 3-pass matcher: exact substring → fuzzy trigram → semantic embedding |
-| `jina.ts` | Article scraping via Jina API |
-| `html.ts` | HTML extraction utilities |
-| `confidence.ts` | Source confidence scoring |
-| `embeddings.ts` | Jina v2 embedding calls (768 dims) |
-| `search.ts` | Vector + full-text search |
-| `subscription.ts` | Subscription status helpers |
-| `tracker-metadata.ts` | Tracker config (slugs, display names, topics) |
-| `trackers.ts` | Tracker data fetching |
-| `user-preferences.ts` | User topic/entity preference helpers |
+### Auth & User
+- `auth/[...nextauth]` — NextAuth (Google OAuth + magic link)
+- `auth/verify` — Magic link verification, cookie, redirect
+- `trial-signup` — Store trial, send welcome email
+- `subscription-access` — Status + needsOnboarding flag
+- `user/onboarding-status`, `user/complete-onboarding`, `user/modal-status`, `user/dismiss-modal`, `user/sector`, `user/update-last-seen`
+
+### Stories & Content
+- `stories` — Fetch (id/topic/pagination)
+- `stories/save` — Save to workspace
+- `stories/comments` — Comments
+- `summarise` — On-demand summarisation (Sonnet, 3-tier fallback: Jina → direct → RSS)
+- `search` — Vector search
+- `connections` — Story connection graph
+- `notifications` — User notifications
+
+### Workspace & Projects
+- `workspace/narrative` — Intelligence thread narrative (Sonnet)
+- `workspace/quick-note` — Quick note capture
+- `projects/[id]/draft` — Draft CRUD
+- `projects/[id]/draft/compile` — Compile draft
+- `projects/new-stories` — New stories for project
+
+### Research & AI
+- `ask` — RAG research queries (Sonnet, prompt-cached)
+- `research/inline` — Inline research with RAG (Sonnet, prompt-cached)
+- `documents/generate-brief` — Generate brief (Sonnet)
+- `documents/[id]/export` — Export document
+- `documents/submit` — Submit to library
+- `story/linkedin-draft` — LinkedIn post drafting (Sonnet)
+- `threads`, `threads/me`, `threads/match` — Crosscurrent threads (match: Sonnet)
+
+### Trackers
+- `treaty-status` — BBNJ treaty status
+- `governance-events` — Governance calendar events (body/topic/significance filters)
+- `tracker-events`, `tracker-status/[slug]`, `tracker/view`
+- `iuu-status`, `iuu/carding`, `30x30-status`, `blue-finance-status`
+- `isa-status`, `isa-contractors`, `psma`
+
+### Calendar
+- `calendar/[token]` — Personal iCal feed (text/calendar)
+- `calendar/subscribe` — Create subscription with filters (Google/Outlook/Apple links)
+
+### Payments
+- `stripe/checkout` — Create Stripe checkout session
+- `portal` — Stripe customer portal
+- `webhooks/treaty-change` — pg_net trigger → Sonnet significance → story alert
+
+### LP Briefing
+- `lp-briefing`, `lp-briefing/pdf`, `lp-briefing/stats`, `lp-portfolios`
+
+### Library & Documents
+- `library/search`, `library/view`, `library/activity`, `library/signed-url`, `library/extract-metadata`
+- `community-documents`, `entities/search`
+- `admin/documents/upload`, `admin/documents/review`, `admin/documents/signed-upload-url`
+- `admin/story-override`, `admin/backfill-velocity`
+
+### Misc
+- `alerts/preferences` — Alert preferences
+- `sidebar-data`, `dashboard`, `landing-data`, `waitlist`, `survey`, `consultations`, `test-email`
 
 ---
 
-## ⏱ Cron Jobs (`app/api/cron/`)
+## Cron Jobs (app/api/cron/)
 
 | Route | Schedule | Purpose |
 |-------|----------|---------|
-| `fetch-feeds` | Hourly | RSS aggregation from ~89 sources |
-| `harvest-scraped-sources` | Every 6h | Jina scrape (IMO, ISA, FAO, IUCN, CBD, BBNJ) |
-| `scrape-governance-calendar` | Mon 3am UTC | 10 body meeting pages → governance_events |
-| `score-significance` | Daily | Story significance scoring |
-| `velocity-scores` | Daily | Pulse score computation per tracker |
-| `generate-brief` | Weekdays | Pool 60 stories → structured JSONB to brief_buffer |
-| `send-brief` | Weekdays 7am | Per-user brief rendering + Resend delivery |
-| `threshold-alerts` | Hourly | User alert threshold checks |
-| `embed-documents` | Daily 3am | Document chunk embedding (SILENT BUG: newest 100 only) |
-| `summarise-pending` | Periodic | Haiku summaries for un-summarised stories |
-| `generate-connections` | Daily | Story → entity connection inference |
-| `project-populate` | Triggered | Auto-populate project with matching stories |
-| `monitor-sources` | Daily | RSS health monitoring |
-| `source-health` | Daily | Source health snapshot |
-| `blue-finance-agent` | Weekly | Blue finance data aggregation |
-| `governance-agent` | Weekly | Governance event enrichment |
-| `scrape-isa` | Daily | ISA contractor data |
-| `scrape-psma` | Weekly | PSMA treaty status |
-| `conversion-triggers` | Hourly | Trial conversion event tracking |
-| `generate-embeddings` | Daily | Story embedding generation |
+| `fetch-feeds` | Hourly | RSS aggregation ~89 sources |
+| `harvest-scraped-sources` | Every 6h | Scrape IMO, ISA, FAO, IUCN, CBD, CITES, UN BBNJ |
+| `scrape-governance-calendar` | Weekly Mon 3am UTC | Scrape 10 governance body pages (Sonnet) |
+| `score-significance` | Daily | Score story significance (Haiku) |
+| `velocity-scores` | Daily | Entity velocity scores |
+| `send-brief` | Daily 7am | Send morning brief emails |
+| `generate-brief` | Before send | Generate brief (Haiku quality gate) |
+| `summarise-pending` | Regular | Batch article summarisation (Sonnet) |
+| `generate-embeddings` | Regular | Story embeddings |
+| `embed-documents` | Regular | Library document embeddings |
+| `generate-connections` | Regular | Story connection graph |
+| `project-populate` | Regular | Populate project stories (Haiku) |
+| `blue-finance-agent` | Regular | Classify blue finance events (Haiku) |
+| `governance-agent` | Regular | Classify governance events (Haiku) |
+| `scrape-isa` | Regular | ISA data scraper |
+| `scrape-psma` | Regular | PSMA data scraper |
+| `source-health` | Regular | Source health monitor |
+| `monitor-sources` | Regular | Source monitoring |
+| `threshold-alerts` | Regular | Velocity threshold alerts |
+| `conversion-triggers` | Regular | Conversion email triggers |
 
 ---
 
-## 🗄 Key Database Tables
+## Core Lib Modules
 
-| Table | Purpose |
-|-------|---------|
-| `public.users` | subscription_status, topics (jsonb), job_type, brief_time, onboarded_at |
-| `public.stories` | title, link, topic, significance, alert_type, entities_extracted |
-| `public.entities` | 942 entities, name, entity_type, embedding vector(768), mention_count |
-| `public.entity_mentions` | match_score, match_method, confidence, significance |
-| `public.entity_aliases` | alias_text with trigram index |
-| `public.projects` | user workspace projects; `last_viewed_at` column updated by `touch_project_viewed` RPC |
-| `public.project_entities` | entities attached to projects (watcher config) — new 2026-05-05 |
-| `public.project_auto_entries` | stories auto-matched to projects via entities |
-| `public.velocity_scores` | tracker_slug, band, score, interpretation |
-| `public.governance_events` | 10 body meetings with expected_decisions |
-| `public.brief_buffer` | Structured JSONB brief candidates per day |
-| `public.signal_events` | Feed events for dashboard signal display |
-| `public.alert_sends` | Threshold alert delivery log |
-| `public.document_queue` | Manual pipeline (drained by processor-agent.ts) |
-| `public.treaty_ratifications` | BBNJ change log with pg_net trigger |
-| `public.lp_portfolios` | LP fund portfolios (5 seeded funds) |
-
----
-
-## 🔧 Configuration
-
-| File | Purpose |
-|------|---------|
-| `vercel.json` | Cron schedules + serverExternalPackages (pdfkit) |
-| `next.config.ts` | Next.js config |
-| `middleware.ts` | Auth gate for `/platform/*` and `/tracker/*` |
-| `vitest.config.ts` | Test config with `@/` path alias |
-| `.env.local` | All secrets (never commit) |
-| `CLAUDE.md` | Coding rules + architecture reference |
-| `MESSAGING_HOUSE.md` | Copy rules (read before any UI work) |
-| `.claude/SPEC.md` | Live session state + next steps |
-| `tasks/lessons.md` | Engineering lessons + gotchas |
-
----
-
-## 🔌 External Services
-
-| Service | Use |
-|---------|-----|
-| Supabase | DB + pgvector + pg_net triggers |
-| NextAuth v4 | Google OAuth + magic link JWT sessions |
-| Anthropic Claude | Haiku (bulk/briefs), Sonnet (summaries/governance) |
-| Resend | Transactional email delivery |
-| Stripe | Subscriptions + webhooks (5 events) |
-| Jina | Article scraping + v2 embeddings (768d) |
-| Vercel | Hosting + cron jobs |
-| Mastra | RAG pipeline (library search) |
-| TipTap | Rich text editor (project drafts) |
-| D3 + Chart.js | Data visualisations on tracker pages |
-
----
-
-## 🔑 Active Issues (2026-05-07 close-out)
-
-1. **ENTITY PICKER ACRONYM SEARCH** — Typing `iwc`, `isa`, `bbnj` returns no results. Picker searches `entities.name` only; does not query `entity_aliases`. Next session P1.
-2. **embed-documents cron** — Silent window bug: only processes newest 100 docs; stalls once those are embedded.
-3. **document_queue** — No Vercel cron; manual drain only via `scripts/processor-agent.ts`.
-4. **ISA Secretariat tracker_tag = null** — May prevent correct routing of ISA stories through auto-attach. Needs audit.
-5. **StoryDrawer fetch race** — Fast clicks on different story cards can race; drawer may show wrong content. Fix: AbortController keyed to storyId.
-
-### Shipped 2026-05-07 (this session)
-- `matched_entity_id` column applied to production (`project_auto_entries`)
-- `lib/entity-matching.ts` ON CONFLICT bug fixed → plain insert + 23505 catch
-- Auto-attach pipeline VERIFIED: synthetic PASS + 4 real stories auto-attached to auth-test-2
-- Entity picker dropdown overflow fixed (`maxHeight: 280, overflowY: auto`)
-- **Workspace reading drawer** — `StoryDrawer` component in `workspace/page.tsx`; click auto-attached source card → drawer with title, summary, source, date
-- **Full citation flow** — `buildCitationBlock()` module-level helper; `pendingCitation` state + ref pattern; paste handler on `editor.view.dom`; floating Cite button on text selection; "Quote from this story" button; publication date in attribution; `@tiptap/extension-link` added
-- **Workspace design locked** — `.claude/DESIGN-WORKSPACE-COLUMN.md` is authoritative for right-column design
-
-### Shipped 2026-05-06
-- React hydration fix (e5dc826): `SidebarDatetime`, `greeting()`, `Sparkline` gradient ID, workspace placeholder
-- Auth fix Parts A + B: `secureCookie` derivation + 6 hardcoded email fallbacks removed → 401
-- Threshold alert email upgrade (React Email template)
-- Active project watcher (Phases A-E): `project_entities` migration, route handlers, auto-attach hook, workspace UI
-- User_id consolidation: gmail `c652fd7f-...` canonical
-
-### New endpoints / tables (2026-05-05/06/07)
-- `GET/POST/DELETE /api/project-entities` — entity watcher management (ownership-gated)
-- `touch_project_viewed` RPC — SECURITY DEFINER; updates `projects.last_viewed_at`, returns previous value
-- `public.project_entities` — entities attached to projects (watcher config)
-- `public.project_auto_entries.matched_entity_id` — FK to entities, set on auto-attach rows
-- `scripts/test-auto-attach.ts` — synthetic e2e test for auto-attach pipeline
-- `scripts/replay-recent-matches.ts` — bounded historical replay with confirmation prompt
-
----
-
-## 📝 Quick Start
-
-```bash
-npm run dev              # dev server
-npm run build            # production build
-npm run lint             # ESLint
-npm run test:run         # Vitest (requires .env.local)
-npm run embeddings:entities  # Embed entities via Jina
-```
-
----
-
-## 🧪 Tests
-
-- `__tests__/entity-matching.idempotency.test.ts` — denormalised counter idempotency
-- `app/lib/brief/select.test.ts` — brief selection logic (48 tests passing)
-
----
-
-## 🗺 Scripts (`scripts/`)
-
-| Script | Purpose |
+| Module | Purpose |
 |--------|---------|
-| `processor-agent.ts` | Drain document_queue (manual, `--limit=N` flag) |
-| `embed-entities.ts` | Embed all 942 entities via Jina v2 |
-| `embed-stories.ts` | Embed story chunks |
-| `embed-documents.ts` | Embed document chunks |
-| `backfill-entity-matching.ts` | Re-run entity matching on unprocessed stories |
-| `seed-loader.ts` | Load entity seed CSV |
-| `test-send-brief.ts` | Send test morning brief email |
-| `screenshot-briefs.ts` | Screenshot brief for QA |
-| `scraper-informea.ts` | InforMEA treaty scraper |
-| `import-faolex.ts` | FAOLEX fisheries law importer |
+| `app/lib/auth.ts` | `getEmailFromSession` shared helper |
+| `app/lib/embeddings.ts` | pgvector embedding functions |
+| `app/lib/search.ts` | Vector search utilities |
+| `app/lib/jina.ts` | Jina article scraping |
+| `app/lib/html.ts` | HTML parsing |
+| `app/lib/confidence.ts` | Confidence scoring |
+| `app/lib/events.ts` | Event helpers |
+| `app/lib/subscription.ts` | Subscription status helpers |
+| `app/lib/tracker-metadata.ts` | Tracker metadata definitions |
+| `lib/entity-matching.ts` | Entity matching pipeline |
+| `lib/lp-briefing-pdf.ts` | LP briefing PDF (PDFKit) |
+| `lib/email/alert-data.ts` | Alert email data builder |
+| `lib/email/sparkline.ts` | Sparkline chart for emails |
+| `lib/emails/onboarding-day3.ts` | Day-3 onboarding email |
+
+---
+
+## Key Database Tables
+
+public: users, stories, scraped_sources, treaty_ratifications, governance_bodies, governance_events, expected_decisions, subscriptions, trial_signups, magic_links, calendar_subscriptions, scrape_runs, velocity_scores, entities, entity_mentions, divergences, lp_portfolios, documents, threads, projects, workspaces, connections, saved_stories
+
+next_auth: users (NextAuth session management, separate from public.users)
+
+---
+
+## Model Assignment
+
+**Haiku** (`claude-haiku-4-5-20251001`): classification, scoring, structured output
+→ blue-finance-agent, generate-brief, governance-agent, project-populate, score-significance
+
+**Sonnet** (`claude-sonnet-4-6`): interpretation, reasoning, drafting, research
+→ ask, research/inline, summarise, summarise-pending, workspace/narrative, threads/match, story/linkedin-draft, webhooks/treaty-change, documents/generate-brief, cron/scrape-governance-calendar
+
+---
+
+## Configuration
+
+- `vercel.json` — Cron schedules + routes
+- `next.config.ts` — Next.js config
+- `tsconfig.json` — TypeScript strict
+- `middleware.ts` — Auth guard for /platform/* and /tracker/*
+- `.env.local` — Secrets (gitignored)
+
+---
+
+## Session Checklist
+
+1. `/sc:index-repo` (done)
+2. Read `tasks/lessons.md` before writing any code
+3. Read `tasks/todo.md` for current priorities
+4. Read `MESSAGING_HOUSE.md` before any UI/copy work
+5. `/sc:save` + update `.claude/SPEC.md` + `tasks/lessons.md` at session end
