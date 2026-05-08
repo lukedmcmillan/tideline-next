@@ -933,6 +933,7 @@ function SourcesTabContent({
   const [searchResults, setSearchResults] = useState<EntitySearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalCount = stories.length + docs.length;
   const prevTime = prevViewedAt ? new Date(prevViewedAt).getTime() : 0;
@@ -987,7 +988,12 @@ function SourcesTabContent({
           <div style={{ marginTop: 8 }}>
             <input
               autoFocus value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); runSearch(e.target.value); }}
+              onChange={e => {
+                const v = e.target.value;
+                setSearchQuery(v);
+                if (searchDebounce.current) clearTimeout(searchDebounce.current);
+                searchDebounce.current = setTimeout(() => runSearch(v), 300);
+              }}
               placeholder="Search entities..."
               style={{ width: "100%", padding: "6px 10px", fontFamily: F, fontSize: 12, border: `1px solid ${BD}`, borderRadius: 4, outline: "none", boxSizing: "border-box" }}
             />

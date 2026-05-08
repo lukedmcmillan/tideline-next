@@ -15,13 +15,7 @@ export async function GET(req: NextRequest) {
   if (q.length < 2) return NextResponse.json({ entities: [] });
 
   const { data, error } = await supabase
-    .from("entities")
-    .select("id, name, entity_type, mention_count")
-    .ilike("name", `%${q}%`)
-    .order("mention_count", { ascending: false })
-    .limit(20);
-
-  console.log("[entities/search]", { q, count: data?.length || 0, error: error?.message });
+    .rpc("search_entities", { q, lim: 20 });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ entities: data || [] });
