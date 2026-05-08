@@ -158,3 +158,15 @@
 - **Next.js route registration on Windows**: new API route folders sometimes need `.next` cache cleared + dev server restart to register. `rm -rf .next` fixes stale route manifests.
 - **Agent hallucination risk**: agents will confidently cite specific file names, line numbers, and architectural conventions that don't exist. Always require real grep output or real SQL query results before accepting architectural claims. The `story_comments` incident: agent read a migration file, assumed the table existed, built FK and RLS reasoning on it — table was never created in the database.
 - **Claude Code audits can be confidently wrong**: push back with actual queries when audit results don't match observed behaviour. The agent will assert something is broken based on static code reading; a real DB query or curl test is the ground truth.
+
+## Postgres / Supabase patterns (2026-05-08)
+
+- **GIN index supports `@>` (array containment) but NOT `ILIKE` on unnested elements**: for alias exact-match search, store aliases lowercase and use `aliases @> ARRAY[lower(q)]` — this uses the GIN index. `WHERE lower(q) = ANY(aliases)` or ILIKE-on-unnest does not use the index and becomes a seq scan per row. The correct pattern is the `@>` containment operator.
+- **Migration UPDATEs should match by canonical name, never by UUID**: UUIDs are instance-specific. Name-based UPDATEs are portable and idempotent (no-op if entity doesn't exist on the instance). If a canonical name changes, the migration must be updated in the same commit.
+- **supabase gen types exits 1 on stderr noise**: `npx supabase gen types typescript --linked > file.ts` returns exit code 1 when the CLI emits "Initialising login role..." to stderr, even on success. Workaround: redirect stdout only (`> /tmp/sb_types.ts`), verify line count, then `cp` to target.
+
+## Codebase archaeology patterns (2026-05-08)
+
+- **Read migrations before assuming schema state**: the live schema may have diverged significantly from the CLAUDE.md table list. Three tables in CLAUDE.md were dropped or replaced by the time of the RAG audit. Always read the migration sequence (sorted by date) to reconstruct current schema state.
+- **Broken crons can be invisible**: `/api/cron/generate-embeddings` was querying a dropped table and failing nightly at 1am with no visible symptom in Vercel dashboard unless you look at cron_log. When auditing, always cross-reference cron handlers against current schema.
+- **Watch for Jina model version divergence**: `jina-embeddings-v2-base-en` (768-dim) and `jina-embeddings-v3` are different models producing incompatible vectors. If different crons or scripts use different model versions, embeddings written by one cannot be matched against those written by the other. Confirm all writers use the same model string before trusting similarity scores.

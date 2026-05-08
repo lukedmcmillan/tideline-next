@@ -371,6 +371,12 @@ Auto-attach is shipped and produces real artefacts but the workspace UI gives us
 
 ---
 
+## BUG (low): StoryDrawer fetch race
+
+Add AbortController keyed to storyId for fast-click scenarios. Currently clicking story A then quickly story B could race and show wrong content. Acceptable for v1 — add `AbortController` in the `useEffect` cleanup in `StoryDrawer`.
+
+---
+
 ## BUG (tomorrow): Auto-attached stories not clickable
 
 **Priority:** P1
@@ -449,3 +455,132 @@ Currently a story matching N tracked entities produces 1 auto-entry attributed t
 - Cleanup test workspaces: aa, ss, zz, cc, Test (clutter under `c652fd7f-...` user)
 
 ---
+
+## 2026-05-07 additions
+
+### USER RESEARCH (highest priority — blocks further design)
+
+Workspace product theory validation. Take `.claude/DESIGN-WORKSPACE-COLUMN.md` to 2 marine lawyers + 1 ESG analyst from the survey respondent pool. 30-min calls with screen share.
+
+Three questions:
+1. Walk me through your last regulatory tracking task
+2. Would you trust an AI summary that gave you 5 paragraphs with linked sources?
+3. What word do you use for what we call a "project"?
+
+Don't show demo first — let them describe their flow before reacting to ours.
+
+---
+
+### BUG (low): StoryDrawer fetch race
+
+Fast clicks on different stories can race; drawer may show wrong content. Add `AbortController` keyed to `storyId` in the `useEffect` fetch inside `StoryDrawer`.
+
+---
+
+### FEATURE (next session): Entity picker acronym search
+
+Add `entities.aliases text[]` with GIN index. Populate aliases for canonical entities: ISA, BBNJ, IMO, IWC, IUCN, FAO, NOAA, UNCLOS, CITES, OSPAR. Update picker search to match `name` OR `aliases`. Same fix benefits the matcher (helps ISA Secretariat match better) and the picker.
+
+---
+
+### FEATURE (next session): Per-entity dossier page
+
+Click any entity card from anywhere in the platform → consistent dossier view. Layout differs by `entity_type`:
+- Person: role/affiliations/statements timeline
+- Organisation: sub-bodies/mandate
+- Treaty: articles/ratifications/status
+
+---
+
+### DESIGN DECISION (defer): Drop Intel from right column
+
+Per `.claude/DESIGN-WORKSPACE-COLUMN.md` the recommendation is drop. Confirm during user research round and ship the decision after.
+
+---
+
+### DATA: ISA Secretariat tracker_tag = null
+
+ISA Secretariat (id `c14591bb-b23a-4f5d-873c-08e9174f9245`) has `tracker_tag = null`. Audit canonical entities and backfill `tracker_tag`.
+
+---
+
+### DESIGN (multi-session migration): Unify Tags and Tracked Entities
+
+Two parallel systems — tag-driven via `project-populate` cron, entity-driven via `matchEntitiesToStory`. Plan: verify entity path stable for ~1 week, migrate writers to also write entities, retire `project-populate` cron, remove `topic_tags` from workspace UI. Library may keep `topic_tags` as separate concept.
+
+---
+
+### DESIGN (medium): One-row-per-(project,story) auto-attach attribution
+
+Currently a story matching N entities produces 1 row attributed to whichever matched first. Decide whether to change to `(project, story, matched_entity)` for richer attribution.
+
+---
+
+### INVESTIGATE: WorkspaceBreadcrumb dead code?
+
+`WorkspaceBreadcrumb` in `app/platform/(shell)/layout.tsx:813` — `typeof window` branch reads `window.location.search`. Possibly dead code. Grep callers before removing.
+
+---
+
+### Carried over from previous sessions
+
+- Remove debug `console.log` lines in `app/api/documents/route.ts`
+- Disable next-auth debug mode in production
+- Reconcile `alertBand()` vs `bandColor()` in `tracker-metadata.ts`
+- Commit `PULSE_SCORE_METHODOLOGY.md` to repo root
+- Update `TIDELINE-CONTEXT.md` priority list
+- Threshold alert preheader upgrade when session date data wired
+- Link Supabase CLI and add `DATABASE_URL` to `.env.local`
+- `test-alert-email.ts` hardcoded recipient
+- Sequential upsert loop in `entity-matching.ts` could be batch insert
+- Run `supabase gen types typescript`
+- Decide fate of hotmail users row
+- `git clean` for repo root junk files
+- Update `supabase/migrations/20260505_matched_entity_id.sql` to include `ON DELETE SET NULL` on FK
+- Cleanup test workspaces: aa, ss, zz, cc, Test
+- Decide whether auth-test-2 workspace is kept as working demo or renamed
+- Investigate 'weh' workspace shows isa/bbnj chips in UI — likely from project-populate cron / topic_tags legacy path
+
+---
+
+## 2026-05-08 additions
+
+### DATA AUDIT: Ambiguous short-name entities (matcher noise)
+
+The matcher may be aggregating distinct organisations under generic short tokens. Investigate these entities — they are likely noise rows that should be deleted or merged:
+
+- `3408b742-cb6e-461b-a377-1bb2627a0c10` — "Commission" (mention_count 16) — too generic; multiple distinct commissions rolled into one row
+- `dd9dea9c-884d-4d4c-a653-781520de521a` — "ONE" — unclear referent
+- `8a8c6043-aa94-4827-8e79-e781cc570459` — "MSC" — could be Marine Stewardship Council or other
+- `6c35b125-b4d4-4b5a-bd13-ed90982e6619` — "LA" — likely geographic noise
+- `d5a11e50-f67f-4de7-90eb-d53ea7c67a9f` — "PLOS ONE" — journal misclassified as organisation; delete or reclassify as `entity_type = 'publication'`
+
+Work needed: Review each row; delete noise; reclassify mistyped entries. Run `recalc-entity-mention-counts` after cleanup.
+
+---
+
+### DATA AUDIT: Possible duplicate entities for merge
+
+- "Convention on Biological Diversity" (id `20773f15-...`, regulator, 4 mentions) vs "Convention on Biological Diversity Text" (instrument, 0 mentions) — may be same concept stored as both body and document. Investigate and merge if appropriate.
+- ISA Council / ISA Secretariat / International Seabed Authority — three distinct rows; correct canonical hierarchy is ISA (the body) with Secretariat and Council as sub-bodies. Currently all three share alias 'isa'. No merge needed now but worth documenting the intended hierarchy.
+
+---
+
+### FUTURE: Matcher acronym support (deferred from 2026-05-08 session)
+
+`lib/entity-matching.ts` not changed in this session. The `aliases` column is now populated but the matcher continues to match on `name` only. Adding alias-aware matching to the matcher requires additional disambiguation logic: when a story mentions "the ISA", which of ISA Council / ISA Secretariat / International Seabed Authority should receive the attribution? Requires a disambiguation strategy (e.g. prefer highest mention_count, or exclude sub-body matches when parent matches) — separate session.
+
+---
+
+## RAG: Duplicate chunks + tiny-PDF failures block workspace integration
+
+**Documented:** 2026-05-08
+**Reference:** .claude/DESIGN-RAG-DIAGNOSIS.md
+
+Fix sequence: cleanup (Bug 3+4) → dedupe (Bug 1) → tiny-PDF visibility (Bug 2) → workspace UI integration. 7-10 hours across 2-3 sessions. Do not ship UI integration until Bug 1 + Bug 2 fixed.
+
+- **Bug 3 (5 min):** Delete /api/cron/generate-embeddings route + remove from vercel.json (queries dropped 'embeddings' table, fails nightly)
+- **Bug 4 (15 min):** Investigate app/api/ask/route.ts (61 lines) vs app/api/workspace/ask/route.ts (338 lines) — likely delete the short one
+- **Bug 1 (1-2 hrs):** Patch idempotency check in embed-documents cron + dedupe 28,337 duplicate chunk rows (33% of 85,947 total)
+- **Bug 2 (2-3 hrs):** Add chunking_status column to documents (pending/success/failed_no_text/failed_error), mark failures, backfill 2,711 unchunked docs
+- **UI integration (3-4 hrs):** Wire FloatingDock ask panel to /api/workspace/ask, render streamed response + citations, integrate with buildCitationBlock pattern

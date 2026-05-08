@@ -1,34 +1,33 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-07 (close-out) — Citation flow shipped, workspace design locked
+## Last session: 2026-05-08 — Entity alias picker shipped, RAG pipeline diagnosed
 
-WHAT SHIPPED (2026-05-07 — this session):
+WHAT SHIPPED (2026-05-08 — this session):
 
-- **`supabase/migrations/20260505_matched_entity_id.sql` applied to production** — `matched_entity_id uuid REFERENCES entities(id)` column added to `project_auto_entries`. Verified with `information_schema.columns` SELECT inside transaction.
-- **`lib/entity-matching.ts` ON CONFLICT bug fixed** — Replaced `.upsert()` with plain `.insert()` + `error.code === "23505"` catch. Root cause: partial unique index with WHERE predicate cannot be resolved by Supabase JS `onConflict`.
-- **Auto-attach pipeline VERIFIED end-to-end** — Synthetic test PASS. Real-data replay: 4 stories auto-attached to auth-test-2.
-- **Entity picker dropdown overflow fix** — `maxHeight: 280, overflowY: "auto"` in `NewProjectModal`.
-- **Workspace reading drawer SHIPPED** (commits a847b4b, a8c432f) — Click any auto-attached source card → `StoryDrawer` opens with title, summary, source, date.
-- **Full citation flow SHIPPED** — In-drawer highlight → floating Cite button → blockquote inserted. "Quote from this story" → pending-cite banner → paste from clipboard → citation with attribution. Publication date included in attribution (`— OSPAR, 14 March 2026 · Read source`). "View original" upgraded to bordered button row.
-- **Active Project Watcher is functionally complete** on the substrate→notes flow: stories auto-attach, user can cite from drawer or from external source via clipboard, citations preserve provenance through to TipTap editor.
-- **Workspace design locked** in `.claude/DESIGN-WORKSPACE-COLUMN.md` — highlight-and-add architecture confirmed; Intel column drop recommended pending user research.
+- **Cleanup batch committed** (`4fe70fc`) — debug logs removed, NextAuth debug gated on NODE_ENV, migration FK ON DELETE SET NULL, PULSE_SCORE_METHODOLOGY.md created, types regenerated, junk files deleted.
+- **Entity alias search shipped** — `entities.aliases text[]` column + GIN index + `search_entities` RPC. Picker now matches `name ILIKE` OR `aliases @> ARRAY[lower(q)]`. 22 entities seeded with 13 acronyms (isa, cites, bbnj, imo, iwc, cbd, fao, ospar, ec, gfw, tnc, unep, wto, iccat, itlos, doalos, ioc).
+- **300ms debounce** on entity picker input (workspace/page.tsx).
+- **Migration 20260508_entity_aliases.sql** — name-based UPDATEs (not UUID), idempotent, with convention comments.
+- **RAG pipeline fully audited** — diagnosis captured in `.claude/DESIGN-RAG-DIAGNOSIS.md`. Two real bugs found (duplicate chunks 33%, tiny-PDF silent failure). Fix path documented and sequenced.
 
-WHAT WAS ALREADY SHIPPED (2026-05-06):
-- React hydration fix, auth fix Parts A+B, threshold alert email upgrade, active project watcher (Phases A-E), user_id consolidation.
+WHAT WAS ALREADY SHIPPED (prior sessions):
+- Full citation flow, workspace reading drawer, auto-attach pipeline, auth fixes, threshold alerts.
 
 PENDING MIGRATIONS:
-- None. All migrations from 2026-05-05/06/07 applied and verified.
+- None. All migrations applied and verified.
 
-OPEN QUESTIONS:
-- User research round: validate workspace product theory with 2 marine lawyers + 1 ESG analyst. See `.claude/DESIGN-WORKSPACE-COLUMN.md`.
-- Intel column: drop or restructure as fact-extraction with sources. Defer pending user research.
+KNOWN ISSUES (carry forward):
+- **RAG Bug 1**: 28,337 duplicate chunk rows (33%). Idempotency check broken in embed-documents cron. Fix before UI integration.
+- **RAG Bug 2**: 2,711 approved docs with no chunks. Silent failure on image-only PDFs. Need chunking_status column.
+- **RAG Bug 3**: generate-embeddings cron queries dropped 'embeddings' table — failing nightly at 1am. 5-min delete.
+- **RAG Bug 4**: app/api/ask/route.ts (61 lines) likely orphaned. Investigate + delete.
 
 NEXT PRIORITIES (in order):
-1. **FEATURE (P1)**: Entity picker acronym search — `entities.aliases text[]` with GIN index; picker matches name OR aliases
-2. **FEATURE**: Per-entity dossier page — click entity card anywhere → dossier view (layout differs by entity_type)
-3. **USER RESEARCH**: Workspace product theory validation — 2 marine lawyers + 1 ESG analyst, 30-min calls
-4. **DESIGN DECISION**: Drop Intel column definitively (after user research confirms)
-5. **DATA**: ISA Secretariat `tracker_tag = null` — audit and backfill
+1. **RAG cleanup (20 min)**: Delete generate-embeddings cron + investigate short ask route (Bug 3+4)
+2. **RAG Bug 1 (1-2 hrs)**: Patch idempotency + dedupe 28K duplicate chunks
+3. **RAG Bug 2 (2-3 hrs)**: Add chunking_status column, mark failures, backfill
+4. **Workspace UI integration (3-4 hrs)**: Wire FloatingDock ask panel → /api/workspace/ask — BLOCKED until Bug 1+2 fixed
+5. **FEATURE**: Per-entity dossier page
 
 ---
 
