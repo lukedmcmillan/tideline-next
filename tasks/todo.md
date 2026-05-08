@@ -584,3 +584,19 @@ Fix sequence: cleanup (Bug 3+4) → dedupe (Bug 1) → tiny-PDF visibility (Bug 
 - **Bug 1 (1-2 hrs):** Patch idempotency check in embed-documents cron + dedupe 28,337 duplicate chunk rows (33% of 85,947 total)
 - **Bug 2 (2-3 hrs):** Add chunking_status column to documents (pending/success/failed_no_text/failed_error), mark failures, backfill 2,711 unchunked docs
 - **UI integration (3-4 hrs):** Wire FloatingDock ask panel to /api/workspace/ask, render streamed response + citations, integrate with buildCitationBlock pattern
+
+---
+
+## Post-workspace-cleanup: three items for next session (filed 2026-05-08)
+
+### 1. RAG Bug 3 + Bug 4 cleanup (20 min)
+- Delete /api/cron/generate-embeddings route + remove from vercel.json (queries dropped 'embeddings' table, fails nightly)
+- Investigate app/api/ask/route.ts (61 lines) vs app/api/workspace/ask/route.ts (338 lines) — likely delete the short one
+
+### 2. project-populate cron: update to only write entity_match rows
+The non-entity_match output from this cron became orphaned in commit 'refactor(workspace): drop Intel/Live/People tabs'.
+Previously those rows were consumed by IntelTabContent (now deleted). Update the cron to skip or filter rows that would have gone to the Intel tab.
+Route: app/api/cron/project-populate/route.ts
+
+### 3. People-as-section question (defer to user research)
+The People/PeopleTabContent stub was removed with Intel and Live. Before rebuilding, confirm in the user research round (2 marine lawyers + 1 ESG analyst) whether tracked people deserve a separate section or whether they should live as entities in the Sources column. Do not implement until research is done.

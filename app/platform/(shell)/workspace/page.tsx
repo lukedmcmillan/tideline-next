@@ -7,7 +7,6 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
-import IntelligenceThread from "@/components/workspace/IntelligenceThread";
 import DesktopOnly from "@/components/DesktopOnly";
 
 // -- Design tokens ---------------------------------------------------------------
@@ -397,213 +396,6 @@ interface AutoEntry {
   story_title: string | null;
   story_source: string | null;
   story_date: string | null;
-}
-
-const CONF_BADGE: Record<string, { bg: string; color: string }> = {
-  STRONG: { bg: "#E6F4F1", color: TEAL },
-  MODERATE: { bg: "#F3F4F6", color: "#6B7280" },
-  WEAK: { bg: BG, color: T4 },
-};
-
-// -- Intelligence panel (right column) --------------------------------------------
-function IntelligencePanel({ editor, topics, projectId }: {
-  editor: ReturnType<typeof useEditor> | null;
-  topics: string[];
-  projectId: string | null;
-}) {
-  const [entries, setEntries] = useState<AutoEntry[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<AskResult | null>(null);
-  const [error, setError] = useState("");
-  const [placeholder] = useState(() => getPlaceholder(topics));
-
-  // Fetch entries when projectId changes
-  useEffect(() => {
-    if (!projectId) return;
-    fetch(`/api/project-entries/${projectId}`)
-      .then(r => r.ok ? r.json() : { entries: [] })
-      .then(d => setEntries(d.entries || []))
-      .catch(() => {});
-  }, [projectId]);
-
-  const visible = entries.filter(e => !e.dismissed);
-  const unreviewed = visible.filter(e => !e.reviewed);
-  const hasEntries = visible.length > 0;
-
-  const patchEntry = (entryId: string, update: Record<string, boolean>) => {
-    if (!projectId) return;
-    fetch(`/api/project-entries/${projectId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entry_id: entryId, ...update }),
-    }).catch(() => {});
-  };
-
-  const markAllReviewed = () => {
-    for (const e of unreviewed) {
-      patchEntry(e.id, { reviewed: true });
-    }
-    setEntries(prev => prev.map(e => ({ ...e, reviewed: true })));
-  };
-
-  const acceptEntry = (entry: AutoEntry) => {
-    if (!editor) return;
-    editor.chain().focus("end").insertContent({
-      type: "paragraph",
-      content: [
-        { type: "text", marks: [{ type: "bold" }], text: entry.content ?? undefined },
-      ],
-    }).insertContent({
-      type: "paragraph",
-      content: [
-        { type: "text", text: `${entry.story_source || "Source"} \u00B7 ${entry.story_date ? fmtDate(entry.story_date) : ""}` },
-      ],
-    }).run();
-    patchEntry(entry.id, { accepted: true });
-    setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, accepted: true } : e));
-  };
-
-  const dismissEntry = (entryId: string) => {
-    patchEntry(entryId, { dismissed: true });
-    setEntries(prev => prev.map(e => e.id === entryId ? { ...e, dismissed: true } : e));
-  };
-
-  const submit = async () => {
-    if (!query.trim() || loading) return;
-    setLoading(true); setResult(null); setError("");
-    try {
-      const r = await fetch("/api/workspace/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: query.trim() }) });
-      const d = await r.json();
-      if (!r.ok) {
-        setError(d.error || "Ask Tideline couldn't connect \u2014 try again");
-      } else if (d.answer) {
-        setResult(d);
-      } else {
-        setError("Ask Tideline couldn't connect \u2014 try again");
-      }
-    } catch {
-      setError("Ask Tideline couldn't connect \u2014 try again");
-    }
-    setLoading(false);
-  };
-
-  const insertAnswer = () => {
-    if (!editor || !result?.answer) return;
-    editor.chain().focus().insertContent({
-      type: "blockquote",
-      content: [
-        { type: "paragraph", content: [{ type: "text", marks: [{ type: "italic" }], text: result.answer }] },
-        { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: "Tideline Research" }, { type: "text", text: ` \u00B7 ${query.trim()}` }] },
-      ],
-    }).run();
-    setResult(null); setQuery("");
-  };
-
-  return (
-    <div style={{ width: 300, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh" }}>
-      {/* Header */}
-      <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.12em" }}>Intelligence</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: hasEntries ? TEAL : T4 }} />
-          <span style={{ fontFamily: F, fontSize: 10, color: hasEntries ? TEAL : T4 }}>{hasEntries ? "Live" : "Monitoring"}</span>
-        </span>
-      </div>
-
-      {/* Scrollable entries area */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
-        {/* Intelligence Thread narrative */}
-        <IntelligenceThread projectId={projectId} />
-
-        {/* New items banner */}
-        {unreviewed.length > 0 && (
-          <div onClick={markAllReviewed} style={{ background: "#E6F4F1", padding: "8px 12px", marginBottom: 12, cursor: "pointer", borderRadius: R }}>
-            <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: TEAL }}>{"\u25CF"} {unreviewed.length} new since your last visit</span>
-          </div>
-        )}
-
-        {/* Entry cards */}
-        {visible.map(e => (
-          <div key={e.id} style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginBottom: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>
-                {e.inserted_at ? fmtDate(e.inserted_at) : ""}
-              </span>
-              {e.entry_type && (
-                <span style={{
-                  fontFamily: F, fontSize: 10, fontWeight: 500, padding: "1px 7px", borderRadius: 10,
-                  ...(CONF_BADGE[e.entry_type.toUpperCase()] || CONF_BADGE.MODERATE),
-                }}>
-                  {e.entry_type}
-                </span>
-              )}
-            </div>
-            <div style={{
-              fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.6, marginBottom: 4,
-              display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const, overflow: "hidden",
-            }}>
-              {e.content}
-            </div>
-            {e.story_source && (
-              <div style={{ fontFamily: F, fontSize: 10, color: T4, marginBottom: 8 }}>{e.story_source}</div>
-            )}
-            {!e.accepted && (
-              <div style={{ display: "flex", gap: 12 }}>
-                <button onClick={() => acceptEntry(e)} style={{ fontFamily: F, fontSize: 11, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                  {"\u2713"} Add to notes
-                </button>
-                <button onClick={() => dismissEntry(e.id)} style={{ fontFamily: F, fontSize: 11, color: T4, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                  {"\u2715"} Dismiss
-                </button>
-              </div>
-            )}
-            {e.accepted && (
-              <span style={{ fontFamily: F, fontSize: 11, color: TEAL }}>{"\u2713"} Added</span>
-            )}
-          </div>
-        ))}
-
-        {/* Empty state */}
-        {visible.length === 0 && (
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: T1, marginBottom: 4 }}>Monitoring this topic</div>
-            <div style={{ fontFamily: F, fontSize: 12, color: T4 }}>Intelligence files here automatically as new sources arrive.</div>
-          </div>
-        )}
-
-        {/* Ask result */}
-        {result && (
-          <div style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginTop: 12 }}>
-            <div style={{ fontFamily: F, fontSize: 13, color: T1, lineHeight: 1.6, marginBottom: 8 }}>{result.answer}</div>
-            <button onClick={insertAnswer} style={{ fontFamily: F, fontSize: 11, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-              {"\u2713"} Add to notes
-            </button>
-          </div>
-        )}
-
-        {/* Ask error */}
-        {error && (
-          <div style={{ background: WHITE, border: `1px solid ${BD}`, padding: 12, marginTop: 12, fontFamily: F, fontSize: 12, color: "#D93025", lineHeight: 1.5 }}>{error}</div>
-        )}
-      </div>
-
-      {/* Ask input, sticky bottom */}
-      <div style={{ borderTop: `1px solid ${BD}`, padding: "12px 16px", flexShrink: 0 }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); }} placeholder={placeholder}
-            style={{ flex: 1, padding: "8px 12px", fontSize: 13, fontFamily: F, color: T1, background: WHITE, border: `1px solid ${BD}`, borderRadius: 7, outline: "none" }} />
-          <button onClick={submit} disabled={!query.trim() || loading} style={{
-            padding: "8px 16px", fontSize: 12, fontWeight: 500, fontFamily: FUI,
-            color: WHITE, background: query.trim() && !loading ? TEAL : T4,
-            border: "none", borderRadius: 6, cursor: query.trim() && !loading ? "pointer" : "default",
-          }}>
-            {loading ? "..." : "Ask"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // -- Upload modal -----------------------------------------------------------------
@@ -1093,178 +885,7 @@ function SourcesTabContent({
   );
 }
 
-function IntelTabContent({ entries = [], onDraft }: { entries?: { id: string; text: string; sources: string[]; tier: string; time: string }[]; onDraft?: () => void }) {
-  const [verified, setVerified] = useState<Set<string>>(new Set());
-
-  const toggleVerify = (id: string) => {
-    setVerified(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
-  const tierStyles: Record<string, { bg: string; color: string; border: string }> = {
-    Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
-    Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
-    Official: { bg: "#F5F3FF", color: "#7C3AED", border: "#EDE9FE" },
-    Community: { bg: "#FEF9C3", color: "#A16207", border: "#FDE047" },
-  };
-
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderBottom: `1px solid ${BD}` }}>
-        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: T3 }}>Agent synthesis</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL }} />
-          <span style={{ fontFamily: F, fontSize: 10, color: TEAL }}>Live</span>
-        </span>
-      </div>
-
-      <div style={{ background: "#FFFBEB", borderBottom: "1px solid #FDE68A", padding: "10px 12px", fontFamily: F, fontSize: 11, color: "#92400E", lineHeight: 1.55 }}>
-        Tideline reads your sources and surfaces connections, treat these as leads to verify, not conclusions to cite. Each entry links to the source it draws from.
-      </div>
-
-      {entries.length > 0 ? entries.map(e => {
-        const isVerified = verified.has(e.id);
-        const tier = tierStyles[e.tier] || tierStyles.Original;
-        return (
-          <div key={e.id} style={{ padding: 12, borderBottom: "1px solid #F3F4F6", borderLeft: isVerified ? `3px solid ${TEAL}` : "3px solid transparent" }}>
-            <div style={{ fontFamily: F, fontSize: 11.5, color: T1, lineHeight: 1.6, marginBottom: 8 }}>{e.text}</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
-              {e.sources.map(s => (
-                <span key={s} style={{ fontFamily: F, fontSize: 10, color: TEAL, background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 4, padding: "1px 7px" }}>{s}</span>
-              ))}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 600, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{e.tier}</span>
-                <span style={{ fontFamily: F, fontSize: 10, color: T4 }}>{e.time}</span>
-              </div>
-              <span onClick={() => toggleVerify(e.id)} style={{ fontFamily: F, fontSize: 10, color: isVerified ? TEAL : T4, opacity: isVerified ? 1 : 0.6, cursor: "pointer", fontWeight: isVerified ? 600 : 400 }}>{isVerified ? "Verified" : "Verify"}</span>
-            </div>
-          </div>
-        );
-      }) : (
-        <div style={{ padding: 24, textAlign: "center", fontFamily: F, fontSize: 11.5, color: T3, lineHeight: 1.6 }}>
-          Tideline's agents will synthesise your sources here once you have 3 or more attached. Check back after your next session.
-        </div>
-      )}
-
-      <div style={{ margin: "10px 12px", padding: 12, background: "rgba(29,158,117,0.08)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 8 }}>
-        <div style={{ fontFamily: F, fontSize: 11.5, fontWeight: 500, color: T1, marginBottom: 4 }}>Ready to write?</div>
-        <div style={{ fontFamily: F, fontSize: 11, color: T3, marginBottom: 8 }}>
-          {verified.size === 0 ? "Verify the entries above, then draft when ready." : verified.size === entries.length ? "All entries verified. Ready to draft." : `${verified.size} of ${entries.length} verified. Draft when you're satisfied.`}
-        </div>
-        <span onClick={onDraft} style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: TEAL, cursor: "pointer" }}>Draft from notes</span>
-      </div>
-    </div>
-  );
-}
-
-function PeopleTabContent() {
-  return (
-    <div style={{ padding: 12 }}>
-      <input placeholder="Search people..." style={{ width: "100%", padding: "5px 9px", fontFamily: F, fontSize: 12, color: T1, background: "#F9FAFB", border: `1px solid ${BD}`, borderRadius: 4, outline: "none", marginBottom: 12 }} />
-      <div style={{ fontFamily: F, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6B7280", borderBottom: `1px solid ${BD}`, paddingBottom: 6, marginBottom: 8 }}>Subjects</div>
-      <div style={{ fontFamily: F, fontSize: 11, color: T4, textAlign: "center", padding: "20px 0" }}>Add people to track in this project.</div>
-    </div>
-  );
-}
-
-function LiveTabContent() {
-  const [query, setQuery] = useState("");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const projectTags: string[] = [];
-  type StreamItem = { id: string; tier: "Wire" | "Original" | "Official" | "Community" | "Tracker" | "Calendar"; source: string; time: string; headline: string };
-  const groups: { key: string; label: string; items: StreamItem[] }[] = [];
-
-  const tierColors: Record<string, { bg: string; color: string; border: string }> = {
-    Wire: { bg: "#DBEAFE", color: "#1D4ED8", border: "#93C5FD" },
-    Original: { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC" },
-    Official: { bg: "#F5F3FF", color: "#7C3AED", border: "#EDE9FE" },
-    Community: { bg: "#FEF9C3", color: "#A16207", border: "#FDE047" },
-    Tracker: { bg: "#E8EAF6", color: "#3949AB", border: "#C5CAE9" },
-    Calendar: { bg: "#FCE4EC", color: "#C2185B", border: "#F48FB1" },
-  };
-
-  const q = query.toLowerCase();
-  const filteredGroups = groups
-    .map(g => ({ ...g, items: g.items.filter(i => !q || i.headline.toLowerCase().includes(q) || i.source.toLowerCase().includes(q)) }))
-    .filter(g => g.items.length > 0);
-
-  const defaultExpanded = (key: string) => key === "today" || key === "yesterday";
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <style>{`@keyframes tl-live-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.15); } }`}</style>
-      {/* Section 1: Header */}
-      <div style={{ padding: "10px 12px", borderBottom: "1px solid #DADCE0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-        <span style={{ fontFamily: FUI, fontSize: 11, fontWeight: 500, color: "#5F6368" }}>Everything matching your tags</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D9E75", animation: "tl-live-pulse 1.6s ease-in-out infinite" }} />
-          <span style={{ fontFamily: FUI, fontSize: 10, color: "#1D9E75" }}>Live</span>
-        </span>
-      </div>
-      {/* Section 2: Search */}
-      <div style={{ padding: "8px 12px", borderBottom: "1px solid #DADCE0", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#F9FAFB", border: `1px solid ${BD}`, borderRadius: 4, padding: "4px 8px" }}>
-          <svg width="11" height="11" viewBox="0 0 13 13" fill="none" stroke="#9AA0A6" strokeWidth="1.5"><circle cx="5.5" cy="5.5" r="3.5"/><path d="M8 8l3 3"/></svg>
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Filter this stream..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FUI, fontSize: 11, color: T1 }} />
-        </div>
-      </div>
-      {/* Section 3: Active tags */}
-      <div style={{ padding: "6px 12px", borderBottom: "1px solid #DADCE0", display: "flex", flexWrap: "wrap", gap: 4, flexShrink: 0 }}>
-        {projectTags.length === 0 ? (
-          <span style={{ fontFamily: FUI, fontSize: 10.5, color: "#9AA0A6" }}>No tags yet</span>
-        ) : projectTags.map(t => (
-          <span key={t} style={{ background: "rgba(29,158,117,0.08)", border: "1px solid #1D9E75", color: "#1D9E75", borderRadius: 20, padding: "2px 10px", fontFamily: FUI, fontSize: 10.5 }}>{t}</span>
-        ))}
-      </div>
-      {/* Section 4: Stream */}
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        {filteredGroups.length === 0 ? (
-          <div style={{ fontFamily: FUI, fontSize: 11.5, color: "#5F6368", padding: 24, textAlign: "center" }}>
-            Tideline will populate this as your tags match new content.
-          </div>
-        ) : filteredGroups.map(g => {
-          const isCollapsed = collapsed[g.key] ?? !defaultExpanded(g.key);
-          return (
-            <div key={g.key}>
-              <div onClick={() => setCollapsed(p => ({ ...p, [g.key]: !isCollapsed }))} style={{ padding: "6px 12px", fontFamily: FUI, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9AA0A6", background: "#F9FAFB", borderTop: "1px solid #DADCE0", borderBottom: "1px solid #DADCE0", cursor: "pointer", display: "flex", justifyContent: "space-between" }}>
-                <span>{g.label}</span>
-                {isCollapsed && <span>Show {g.items.length} items</span>}
-              </div>
-              {!isCollapsed && g.items.map(it => {
-                const tier = tierColors[it.tier];
-                return (
-                  <div key={it.id} style={{ padding: "10px 12px", borderBottom: "1px solid #DADCE0" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: FUI, fontSize: 10, color: "#9AA0A6", marginBottom: 4 }}>
-                      <span style={{ fontFamily: M, fontSize: 8.5, fontWeight: 600, textTransform: "uppercase", padding: "1px 5px", borderRadius: 3, background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>{it.tier}</span>
-                      <span>{it.source}</span>
-                      <span>·</span>
-                      <span>{it.time}</span>
-                    </div>
-                    <div style={{ fontFamily: FUI, fontSize: 11.5, fontWeight: 500, color: "#202124", lineHeight: 1.4 }}>{it.headline}</div>
-                    {it.tier !== "Calendar" && (
-                      <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                        <button style={{ height: 22, padding: "0 8px", borderRadius: 4, fontFamily: FUI, fontSize: 10.5, background: "rgba(29,158,117,0.08)", color: "#1D9E75", border: "1px solid rgba(29,158,117,0.3)", cursor: "pointer" }}>Save</button>
-                        <button style={{ height: 22, padding: "0 8px", borderRadius: 4, fontFamily: FUI, fontSize: 10.5, background: "#F9FAFB", color: "#5F6368", border: "1px solid #DADCE0", cursor: "pointer" }}>+ Add to project</button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function RightSidebar({ stories, docs, projectId, onDraft, onStoryOpen }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; projectId: string | null; onDraft?: () => void; onStoryOpen: (storyId: string) => void }) {
-  const [tab, setTab] = useState<"sources" | "intel" | "people" | "live">("sources");
+function RightSidebar({ stories, docs, projectId, onStoryOpen }: { stories: SourceStory[]; docs: { id: string; title: string; updated_at: string }[]; projectId: string | null; onStoryOpen: (storyId: string) => void }) {
   const [autoEntries, setAutoEntries] = useState<AutoEntry[]>([]);
   const [newCount, setNewCount] = useState(0);
   const [prevViewedAt, setPrevViewedAt] = useState<string | null>(null);
@@ -1282,7 +903,6 @@ function RightSidebar({ stories, docs, projectId, onDraft, onStoryOpen }: { stor
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d) return;
-        // Only show entity_match rows in Sources tab; other types belong in Intel
         const entityRows = (d.entries || []).filter((e: AutoEntry) => e.entry_type === "entity_match");
         setAutoEntries(entityRows);
         setNewCount(d.new_count ?? 0);
@@ -1326,45 +946,20 @@ function RightSidebar({ stories, docs, projectId, onDraft, onStoryOpen }: { stor
     setProjectEntities(prev => prev.filter(pe => pe.entity_id !== entityId));
   };
 
-  const tabs = [
-    { id: "sources" as const, label: "Sources", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="9" height="9" rx="1"/><path d="M4 5h5M4 7h5M4 9h3"/></svg> },
-    { id: "intel" as const, label: "Intel", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M6.5 4v3l2 1"/></svg> },
-    { id: "people" as const, label: "People", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="6.5" cy="5" r="2.5"/><path d="M2 11c0-2 2-3.5 4.5-3.5S11 9 11 11"/></svg> },
-    { id: "live" as const, label: "Live", icon: <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.4" opacity="0.4"/><circle cx="6.5" cy="6.5" r="2" fill="currentColor"/></svg> },
-  ];
   return (
     <div style={{ width: 320, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-      <div style={{ display: "flex", borderBottom: `1px solid ${BD}`, flexShrink: 0 }}>
-        {tabs.map(t => {
-          const active = tab === t.id;
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex: 1, padding: "10px 0 8px",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-              background: WHITE, border: "none", cursor: "pointer",
-              borderBottom: active ? `2px solid ${TEAL}` : "2px solid transparent",
-              color: active ? TEAL : "#6B7280",
-              opacity: active ? 1 : 0.85,
-            }}>
-              <span style={{ opacity: active ? 1 : 0.6 }}>{t.icon}</span>
-              <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.label}</span>
-            </button>
-          );
-        })}
+      {/* Section header */}
+      <div style={{ padding: "12px 16px 10px", borderBottom: `1px solid ${BD}`, flexShrink: 0 }}>
+        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.12em" }}>Sources</span>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {tab === "sources" && (
-          <SourcesTabContent
-            stories={stories} docs={docs}
-            autoEntries={autoEntries} newCount={newCount} prevViewedAt={prevViewedAt}
-            projectEntities={projectEntities} entityError={entityError}
-            onAddEntity={addEntity} onRemoveEntity={removeEntity}
-            onStoryOpen={onStoryOpen}
-          />
-        )}
-        {tab === "intel" && <IntelTabContent onDraft={onDraft} />}
-        {tab === "people" && <PeopleTabContent />}
-        {tab === "live" && <LiveTabContent />}
+        <SourcesTabContent
+          stories={stories} docs={docs}
+          autoEntries={autoEntries} newCount={newCount} prevViewedAt={prevViewedAt}
+          projectEntities={projectEntities} entityError={entityError}
+          onAddEntity={addEntity} onRemoveEntity={removeEntity}
+          onStoryOpen={onStoryOpen}
+        />
       </div>
     </div>
   );
@@ -2446,7 +2041,7 @@ function WorkspaceContent() {
         </div>
       </div>
 
-      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onDraft={() => setDockPanel(p => p === "draft" ? "none" : "draft")} onStoryOpen={setDrawerStoryId} />
+      <RightSidebar stories={projectStories} docs={projectDocs} projectId={projectId} onStoryOpen={setDrawerStoryId} />
 
       <StoryDrawer
         storyId={drawerStoryId}
