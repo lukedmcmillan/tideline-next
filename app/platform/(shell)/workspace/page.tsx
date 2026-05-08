@@ -762,11 +762,18 @@ function SourcesTabContent({
 
   return (
     <div>
+      {/* ── Explainer header (always visible) ───────────────────── */}
+      <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${BD}` }}>
+        <p style={{ fontFamily: F, fontSize: 13, color: T2, lineHeight: 1.65, margin: "0 0 8px" }}>
+          Pick the people, companies, and bodies you want to follow.
+        </p>
+        <p style={{ fontFamily: F, fontSize: 13, color: T2, lineHeight: 1.65, margin: 0 }}>
+          Tideline attaches relevant stories as they arrive.
+        </p>
+      </div>
+
       {/* ── Entity chips panel ──────────────────────────────────── */}
       <div style={{ borderBottom: `1px solid ${BD}`, padding: "10px 12px" }}>
-        {projectEntities.length > 0 && (
-          <div style={{ fontFamily: F, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", color: T4, marginBottom: 8 }}>Tracked entities</div>
-        )}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
           {projectEntities.map(pe => (
             <span key={pe.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: F, fontSize: 11, color: T1, border: `1px solid ${BD}`, borderRadius: 999, padding: "3px 8px 3px 10px", background: WHITE }}>
@@ -807,36 +814,18 @@ function SourcesTabContent({
         )}
       </div>
 
-      {/* ── Empty-state explainer when no entities tracked ──────── */}
-      {projectEntities.length === 0 && (
-        <div style={{ padding: "24px 20px 0" }}>
-          <p style={{ fontFamily: F, fontSize: 13, color: T2, lineHeight: 1.65, margin: "0 0 10px" }}>
-            Pick the people, companies, and bodies you want to follow.
-          </p>
-          <p style={{ fontFamily: F, fontSize: 13, color: T2, lineHeight: 1.65, margin: 0 }}>
-            Tideline will attach relevant stories as they arrive.
-          </p>
+      {/* ── 'N new since your last visit' badge ─────────────────── */}
+      {newCount > 0 && (
+        <div style={{ borderLeft: `3px solid ${AMBER}`, margin: "10px 12px 0", padding: "7px 10px" }}>
+          <span style={{ fontFamily: F, fontSize: 12, color: T2, fontVariantNumeric: "tabular-nums" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{newCount}</span>{" "}
+            {newCount === 1 ? "new since your last visit" : "new since your last visit"}
+          </span>
         </div>
       )}
 
-      {projectEntities.length > 0 && (
-        <>
-          {/* ── 'N new since your last visit' badge ─────────────── */}
-          {newCount > 0 && (
-            <div style={{ borderLeft: `3px solid ${AMBER}`, margin: "10px 12px 0", padding: "7px 10px" }}>
-              <span style={{ fontFamily: F, fontSize: 12, color: T2, fontVariantNumeric: "tabular-nums" }}>
-                <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{newCount}</span>{" "}
-                {newCount === 1 ? "new since your last visit" : "new since your last visit"}
-              </span>
-            </div>
-          )}
-
-          <div style={{ background: "rgba(29,158,117,0.04)", borderBottom: "1px solid rgba(29,158,117,0.15)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
-            <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.04em", textTransform: "uppercase", color: T4 }}>Attached to this workspace</span>
-            <span style={{ fontFamily: F, fontSize: 10, background: "rgba(29,158,117,0.12)", color: TEAL, borderRadius: 10, padding: "1px 7px", fontWeight: 600 }}>{totalCount + autoEntries.length}</span>
-          </div>
-
-          <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* ── Attached stories stream ──────────────────────────────── */}
+      <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
         {/* Auto-attached entity_match entries -- amber border if new */}
         {autoEntries.map(e => {
           const isNew = prevViewedAt !== null && new Date(e.inserted_at).getTime() > prevTime;
@@ -891,14 +880,7 @@ function SourcesTabContent({
             </div>
           );
         })}
-        {totalCount === 0 && autoEntries.length === 0 && (
-          <div style={{ padding: "24px 12px", textAlign: "center" }}>
-            <div style={{ fontFamily: F, fontSize: 12, color: T4, lineHeight: 1.6 }}>No sources attached yet. Save stories from the feed or upload documents to build your project library.</div>
-          </div>
-        )}
       </div>
-        </>
-      )}
     </div>
   );
 }
