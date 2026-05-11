@@ -45,13 +45,61 @@ export async function GET(request: Request) {
 
     for (const story of stories) {
       try {
+        // Source of truth for tracker definitions and failure modes:
+        // PULSE_SCORE_METHODOLOGY.md §4 (Domain Thresholds) and §6 (Failure Modes).
+        // If the methodology changes, this prompt MUST change with it — they must stay in lockstep.
         const message = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 300,
-          system: [{ type: 'text', text: 'You are an ocean governance analyst. Score this story and return JSON only. No markdown. No explanation.', cache_control: { type: 'ephemeral' } }],
+          system: [{
+            type: 'text',
+            // cache_control kept for forward-proofing; activates at 2048+ tokens for Haiku 4.5
+            cache_control: { type: 'ephemeral' },
+            text: `You are an ocean governance significance scorer for Tideline. Score stories and assign tracker slugs. Return JSON only. No markdown. No explanation.
+
+TRACKER SLUG DEFINITIONS
+Verbatim from PULSE_SCORE_METHODOLOGY.md §4 Domain Thresholds. Prompt and methodology must stay in lockstep.
+
+bbnj — BBNJ High Seas Treaty. Multilateral/complex. Covers the UN Agreement on Marine Biodiversity of Areas Beyond National Jurisdiction: ratification, implementation, signatory actions, ICP meetings, draft text negotiations, entry-into-force milestones. Calibrated threshold: 6.0. True positive rate: ~60%. Failure mode: Implementation phase signals are diffuse across 168 signatories.
+
+isa — ISA Deep-Sea Mining. Multilateral/veto players. Covers the International Seabed Authority: council sessions, exploitation regulations, contractor licences, nodule/crust/sulphide extraction permits, mining code text, ISA Assembly decisions, and sponsoring state actions. Calibrated threshold: 6.5. True positive rate: ~65%. Failure mode: Commercial licensing runs structurally low due to confidential contractor communications. Do NOT assign isa solely because a story mentions "ocean floor" or "seabed" without an ISA regulatory link.
+
+iuu — IUU Fishing Enforcement. Plurilateral. Covers illegal, unreported and unregulated fishing: port state control actions, flag state certifications, IUU vessel lists, carding decisions (EU, US, UK), RFMO enforcement, and high-seas boarding inspections. Calibrated threshold: 5.5. True positive rate: ~70%.
+
+30x30 — 30x30 / MPA Designations. Varies by jurisdiction. Covers marine protected area designations, High Ambition Coalition commitments, national ocean targets aligned with the Kunming-Montreal GBF 30x30 goal, and CCAMLR MPA proposals. Calibrated threshold: 5.0. True positive rate: ~55-75%. Failure mode: Unilateral designations (US, UK) score well; multilateral MPA negotiations (CCAMLR) score poorly due to consensus veto dynamics.
+
+blue_finance — Blue Finance / TNFD. Unilateral/framework body. Covers TNFD framework adoption, blue bonds, debt-for-nature swaps with an ocean component, ocean-linked sustainable finance instruments, and institutional investor ocean commitments. Calibrated threshold: 5.5. True positive rate: ~75%. Failure mode: Private transaction signals invisible — score runs structurally lower. Do NOT assign blue_finance to fisheries infrastructure grants, port construction, or domestic maritime spending — those are not blue finance instruments. Required test: is there a named financial instrument (bond, swap, fund) or named framework adoption (TNFD, IPSF, GBF finance target)?
+
+imo_shipping — IMO Shipping Emissions. Plurilateral. Covers IMO MEPC sessions, GHG strategy revision, CII ratings, carbon intensity indicators, EEDI/EEXI regulations, alternative fuels framework, and flag state ratification of IMO instruments. Calibrated threshold: 6.0. True positive rate: ~70%. Failure mode: Flag state ratification divergence creates noise.
+
+wto_fisheries — WTO Fisheries Subsidies. Multilateral/consensus. Covers the WTO Agreement on Fisheries Subsidies: implementation, ratification, Fish Two negotiations (harmful subsidies phase 2), capacity and overfishing provisions, dispute settlement. Agreement entered into force September 2025; Fish Two negotiations stalled. Calibrated threshold: 6.5. True positive rate: ~50%.
+
+cites_marine — CITES Marine Species. Multilateral/CoP cycle. Covers CITES CoP decisions on shark species, rays, seahorses, queen conch, and other marine wildlife: listing proposals, implementation by range states, trade permit enforcement, intersessional working group outputs. Calibrated threshold: 6.5. True positive rate: ~65%. Failure mode: Signal concentrates around CoP dates, quiet between.
+
+plastics — Plastics Treaty (INC). Multilateral/contested. Covers INC sessions of the UN treaty to end plastic pollution: draft text, national positions, veto coalition dynamics, extended producer responsibility provisions, and waste trade chapters. Calibrated threshold: 5.5. True positive rate: ~55%. Failure mode: Veto coalition dynamics poorly captured.
+
+offshore_wind — Offshore Wind. Unilateral/national. Covers national offshore wind licensing, planning approvals, auction results, grid connection decisions, and port infrastructure for turbine installation. Calibrated threshold: 4.5. True positive rate: ~80%.
+
+STRUCTURAL FAILURE MODES (verbatim from §6)
+These constrain tracker assignment — do not over-assign based on surface relevance:
+
+Failure Mode 1 — Consensus-blocked institutions: CCAMLR, ICCAT, and CBD COP generate high document volume regardless of outcome. High volume alone does not justify 30x30 assignment if there is no designation decision.
+
+Failure Mode 3 — Confidential commercial transactions: ISA contractor activity, blue bond issuance, and debt-for-nature negotiations are structurally designed to avoid public signal until completion. Stories about closed commercial processes should not inflate isa or blue_finance assignment beyond what is document-visible.
+
+ASSIGNMENT RULES
+- Only assign a slug when the story directly and substantively affects that governance domain.
+- When uncertain, assign zero trackers and score conservatively.`,
+          }],
           messages: [{
             role: 'user',
-            content: `Story headline: ${story.title}. Summary: ${story.short_summary}. Return this exact JSON: { "score": 0-100, "trackers": [] } where trackers is an array of slugs from this list only: bbnj, isa, iuu, 30x30, blue_finance, imo_shipping, whaling, ocean_carbon, msp, arctic. Score meaning: 0-30 = routine update, 31-60 = noteworthy, 61-75 = significant development, 76-100 = major policy shift. Only include tracker slugs this story directly affects. Return only valid JSON.`,
+            content: `Story headline: ${story.title}
+Summary: ${story.short_summary}
+
+Return this exact JSON: { "score": 0-100, "trackers": [] }
+Valid tracker slugs: bbnj, isa, iuu, 30x30, blue_finance, imo_shipping, wto_fisheries, cites_marine, plastics, offshore_wind
+Score: 0-30 = routine update, 31-60 = noteworthy, 61-75 = significant development, 76-100 = major policy shift
+Only include slugs this story directly affects. Return only valid JSON.`,
           }],
         })
 
@@ -60,7 +108,9 @@ export async function GET(request: Request) {
 
         const score = Math.max(0, Math.min(100, Math.round(parsed.score || 0)))
         const trackers = Array.isArray(parsed.trackers) ? parsed.trackers.filter((t: string) =>
-          ['bbnj', 'isa', 'iuu', '30x30', 'blue_finance', 'imo_shipping', 'whaling', 'ocean_carbon', 'msp', 'arctic'].includes(t)
+          // Slug whitelist — must match PULSE_SCORE_METHODOLOGY.md §4 tracker domains exactly.
+          // Uses underscore form for cross_tracker_flags column (velocity_scores uses hyphen form).
+          ['bbnj', 'isa', 'iuu', '30x30', 'blue_finance', 'imo_shipping', 'wto_fisheries', 'cites_marine', 'plastics', 'offshore_wind'].includes(t)
         ) : []
         const isFeatured = score > 75
 

@@ -265,11 +265,75 @@ function actionSignal(title: string): 0 | 1 {
   return ACTION_SIGNAL_KEYWORDS.some(kw => lower.includes(kw)) ? 1 : 0;
 }
 
+// ── Lead-proximity anchor dedup ───────────────────────────────────────────────
+// Protects diverging stories covering the same event from different angles.
+// Word-overlap alone is too aggressive (would collapse contradicting stories).
+// Instead, match on a concrete anchor: dollar figure + same topic + 48h window.
+
+/**
+ * Extracts normalised dollar-figure strings from text.
+ * Matches: $957.8M, $1.2 billion, CAD 957 million, €2.5bn, etc.
+ * Returns "<number>-<scale>" keys, e.g. "957.8-m", "1.2-b".
+ */
+function extractDollarFigures(text: string): Set<string> {
+  const figures = new Set<string>();
+  // currency symbol/code (optional) + number + scale word/letter
+  const re = /(?:[$€£¥]|USD|CAD|AUD|EUR|GBP|NZD)?\s*(\d[\d, .]*\d|\d)\s*(billion|million|thousand|bn|mn|[BMKbmk])\b/gi;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const num = parseFloat(m[1].replace(/[, ]/g, ''));
+    const scaleRaw = m[2].toLowerCase();
+    let scale: string;
+    if (scaleRaw === 'billion' || scaleRaw === 'bn' || scaleRaw === 'b') scale = 'b';
+    else if (scaleRaw === 'million' || scaleRaw === 'mn' || scaleRaw === 'm') scale = 'm';
+    else if (scaleRaw === 'thousand' || scaleRaw === 'k') scale = 'k';
+    else scale = scaleRaw;
+    if (!isNaN(num)) figures.add(`${num}-${scale}`);
+  }
+  return figures;
+}
+
+/**
+ * Returns true only when candidate is a near-duplicate of the lead story.
+ * All three conditions must hold simultaneously:
+ * (a) shared dollar figure anchor (prevents collapsing stories about different amounts)
+ * (b) same topic
+ * (c) published within 48h
+ *
+ * Word-overlap alone is intentionally NOT used — divergence detection requires
+ * that contradicting stories about the same event survive into Evidence.
+ */
+function isLeadNearDuplicate(candidate: StoryRow, leadStory: StoryRow): boolean {
+  // (b) same topic
+  if (candidate.topic !== leadStory.topic) return false;
+
+  // (c) within 48h
+  const diffH =
+    Math.abs(
+      new Date(candidate.published_at).getTime() -
+      new Date(leadStory.published_at).getTime()
+    ) / (1000 * 60 * 60);
+  if (diffH > 48) return false;
+
+  // (a) shared dollar figure anchor
+  const leadText = `${leadStory.title} ${leadStory.short_summary ?? ''} ${leadStory.description ?? ''}`;
+  const leadFigs = extractDollarFigures(leadText);
+  if (leadFigs.size === 0) return false; // no anchor in lead → cannot match
+
+  const candText = `${candidate.title} ${candidate.short_summary ?? ''} ${candidate.description ?? ''}`;
+  const candFigs = extractDollarFigures(candText);
+  for (const fig of leadFigs) {
+    if (candFigs.has(fig)) return true;
+  }
+  return false;
+}
+
 /**
  * Returns up to 3 evidence items.
  * Excludes the lead story. Only stories with short_summary qualify.
  * Sort: significance_score desc; within 10 points, prefers action_signal=1 stories.
- * After sort, deduplicates near-identical headlines (same topic, 3+ shared words, <=7 days apart).
+ * Pass 1 dedup: story.id exclusion + anchor-based lead-proximity filter (dollar figure + topic + 48h).
+ * Pass 2 dedup: near-identical headlines within the evidence pool (same topic, 3+ shared words, <=7 days).
  */
 export function selectEvidence(
   stories: StoryRow[],
@@ -283,12 +347,20 @@ export function selectEvidence(
     userTopics.flatMap(t => TRACKER_TO_TOPICS[t] || [t])
   );
 
+  // Pass 1a: id exclusion
   const candidates = stories.filter(
     s => s.id !== leadId && !!s.short_summary && contentTopics.has(s.topic)
   );
 
+  // Pass 1b: anchor-based lead-proximity filter
+  // Find the lead story row to extract its dollar-figure anchors.
+  const leadStory = leadId ? (stories.find(s => s.id === leadId) ?? null) : null;
+  const filtered = leadStory
+    ? candidates.filter(s => !isLeadNearDuplicate(s, leadStory))
+    : candidates;
+
   // Sort: significance desc; within 10 points prefer action_signal=1
-  candidates.sort((a, b) => {
+  filtered.sort((a, b) => {
     const sigA = a.significance_score ?? 0;
     const sigB = b.significance_score ?? 0;
     const sigDiff = sigB - sigA;
@@ -298,8 +370,8 @@ export function selectEvidence(
     return sigDiff;
   });
 
-  // Dedup pass, then take top 3
-  const deduped = dedupStories(candidates).slice(0, 3);
+  // Pass 2 dedup: near-identical headlines within evidence pool, then take top 3
+  const deduped = dedupStories(filtered).slice(0, 3);
 
   return deduped.map((s, i) => ({
     headline: cleanTitle(s.title),

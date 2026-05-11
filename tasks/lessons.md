@@ -229,6 +229,14 @@
 - **Auth API fix ≠ platform shipped.** Browser DevTools / console is load-bearing verification. A clean Vercel log showing `hasEmail: true` does not prove the platform UI works. Open the page, open DevTools, exercise the failing path, confirm console is clean, confirm the network request fires. This is the only valid shipping proof for UI-facing auth fixes.
 - **"Tracking 0 everywhere" and silent empty states always mean look upstream of the data layer.** Three sessions of this pattern (signals, workspace modal, entity chips): the data layer is fine; the auth layer, hydration layer, or wire-up between them is broken. When data reads "0" or "nothing", suspect the delivery path (auth → hydration → event handlers), not the data itself.
 
+## 2026-05-11
+
+### Morning Brief — Structural Feed Duplication
+
+- **stories table has structural duplication: same real-world event, multiple rows from different press releases.** The Canada $957.8M Small Craft Harbours announcement surfaced as 6 DFO press release rows (3 on the same day, different officials quoted). These are not near-duplicates at the text level — headlines differ enough to pass word-overlap dedup — but they represent one event. This pattern surfaces in: feed (same story appears multiple times), brief lead+evidence dedup (anchor-based filter needed as workaround), and workspace context (entity signal noise). **Canonical clustering is the structural fix**: hash on `(entity_set + dollar_figure + date_window)` at ingest, or post-hoc event-cluster table. Workaround (anchor-based dedup in selectEvidence) is in place but does not address the root cause.
+
+---
+
 ## 2026-05-07 (auto-attach pipeline verification)
 
 ### Migration Tracking
