@@ -727,7 +727,6 @@ function SourcesTabContent({
   const [adding, setAdding] = useState<string | null>(null);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const totalCount = stories.length + docs.length;
   const prevTime = prevViewedAt ? new Date(prevViewedAt).getTime() : 0;
 
   const tierColors: Record<string, { bg: string; color: string; border: string }> = {
@@ -763,12 +762,9 @@ function SourcesTabContent({
   return (
     <div>
       {/* ── Explainer header (always visible) ───────────────────── */}
-      <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${BD}` }}>
-        <p style={{ fontFamily: F, fontSize: 13, color: T2, lineHeight: 1.65, margin: "0 0 8px" }}>
-          Pick the people, companies, and bodies you want to follow.
-        </p>
-        <p style={{ fontFamily: F, fontSize: 13, color: T2, lineHeight: 1.65, margin: 0 }}>
-          Tideline attaches relevant stories as they arrive.
+      <div style={{ background: "rgba(29,158,117,0.06)", borderLeft: "3px solid rgba(29,158,117,0.25)", padding: "14px 16px", margin: "16px 16px 14px", borderRadius: 6 }}>
+        <p style={{ fontFamily: F, fontSize: 13, color: T2, margin: 0, lineHeight: 1.65 }}>
+          Pick the people, companies, and bodies you want to follow. Tideline attaches relevant stories as they arrive.
         </p>
       </div>
 
@@ -948,10 +944,6 @@ function RightSidebar({ stories, docs, projectId, onStoryOpen }: { stories: Sour
 
   return (
     <div style={{ width: 320, background: WHITE, borderLeft: `1px solid ${BD}`, flexShrink: 0, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-      {/* Section header */}
-      <div style={{ padding: "12px 16px 10px", borderBottom: `1px solid ${BD}`, flexShrink: 0 }}>
-        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: T4, textTransform: "uppercase", letterSpacing: "0.12em" }}>Sources</span>
-      </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         <SourcesTabContent
           stories={stories} docs={docs}
