@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Env vars loaded by dotenvx CLI wrapper or host environment
+import { config } from "dotenv";
+config({ path: ".env.local" });
 
 import { extractText } from "unpdf";
 import { randomUUID } from "crypto";
@@ -89,6 +90,36 @@ function parseJson(text: string): Record<string, unknown> | null {
   }
 }
 
+// Parse machine-safe decision slug (written by InforMEA scraper) back to human-readable title.
+// Pattern: {TREATY}_DEC_{major}_{minor}[_REV_{revref}]
+// Examples:
+//   "CITES_DEC_20_49"          -> "CITES Decision 20.49"
+//   "CITES_DEC_19_178_REV_COP20" -> "CITES Decision 19.178 (Rev. CoP20)"
+// Returns null if file_name doesn't match the expected slug pattern.
+function parseDecisionId(fileName: string): string | null {
+  const m = fileName.match(/^([A-Z]+)_DEC_(\d+)_(\d+)(?:_REV_(.+))?$/);
+  if (!m) return null;
+  const treaty = m[1];
+  const baseTitle = `${treaty} Decision ${m[2]}.${m[3]}`;
+  if (!m[4]) return baseTitle;
+  // Format revision reference: COP20 -> CoP20
+  const revFormatted = m[4].replace(/COP(\d+)/i, "CoP$1");
+  return `${baseTitle} (Rev. ${revFormatted})`;
+}
+
+// Fetch page text via Jina reader (handles JS-rendered pages)
+async function fetchViaJina(url: string): Promise<string> {
+  const jinaKey = process.env.JINA_API_KEY;
+  const res = await fetch(`https://r.jina.ai/${url}`, {
+    headers: {
+      "User-Agent": "Tideline Library Bot/1.0",
+      ...(jinaKey ? { "Authorization": `Bearer ${jinaKey}` } : {}),
+    },
+  });
+  if (!res.ok) throw new Error(`Jina HTTP ${res.status}`);
+  return res.text();
+}
+
 async function markFailed(id: string, reason: string) {
   await getSupabase()
     .from("document_queue")
@@ -104,33 +135,53 @@ function sleep(ms: number) {
 async function processItem(item: {
   id: string; file_url: string; file_name: string;
   is_primary_source: boolean; source_domain: string;
+  source_format: string | null;
 }) {
-  console.log(`\nProcessing: ${item.file_name}`);
+  console.log(`\nProcessing: ${item.file_name} [${item.source_format ?? "pdf"}]`);
 
-  // Download PDF
-  let pdfBuffer: ArrayBuffer;
-  try {
-    const res = await fetch(item.file_url, {
-      headers: { "User-Agent": "Tideline Library Bot/1.0" },
-    });
-    if (!res.ok) { await markFailed(item.id, `Download HTTP ${res.status}`); return; }
-    pdfBuffer = await res.arrayBuffer();
-  } catch (err) {
-    await markFailed(item.id, `Download error: ${err}`);
-    return;
+  const isHtml = item.source_format === "html";
+
+  // Download content — PDF or HTML via Jina
+  let fullText: string;
+  let pdfBuffer: ArrayBuffer | null = null;
+
+  if (isHtml) {
+    // HTML path: fetch rendered page text via Jina
+    try {
+      fullText = await fetchViaJina(item.file_url);
+    } catch (err) {
+      await markFailed(item.id, `Jina fetch error: ${err}`);
+      return;
+    }
+    if (!fullText || fullText.trim().length < 100) {
+      await markFailed(item.id, "HTML fetch returned insufficient text");
+      return;
+    }
+  } else {
+    // PDF path: download and extract text
+    try {
+      const res = await fetch(item.file_url, {
+        headers: { "User-Agent": "Tideline Library Bot/1.0" },
+      });
+      if (!res.ok) { await markFailed(item.id, `Download HTTP ${res.status}`); return; }
+      pdfBuffer = await res.arrayBuffer();
+    } catch (err) {
+      await markFailed(item.id, `Download error: ${err}`);
+      return;
+    }
+
+    try {
+      const bufferCopy = pdfBuffer.slice(0);
+      const result = await extractText(new Uint8Array(bufferCopy));
+      const pages = result.text;
+      fullText = Array.isArray(pages) ? pages.join("\n") : String(pages);
+    } catch (err) {
+      await markFailed(item.id, `PDF parse error: ${err}`);
+      return;
+    }
   }
 
   // STEP 0 — RELEVANCE (first 1000 chars)
-  let fullText: string;
-  try {
-    const bufferCopy = pdfBuffer.slice(0);
-    const result = await extractText(new Uint8Array(bufferCopy));
-    const pages = result.text;
-    fullText = Array.isArray(pages) ? pages.join("\n") : String(pages);
-  } catch (err) {
-    await markFailed(item.id, `PDF parse error: ${err}`);
-    return;
-  }
 
   if (!fullText || fullText.trim().length === 0) {
     await markFailed(item.id, "SKIP: empty text extraction");
@@ -139,7 +190,7 @@ async function processItem(item: {
 
   const previewText = fullText.slice(0, 1000);
   if (previewText.trim().length < 100) {
-    await markFailed(item.id, "Scanned PDF — insufficient text");
+    await markFailed(item.id, isHtml ? "HTML fetch returned insufficient text" : "Scanned PDF — insufficient text");
     return;
   }
 
@@ -157,7 +208,7 @@ async function processItem(item: {
   // STEP 1 — TEXT (first 6000 chars)
   const extractedText = fullText.slice(0, 6000);
   if (extractedText.length < 100) {
-    await markFailed(item.id, "Scanned PDF — insufficient extractable text");
+    await markFailed(item.id, "Insufficient extractable text");
     return;
   }
 
@@ -167,7 +218,7 @@ async function processItem(item: {
 title: exact official title, never paraphrase.
 source_organisation: issuing body only.
 document_type: MUST be exactly one of: treaty,resolution,report,regulation,scientific_paper,ngo_report,government_document,court_filing,other — no other values ever.
-published_date: YYYY-MM-DD. Year only → YYYY-01-01. Month-year → YYYY-MM-01. Unknown → empty string.
+published_date: YYYY-MM-DD. Year only -> YYYY-01-01. Month-year -> YYYY-MM-01. Unknown -> empty string.
 topic_tags: 3-6 established ocean governance terms.
 region_tags: specific regions or Global.
 Return only valid JSON. No markdown.`,
@@ -192,7 +243,12 @@ Return only corrected JSON. No markdown.`,
   const verified = parseJson(verifyRaw) || extracted;
 
   // STEP 4 — SANITISE
-  const title = String(verified.title || "").trim();
+  // For decision ID filenames (e.g. CITES_DEC_20_49), the decision number is the primary title.
+  // Claude's extracted title becomes the subtitle (descriptive text).
+  const decisionId = parseDecisionId(item.file_name);
+  const primaryTitle = decisionId ?? String(verified.title || "").trim();
+  const subtitle = decisionId ? String(verified.title || "").trim() : null;
+
   const sourceOrg = String(verified.source_organisation || "").trim();
   const docType = sanitiseDocumentType(String(verified.document_type || ""));
   const pubDate = sanitiseDate(verified.published_date as string | null);
@@ -200,8 +256,8 @@ Return only corrected JSON. No markdown.`,
   const regionTags = Array.isArray(verified.region_tags) ? verified.region_tags as string[] : [];
 
   // STEP 5 — VALIDATE
-  if (title.length <= 5 || /^https?:\/\//.test(title) || /\.\w{2,4}$/.test(title)) {
-    await markFailed(item.id, `Validation failed: bad title "${title}"`);
+  if (primaryTitle.length <= 5 || /^https?:\/\//.test(primaryTitle) || /\.\w{2,4}$/.test(primaryTitle)) {
+    await markFailed(item.id, `Validation failed: bad title "${primaryTitle}"`);
     return;
   }
   if (sourceOrg.length <= 3) {
@@ -209,28 +265,41 @@ Return only corrected JSON. No markdown.`,
     return;
   }
 
-  // STEP 6 — STORAGE
-  const uuid = randomUUID();
-  const storagePath = `library/${uuid}.pdf`;
-  const { error: uploadError } = await getSupabase().storage
-    .from("tideline-documents")
-    .upload(storagePath, Buffer.from(pdfBuffer), {
-      contentType: "application/pdf",
-      upsert: false,
-    });
-  if (uploadError) {
-    await markFailed(item.id, `Storage upload failed: ${uploadError.message}`);
-    return;
+  // STEP 6 — STORAGE (PDF only; HTML documents are not uploaded to storage)
+  let storedFileUrl: string;
+  let fileSizeBytes: number | null = null;
+
+  if (isHtml) {
+    // HTML: file_url in documents is the canonical page URL
+    storedFileUrl = item.file_url;
+  } else {
+    const uuid = randomUUID();
+    const storagePath = `library/${uuid}.pdf`;
+    const { error: uploadError } = await getSupabase().storage
+      .from("tideline-documents")
+      .upload(storagePath, Buffer.from(pdfBuffer!), {
+        contentType: "application/pdf",
+        upsert: false,
+      });
+    if (uploadError) {
+      await markFailed(item.id, `Storage upload failed: ${uploadError.message}`);
+      return;
+    }
+    storedFileUrl = storagePath;
+    fileSizeBytes = pdfBuffer!.byteLength;
   }
 
   // STEP 7 — INSERT
   const { error: insertError } = await getSupabase().from("documents").insert({
-    title,
+    title:               primaryTitle,
+    subtitle:            subtitle || undefined,
     source_organisation: sourceOrg,
-    document_type: docType,
-    published_date: pubDate,
-    file_url: storagePath,
-    file_size_bytes: pdfBuffer.byteLength,
+    document_type:       docType,
+    published_date:      pubDate,
+    file_url:            storedFileUrl,
+    canonical_url:       isHtml ? item.file_url : null,
+    source_format:       item.source_format ?? (isHtml ? "html" : "pdf"),
+    file_size_bytes:     fileSizeBytes,
     is_public: true,
     is_primary_source: item.is_primary_source,
     status: "approved",
@@ -251,7 +320,7 @@ Return only corrected JSON. No markdown.`,
     .update({ status: "completed", processed_at: new Date().toISOString() })
     .eq("id", item.id);
 
-  console.log(`  OK: "${title}" (${docType})`);
+  console.log(`  OK: "${primaryTitle}" (${docType})`);
 }
 
 const loopMode = process.argv.includes("--loop") || limitArg !== undefined;
@@ -259,7 +328,7 @@ const loopMode = process.argv.includes("--loop") || limitArg !== undefined;
 async function processBatch(): Promise<number> {
   const { data: items, error } = await getSupabase()
     .from("document_queue")
-    .select("id, file_url, file_name, is_primary_source, source_domain")
+    .select("id, file_url, file_name, is_primary_source, source_domain, source_format")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .limit(BATCH_LIMIT);

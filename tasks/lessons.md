@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## 2026-05-11
+
+- **Revised CITES decisions and document relationships**: Revised decisions (e.g. "CITES Decision 19.178 (Rev. CoP20)") supersede a prior version but there is no `superseded_by` or `revision_of` relationship in the `documents` table. The revision is captured in the title (and slug: `CITES_DEC_19_178_REV_COP20`) but not linked to the original `19.178`. This is acceptable for v1 but creates a gap for legal research users who need to trace decision lineage. Add `revision_of uuid REFERENCES documents(id)` before the library becomes a primary research tool.
+- **InforMEA OData: status field values**: Real InforMEA status values are `"active"` (adopted/in-force), NOT `"adopted"` or `"in force"`. Exclude: `draft`, `recommended`, `withdrawn`, `deleted`, `""`. Any future scraper hitting this API should probe `?$top=1` first to confirm field values before writing a filter.
+- **InforMEA OData: client-side date filtering required**: Server-side `$filter=published gt datetime'...'` returns 0 results on this endpoint. Parse `/Date(milliseconds)/` format client-side. Confirmed with `scripts/probe-informea.ts`.
+- **HTML-only documents in PDF-assumed pipeline**: CITES CoP20 decisions (33 records) are HTML-only on cites.org. Queuing them in `document_queue` without format tracking would silently fail at `extractText()` in processor-agent. Added `source_format` column to both `document_queue` and `documents`; processor routes HTML to Jina fetch instead of PDF download.
+- **velocity.ts queried on stories.topic, not cross_tracker_flags**: The backfill cleaned `cross_tracker_flags` but velocity.ts still queried `stories.topic`. Cleaning the classifier without redirecting the score query path meant the backfill had no effect on Pulse Scores. The cleaned data must be read by the consumers that need it. Fixed 2026-05-11: switched to `.contains("cross_tracker_flags", [flag])`.
+
 ## 2026-05-07
 
 - **Migration tracking**: Migration files marked 'pending Studio apply' need to be tracked and verified applied — `matched_entity_id` was committed but not run, leaving auto-attach silently broken in production. Always verify migration applied before testing the feature it supports.
