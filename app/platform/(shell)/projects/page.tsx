@@ -118,7 +118,7 @@ function ProjectCard({ project, onClick, onDelete }: { project: any; onClick: ()
           {project.topic || project.summary || "Open this project to add notes and sources."}
         </div>
         {draftInfo && (
-          <div style={{ fontFamily: M, fontSize: 10, color: TEAL, marginTop: 6 }}>Draft \u00b7 last edited {fmtRelative(draftInfo.updated_at || undefined)}</div>
+          <div style={{ fontFamily: M, fontSize: 10, color: TEAL, marginTop: 6 }}>Draft {"\u00b7"} last edited {fmtRelative(draftInfo.updated_at || undefined)}</div>
         )}
       </div>
       <div style={{ padding: "12px 18px" }}>
