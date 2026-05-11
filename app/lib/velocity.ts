@@ -8,17 +8,21 @@ const supabase = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
+// Topic values must match stories.topic column exactly (set by RSS source definition in sources.ts).
+// These are coarse source-level tags, not AI-assigned tracker classifications.
+// See cross_tracker_flags column for AI-assigned tracker tags (cleaned 2026-05-11 backfill).
+// Future architectural upgrade: switch velocity calculation to use cross_tracker_flags containment.
 const TRACKER_TOPICS: Record<string, string[]> = {
   isa: ["dsm"],
-  bbnj: ["bbnj", "high-seas"],
+  bbnj: [],                          // no matching topic — relies entirely on TITLE_KEYWORDS
   iuu: ["iuu"],
-  "30x30": ["mpa", "30x30"],
-  "blue-finance": ["blue-finance", "esg"],
-  plastics: ["plastics", "pollution"],
+  "30x30": ["mpa", "conservation"],
+  "blue-finance": ["bluefinance"],   // fixed 2026-05-11: DB uses "bluefinance" (no hyphen), not "blue-finance"
+  plastics: [],                      // "governance" (87 stories) covers BBNJ+CBD+others — too broad; relies on TITLE_KEYWORDS
   "imo-shipping": ["shipping"],
-  "offshore-wind": ["offshore-wind"],
-  "cites-marine": ["cites", "sharks", "shark", "rays", "guitarfish"],
-  "wto-fisheries": ["wto-fisheries", "fisheries-subsidies", "subsidies"],
+  "offshore-wind": [],               // no matching topic — relies entirely on TITLE_KEYWORDS
+  "cites-marine": [],                // no matching topic — relies entirely on TITLE_KEYWORDS
+  "wto-fisheries": [],               // "fisheries" (316 stories) far too broad; relies on TITLE_KEYWORDS
 };
 
 const INSTITUTIONAL_MULTIPLIER: Record<string, number> = {
@@ -37,10 +41,23 @@ const INSTITUTIONAL_MULTIPLIER: Record<string, number> = {
 const DECISION_PATTERN =
   /ratif|adopt|enforc|sanction|decision|resolution|agreement|signed|implement|deadline|entry into force|enters into force|in force|final text|mandate|conclude|binding|approved|adopted|enacted|compliance|effective/i;
 
-// Title keywords to broaden story matching beyond topic tags
+// Title keywords to narrow or supplement story matching beyond the coarse topic field.
+// Applied to ALL recent stories (minus EXCLUDED_TOPICS) as a secondary pass.
+// Source of truth for tracker scope: PULSE_SCORE_METHODOLOGY.md §4 Domain Thresholds.
+// If the methodology changes, these patterns MUST change with it.
 const TITLE_KEYWORDS: Record<string, RegExp> = {
+  // IMO-specific regulatory language — excludes geopolitical shipping (Hormuz, naval, piracy)
   "imo-shipping": /\b(imo|mepc|marpol|cii|fueleu|ghg|shipping emissions|decarbonisation|net zero shipping|carbon intensity|eu ets shipping|green shipping)\b/i,
-  "offshore-wind": /\b(offshore wind|wind energy|boem|crown estate|marine spatial|seabed leasing|wind farm)\b/i,
+  // Offshore wind licencing and planning — no matching topic in DB
+  "offshore-wind": /\b(offshore wind|wind energy|boem|crown estate|seabed leasing|wind farm|wind auction|wind licence)\b/i,
+  // BBNJ treaty — UN High Seas Agreement; stories land in governance/all topic
+  "bbnj": /\b(bbnj|BBNJ|high seas treaty|high seas agreement|high seas biodiversity|ABNJ|beyond national jurisdiction|marine biodiversity.{0,30}national jurisdiction)\b/i,
+  // WTO fisheries subsidies — "fisheries" topic (316 stories) is far too broad to use alone
+  "wto-fisheries": /\b(fisheries subsidies|WTO.{0,20}fish|fish.{0,20}WTO|harmful.{0,15}subsidies|Fish Two|fisheries.*WTO agreement)\b/i,
+  // CITES marine species — no matching topic; CoP listing decisions and species trade
+  "cites-marine": /\b(CITES|shark.{0,15}(list|trade|ban|protection)|ray.{0,15}(list|trade|protection)|seahorse.{0,15}trade|cites.{0,15}cop|appendix.{0,10}(shark|ray))\b/i,
+  // Plastics treaty INC sessions — stories land in governance topic (shared with BBNJ etc.)
+  "plastics": /\b(plastics treaty|plastic.{0,10}treaty|INC-[1-9]|end plastic pollution|global plastics|plastic pollution.{0,20}(agreement|negotiat|treaty))\b/i,
 };
 
 // Topics excluded from broad title-keyword scan (irrelevant to governance trackers)
@@ -70,13 +87,15 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
 
   const titlePattern = TITLE_KEYWORDS[trackerSlug];
 
-  // Current 30d stories (by topic tag)
-  const { data: topicStories } = await supabase
-    .from("stories")
-    .select("id, title, published_at, short_summary")
-    .in("topic", topics)
-    .gte("published_at", d30)
-    .order("published_at", { ascending: false });
+  // Current 30d stories (by topic tag) — guard against empty array (PostgREST returns error on .in("topic", []))
+  const { data: topicStories } = topics.length > 0
+    ? await supabase
+        .from("stories")
+        .select("id, title, published_at, short_summary")
+        .in("topic", topics)
+        .gte("published_at", d30)
+        .order("published_at", { ascending: false })
+    : { data: [] };
 
   // Also fetch by title keywords if available (broader net, excluding irrelevant topics)
   let titleStories: { id: string; title: string; published_at: string; short_summary: string | null }[] = [];
@@ -103,13 +122,15 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
   const currentStories = deduplicateByTitle(mergedStories);
   const currentCount = currentStories.length;
 
-  // Previous 30d stories (30-60 days ago)
-  const { data: prevTopicStories } = await supabase
-    .from("stories")
-    .select("id, title")
-    .in("topic", topics)
-    .gte("published_at", d60)
-    .lt("published_at", d30);
+  // Previous 30d stories (30-60 days ago) — same empty-array guard
+  const { data: prevTopicStories } = topics.length > 0
+    ? await supabase
+        .from("stories")
+        .select("id, title")
+        .in("topic", topics)
+        .gte("published_at", d60)
+        .lt("published_at", d30)
+    : { data: [] };
 
   let prevTitleStories: { id: string; title: string }[] = [];
   if (titlePattern) {
