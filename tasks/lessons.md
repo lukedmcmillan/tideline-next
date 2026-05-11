@@ -247,6 +247,14 @@
 
 - **offshore_wind (4 stories/30d), cites_marine (3), plastics (1) appear structurally under-covered.** These were formerly coded as impossible to tag (old prompt used deprecated slugs). Low story counts will cause structurally noisy velocity scores regardless of classifier quality. Verify whether RSS feed sources cover these domains adequately — if not, add targeted sources before treating their Pulse Scores as reliable signals.
 
+### Velocity Query Path — Clean Data Must Be Read by Consumers
+
+- **velocity.ts queried on `stories.topic`, not `cross_tracker_flags`. Cleaning the classifier without redirecting the score query path meant the backfill had no effect on Pulse Scores. The cleaned data must be read by the consumers that need it.** After the May 2026 cross_tracker_flags backfill (235 corrections), velocity scores still reflected contaminated data because `calculateVelocityScore()` was fetching by `topic IN [...]` — a coarse RSS source tag that is: (a) contaminated for `bluefinance` (returns ESG/energy stories), (b) too broad for `shipping` (includes 94 Hormuz/naval stories), and (c) simply absent for 5 trackers. Fixed 2026-05-11: velocity.ts now uses `.contains('cross_tracker_flags', [flag])`. Rule: any consumer of tracker-scoped data must read from the same source that the classifier writes to.
+
+### Blue Finance — Topic Tag Data Quality
+
+- **DB `topic='bluefinance'` does not mean "ocean blue finance."** The 89-source RSS feed includes an ESG/clean energy source tagged `bluefinance` in sources.ts. Result: 63 stories in last 30d matching `topic='bluefinance'` include "Bad Bunny's Backstage Hedge to Beat Bad Weather" and "Iran War Is Forcing a Reckoning on Energy Demand." The cross_tracker_flags path (AI-verified) shows 1 genuine blue finance story in the same window. Never trust source-level topic tags for meaning — they reflect the feed slot, not the content.
+
 ### Morning Brief — Structural Feed Duplication
 
 - **stories table has structural duplication: same real-world event, multiple rows from different press releases.** The Canada $957.8M Small Craft Harbours announcement surfaced as 6 DFO press release rows (3 on the same day, different officials quoted). These are not near-duplicates at the text level — headlines differ enough to pass word-overlap dedup — but they represent one event. This pattern surfaces in: feed (same story appears multiple times), brief lead+evidence dedup (anchor-based filter needed as workaround), and workspace context (entity signal noise). **Canonical clustering is the structural fix**: hash on `(entity_set + dollar_figure + date_window)` at ingest, or post-hoc event-cluster table. Workaround (anchor-based dedup in selectEvidence) is in place but does not address the root cause.

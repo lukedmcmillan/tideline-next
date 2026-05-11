@@ -8,60 +8,42 @@ const supabase = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-// Topic values must match stories.topic column exactly (set by RSS source definition in sources.ts).
-// These are coarse source-level tags, not AI-assigned tracker classifications.
-// See cross_tracker_flags column for AI-assigned tracker tags (cleaned 2026-05-11 backfill).
-// Future architectural upgrade: switch velocity calculation to use cross_tracker_flags containment.
-const TRACKER_TOPICS: Record<string, string[]> = {
-  isa: ["dsm"],
-  bbnj: [],                          // no matching topic — relies entirely on TITLE_KEYWORDS
-  iuu: ["iuu"],
-  "30x30": ["mpa", "conservation"],
-  "blue-finance": ["bluefinance"],   // fixed 2026-05-11: DB uses "bluefinance" (no hyphen), not "blue-finance"
-  plastics: [],                      // "governance" (87 stories) covers BBNJ+CBD+others — too broad; relies on TITLE_KEYWORDS
-  "imo-shipping": ["shipping"],
-  "offshore-wind": [],               // no matching topic — relies entirely on TITLE_KEYWORDS
-  "cites-marine": [],                // no matching topic — relies entirely on TITLE_KEYWORDS
-  "wto-fisheries": [],               // "fisheries" (316 stories) far too broad; relies on TITLE_KEYWORDS
+// Maps each tracker slug to its cross_tracker_flags value (underscore form).
+// Source of truth: PULSE_SCORE_METHODOLOGY.md §4 Domain Thresholds.
+// cross_tracker_flags is the AI-assigned, classifier-verified tracker column — use this,
+// NOT stories.topic (coarse RSS source tag, contaminated for several trackers).
+// Architecture note: velocity was previously queried via stories.topic. Switched to
+// cross_tracker_flags on 2026-05-11 after discovering topic='bluefinance' returns ESG/energy
+// stories unrelated to ocean blue finance, and topic='shipping' includes 94+ geopolitical
+// stories (Hormuz, naval) not within IMO regulatory scope.
+const TRACKER_FLAG: Record<string, string> = {
+  isa:              "isa",
+  bbnj:             "bbnj",
+  iuu:              "iuu",
+  "30x30":          "30x30",
+  "blue-finance":   "blue_finance",
+  plastics:         "plastics",
+  "imo-shipping":   "imo_shipping",
+  "offshore-wind":  "offshore_wind",
+  "cites-marine":   "cites_marine",
+  "wto-fisheries":  "wto_fisheries",
 };
 
 const INSTITUTIONAL_MULTIPLIER: Record<string, number> = {
-  "imo-shipping": 0.75,
+  "imo-shipping":  0.75,
   "wto-fisheries": 0.75,
-  isa: 0.75,
-  bbnj: 0.46,
-  plastics: 0.46,
-  "30x30": 0.85,
-  iuu: 0.85,
-  "blue-finance": 0.80,
+  isa:             0.75,
+  bbnj:            0.46,
+  plastics:        0.46,
+  "30x30":         0.85,
+  iuu:             0.85,
+  "blue-finance":  0.80,
   "offshore-wind": 0.85,
-  "cites-marine": 0.75,
+  "cites-marine":  0.75,
 };
 
 const DECISION_PATTERN =
   /ratif|adopt|enforc|sanction|decision|resolution|agreement|signed|implement|deadline|entry into force|enters into force|in force|final text|mandate|conclude|binding|approved|adopted|enacted|compliance|effective/i;
-
-// Title keywords to narrow or supplement story matching beyond the coarse topic field.
-// Applied to ALL recent stories (minus EXCLUDED_TOPICS) as a secondary pass.
-// Source of truth for tracker scope: PULSE_SCORE_METHODOLOGY.md §4 Domain Thresholds.
-// If the methodology changes, these patterns MUST change with it.
-const TITLE_KEYWORDS: Record<string, RegExp> = {
-  // IMO-specific regulatory language — excludes geopolitical shipping (Hormuz, naval, piracy)
-  "imo-shipping": /\b(imo|mepc|marpol|cii|fueleu|ghg|shipping emissions|decarbonisation|net zero shipping|carbon intensity|eu ets shipping|green shipping)\b/i,
-  // Offshore wind licencing and planning — no matching topic in DB
-  "offshore-wind": /\b(offshore wind|wind energy|boem|crown estate|seabed leasing|wind farm|wind auction|wind licence)\b/i,
-  // BBNJ treaty — UN High Seas Agreement; stories land in governance/all topic
-  "bbnj": /\b(bbnj|BBNJ|high seas treaty|high seas agreement|high seas biodiversity|ABNJ|beyond national jurisdiction|marine biodiversity.{0,30}national jurisdiction)\b/i,
-  // WTO fisheries subsidies — "fisheries" topic (316 stories) is far too broad to use alone
-  "wto-fisheries": /\b(fisheries subsidies|WTO.{0,20}fish|fish.{0,20}WTO|harmful.{0,15}subsidies|Fish Two|fisheries.*WTO agreement)\b/i,
-  // CITES marine species — no matching topic; CoP listing decisions and species trade
-  "cites-marine": /\b(CITES|shark.{0,15}(list|trade|ban|protection)|ray.{0,15}(list|trade|protection)|seahorse.{0,15}trade|cites.{0,15}cop|appendix.{0,10}(shark|ray))\b/i,
-  // Plastics treaty INC sessions — stories land in governance topic (shared with BBNJ etc.)
-  "plastics": /\b(plastics treaty|plastic.{0,10}treaty|INC-[1-9]|end plastic pollution|global plastics|plastic pollution.{0,20}(agreement|negotiat|treaty))\b/i,
-};
-
-// Topics excluded from broad title-keyword scan (irrelevant to governance trackers)
-const EXCLUDED_TOPICS = ["science", "health", "technology", "sports", "entertainment"];
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -78,81 +60,32 @@ function deduplicateByTitle<T extends { title: string }>(stories: T[]): T[] {
 }
 
 export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
-  const topics = TRACKER_TOPICS[trackerSlug];
-  if (!topics) throw new Error(`Unknown tracker slug: ${trackerSlug}`);
+  const flag = TRACKER_FLAG[trackerSlug];
+  if (!flag) throw new Error(`Unknown tracker slug: ${trackerSlug}`);
 
   const now = asOf ?? new Date();
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const d60 = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
-  const titlePattern = TITLE_KEYWORDS[trackerSlug];
+  // Current 30d stories — filtered by AI-assigned tracker flag, not coarse topic tag
+  const { data: currentRaw } = await supabase
+    .from("stories")
+    .select("id, title, published_at, short_summary")
+    .contains("cross_tracker_flags", [flag])
+    .gte("published_at", d30)
+    .order("published_at", { ascending: false });
 
-  // Current 30d stories (by topic tag) — guard against empty array (PostgREST returns error on .in("topic", []))
-  const { data: topicStories } = topics.length > 0
-    ? await supabase
-        .from("stories")
-        .select("id, title, published_at, short_summary")
-        .in("topic", topics)
-        .gte("published_at", d30)
-        .order("published_at", { ascending: false })
-    : { data: [] };
+  // Previous 30d stories (30-60 days ago)
+  const { data: prevRaw } = await supabase
+    .from("stories")
+    .select("id, title")
+    .contains("cross_tracker_flags", [flag])
+    .gte("published_at", d60)
+    .lt("published_at", d30);
 
-  // Also fetch by title keywords if available (broader net, excluding irrelevant topics)
-  let titleStories: { id: string; title: string; published_at: string; short_summary: string | null }[] = [];
-  if (titlePattern) {
-    const { data: allRecent } = await supabase
-      .from("stories")
-      .select("id, title, published_at, short_summary, topic")
-      .gte("published_at", d30)
-      .not("topic", "is", null)
-      .order("published_at", { ascending: false })
-      .limit(500);
-    titleStories = (allRecent || [])
-      .filter(s => !EXCLUDED_TOPICS.includes(s.topic || ""))
-      .filter(s => titlePattern.test(s.title));
-  }
-
-  // Merge, deduplicate by ID then by title
-  const seenIds = new Set<string>();
-  const mergedStories = [...(topicStories || []), ...titleStories].filter(s => {
-    if (seenIds.has(s.id)) return false;
-    seenIds.add(s.id);
-    return true;
-  });
-  const currentStories = deduplicateByTitle(mergedStories);
+  const currentStories = deduplicateByTitle(currentRaw || []);
+  const prevAll = deduplicateByTitle(prevRaw || []);
   const currentCount = currentStories.length;
-
-  // Previous 30d stories (30-60 days ago) — same empty-array guard
-  const { data: prevTopicStories } = topics.length > 0
-    ? await supabase
-        .from("stories")
-        .select("id, title")
-        .in("topic", topics)
-        .gte("published_at", d60)
-        .lt("published_at", d30)
-    : { data: [] };
-
-  let prevTitleStories: { id: string; title: string }[] = [];
-  if (titlePattern) {
-    const { data: allPrev } = await supabase
-      .from("stories")
-      .select("id, title, topic")
-      .gte("published_at", d60)
-      .lt("published_at", d30)
-      .not("topic", "is", null)
-      .limit(500);
-    prevTitleStories = (allPrev || [])
-      .filter(s => !EXCLUDED_TOPICS.includes(s.topic || ""))
-      .filter(s => titlePattern.test(s.title));
-  }
-
-  const prevIds = new Set<string>();
-  const prevMerged = [...(prevTopicStories || []), ...prevTitleStories].filter(s => {
-    if (prevIds.has(s.id)) return false;
-    prevIds.add(s.id);
-    return true;
-  });
-  const prevAll = deduplicateByTitle(prevMerged);
   const prevCount = prevAll.length;
 
   // Component A: Story Volume Trend (40%)
@@ -161,7 +94,7 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
 
   // Component B: Recency (35%)
   let scoreB = 2;
-  if (currentStories && currentStories.length > 0) {
+  if (currentStories.length > 0) {
     const latest = new Date(currentStories[0].published_at);
     const daysSince = (now.getTime() - latest.getTime()) / (24 * 60 * 60 * 1000);
     scoreB = Math.max(2, parseFloat((10 * Math.exp(-0.05 * daysSince)).toFixed(1)));
@@ -237,7 +170,13 @@ export async function calculateVelocityScore(trackerSlug: string, asOf?: Date) {
 
   if (error) console.error(`velocity_scores insert error for ${trackerSlug}:`, error.message);
 
-  return { trackerSlug, score, scoreA: Math.round(scoreA * multiplier * 10) / 10, scoreB: Math.round(scoreB * multiplier * 10) / 10, scoreC: Math.round(scoreC * multiplier * 10) / 10, currentCount, momentumDirection, interpretation };
+  return {
+    trackerSlug, score,
+    scoreA: Math.round(scoreA * multiplier * 10) / 10,
+    scoreB: Math.round(scoreB * multiplier * 10) / 10,
+    scoreC: Math.round(scoreC * multiplier * 10) / 10,
+    currentCount, momentumDirection, interpretation,
+  };
 }
 
 // ── Shared week-deduplication helper ─────────────────────────────────────────
