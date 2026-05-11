@@ -261,6 +261,9 @@ export async function GET(request: NextRequest) {
       totalSaved++
       if (upserted && upserted.length > 0) {
         const s = upserted[0]
+        // Dead code: short_summary is null at RSS insert time (summary written later by summarise-pending).
+        // Matcher now runs in summarise-pending after short_summary is written. Retain for safety;
+        // remove in a future cleanup commit (see tasks/todo.md).
         if (s.short_summary && !s.entities_extracted) {
           try {
             const matchResult = await matchEntitiesToStory(s.id)

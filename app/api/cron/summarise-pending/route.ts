@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { scoreConfidence } from '@/app/lib/confidence'
+import { matchEntitiesToStory } from '@/lib/entity-matching'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -291,6 +292,8 @@ export async function GET(request: Request) {
   let pendingReviewCount = 0
   let sourceUnavailableCount = 0
   const errors: string[] = []
+  let entitiesMatched = 0
+  let entityMatchErrors = 0
 
   for (const story of pending) {
     try {
@@ -344,6 +347,19 @@ export async function GET(request: Request) {
         })
         .eq('id', story.id)
       summarised++
+
+      // Entity matching — runs after short_summary is written to the story.
+      // entities_extracted = true whenever the matcher ran (even if 0 matches found).
+      // try/catch ensures a failed match never aborts other stories in this cron run.
+      try {
+        const matchResult = await matchEntitiesToStory(story.id)
+        if (matchResult.matched > 0) entitiesMatched += matchResult.matched
+      } catch (e) {
+        entityMatchErrors++
+        console.error(`[entity-match] failed for story ${story.id}:`, e)
+      }
+      await supabase.from('stories').update({ entities_extracted: true }).eq('id', story.id)
+
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       errors.push(`${story.id}: ${msg}`)
@@ -364,6 +380,10 @@ export async function GET(request: Request) {
     pending_review: pendingReviewCount,
     source_unavailable: sourceUnavailableCount,
     pending: pending.length,
+    entity_matching: {
+      stories_matched: entitiesMatched,
+      errors: entityMatchErrors,
+    },
     errors: errors.length > 0 ? errors : undefined,
   })
 }

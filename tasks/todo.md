@@ -587,6 +587,19 @@ Fix sequence: cleanup (Bug 3+4) → dedupe (Bug 1) → tiny-PDF visibility (Bug 
 
 ---
 
+## CLEANUP: Remove dead entity-matching guard from fetch-feeds
+
+**Priority:** P3 (low — cosmetic debt, not blocking)
+**Discovered:** 2026-05-11
+
+`app/api/cron/fetch-feeds/route.ts` line ~264: `if (s.short_summary && !s.entities_extracted)` guard
+is dead code. `short_summary` is always null at RSS insert time. Entity matching now runs in
+`summarise-pending` after `short_summary` is written. Remove this block (and its surrounding
+`storiesMatched`/`totalEntityMentions`/`matchingErrors` counters + response fields) once the
+`summarise-pending` fix has been stable in production for one week.
+
+---
+
 ## Post-workspace-cleanup: three items for next session (filed 2026-05-08)
 
 ### 1. RAG Bug 3 + Bug 4 cleanup (20 min)
