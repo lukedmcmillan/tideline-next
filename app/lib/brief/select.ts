@@ -92,8 +92,8 @@ export function selectLead(
     .filter(t => userTopics.includes(t.tracker_slug))
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
 
-  // Mode a: story-led
-  if (topStory && maxSig >= 50) {
+  // Mode a: story-led (significance threshold 35 — any summarised story of moderate relevance)
+  if (topStory && maxSig >= 35) {
     return {
       type:           'story',
       headline:       cleanTitle(topStory.title),
@@ -102,14 +102,28 @@ export function selectLead(
     };
   }
 
-  // Mode b: hybrid — tracker framing, story content
-  if (topStory) {
-    const trackerPart = topTracker
-      ? `${TRACKER_LABELS[topTracker.tracker_slug] || topTracker.tracker_slug} at Pulse ${topTracker.score.toFixed(1)}`
-      : 'Ocean conditions';
+  // Mode b: hybrid — tracker framing + story content.
+  // Guard: only fires when topTracker is WATCH band or above (score >= 4.0 per methodology Section 3).
+  // A LOW-band tracker must never headline the brief.
+  if (topStory && topTracker && topTracker.score >= 4.0) {
+    const trackerPart = `${TRACKER_LABELS[topTracker.tracker_slug] || topTracker.tracker_slug} at Pulse ${topTracker.score.toFixed(1)}`;
+    const cleanStoryTitle = cleanTitle(topStory.title);
     return {
-      type:           'state',
-      headline:       `${trackerPart}. ${cleanTitle(topStory.title)}.`,
+      type:            'state',
+      headline:        `${trackerPart}. ${cleanStoryTitle}.`,
+      subjectHeadline: cleanStoryTitle,   // Bug 1 fix: short title for email subject
+      storyId:         topStory.id,       // Bug 2 fix: exclude from evidence
+      interpretation:  topStory.short_summary ?? topStory.description ?? '',
+    };
+  }
+
+  // LOW-band fallback: story exists but no tracker is WATCH+. Present as story-led
+  // so a quiet tracker never headlines the brief.
+  if (topStory) {
+    return {
+      type:           'story',
+      headline:       cleanTitle(topStory.title),
+      storyId:        topStory.id,
       interpretation: topStory.short_summary ?? topStory.description ?? '',
     };
   }
@@ -153,7 +167,11 @@ export function selectConditions(
     const band = bandForScore(t.score ?? 0);
     let interpretation: string;
     if (t.interpretation && t.interpretation.trim().length > 0) {
-      interpretation = t.interpretation.slice(0, 80);
+      const raw = t.interpretation.trim();
+      // Word-boundary truncation: never cut mid-word
+      interpretation = raw.length > 80
+        ? raw.slice(0, 80).replace(/\s\S+$/, '') + '\u2026'
+        : raw;
     } else {
       switch (band) {
         case 'ELEVATED': interpretation = 'Multiple developments tracked in 30 days.'; break;
@@ -258,7 +276,9 @@ export function selectEvidence(
   lead: LeadItem,
   userTopics: string[],
 ): EvidenceItem[] {
-  const leadId = lead.type === 'story' ? lead.storyId : null;
+  // Read storyId from both story-led and state-led (Mode b) leads — prevents lead from
+  // appearing again in the Evidence section regardless of lead type.
+  const leadId = lead.type === 'story' ? lead.storyId : (lead.storyId ?? null);
   const contentTopics = new Set<string>(
     userTopics.flatMap(t => TRACKER_TO_TOPICS[t] || [t])
   );

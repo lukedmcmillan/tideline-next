@@ -53,7 +53,12 @@ function buildSubject(
   conditions: ConditionRow[],
   events: WatchEvent[],
 ): string {
-  const headline = lead.headline.replace(/\.$/, "").trim();
+  // In Mode b (state type with hybrid framing), headline is a long compound sentence.
+  // Use subjectHeadline (the bare story title) instead for the email subject.
+  const headline = (lead.type === 'state' && lead.subjectHeadline
+    ? lead.subjectHeadline
+    : lead.headline
+  ).replace(/\.$/, "").trim();
   const headlineHasPulse = /Pulse \d+\.?\d*/i.test(headline);
 
   if (headlineHasPulse) {
@@ -197,13 +202,13 @@ export async function GET(request: Request) {
       const userTopics: string[] = sub.topics;
 
       // ── 3a. Async context (1 DB call + 2 in-memory) ──
-      // isFirstBrief: no 'status' column in brief_sends — send_type='production'
-      // already excludes 'skip_no_topics' rows, so this correctly identifies first-timers.
+      // isFirstBrief: any prior production OR test_send means the user has seen a brief.
+      // Exclude 'skip_no_topics' rows only — those are not real sends.
       const { data: prevSends } = await supabase
         .from("brief_sends")
         .select("id")
         .eq("user_id", sub.id)
-        .eq("send_type", "production")
+        .neq("send_type", "skip_no_topics")
         .limit(1);
       const isFirstBrief = !prevSends || prevSends.length === 0;
 

@@ -38,9 +38,11 @@ export interface LeadStory {
 
 /** A lead synthesised from tracker state when no story crosses threshold. */
 export interface LeadStateStatement {
-  type:           'state';
-  headline:       string; // e.g. 'IMO Shipping at Pulse 7.5. MSC 109 in 11 days.'
-  interpretation: string;
+  type:            'state';
+  headline:        string;         // e.g. 'IMO Shipping at Pulse 7.5. MSC 109 in 11 days.'
+  subjectHeadline?: string;        // short story title for email subject (Mode b only)
+  storyId?:        string;         // anchored story ID for evidence dedup (Mode b only)
+  interpretation:  string;
 }
 
 export type LeadItem = LeadStory | LeadStateStatement;

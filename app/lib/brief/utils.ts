@@ -21,7 +21,7 @@ export const TRACKER_TO_TOPICS: Record<string, string[]> = {
   'isa':           ['dsm'],
   'imo-shipping':  ['shipping'],
   '30x30':         ['conservation', 'mpa'],
-  'iuu':           ['fisheries'],
+  'iuu':           ['fisheries', 'iuu'], // stories from Sea Shepherd / Global Fishing Watch use topic:'iuu'
   'wto-fisheries': ['fisheries'],
   'cites-marine':  ['conservation', 'science'],
   'blue-finance':  ['bluefinance'],
