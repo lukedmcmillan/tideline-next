@@ -231,6 +231,22 @@
 
 ## 2026-05-11
 
+### Tracker Canonical List Drift
+
+- **Canonical tracker list lives in 5+ places (TRACKER_LABELS, score-significance prompt, methodology doc, TRACKER_TO_TOPICS, tracker routes). Drift caused two production bugs in May 2026. Refactor candidate: single `lib/trackers.ts` source of truth.** The score-significance prompt used `whaling`, `ocean_carbon`, `msp`, `arctic` (deprecated aspirational slugs) while all other sources had moved to `wto_fisheries`, `cites_marine`, `plastics`, `offshore_wind`. 295+ stories carried incorrect/deprecated cross_tracker_flags for months before detection.
+
+### Blue Finance Pulse Score Data Contamination
+
+- **Blue Finance Pulse Score pre-backfill was built on contaminated data.** 21 stories incorrectly tagged `blue_finance`, mostly aquaculture VC rounds and fisheries subsidies that are not TNFD/blue bond instruments. Score will drop after backfill, which is correct per PULSE_SCORE_METHODOLOGY.md §6. Additionally: `velocity.ts` queries `topic IN ['blue-finance', 'esg']` but DB topic value is `bluefinance` (no hyphen) — near-zero topic matches, so blue-finance velocity was already undercooked regardless of cross_tracker_flags.
+
+### IMO Shipping Pulse Score Data Contamination
+
+- **IMO Shipping Pulse Score pre-backfill included 94 geopolitical shipping stories (Hormuz, naval deployments, cruise incidents) that are not IMO regulatory activity.** The published 70% TPR in PULSE_SCORE_METHODOLOGY.md §5 was measured on contaminated classifier output and needs re-validation against cleaned data. Note: velocity.ts uses `topic = 'shipping'` for the count — Hormuz stories have `topic = 'shipping'` so they still affect velocity regardless of the cross_tracker_flags backfill. Fixing velocity accuracy requires either: (a) tightening title keyword regex, or (b) using cross_tracker_flags for velocity (architectural change).
+
+### Feed Coverage — Thin Tracker Domains
+
+- **offshore_wind (4 stories/30d), cites_marine (3), plastics (1) appear structurally under-covered.** These were formerly coded as impossible to tag (old prompt used deprecated slugs). Low story counts will cause structurally noisy velocity scores regardless of classifier quality. Verify whether RSS feed sources cover these domains adequately — if not, add targeted sources before treating their Pulse Scores as reliable signals.
+
 ### Morning Brief — Structural Feed Duplication
 
 - **stories table has structural duplication: same real-world event, multiple rows from different press releases.** The Canada $957.8M Small Craft Harbours announcement surfaced as 6 DFO press release rows (3 on the same day, different officials quoted). These are not near-duplicates at the text level — headlines differ enough to pass word-overlap dedup — but they represent one event. This pattern surfaces in: feed (same story appears multiple times), brief lead+evidence dedup (anchor-based filter needed as workaround), and workspace context (entity signal noise). **Canonical clustering is the structural fix**: hash on `(entity_set + dollar_figure + date_window)` at ingest, or post-hoc event-cluster table. Workaround (anchor-based dedup in selectEvidence) is in place but does not address the root cause.
