@@ -1,6 +1,41 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-08 — Entity alias picker shipped, RAG pipeline diagnosed
+## Last session: 2026-05-11 — Morning brief fixes, classifier rewrite, velocity fix, InforMEA HTML
+
+WHAT SHIPPED (2026-05-11):
+
+- **Morning brief fixes 1-5** — Subject line dedup (double-Pulse guard), brief dedup (skip if sent < 20 hours ago), first-brief gating (no brief if 0 stories match user topics), conditions truncation fix (was cutting mid-sentence), Mode b LOW-band guard (suppress brief if all trackers LOW). All committed and deployed.
+- **Score-significance classifier rewritten** — verbatim methodology definitions (CRITICAL/HIGH/MEDIUM/LOW) per PULSE_SCORE_METHODOLOGY.md, replacing the old approximate pattern. 235-story backfill run; significance distribution shifted ~8% toward CRITICAL/HIGH. Committed.
+- **velocity.ts architectural fix** — query path changed from `WHERE topic = slug` to `.contains("cross_tracker_flags", [slug])`. Old path read from `stories.topic` (unreliable after classifier backfill); new path reads from `cross_tracker_flags` (the canonical source of truth). All 10 tracker Pulse Scores recalculated. Committed.
+- **InforMEA HTML fallback (Option B)** — `source_format text CHECK IN ('pdf','html','mixed')` added to both `documents` and `document_queue`. `canonical_url` and `subtitle` added to `documents`. Scraper now accepts `dec.link` HTML URL when no PDF attached. Machine-safe slug `{TREATY}_DEC_{major}_{minor}[_REV_{ref}]` as `file_name`. `parseDecisionId()` in processor reverses slug to human-readable title. Migration `20260511_informea_html_support.sql` applied in Studio and verified.
+- **InforMEA live run** — 180 records queued: CITES 38, IWC 130, CBD 8, Barcelona 1, ASCOBANS 3. All `source_format='html'`. 318 deduped (pre-existing from April 13 old scraper run).
+- **source_format backfill** — 10,379 pre-existing null PDF rows backfilled `source_format='pdf'` via `scripts/backfill-source-format.ts`.
+- **Lessons + context updated** — `tasks/lessons.md` entries added (scraper scope discipline, InforMEA run history, IWC discoverability, revised decisions, velocity query path). `TIDELINE-CONTEXT.md` scraper status block updated to LIVE.
+- **Commits**: `58d5a54` (InforMEA impl), `c84d08d` (lessons/context).
+
+PENDING MIGRATIONS:
+- None. `20260511_informea_html_support.sql` applied and verified (4 columns confirmed present).
+
+KNOWN ISSUES (carry forward):
+- **IWC discoverability**: 130 decisions queued with no tracker surface. Will rely on Claude topic tags (cetacean/whaling/marine mammals) for discoverability. Verify after first processor run before deciding tracker reinstatement.
+- **OpenAlex DOI null rows**: 5,607 rows with `source_format=NULL` — DOIs often resolve to HTML landing pages, not PDFs; processor defaults to PDF path. Deferred audit.
+- **WTO Fisheries Subsidies feed gap**: 0 stories from distinct sources in 90 days. Needs IISD ENB or WTO press office feed.
+- **RAG Bug 1**: 28,337 duplicate chunk rows (33%). Idempotency broken in embed-documents cron.
+- **RAG Bug 2**: 2,711 approved docs with no chunks. Silent failure on image-only PDFs.
+- **RAG Bug 3**: generate-embeddings cron queries dropped 'embeddings' table — failing nightly at 1am.
+- **RAG Bug 4**: app/api/ask/route.ts (61 lines) likely orphaned.
+
+NEXT PRIORITIES (in order):
+1. **Process document_queue HTML records** — run processor-agent on 180 pending InforMEA HTML records; verify IWC topic_tags include cetacean/whaling/marine mammals
+2. **Morning brief regression check** — verify first production brief post-fixes lands clean
+3. **Library viewer search UX** — 2,000+ docs need discoverability surface (faceted search)
+4. **WTO feed gap** — IISD ENB or WTO press office RSS; 0 sources in 90 days is a blind spot
+5. **RAG cleanup** — Bug 3+4 first (20 min), then Bug 1 idempotency patch, then Bug 2 chunking_status
+6. **Single lib/trackers.ts** — canonical tracker list lives in 5+ places; refactor candidate
+
+---
+
+## Previous: 2026-05-08 — Entity alias picker shipped, RAG pipeline diagnosed
 
 WHAT SHIPPED (2026-05-08 — this session):
 
