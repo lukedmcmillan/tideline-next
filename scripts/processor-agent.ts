@@ -324,14 +324,19 @@ Return only corrected JSON. No markdown.`,
 }
 
 const loopMode = process.argv.includes("--loop") || limitArg !== undefined;
+const formatFilter = process.argv.find(a => a.startsWith("--format="))?.split("=")[1] ?? null;
 
 async function processBatch(): Promise<number> {
-  const { data: items, error } = await getSupabase()
+  let query = getSupabase()
     .from("document_queue")
     .select("id, file_url, file_name, is_primary_source, source_domain, source_format")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .limit(BATCH_LIMIT);
+
+  if (formatFilter) query = query.eq("source_format", formatFilter);
+
+  const { data: items, error } = await query;
 
   if (error) {
     console.error("Queue fetch error:", error.message);
@@ -359,7 +364,8 @@ async function processBatch(): Promise<number> {
 async function main() {
   console.log("=== Tideline Library Processor Agent ===");
   const limitDisplay = TOTAL_LIMIT === Infinity ? "unlimited" : String(TOTAL_LIMIT);
-  console.log(`Batch size: ${BATCH_LIMIT} | Limit: ${limitDisplay} | Loop mode: ${loopMode}\n`);
+  const filterDisplay = formatFilter ? ` | Format filter: ${formatFilter}` : "";
+  console.log(`Batch size: ${BATCH_LIMIT} | Limit: ${limitDisplay} | Loop mode: ${loopMode}${filterDisplay}\n`);
 
   let totalProcessed = 0;
   let batchNum = 0;

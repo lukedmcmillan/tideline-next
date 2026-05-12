@@ -109,8 +109,10 @@ export async function GET(request: Request) {
           decodeHtml(s.title),
           s.description || s.short_summary || null
         );
-        if (!summary) return null;
-        return { ...s, short_summary: summary } as StoryRow;
+        // Fall back to existing DB summary if Haiku fails (API outage / credit error)
+        const finalSummary = summary || s.short_summary || null;
+        if (!finalSummary) return null;
+        return { ...s, short_summary: finalSummary } as StoryRow;
       })
     );
     const summarisedStories = allResults.filter((s): s is StoryRow => s !== null);
