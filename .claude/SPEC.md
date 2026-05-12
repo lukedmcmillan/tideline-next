@@ -1,6 +1,39 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-11 — Morning brief fixes, classifier rewrite, velocity fix, InforMEA HTML
+## Last session: 2026-05-12 — InforMEA processing, brief rejection fix, IWC tag verification
+
+WHAT SHIPPED (2026-05-12):
+
+- **InforMEA HTML processor run** — 180 pending `source_format='html'` records processed via `--format=html` flag added to `processor-agent.ts`. Results: IWC ~95 OK, CBD ~5 OK, ASCOBANS 3 OK, CITES 38 FAILED (structural CAPTCHA block), Barcelona 1 FAILED. ~103 total library documents added.
+- **Morning brief fallback fix** — `generate-brief/route.ts` now falls back to `s.short_summary` when Haiku API fails (credit exhaustion, outage). Previously: all `generateSummary()` calls throwing `BadRequestError` → null → `summarisedStories.length=0` → quality gate rejection. Committed.
+- **IWC topic tags verified** — 111 IWC documents confirmed with cetacean/whaling/marine-mammal vocabulary (whale conservation ×37, cetacean conservation ×26, etc.). No IWC tracker reinstatement required.
+- **`--format=html` flag** added to `processor-agent.ts` for targeted queue processing by source_format.
+- **20 stuck `processing` items** reset to `pending` after credit exhaustion mid-run.
+
+PENDING MIGRATIONS:
+- None.
+
+KNOWN ISSUES (carry forward):
+- **CITES HTML blocked**: 38 records `status='failed'` — cites.org returns Cloudflare CAPTCHA to Jina. Not a scraper bug. Options next session: (a) check April 13 PDF run overlap, (b) InforMEA PDF URL fallback, (c) accept gap.
+- **Morning brief re-verification**: Tomorrow's 06:30 UTC cron (2026-05-13) is the verification window for the short_summary fallback fix.
+- **OpenAlex DOI null rows**: 5,607 rows with `source_format=NULL`. Deferred audit.
+- **WTO Fisheries Subsidies feed gap**: 0 stories from distinct sources in 90 days. Needs IISD ENB or WTO press office feed.
+- **RAG Bug 1**: 28,337 duplicate chunk rows (33%). Idempotency broken in embed-documents cron.
+- **RAG Bug 2**: 2,711 approved docs with no chunks. Silent failure on image-only PDFs.
+- **RAG Bug 3**: generate-embeddings cron queries dropped 'embeddings' table — failing nightly at 1am.
+- **RAG Bug 4**: app/api/ask/route.ts (61 lines) likely orphaned.
+
+NEXT PRIORITIES (in order):
+1. **Morning brief regression check** — verify 06:30 UTC cron 2026-05-13 produces a non-empty brief
+2. **CITES gap decision** — check April 13 PDF run overlap; decide whether to accept gap or try InforMEA PDF fallback
+3. **Library viewer search UX** — 2,000+ docs need discoverability surface (faceted search)
+4. **WTO feed gap** — IISD ENB or WTO press office RSS; 0 sources in 90 days is a blind spot
+5. **RAG cleanup** — Bug 3+4 first (20 min), then Bug 1 idempotency patch, then Bug 2 chunking_status
+6. **Single lib/trackers.ts** — canonical tracker list lives in 5+ places; refactor candidate
+
+---
+
+## Previous: 2026-05-11 — Morning brief fixes, classifier rewrite, velocity fix, InforMEA HTML
 
 WHAT SHIPPED (2026-05-11):
 
@@ -10,28 +43,7 @@ WHAT SHIPPED (2026-05-11):
 - **InforMEA HTML fallback (Option B)** — `source_format text CHECK IN ('pdf','html','mixed')` added to both `documents` and `document_queue`. `canonical_url` and `subtitle` added to `documents`. Scraper now accepts `dec.link` HTML URL when no PDF attached. Machine-safe slug `{TREATY}_DEC_{major}_{minor}[_REV_{ref}]` as `file_name`. `parseDecisionId()` in processor reverses slug to human-readable title. Migration `20260511_informea_html_support.sql` applied in Studio and verified.
 - **InforMEA live run** — 180 records queued: CITES 38, IWC 130, CBD 8, Barcelona 1, ASCOBANS 3. All `source_format='html'`. 318 deduped (pre-existing from April 13 old scraper run).
 - **source_format backfill** — 10,379 pre-existing null PDF rows backfilled `source_format='pdf'` via `scripts/backfill-source-format.ts`.
-- **Lessons + context updated** — `tasks/lessons.md` entries added (scraper scope discipline, InforMEA run history, IWC discoverability, revised decisions, velocity query path). `TIDELINE-CONTEXT.md` scraper status block updated to LIVE.
 - **Commits**: `58d5a54` (InforMEA impl), `c84d08d` (lessons/context).
-
-PENDING MIGRATIONS:
-- None. `20260511_informea_html_support.sql` applied and verified (4 columns confirmed present).
-
-KNOWN ISSUES (carry forward):
-- **IWC discoverability**: 130 decisions queued with no tracker surface. Will rely on Claude topic tags (cetacean/whaling/marine mammals) for discoverability. Verify after first processor run before deciding tracker reinstatement.
-- **OpenAlex DOI null rows**: 5,607 rows with `source_format=NULL` — DOIs often resolve to HTML landing pages, not PDFs; processor defaults to PDF path. Deferred audit.
-- **WTO Fisheries Subsidies feed gap**: 0 stories from distinct sources in 90 days. Needs IISD ENB or WTO press office feed.
-- **RAG Bug 1**: 28,337 duplicate chunk rows (33%). Idempotency broken in embed-documents cron.
-- **RAG Bug 2**: 2,711 approved docs with no chunks. Silent failure on image-only PDFs.
-- **RAG Bug 3**: generate-embeddings cron queries dropped 'embeddings' table — failing nightly at 1am.
-- **RAG Bug 4**: app/api/ask/route.ts (61 lines) likely orphaned.
-
-NEXT PRIORITIES (in order):
-1. **Process document_queue HTML records** — run processor-agent on 180 pending InforMEA HTML records; verify IWC topic_tags include cetacean/whaling/marine mammals
-2. **Morning brief regression check** — verify first production brief post-fixes lands clean
-3. **Library viewer search UX** — 2,000+ docs need discoverability surface (faceted search)
-4. **WTO feed gap** — IISD ENB or WTO press office RSS; 0 sources in 90 days is a blind spot
-5. **RAG cleanup** — Bug 3+4 first (20 min), then Bug 1 idempotency patch, then Bug 2 chunking_status
-6. **Single lib/trackers.ts** — canonical tracker list lives in 5+ places; refactor candidate
 
 ---
 

@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## 2026-05-12
+
+- **IWC discoverability via library topic tags verified.** 111 IWC documents processed with reliable whaling/cetacean/marine-mammal vocabulary across 7 distinct tag classes (whale conservation ×37, cetacean conservation ×26, marine conservation ×18, whaling management ×17, whaling regulation ×16, cetacean management ×11, marine mammal protection ×8). Option (b) from last night was correct — no IWC tracker reinstatement required. Topic-tag-based discovery is sufficient for tracker-orphaned MEA content.
+
+- **CITES decisions hit structural Cloudflare/CAPTCHA block during processing.** 38 records queued May 11 (cites.org HTML URLs) all failed as "Not relevant" — Jina received the security verification page, not decision text. This is a site access pattern, not a scraper bug. Do NOT build a headless-browser bypass. Next-session options: (a) check overlap with April 13 PDF run for coverage, (b) try InforMEA PDF URL fallback for CITES decisions if attachments exist in OData, (c) accept gap and note it in feed coverage audit. Decision deferred.
+
+- **Morning brief quality gate "Zero passing stories" traced to Anthropic credit exhaustion.** On 2026-05-12 07:00 UTC, `generateSummary()` threw `BadRequestError: credit balance too low` for every candidate story, all caught as `null`, collapsing `summarisedStories` to empty array — quality gate rejected with 0 passing stories. Root cause: no fallback when Haiku API fails. Fix: `finalSummary = summary || s.short_summary || null` in `generate-brief/route.ts`. DB-stored `short_summary` is now the resilience layer when API is unavailable. Re-verification window: 06:30 UTC 2026-05-13.
+
 ## 2026-05-11
 
 - **Scraper scope discipline**: Dry-run scripts preview scope narrowly (e.g. `--days 180`); live scrapers default to no time cap and run full history. Pattern: make `--days` a required argument with no implicit default in any scraper. The April 13 and May 11 InforMEA runs both exhibited this — records were correct but scope was wider than the dry-run preview suggested.
