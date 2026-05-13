@@ -344,3 +344,7 @@
 ### Supabase Count Queries
 
 - **Supabase JS client count queries silently cap at 1,000 rows** — A `COUNT(column)` query or `select('*', { count: 'exact' })` without `head: true` on a table with >1,000 rows can return wrong results if the underlying query returns rows rather than the aggregate. Today, a diagnostic script suggested "96.9% of stories missing summaries, pipeline broken for 3 weeks" — the real number was 19.6% missing with a clean explanation (post-RSS-source-addition backlog). The fault was a count query hitting the row cap and producing a meaningless ratio. Lesson: when a count looks suspiciously high or low, verify directly in Supabase Studio (no row limit) before drawing conclusions. For programmatic counts in the JS client, always use `.select('*', { count: 'exact', head: true })` — `head: true` returns only the count, not rows, and bypasses the row cap.
+
+### Bot-Block Strategy — Phase 1 (2026-05-13)
+
+- **Phase 1 of bot-block strategy shipped.** Foundation utility built (`app/lib/http-client.ts`) and all 5 verification tests passing. No production scraper migrated yet. Canonical Tideline UA established. robots.txt compliance via robots-parser (24h cache, fail-open). Per-domain rate limiting (5s default, override list for OpenAlex/Jina/Google APIs). About-crawler public page deployed at `/about-our-crawler`. Next: Phase 2 migration of high-value direct-fetch scrapers (scraper-informea, scraper-un-library, scraper-ngo-reports direct fallback, queue PDF processor).
