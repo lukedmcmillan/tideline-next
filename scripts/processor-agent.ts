@@ -4,6 +4,7 @@ config({ path: ".env.local" });
 
 import { extractText } from "unpdf";
 import { randomUUID } from "crypto";
+import { fetchAsTideline, RobotsBlocked } from "../app/lib/http-client";
 
 let _supabase: any;
 function getSupabase() {
@@ -107,14 +108,13 @@ function parseDecisionId(fileName: string): string | null {
   return `${baseTitle} (Rev. ${revFormatted})`;
 }
 
-// Fetch page text via Jina reader (handles JS-rendered pages)
+// Fetch page text via Jina reader (handles JS-rendered pages).
+// r.jina.ai has a 0ms rate-limit override in http-client.ts (Jina manages its own
+// crawl etiquette toward the target domain; Tideline is not the direct HTTP client).
 async function fetchViaJina(url: string): Promise<string> {
   const jinaKey = process.env.JINA_API_KEY;
-  const res = await fetch(`https://r.jina.ai/${url}`, {
-    headers: {
-      "User-Agent": "Tideline Library Bot/1.0",
-      ...(jinaKey ? { "Authorization": `Bearer ${jinaKey}` } : {}),
-    },
+  const res = await fetchAsTideline(`https://r.jina.ai/${url}`, {
+    headers: jinaKey ? { "Authorization": `Bearer ${jinaKey}` } : {},
   });
   if (!res.ok) throw new Error(`Jina HTTP ${res.status}`);
   return res.text();
@@ -158,14 +158,16 @@ async function processItem(item: {
       return;
     }
   } else {
-    // PDF path: download and extract text
+    // PDF path: download with canonical Tideline UA + robots.txt compliance
     try {
-      const res = await fetch(item.file_url, {
-        headers: { "User-Agent": "Tideline Library Bot/1.0" },
-      });
+      const res = await fetchAsTideline(item.file_url);
       if (!res.ok) { await markFailed(item.id, `Download HTTP ${res.status}`); return; }
       pdfBuffer = await res.arrayBuffer();
     } catch (err) {
+      if (err instanceof RobotsBlocked) {
+        await markFailed(item.id, `RobotsBlocked: ${err.domain} — ${err.rule}`);
+        return;
+      }
       await markFailed(item.id, `Download error: ${err}`);
       return;
     }
@@ -325,6 +327,7 @@ Return only corrected JSON. No markdown.`,
 
 const loopMode = process.argv.includes("--loop") || limitArg !== undefined;
 const formatFilter = process.argv.find(a => a.startsWith("--format="))?.split("=")[1] ?? null;
+const domainFilter = process.argv.find(a => a.startsWith("--domain="))?.split("=")[1] ?? null;
 
 async function processBatch(): Promise<number> {
   let query = getSupabase()
@@ -335,6 +338,7 @@ async function processBatch(): Promise<number> {
     .limit(BATCH_LIMIT);
 
   if (formatFilter) query = query.eq("source_format", formatFilter);
+  if (domainFilter) query = query.eq("source_domain", domainFilter);
 
   const { data: items, error } = await query;
 
@@ -364,7 +368,10 @@ async function processBatch(): Promise<number> {
 async function main() {
   console.log("=== Tideline Library Processor Agent ===");
   const limitDisplay = TOTAL_LIMIT === Infinity ? "unlimited" : String(TOTAL_LIMIT);
-  const filterDisplay = formatFilter ? ` | Format filter: ${formatFilter}` : "";
+  const filterDisplay = [
+    formatFilter ? `Format: ${formatFilter}` : "",
+    domainFilter ? `Domain: ${domainFilter}` : "",
+  ].filter(Boolean).map(s => ` | ${s}`).join("");
   console.log(`Batch size: ${BATCH_LIMIT} | Limit: ${limitDisplay} | Loop mode: ${loopMode}${filterDisplay}\n`);
 
   let totalProcessed = 0;

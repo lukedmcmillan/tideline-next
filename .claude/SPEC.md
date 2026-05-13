@@ -477,6 +477,7 @@ Priority order:
 - Next: responsive QA at 360/390/414/430px and 1200/1440px
 
 ## Known issues / debt
+- **scraper-un-library — DEFERRED 2026-05-13.** Phase 2A investigation confirmed: OAI-PMH endpoint is robots.txt-compliant but currently surfaces only historical decolonisation/sanctions/apartheid records (1996–2015 publication dates) being retroactively catalogued. Invenio /search endpoint has ocean content with proper UNBIS subject filtering but is robots.txt-disallowed (Disallow: /search). No code-only fix is possible. Outreach required: email library-ny@un.org requesting machine access to search API for research crawler. Revisit after response (or after OAI-PMH cycles to a more recent cataloguing batch). Current state: OAI-PMH + UNBIS in-memory filter code written but not committed.
 - Firecrawl MCP not connecting on Windows — use Jina fallback
 - community-documents POST bug fix pending push
 - Next.js middleware.ts deprecated — migrate to proxy convention

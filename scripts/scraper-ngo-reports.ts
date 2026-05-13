@@ -2,6 +2,7 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 import { createClient } from "@supabase/supabase-js";
+import { fetchAsTideline, RobotsBlocked } from "../app/lib/http-client";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,17 +46,19 @@ interface Report {
 
 // --- Jina Reader ---
 
+// r.jina.ai has 0ms rate-limit override (Jina is a proxy; it manages crawl etiquette
+// toward the target domain). Canonical Tideline UA is added automatically.
 async function fetchJinaText(url: string): Promise<string | null> {
   if (!JINA_KEY) return null;
   try {
-    const res = await fetch(`https://r.jina.ai/${url}`, {
+    const res = await fetchAsTideline(`https://r.jina.ai/${url}`, {
       headers: {
         Authorization: `Bearer ${JINA_KEY}`,
         Accept: "text/plain",
         "X-Return-Format": "markdown",
         "X-Timeout": "10",
       },
-      signal: AbortSignal.timeout(15000),
+      timeoutMs: 15000,
     });
     if (!res.ok) return null;
     return await res.text();
@@ -64,18 +67,18 @@ async function fetchJinaText(url: string): Promise<string | null> {
   }
 }
 
+// Direct fallback when Jina is unavailable. fetchAsTideline enforces robots.txt
+// compliance + rate limiting + canonical UA. Throws RobotsBlocked — caller handles.
 async function fetchPage(url: string): Promise<string | null> {
   const jina = await fetchJinaText(url);
   if (jina && jina.length > 200) return jina;
-  // Fallback: direct fetch
+  // Fallback: direct fetch with canonical Tideline UA
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Tideline/1.0 (thetideline.co)" },
-      signal: AbortSignal.timeout(15000),
-    });
+    const res = await fetchAsTideline(url, { timeoutMs: 15000 });
     if (!res.ok) return null;
     return await res.text();
-  } catch {
+  } catch (err) {
+    if (err instanceof RobotsBlocked) throw err; // re-throw for caller to handle
     return null;
   }
 }
@@ -247,9 +250,11 @@ async function isAlreadyQueued(fileUrl: string, title: string, org: string): Pro
   return false;
 }
 
-async function queueReport(report: Report, source: Source): Promise<boolean> {
+async function queueReport(report: Report, source: Source, dryRun: boolean): Promise<boolean> {
   const exists = await isAlreadyQueued(report.source_url, report.title, report.organisation);
   if (exists) return false;
+
+  if (dryRun) return true; // count as would-be queued, no DB write
 
   const dedupKey = `${report.organisation}_${report.title}`.slice(0, 200).replace(/[^a-zA-Z0-9]/g, "_");
 
@@ -276,7 +281,8 @@ function sleep(ms: number) {
 // --- Main ---
 
 async function main() {
-  console.log("=== Tideline NGO Report Scraper ===\n");
+  const dryRun = process.argv.includes("--dry-run");
+  console.log(`=== Tideline NGO Report Scraper${dryRun ? " (DRY RUN — no DB writes)" : ""} ===\n`);
 
   const breakdown: Record<string, number> = {};
   let totalQueued = 0;
@@ -302,7 +308,7 @@ async function main() {
       let skipped = 0;
 
       for (const report of reports) {
-        const ok = await queueReport(report, source);
+        const ok = await queueReport(report, source, dryRun);
         if (ok) {
           queued++;
           totalQueued++;
@@ -312,18 +318,24 @@ async function main() {
         }
       }
 
-      console.log(`  Queued: ${queued}, Skipped (duplicate): ${skipped}`);
+      console.log(`  ${dryRun ? "Would queue" : "Queued"}: ${queued}, Skipped (duplicate): ${skipped}`);
       sourcesProcessed++;
     } catch (err) {
+      if (err instanceof RobotsBlocked) {
+        console.log(`  RobotsBlocked: domain=${err.domain} rule="${err.rule}" — skipping source`);
+        continue;
+      }
       console.error(`  ERROR processing ${source.name}:`, err instanceof Error ? err.message : err);
     }
 
-    // Rate limit between sources
+    // Rate limit between sources (fetchAsTideline handles per-domain limits;
+    // this extra gap avoids hammering Jina with rapid successive source requests)
     await sleep(500);
   }
 
   const parts = SOURCES.map(s => `${s.slug.toUpperCase()}:${breakdown[s.slug] || 0}`).join(" ");
-  console.log(`\nNGO scraper complete: ${totalQueued} total queued across ${sourcesProcessed} sources. Breakdown: ${parts}`);
+  console.log(`\nNGO scraper complete: ${totalQueued} total ${dryRun ? "would be queued" : "queued"} across ${sourcesProcessed} sources. Breakdown: ${parts}`);
+  if (dryRun) console.log("  (DRY RUN — no writes made to document_queue)");
 }
 
 main().catch(err => {
