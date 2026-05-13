@@ -1,4 +1,8 @@
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+
 import { createClient } from "@supabase/supabase-js";
+import { fetchAsTideline, RobotsBlocked } from "../app/lib/http-client";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,10 +177,7 @@ async function fetchDecisions(treatyId: string, skip: number): Promise<ODataDeci
     `${BASE}/Decisions?$filter=treaty eq '${treatyId}'` +
     `&$expand=title,files&$top=${PAGE_SIZE}&$skip=${skip}&$format=json`;
 
-  const res = await fetch(url, {
-    redirect: "follow",
-    headers: { "User-Agent": "Tideline Library Bot/1.0" },
-  });
+  const res = await fetchAsTideline(url, { redirect: "follow" });
 
   if (!res.ok) {
     console.log(`  HTTP ${res.status} for treaty=${treatyId} skip=${skip}`);
@@ -201,7 +202,7 @@ interface TreatyResult {
 // Statuses that mean a decision is not in force / adopted — skip these
 const EXCLUDED_STATUSES = new Set(["draft", "recommended", "withdrawn", "deleted", ""]);
 
-async function scrapeTreaty(treaty: { id: string; name: string; filterTitle: boolean }): Promise<TreatyResult> {
+async function scrapeTreaty(treaty: { id: string; name: string; filterTitle: boolean }, dryRun = false): Promise<TreatyResult> {
   console.log(`\n[${treaty.name}] Starting (filter=${treaty.filterTitle})`);
   let skip = 0;
   const result: TreatyResult = {
@@ -211,7 +212,16 @@ async function scrapeTreaty(treaty: { id: string; name: string; filterTitle: boo
   let processed = 0;
 
   while (true) {
-    const decisions = await fetchDecisions(treaty.id, skip);
+    let decisions: ODataDecision[];
+    try {
+      decisions = await fetchDecisions(treaty.id, skip);
+    } catch (err) {
+      if (err instanceof RobotsBlocked) {
+        console.log(`  [${treaty.name}] RobotsBlocked: domain=${err.domain} url=${err.url} rule="${err.rule}" — skipping treaty`);
+        break;
+      }
+      throw err;
+    }
     if (decisions.length === 0) break;
 
     for (const dec of decisions) {
@@ -279,23 +289,28 @@ async function scrapeTreaty(treaty: { id: string; name: string; filterTitle: boo
         continue;
       }
 
-      // Queue
-      const { error } = await supabase.from("document_queue").insert({
-        source_url:        sourceUrl,
-        source_domain:     sourceDomain,
-        file_url:          fileUrl,
-        file_name:         fileName,
-        is_primary_source: true,
-        status:            "pending",
-        source_format:     sourceFormat,
-      });
-
-      if (!error) {
+      // Queue (skipped in dry-run mode)
+      if (dryRun) {
         result.queued++;
         if (sourceFormat === "html") result.queuedHtml++;
-      } else if (!error.message.includes("duplicate")) {
-        result.errors++;
-        if (result.errors <= 3) console.log(`  Insert error: ${error.message}`);
+      } else {
+        const { error } = await supabase.from("document_queue").insert({
+          source_url:        sourceUrl,
+          source_domain:     sourceDomain,
+          file_url:          fileUrl,
+          file_name:         fileName,
+          is_primary_source: true,
+          status:            "pending",
+          source_format:     sourceFormat,
+        });
+
+        if (!error) {
+          result.queued++;
+          if (sourceFormat === "html") result.queuedHtml++;
+        } else if (!error.message.includes("duplicate")) {
+          result.errors++;
+          if (result.errors <= 3) console.log(`  Insert error: ${error.message}`);
+        }
       }
 
       processed++;
@@ -325,8 +340,23 @@ async function scrapeTreaty(treaty: { id: string; name: string; filterTitle: boo
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
-  console.log(`=== Tideline InforMEA OData Scraper${dryRun ? " (DRY RUN)" : ""} ===`);
-  console.log(`Querying ${OCEAN_TREATIES.length} ocean-relevant treaties\n`);
+  console.log(`=== Tideline InforMEA OData Scraper${dryRun ? " (DRY RUN — no DB writes)" : ""} ===`);
+  console.log(`Querying ${OCEAN_TREATIES.length} ocean-relevant treaties`);
+
+  if (dryRun) {
+    // Verify canonical UA by echoing from httpbin
+    try {
+      const echo = await fetchAsTideline("https://httpbin.org/headers", { skipRateLimit: true /* one-off diagnostic, not a scrape target */ });
+      const body = await echo.json() as { headers: Record<string, string> };
+      const h = body.headers;
+      console.log(`[UA CHECK] User-Agent:        ${h["User-Agent"]}`);
+      console.log(`[UA CHECK] From:              ${h["From"]}`);
+      console.log(`[UA CHECK] X-Crawler-Contact: ${h["X-Crawler-Contact"]}`);
+    } catch {
+      console.log("[UA CHECK] Could not reach httpbin.org — skipping UA echo");
+    }
+  }
+  console.log("");
 
   const totals: TreatyResult = {
     queued: 0, queuedHtml: 0, skippedDup: 0, skippedStatus: 0,
@@ -334,7 +364,7 @@ async function main() {
   };
 
   for (const treaty of OCEAN_TREATIES) {
-    const r = await scrapeTreaty(treaty);
+    const r = await scrapeTreaty(treaty, dryRun);
     for (const k of Object.keys(totals) as (keyof TreatyResult)[]) totals[k] += r[k];
     await sleep(DELAY_MS);
   }
