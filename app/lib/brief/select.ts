@@ -72,16 +72,18 @@ export interface GovernanceEventRow {
 export function selectLead(
   stories: StoryRow[],
   trackers: TrackerScoreRow[],
-  userTopics: string[],   // tracker slugs, e.g. ['imo-shipping', 'bbnj']
+  userTopics: string[],        // tracker slugs, e.g. ['imo-shipping', 'bbnj']
+  recentlyLedIds: Set<string> = new Set(), // story IDs that led a brief in the last 7 days
 ): LeadItem {
   // Derive content topic categories from tracker slugs
   const contentTopics = new Set<string>(
     userTopics.flatMap(t => TRACKER_TO_TOPICS[t] || [t])
   );
 
-  // Sort candidates by significance descending; require short_summary
+  // Sort candidates by significance descending; require short_summary.
+  // Exclude stories that have already led a brief in the last 7 days.
   const candidates = [...stories]
-    .filter(s => contentTopics.has(s.topic) && s.short_summary)
+    .filter(s => contentTopics.has(s.topic) && s.short_summary && !recentlyLedIds.has(s.id))
     .sort((a, b) => (b.significance_score ?? 0) - (a.significance_score ?? 0));
 
   const topStory  = candidates[0];

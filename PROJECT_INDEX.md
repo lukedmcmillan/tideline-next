@@ -1,183 +1,284 @@
 # Project Index: Tideline
 
-Generated: 2026-05-08
-
-## Stack
-
-Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4 (inline styles only), Supabase, Stripe, Resend, Anthropic API, Jina, Vercel
+Generated: 2026-05-13 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
 
 ---
 
-## Public Routes (app/)
+## Directory Structure
+
+```
+tideline-next/
+├── app/                    # Next.js App Router
+│   ├── api/                # API route handlers
+│   │   ├── cron/           # Scheduled jobs (20 routes)
+│   │   ├── entities/       # Entity CRUD + search
+│   │   ├── workspace/      # Workspace ask + quick-note
+│   │   ├── admin/          # Admin doc review + upload
+│   │   ├── library/        # Document library routes
+│   │   ├── projects/       # Project + draft routes
+│   │   └── ...             # Auth, stories, tracker data, Stripe, etc.
+│   ├── lib/                # Shared server-side modules (20 files)
+│   ├── platform/           # Protected platform UI (App Router shell)
+│   └── [public pages]      # /, /sign-in, /pricing, /legal, /admin
+├── components/             # Shared React components (34 files)
+├── lib/                    # Top-level shared libs (entity matching, emails, PDF)
+├── scripts/                # Manual one-off scripts (36 files)
+├── __tests__/              # Vitest tests (1 file)
+└── supabase/               # Migrations
+```
+
+---
+
+## Entry Points
 
 | Path | Purpose |
 |------|---------|
-| `/` | Marketing homepage — PROTECTED, do not modify |
-| `/login` | Magic link sign-in |
-| `/sign-in` | Google OAuth sign-in |
-| `/start` | Trial signup flow |
-| `/onboarding` | Topic + timezone setup |
-| `/subscribe` | Stripe Elements checkout |
-| `/upgrade` | Upgrade prompt |
-| `/pricing` | Pricing page |
-| `/demo` | Demo page |
-| `/survey` | User survey |
-| `/reports` | Reports |
-| `/methodology` | Methodology explanation |
-| `/workspace` | Workspace list |
-| `/workspace/[id]` | Individual workspace |
-
-## Platform Routes (auth-protected, /platform/...)
-
-feed, story/[id], trackers, tracker/bbnj, tracker/governance, tracker/isa, tracker/iuu, tracker/30x30, tracker/blue-finance, tracker/imo-shipping, tracker/offshore-wind, tracker/cites-marine, tracker/wto-fisheries, tracker/plastics, research, threads, projects, projects/[id], projects/[id]/draft, library, library/submit, lp-briefing, calendar, workspace, directory, settings/topics, welcome, admin/library
+| `app/page.tsx` | Marketing homepage (PROTECTED -- do not modify without instruction) |
+| `app/platform/(shell)/page.tsx` | Dashboard (signal feed, hero, ticker) |
+| `app/platform/(shell)/feed/page.tsx` | Main story feed with topic sidebar |
+| `app/platform/(shell)/workspace/page.tsx` | Entity workspace (picker + evidence panel) |
+| `middleware.ts` | Auth guard for /platform/* and /tracker/* |
+| `app/api/auth/[...nextauth]/route.ts` | NextAuth v4 (Google OAuth + magic link) |
 
 ---
 
-## API Routes (app/api/)
+## Platform Pages
 
-### Auth & User
-- `auth/[...nextauth]` — NextAuth (Google OAuth + magic link)
-- `auth/verify` — Magic link verification, cookie, redirect
-- `trial-signup` — Store trial, send welcome email
-- `subscription-access` — Status + needsOnboarding flag
-- `user/onboarding-status`, `user/complete-onboarding`, `user/modal-status`, `user/dismiss-modal`, `user/sector`, `user/update-last-seen`
-
-### Stories & Content
-- `stories` — Fetch (id/topic/pagination)
-- `stories/save` — Save to workspace
-- `stories/comments` — Comments
-- `summarise` — On-demand summarisation (Sonnet, 3-tier fallback: Jina → direct → RSS)
-- `search` — Vector search
-- `connections` — Story connection graph
-- `notifications` — User notifications
-
-### Workspace & Projects
-- `workspace/narrative` — Intelligence thread narrative (Sonnet)
-- `workspace/quick-note` — Quick note capture
-- `projects/[id]/draft` — Draft CRUD
-- `projects/[id]/draft/compile` — Compile draft
-- `projects/new-stories` — New stories for project
-
-### Research & AI
-- `ask` — RAG research queries (Sonnet, prompt-cached)
-- `research/inline` — Inline research with RAG (Sonnet, prompt-cached)
-- `documents/generate-brief` — Generate brief (Sonnet)
-- `documents/[id]/export` — Export document
-- `documents/submit` — Submit to library
-- `story/linkedin-draft` — LinkedIn post drafting (Sonnet)
-- `threads`, `threads/me`, `threads/match` — Crosscurrent threads (match: Sonnet)
-
-### Trackers
-- `treaty-status` — BBNJ treaty status
-- `governance-events` — Governance calendar events (body/topic/significance filters)
-- `tracker-events`, `tracker-status/[slug]`, `tracker/view`
-- `iuu-status`, `iuu/carding`, `30x30-status`, `blue-finance-status`
-- `isa-status`, `isa-contractors`, `psma`
-
-### Calendar
-- `calendar/[token]` — Personal iCal feed (text/calendar)
-- `calendar/subscribe` — Create subscription with filters (Google/Outlook/Apple links)
-
-### Payments
-- `stripe/checkout` — Create Stripe checkout session
-- `portal` — Stripe customer portal
-- `webhooks/treaty-change` — pg_net trigger → Sonnet significance → story alert
-
-### LP Briefing
-- `lp-briefing`, `lp-briefing/pdf`, `lp-briefing/stats`, `lp-portfolios`
-
-### Library & Documents
-- `library/search`, `library/view`, `library/activity`, `library/signed-url`, `library/extract-metadata`
-- `community-documents`, `entities/search`
-- `admin/documents/upload`, `admin/documents/review`, `admin/documents/signed-upload-url`
-- `admin/story-override`, `admin/backfill-velocity`
-
-### Misc
-- `alerts/preferences` — Alert preferences
-- `sidebar-data`, `dashboard`, `landing-data`, `waitlist`, `survey`, `consultations`, `test-email`
+| Route | File |
+|-------|------|
+| /platform/ | `(shell)/page.tsx` -- dashboard |
+| /platform/feed | `(shell)/feed/page.tsx` |
+| /platform/workspace | `(shell)/workspace/page.tsx` |
+| /platform/story/[id] | `(shell)/story/[id]/page.tsx` |
+| /platform/research | `(shell)/research/page.tsx` |
+| /platform/library | `(shell)/library/page.tsx` |
+| /platform/directory | `(shell)/directory/page.tsx` |
+| /platform/trackers | `(shell)/trackers/page.tsx` |
+| /platform/tracker/bbnj | `(shell)/tracker/bbnj/page.tsx` |
+| /platform/tracker/governance | `(shell)/tracker/governance/page.tsx` |
+| /platform/tracker/isa | `(shell)/tracker/isa/page.tsx` |
+| /platform/tracker/imo-shipping | `(shell)/tracker/imo-shipping/page.tsx` |
+| /platform/tracker/iuu | `(shell)/tracker/iuu/page.tsx` |
+| /platform/tracker/30x30 | `(shell)/tracker/30x30/page.tsx` |
+| /platform/tracker/plastics | `(shell)/tracker/plastics/page.tsx` |
+| /platform/tracker/cites-marine | `(shell)/tracker/cites-marine/page.tsx` |
+| /platform/tracker/blue-finance | `(shell)/tracker/blue-finance/page.tsx` |
+| /platform/tracker/offshore-wind | `(shell)/tracker/offshore-wind/page.tsx` |
+| /platform/tracker/wto-fisheries | `(shell)/tracker/wto-fisheries/page.tsx` |
+| /platform/projects | `(shell)/projects/page.tsx` |
+| /platform/projects/[id] | `(shell)/projects/[id]/page.tsx` |
+| /platform/lp-briefing | `(shell)/lp-briefing/page.tsx` |
+| /platform/settings/topics | `(shell)/settings/topics/page.tsx` |
+| /platform/welcome | `(shell)/welcome/page.tsx` |
+| /platform/threads | `(shell)/threads/page.tsx` |
+| /platform/calendar | `(shell)/calendar/page.tsx` |
 
 ---
 
-## Cron Jobs (app/api/cron/)
+## Cron Jobs (vercel.json schedules)
 
 | Route | Schedule | Purpose |
 |-------|----------|---------|
-| `fetch-feeds` | Hourly | RSS aggregation ~89 sources |
-| `harvest-scraped-sources` | Every 6h | Scrape IMO, ISA, FAO, IUCN, CBD, CITES, UN BBNJ |
-| `scrape-governance-calendar` | Weekly Mon 3am UTC | Scrape 10 governance body pages (Sonnet) |
-| `score-significance` | Daily | Score story significance (Haiku) |
-| `velocity-scores` | Daily | Entity velocity scores |
-| `send-brief` | Daily 7am | Send morning brief emails |
-| `generate-brief` | Before send | Generate brief (Haiku quality gate) |
-| `summarise-pending` | Regular | Batch article summarisation (Sonnet) |
-| `generate-embeddings` | Regular | Story embeddings |
-| `embed-documents` | Regular | Library document embeddings |
-| `generate-connections` | Regular | Story connection graph |
-| `project-populate` | Regular | Populate project stories (Haiku) |
-| `blue-finance-agent` | Regular | Classify blue finance events (Haiku) |
-| `governance-agent` | Regular | Classify governance events (Haiku) |
-| `scrape-isa` | Regular | ISA data scraper |
-| `scrape-psma` | Regular | PSMA data scraper |
-| `source-health` | Regular | Source health monitor |
-| `monitor-sources` | Regular | Source monitoring |
-| `threshold-alerts` | Regular | Velocity threshold alerts |
-| `conversion-triggers` | Regular | Conversion email triggers |
+| `cron/fetch-feeds` | hourly | RSS aggregation (~89 sources) |
+| `cron/harvest-scraped-sources` | every 6h | Jina scraper for non-RSS sources |
+| `cron/scrape-governance-calendar` | Mon 3am UTC | Governance body meeting scraper |
+| `cron/score-significance` | daily | Claude Haiku significance scoring |
+| `cron/summarise-pending` | daily | Batch article summarisation |
+| `cron/generate-brief` | weekdays | Morning brief candidate pool builder |
+| `cron/send-brief` | weekdays | Per-user brief email via Resend |
+| `cron/velocity-scores` | daily | Pulse score calculation |
+| `cron/embed-documents` | daily 3am | Jina document chunk embeddings |
+| `cron/threshold-alerts` | daily | Band crossing alert emails |
+| `cron/blue-finance-agent` | daily | Blue finance event classification |
+| `cron/governance-agent` | daily | Governance event classification |
+| `cron/project-populate` | daily | Project entry generation |
+| `cron/generate-connections` | daily | Cross-entity connection detection |
+| `cron/monitor-sources` | daily | RSS source health monitoring |
+| `cron/source-health` | daily | Source failure tracking |
+| `cron/scrape-isa` | daily | ISA document scraper |
+| `cron/scrape-psma` | daily | PSMA data scraper |
+| `cron/conversion-triggers` | daily | Trial-to-paid conversion nudges |
+| `cron/generate-embeddings` | daily | ORPHANED -- investigate/delete (RAG Bug 3) |
 
 ---
 
-## Core Lib Modules
+## App Lib Modules (app/lib/)
 
-| Module | Purpose |
-|--------|---------|
-| `app/lib/auth.ts` | `getEmailFromSession` shared helper |
-| `app/lib/embeddings.ts` | pgvector embedding functions |
-| `app/lib/search.ts` | Vector search utilities |
-| `app/lib/jina.ts` | Jina article scraping |
-| `app/lib/html.ts` | HTML parsing |
-| `app/lib/confidence.ts` | Confidence scoring |
-| `app/lib/events.ts` | Event helpers |
-| `app/lib/subscription.ts` | Subscription status helpers |
-| `app/lib/tracker-metadata.ts` | Tracker metadata definitions |
-| `lib/entity-matching.ts` | Entity matching pipeline |
-| `lib/lp-briefing-pdf.ts` | LP briefing PDF (PDFKit) |
+| File | Purpose |
+|------|---------|
+| `auth.ts` | `getEmailFromSession()` -- JWT extraction for API routes |
+| `sources.ts` | RSS_SOURCES array (~89 sources) + OCEAN_DEDICATED list |
+| `html.ts` | HTML parsing utilities for RSS/scraper content |
+| `jina.ts` | Jina API wrapper for article fetch + embedding |
+| `confidence.ts` | Entity match confidence scoring |
+| `embeddings.ts` | Jina v2 embedding calls (vector(768)) |
+| `ocean-relevance-gate.ts` | Claude Haiku ocean-topic classifier (blocking mode, ~25-28% quarantine) |
+| `velocity.ts` | Pulse score computation + band classification |
+| `signal-generation.ts` | 4 signal generators: band_crossing, countdown_threshold, convergence_spike, high_sig_story |
+| `constants.ts` | TRACKER_LABELS, TOPIC_LABELS, TRACKER_TO_TOPICS, ACTION_SIGNAL_KEYWORDS |
+| `trackers.ts` | Tracker slug definitions + display metadata |
+| `tracker-metadata.ts` | Per-tracker data fetchers |
+| `tracker-descriptions.ts` | 10 tracker one-liner descriptions |
+| `events.ts` | Governance event utilities |
+| `subscription.ts` | Subscription status helpers |
+| `search.ts` | Full-text search utilities |
+| `entity-type-label.ts` | Entity type display labels |
+| `user-preferences.ts` | User preference helpers |
+| `query-expansion.ts` | RAG query expansion |
+| `brief-reply.ts` | Brief reply webhook handler |
+
+---
+
+## Top-Level Lib (lib/)
+
+| File | Purpose |
+|------|---------|
+| `lib/entity-matching.ts` | 5-pass entity matching (exact/alias/normalised/trigram/insert) + `findOrCreateEntity()` |
+| `lib/lp-briefing-pdf.ts` | PDFKit LP briefing PDF generator |
+| `lib/email/sparkline.ts` | SVG sparkline for email |
 | `lib/email/alert-data.ts` | Alert email data builder |
-| `lib/email/sparkline.ts` | Sparkline chart for emails |
-| `lib/emails/onboarding-day3.ts` | Day-3 onboarding email |
+| `lib/emails/onboarding-day3.ts` | Day-3 onboarding email template |
 
 ---
 
-## Key Database Tables
+## Key API Routes
 
-public: users, stories, scraped_sources, treaty_ratifications, governance_bodies, governance_events, expected_decisions, subscriptions, trial_signups, magic_links, calendar_subscriptions, scrape_runs, velocity_scores, entities, entity_mentions, divergences, lp_portfolios, documents, threads, projects, workspaces, connections, saved_stories
-
-next_auth: users (NextAuth session management, separate from public.users)
-
----
-
-## Model Assignment
-
-**Haiku** (`claude-haiku-4-5-20251001`): classification, scoring, structured output
-→ blue-finance-agent, generate-brief, governance-agent, project-populate, score-significance
-
-**Sonnet** (`claude-sonnet-4-6`): interpretation, reasoning, drafting, research
-→ ask, research/inline, summarise, summarise-pending, workspace/narrative, threads/match, story/linkedin-draft, webhooks/treaty-change, documents/generate-brief, cron/scrape-governance-calendar
-
----
-
-## Configuration
-
-- `vercel.json` — Cron schedules + routes
-- `next.config.ts` — Next.js config
-- `tsconfig.json` — TypeScript strict
-- `middleware.ts` — Auth guard for /platform/* and /tracker/*
-- `.env.local` — Secrets (gitignored)
+| Route | Purpose |
+|-------|---------|
+| `api/entities/search` | Entity search (name + alias ILIKE, `search_entities` RPC, 300ms debounce client-side) |
+| `api/entities/track` | Toggle entity tracking for user |
+| `api/entities/dashboard` | Entity dashboard data |
+| `api/entities/detail` | Single entity detail with mentions |
+| `api/workspace/ask` | RAG ask endpoint (exists; BLOCKED on Bug 1+2 fix before wiring UI) |
+| `api/workspace/quick-note` | Save workspace quick note |
+| `api/research/inline` | Inline research with RAG |
+| `api/ask` | Orphaned -- 61 lines, investigate/delete (RAG Bug 4) |
+| `api/stories` | Story list + pagination |
+| `api/summarise` | On-demand article summarisation |
+| `api/lp-briefing` | LP portfolio briefing JSON |
+| `api/lp-briefing/pdf` | LP briefing PDFKit export |
+| `api/governance-events` | Governance calendar events |
+| `api/dashboard` | Dashboard data endpoint |
+| `api/sidebar-data` | Sidebar entity/tracker data |
+| `api/stripe/checkout` | Stripe checkout session |
+| `api/webhooks/treaty-change` | pg_net treaty change webhook |
+| `api/webhooks/brief-reply` | Brief reply handler |
 
 ---
 
-## Session Checklist
+## Shared Components (components/)
 
-1. `/sc:index-repo` (done)
-2. Read `tasks/lessons.md` before writing any code
-3. Read `tasks/todo.md` for current priorities
-4. Read `MESSAGING_HOUSE.md` before any UI/copy work
-5. `/sc:save` + update `.claude/SPEC.md` + `tasks/lessons.md` at session end
+| Component | Purpose |
+|-----------|---------|
+| `Header.tsx` | Site header (auth-aware) |
+| `TrackerHero.tsx` | Shared tracker hero section |
+| `TrackerHistory.tsx` | Tracker score history chart |
+| `TrackerMethodology.tsx` | Methodology explainer |
+| `HeroSignal.tsx` | Dashboard signal card (4 subtypes) |
+| `HeroSignalBandCrossing.tsx` | Band crossing signal subtype |
+| `HeroSignalGovernance.tsx` | Governance countdown subtype |
+| `HeroSignalVelocity.tsx` | Velocity spike subtype |
+| `OvernightReveal.tsx` | Dashboard overnight reveal animation |
+| `DashboardReveal.tsx` | Dashboard content reveal |
+| `TickerStrip.tsx` | Horizontal ticker (5 item types, 2-min revalidate) |
+| `SignalFeed.tsx` | Signal event feed list |
+| `Sparkline.tsx` | SVG sparkline chart |
+| `VelocityScore.tsx` | Pulse score display card |
+| `StoryCard.tsx` | Story list item |
+| `FeedSidebar.tsx` | Topic filter sidebar |
+| `AlertToggle.tsx` | Threshold alert toggle |
+| `Paywall.tsx` | Hard paywall overlay |
+| `TrialBanner.tsx` | Soft trial expiry banner |
+| `ConversionModal.tsx` | Trial conversion modal |
+| `TopicsSelector.tsx` | Multi-topic selector |
+| `LinkedInDraftPanel.tsx` | LinkedIn post draft panel |
+| `LandingHeader.tsx` | Marketing header |
+| `HeroPulseCard.tsx` | Landing hero pulse card |
+| `WelcomeState.tsx` | Welcome/empty state |
+
+---
+
+## Scripts (scripts/)
+
+Manual scripts -- run with: `npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/<name>.ts`
+
+| Script | Purpose |
+|--------|---------|
+| `processor-agent.ts` | Library doc queue processor (--limit=N flag; sequential, ~200 items/hr) |
+| `embed-entities.ts` | Embed all entities via Jina v2 |
+| `embed-stories.ts` | Embed stories via Jina v2 |
+| `embed-documents.ts` | Embed library document chunks |
+| `backfill-entity-matching.ts` | Re-run 3-pass entity matching on stories |
+| `seed-loader.ts` | Seed entities from CSV |
+| `scraper-agent.ts` | Manual scraper run |
+| `import-faolex.ts` | FAO LEX document import |
+| `scraper-informea.ts` | InforMEA treaty document scraper |
+| `replay-recent-matches.ts` | Re-run entity matching on recent stories |
+| `diag-informea-dedup.ts` | Diagnose InforMEA duplicate detection |
+| `diag-null-status.ts` | Diagnose null status rows in library queue |
+| `diag-queue-nulls.ts` | Diagnose null entries in document queue |
+| `probe-informea.ts` | Probe InforMEA scraper responses |
+| `screenshot-briefs.ts` | Screenshot brief email rendering |
+| `test-send-brief.ts` | Test brief send pipeline end-to-end |
+| `verify-queue-insert.ts` | Verify document queue insert behaviour |
+
+---
+
+## Database -- Key Tables
+
+| Table | Purpose |
+|-------|---------|
+| `public.users` | Subscription status, topics (jsonb), job_type, brief_time, onboarded_at |
+| `public.stories` | Feed stories with significance, entity extraction flags |
+| `public.entities` | 942 entities, aliases[], embedding vector(768), mention_count |
+| `public.entity_aliases` | GIN-indexed aliases, feeds `search_entities` RPC |
+| `public.entity_mentions` | Story<->entity links with match_score, method, confidence |
+| `public.user_entities` | Per-user tracked entities |
+| `public.velocity_scores` | Pulse scores per tracker per day, band, interpretation |
+| `public.signal_events` | 4 signal types for dashboard hero |
+| `public.governance_events` | Meeting/deadlines with significance + expected_decisions |
+| `public.document_queue` | Library doc processing queue (manual drain via processor-agent.ts) |
+| `public.document_chunks` | RAG chunks -- 28K duplicate rows (Bug 1 PENDING FIX) |
+| `public.brief_buffer` | Morning brief candidate pool (JSONB) |
+| `public.alert_sends` | Threshold alert send log |
+| `public.lp_portfolios` | LP fund portfolio data |
+
+---
+
+## Known Issues (active)
+
+| # | Issue | Fix path |
+|---|-------|---------|
+| Bug 1 | 28,337 duplicate chunk rows (33%) in document_chunks. Idempotency check broken in embed-documents cron | Patch idempotency check + dedupe pass |
+| Bug 2 | 2,711 approved docs with no chunks. Silent failure on image-only PDFs | Add chunking_status column, mark failures, backfill |
+| Bug 3 | cron/generate-embeddings queries dropped `embeddings` table -- fails nightly | Delete this cron route (5 min fix) |
+| Bug 4 | app/api/ask/route.ts (61 lines) likely orphaned post-RAG refactor | Investigate + delete |
+| Auth | 6 API routes have hardcoded email fallback (security bug) | Fix secureCookie in auth.ts first, then remove fallbacks |
+
+---
+
+## Recent Changes (2026-05-12 session)
+
+- `feat(library)`: InforMEA HTML fallback + `source_format` column tracking in scraped_sources
+- `fix(brief)`: Brief cron falls back to stored `short_summary` when Haiku API fails
+
+---
+
+## Next Priorities (SPEC.md 2026-05-08)
+
+1. RAG cleanup: delete `cron/generate-embeddings` + investigate `api/ask/route.ts` (20 min)
+2. RAG Bug 1: patch idempotency + dedupe 28K duplicate chunks
+3. RAG Bug 2: add `chunking_status` column, mark failures, backfill
+4. Workspace UI: wire FloatingDock ask panel to `/api/workspace/ask` (BLOCKED on 1+2)
+
+---
+
+## Design Rules (enforced across all UI)
+
+- Inline styles only in JSX -- no Tailwind utility classes
+- Teal: `#1D9E75` -- no blue `#1a73e8` anywhere
+- No em dashes -- use commas, colons, or restructure
+- No monospace fonts -- DM Sans everywhere (scores, timestamps, source labels)
+- Fonts: DM Sans (body), Georgia (serif headlines)
+- Dark bg: `#0B1628` / `#0D1E35` | Text primary: `#E8EDF4` | Muted: `#8BA0BC`
+- Workspace standard: white bg, teal 3px top border on selected, underline-only inputs, 4px button radius, never dark bg in content area

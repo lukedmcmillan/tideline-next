@@ -55,22 +55,31 @@ function buildSubject(
 ): string {
   // In Mode b (state type with hybrid framing), headline is a long compound sentence.
   // Use subjectHeadline (the bare story title) instead for the email subject.
-  const headline = (lead.type === 'state' && lead.subjectHeadline
+  const rawHeadline = (lead.type === 'state' && lead.subjectHeadline
     ? lead.subjectHeadline
     : lead.headline
   ).replace(/\.$/, "").trim();
-  const headlineHasPulse = /Pulse \d+\.?\d*/i.test(headline);
 
+  // Determine suffix first so the headline cap can account for it.
+  // Total subject = headline + suffix must fit within 80 chars.
+  const headlineHasPulse = /Pulse \d+\.?\d*/i.test(rawHeadline);
+  let suffix = "";
   if (headlineHasPulse) {
-    // Headline already states a pulse score — prefer event label over repeating
-    if (events.length > 0) return `${headline} · ${events[0].dayLabel}`;
-    return headline;
+    suffix = events.length > 0 ? ` · ${events[0].dayLabel}` : "";
+  } else {
+    const elevated = conditions.find(c => c.band === "ELEVATED");
+    if (elevated) suffix = ` · Pulse ${elevated.score.toFixed(1)}`;
+    else if (events.length > 0) suffix = ` · ${events[0].dayLabel}`;
   }
 
-  const elevated = conditions.find(c => c.band === "ELEVATED");
-  if (elevated) return `${headline} · Pulse ${elevated.score.toFixed(1)}`;
-  if (events.length > 0) return `${headline} · ${events[0].dayLabel}`;
-  return headline;
+  // Cap headline so that headline + suffix ≤ 80 chars. Government press-release
+  // titles (Mode a / LOW-band fallback) can be 100+ chars without this guard.
+  const maxHeadline = 80 - suffix.length;
+  const headline = rawHeadline.length > maxHeadline
+    ? rawHeadline.slice(0, maxHeadline).replace(/\s\S+$/, "").trim()
+    : rawHeadline;
+
+  return `${headline}${suffix}`;
 }
 
 // ── Resend send ───────────────────────────────────────────────────────────────
@@ -212,6 +221,23 @@ export async function GET(request: Request) {
         .limit(1);
       const isFirstBrief = !prevSends || prevSends.length === 0;
 
+      // Recently-led exclusion: stories that led a brief in the last 7 days
+      // are excluded from lead candidates so the same story cannot lead twice.
+      // Requires brief_sends.lead_story_id column (migration: see SPEC.md).
+      let recentlyLedIds = new Set<string>();
+      if (sub.id !== "test") {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentLeads } = await supabase
+          .from("brief_sends")
+          .select("lead_story_id")
+          .eq("user_id", sub.id)
+          .not("lead_story_id", "is", null)
+          .gte("sent_at", sevenDaysAgo);
+        recentlyLedIds = new Set(
+          (recentLeads ?? []).map(r => r.lead_story_id as string).filter(Boolean)
+        );
+      }
+
       // Context signals derived from candidate pool (no extra DB call)
       const userStories = pool.candidate_stories.filter(s =>
         userTopics.length === 0 ||
@@ -223,7 +249,7 @@ export async function GET(request: Request) {
       const quickAskCtx: QuickAskContext = { isFirstBrief, recentHighSigCount, recentLowActivityWeek };
 
       // ── 3b. Sync selectors ──
-      const lead         = selectLead(pool.candidate_stories, pool.all_tracker_scores, userTopics);
+      const lead         = selectLead(pool.candidate_stories, pool.all_tracker_scores, userTopics, recentlyLedIds);
       const conditions   = selectConditions(pool.all_tracker_scores, userTopics);
       const evidence     = selectEvidence(pool.candidate_stories, lead, userTopics);
       const whatToWatch  = selectWhatToWatch(pool.all_events, userTopics, 14);
@@ -288,12 +314,13 @@ export async function GET(request: Request) {
         supabase
           .from("brief_sends")
           .insert({
-            user_id:      sub.id === "test" ? null : sub.id,
-            email:        sub.email,
-            story_count:  evidence.length,   // items user actually saw in Evidence section
-            tracker_slug: topTrackerSlug,    // top tracker for this user (was daily rotation)
-            send_type:    sendType,
-            brief_date:   todayDate,
+            user_id:       sub.id === "test" ? null : sub.id,
+            email:         sub.email,
+            story_count:   evidence.length,   // items user actually saw in Evidence section
+            tracker_slug:  topTrackerSlug,    // top tracker for this user (was daily rotation)
+            send_type:     sendType,
+            brief_date:    todayDate,
+            lead_story_id: lead.storyId ?? null,
           })
           .then(() => {});
       } else {

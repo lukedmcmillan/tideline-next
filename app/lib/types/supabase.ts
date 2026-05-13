@@ -293,6 +293,7 @@ export type Database = {
           brief_date: string | null
           email: string
           id: string
+          lead_story_id: string | null
           send_type: string | null
           sent_at: string | null
           story_count: number | null
@@ -303,6 +304,7 @@ export type Database = {
           brief_date?: string | null
           email: string
           id?: string
+          lead_story_id?: string | null
           send_type?: string | null
           sent_at?: string | null
           story_count?: number | null
@@ -313,6 +315,7 @@ export type Database = {
           brief_date?: string | null
           email?: string
           id?: string
+          lead_story_id?: string | null
           send_type?: string | null
           sent_at?: string | null
           story_count?: number | null
