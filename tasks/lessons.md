@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## 2026-05-20 (Architectural verification complete — FOURTEENTH meta-lesson)
+
+- **Classification is phrasing-robust; scoring is phrasing-fragile.** Low-cardinality bucket classification (GOVERNANCE_CHANGE vs ANALYSIS_OR_FINDING etc.) is stable across prompt wording variation — the same story lands in the same bucket regardless of how the prompt is phrased. Continuous scalar scoring (governance_significance, delta confidence, significance estimation) swings dramatically on prompt wording for identical content. RULE: gate on category; order on the independently-computed `significance_score` from the DB. Never use a model-elicited scalar as a load-bearing threshold. This is the generalised principle behind the verb-allowlist failure (EIGHTH), the governance_significance swing finding (NINTH), and the SIG_FLOOR caution in the current spec.
+
+- **Verification must be against the actual production artifact at every check.** Three instances this investigation: (a) determinism proof ran against a clean-cache environment, not the live DB with verb-era collisions; (b) the category gate was "working" locally for two days while production ran a week-old commit; (c) Step F initially gate-failed because the deploy had not happened despite a green local build. The pattern in all three: the local artifact (code, cache, build) was assumed to match the production artifact without confirmation. RULE: before attributing a production behaviour to local code, confirm: `git log origin/main..HEAD --oneline` returns empty, the runtime prompt_version hash matches the local hash, and the DB state reflects what the deployed code should have written — not what the local code would write.
+
+- **Warm-cache determinism verified in production for the first time (2026-05-20).** All 60 `delta_classifications` rows under `f6491a2171c78bdf` written at `14:21:24` (Brief #1 cold). Zero rows written after that timestamp across Briefs #2, #3, #4. Zero Haiku calls on warm runs — confirmed by `classified_at` distribution, not log lines (Vercel MCP aggregates to one log entry per HTTP request; individual `console.log` lines within a serverless function are not exposed by the log API).
+
+---
+
 ## 2026-05-19 (Primary-angle proof — tenth instance, verification-against-convenient-data)
 
 - **TENTH instance, same root as all prior. The primary-angle proof PASSED — against a summary that is not the one production classifies. Live-DB Mongabay BBNJ still confabulates GOVERNANCE_CHANGE. This is the verification-against-convenient-data failure for the tenth time: wrong account (TEST_EMAIL), wrong cache partition (backtest), now wrong summary (primary-angle proof). RULE, now absolute: every proof must run against the EXACT production artifact — the live DB row, the production prompt version, the real account — never a cleaned, reconstructed, or adjacent substitute. A proof against non-production data proves nothing about production. Disclosing the gap honestly is necessary but the conclusion must be 'not proven', never 'open item'.**

@@ -1,35 +1,39 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-12 — InforMEA processing, brief rejection fix, IWC tag verification
+## Last session: 2026-05-20 — Brief category gate architectural verification end-to-end
 
-WHAT SHIPPED (2026-05-12):
+WHAT SHIPPED (2026-05-20):
 
-- **InforMEA HTML processor run** — 180 pending `source_format='html'` records processed via `--format=html` flag added to `processor-agent.ts`. Results: IWC ~95 OK, CBD ~5 OK, ASCOBANS 3 OK, CITES 38 FAILED (structural CAPTCHA block), Barcelona 1 FAILED. ~103 total library documents added.
-- **Morning brief fallback fix** — `generate-brief/route.ts` now falls back to `s.short_summary` when Haiku API fails (credit exhaustion, outage). Previously: all `generateSummary()` calls throwing `BadRequestError` → null → `summarisedStories.length=0` → quality gate rejection. Committed.
-- **IWC topic tags verified** — 111 IWC documents confirmed with cetacean/whaling/marine-mammal vocabulary (whale conservation ×37, cetacean conservation ×26, etc.). No IWC tracker reinstatement required.
-- **`--format=html` flag** added to `processor-agent.ts` for targeted queue processing by source_format.
-- **20 stuck `processing` items** reset to `pending` after credit exhaustion mid-run.
+- **Category gate live in production** — `categoryCandidates()` (Haiku, temp=0, `f6491a2171c78bdf`) deployed and verified: 60 stories classified on Brief #1 cold run, all written to `delta_classifications`. Briefs #2-3 hit 100% cache — zero model calls confirmed by `classified_at` timestamps (all `14:21:24`, none after).
+- **Cache collision bug fixed** — 663 verb-era `category IS NULL` rows deleted (purge verified safe: all had verb fields, zero exceptions). `ignoreDuplicates: true` removed from upsert — all category writes now persist.
+- **Runtime hash parity confirmed** — deployed code computes `CATEGORY_PROMPT_VERSION = f6491a2171c78bdf` matching local hash. No environment dependency.
+- **PNG MPA correctly led Brief #1** — GOVERNANCE_CHANGE sig=72 via Gate 2 (`delta_fallback=false`). Classification correct.
+- **Scotland trawling correctly excluded from gate** — ANALYSIS_OR_FINDING (seabed recovery study, prior ban as context). Led Brief #3 only via fallback after pool exhausted by recentlyLedIds cascade.
+- **Non-determinism across same-day test runs explained** — `recentlyLedIds` 7-day exclusion accumulates within a single test session. Normal production (one send/day) is unaffected.
+- **Thirteen lessons documented** — TWELFTH: determinism proof tested clean cache, not production; THIRTEENTH: production was running week-old commit; deploy verification rule. FOURTEENTH: classification phrasing-robust; scoring phrasing-fragile; verify production artifact not local artifact.
+- **`brief-category-gate-redesign.md` gate redesign**: IMPLEMENTED. Stage 2 headline generation FROZEN pending 30-day backtest.
+- **Commits pushed to origin/main**: 5 commits (`cee92e3` deployed to Vercel).
 
 PENDING MIGRATIONS:
-- None.
+- None. `20260518_brief_sends_delta_fallback.sql`, `20260518_delta_classifications_cache.sql`, `20260519_delta_classifications_category.sql` all applied.
 
 KNOWN ISSUES (carry forward):
-- **CITES HTML blocked**: 38 records `status='failed'` — cites.org returns Cloudflare CAPTCHA to Jina. Not a scraper bug. Options next session: (a) check April 13 PDF run overlap, (b) InforMEA PDF URL fallback, (c) accept gap.
-- **Morning brief re-verification**: Tomorrow's 06:30 UTC cron (2026-05-13) is the verification window for the short_summary fallback fix.
-- **OpenAlex DOI null rows**: 5,607 rows with `source_format=NULL`. Deferred audit.
-- **WTO Fisheries Subsidies feed gap**: 0 stories from distinct sources in 90 days. Needs IISD ENB or WTO press office feed.
+- **Stage 2 headline generation frozen** — Model A/C rewrites not yet built. Brief headlines are raw `cleanTitle()` output. Unblock after 30-day category backtest accumulates real data.
+- **SIG_FLOOR = 35 unvalidated** — Carried from verb-era backtest. Must run floor-sensitivity report (30/35/40) against 30 days of real categorised pool data.
+- **Prompt edge cases not yet tightened** — Operational-vs-formal boundary (Vaquita training = COMMERCIAL_BUSINESS sig=42; correct?). Threshold calibration deferred until backtest data exists.
 - **RAG Bug 1**: 28,337 duplicate chunk rows (33%). Idempotency broken in embed-documents cron.
 - **RAG Bug 2**: 2,711 approved docs with no chunks. Silent failure on image-only PDFs.
 - **RAG Bug 3**: generate-embeddings cron queries dropped 'embeddings' table — failing nightly at 1am.
 - **RAG Bug 4**: app/api/ask/route.ts (61 lines) likely orphaned.
+- **CITES HTML blocked**: 38 records `status='failed'` — cites.org returns Cloudflare CAPTCHA.
+- **WTO Fisheries Subsidies feed gap**: 0 stories from distinct sources in 90 days.
 
 NEXT PRIORITIES (in order):
-1. **Morning brief regression check** — verify 06:30 UTC cron 2026-05-13 produces a non-empty brief
-2. **CITES gap decision** — check April 13 PDF run overlap; decide whether to accept gap or try InforMEA PDF fallback
-3. **Library viewer search UX** — 2,000+ docs need discoverability surface (faceted search)
-4. **WTO feed gap** — IISD ENB or WTO press office RSS; 0 sources in 90 days is a blind spot
-5. **RAG cleanup** — Bug 3+4 first (20 min), then Bug 1 idempotency patch, then Bug 2 chunking_status
-6. **Single lib/trackers.ts** — canonical tracker list lives in 5+ places; refactor candidate
+1. **30-day category backtest accumulation** — let real classifications accumulate; run floor-sensitivity report at 30 days to calibrate SIG_FLOOR (30 vs 35 vs 40)
+2. **Stage 2 headline generation** — Model A (GOVERNANCE_CHANGE lead rewrite) and Model C (gate1 rewrite) — BLOCKED on backtest
+3. **Prompt edge-case tightening** — Vaquita/operational-vs-formal boundary; review GOVERNANCE_CHANGE definition after 30 days of real data
+4. **RAG cleanup** — Bug 3+4 first (20 min), then Bug 1 idempotency patch, then Bug 2 chunking_status
+5. **WTO feed gap** — IISD ENB or WTO press office RSS; 0 sources in 90 days is a blind spot
 
 ---
 
