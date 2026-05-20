@@ -13,6 +13,17 @@ import {
   type GovernanceEventRow,
 } from './select';
 
+// Helper: call selectLead with empty deltaMap (all stories fall to legacy fallback path).
+// Tests validate that fallback behaviour is preserved exactly.
+function selectLeadLegacy(
+  stories: StoryRow[],
+  trackers: TrackerScoreRow[],
+  userTopics: string[],
+  recentlyLedIds?: Set<string>,
+) {
+  return selectLead(stories, trackers, userTopics, recentlyLedIds).lead;
+}
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const makeStory = (overrides: Partial<StoryRow> = {}): StoryRow => ({
@@ -187,7 +198,7 @@ describe('selectLead', () => {
   it('[mode a] returns story type when max significance >= 50', () => {
     const stories = [makeStory({ id: 'high', topic: 'governance', significance_score: 72 })];
     const trackers = [makeTracker({ tracker_slug: 'bbnj' })];
-    const lead = selectLead(stories, trackers, ['bbnj']);
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
     expect(lead.type).toBe('story');
     if (lead.type === 'story') expect(lead.storyId).toBe('high');
   });
@@ -197,7 +208,7 @@ describe('selectLead', () => {
       makeStory({ id: 'lower', topic: 'governance', significance_score: 50 }),
       makeStory({ id: 'higher', topic: 'governance', significance_score: 75 }),
     ];
-    const lead = selectLead(stories, [], ['bbnj']);
+    const lead = selectLeadLegacy(stories, [], ['bbnj']);
     expect(lead.type).toBe('story');
     if (lead.type === 'story') expect(lead.storyId).toBe('higher');
   });
@@ -206,7 +217,7 @@ describe('selectLead', () => {
   it('[mode b] returns state type with tracker framing when max significance < 50', () => {
     const stories = [makeStory({ topic: 'governance', significance_score: 13 })];
     const trackers = [makeTracker({ tracker_slug: 'bbnj', score: 5.9 })];
-    const lead = selectLead(stories, trackers, ['bbnj']);
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
     expect(lead.type).toBe('state');
     if (lead.type === 'state') {
       expect(lead.headline).toContain('Pulse 5.9');
@@ -219,7 +230,7 @@ describe('selectLead', () => {
   it('[mode b] hybrid headline contains cleaned story title', () => {
     const stories = [makeStory({ title: 'BBNJ Treaty progress | UN News', topic: 'governance', significance_score: 20 })];
     const trackers = [makeTracker({ tracker_slug: 'bbnj', score: 5.0 })];
-    const lead = selectLead(stories, trackers, ['bbnj']);
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
     if (lead.type === 'state') {
       expect(lead.headline).not.toContain('| UN News');
       expect(lead.headline).toContain('BBNJ Treaty progress');
@@ -229,7 +240,7 @@ describe('selectLead', () => {
   // Mode c: state-led (empty pool)
   it('[mode c] falls back to pure state-of-tracker when no matching stories', () => {
     const trackers = [makeTracker({ tracker_slug: 'imo-shipping', score: 7.5 })];
-    const lead = selectLead([], trackers, ['imo-shipping']);
+    const lead = selectLeadLegacy([], trackers, ['imo-shipping']);
     expect(lead.type).toBe('state');
     if (lead.type === 'state') {
       expect(lead.headline).toContain('Pulse 7.5');
@@ -239,7 +250,7 @@ describe('selectLead', () => {
   });
 
   it('[mode c] returns absolute fallback when no stories and no trackers', () => {
-    const lead = selectLead([], [], ['bbnj']);
+    const lead = selectLeadLegacy([], [], ['bbnj']);
     expect(lead.type).toBe('state');
   });
 
@@ -247,7 +258,7 @@ describe('selectLead', () => {
   it('ignores stories without short_summary', () => {
     const stories = [makeStory({ short_summary: null, description: null, topic: 'governance', significance_score: 80 })];
     const trackers = [makeTracker({ tracker_slug: 'bbnj', score: 5.0 })];
-    const lead = selectLead(stories, trackers, ['bbnj']);
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
     // No summary → drops to state-led
     expect(lead.type).toBe('state');
     if (lead.type === 'state') expect(lead.interpretation).toContain('Quiet');
@@ -256,8 +267,49 @@ describe('selectLead', () => {
   it('ignores stories not matching user content topics', () => {
     const stories = [makeStory({ topic: 'climate', significance_score: 80 })]; // climate not in bbnj topics
     const trackers = [makeTracker({ tracker_slug: 'bbnj', score: 5.0 })];
-    const lead = selectLead(stories, trackers, ['bbnj']);
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
     expect(lead.type).toBe('state');
+  });
+
+  // Coherence: Mode b must not pair a tracker headline with an unrelated story body
+  it('[mode b coherence] topic=all story never drives a tracker-branded headline', () => {
+    // Broad editorial story (topic='all') has no tracker affinity — must not produce
+    // "BBNJ Treaty at Pulse X. [Mongabay story about something else]."
+    const stories = [makeStory({ topic: 'all', significance_score: 13 })];
+    const trackers = [makeTracker({ tracker_slug: 'bbnj', score: 5.9 })];
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
+    // Must fall through to plain story lead, not tracker-framed state lead
+    expect(lead.type).toBe('story');
+  });
+
+  it('[mode b coherence] mismatched topic/tracker does not produce incoherent hybrid headline', () => {
+    // Production failure: user subscribes to ['imo-shipping', '30x30'].
+    // topStory = shipping story (sig=20); topTracker = '30x30' (score=7.0, higher than imo-shipping).
+    // Without coherence check: "30x30 at Pulse 7.0. Damen Fuel Flexible Tugs..."
+    // With coherence check: shipping does NOT map to 30x30 → plain story lead.
+    const stories = [
+      makeStory({ id: 'ship-1', topic: 'shipping', significance_score: 20, title: 'Damen Fuel Flexible Tugs announcement' }),
+    ];
+    const trackers = [
+      makeTracker({ tracker_slug: '30x30',      score: 7.0 }),
+      makeTracker({ tracker_slug: 'imo-shipping', score: 4.5 }),
+    ];
+    const lead = selectLeadLegacy(stories, trackers, ['imo-shipping', '30x30']);
+    // shipping topic does NOT map to 30x30 tracker → must NOT produce tracker-framed headline
+    expect(lead.type).toBe('story');
+    if (lead.type === 'story') expect(lead.headline).toContain('Damen');
+  });
+
+  it('[mode b coherence] matching topic/tracker still produces tracker-framed headline', () => {
+    // Positive case: governance story + bbnj tracker → topicMapsToTracker returns true → Mode b fires.
+    const stories = [makeStory({ topic: 'governance', significance_score: 13 })];
+    const trackers = [makeTracker({ tracker_slug: 'bbnj', score: 5.9 })];
+    const lead = selectLeadLegacy(stories, trackers, ['bbnj']);
+    expect(lead.type).toBe('state');
+    if (lead.type === 'state') {
+      expect(lead.headline).toContain('BBNJ Treaty');
+      expect(lead.headline).toContain('Pulse 5.9');
+    }
   });
 });
 

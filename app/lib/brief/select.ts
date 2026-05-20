@@ -1,7 +1,16 @@
 // app/lib/brief/select.ts
-// Pure sync content selection functions for the morning brief.
-// All 7 selection functions are pure - no DB, no async.
+// Content selection functions for the morning brief.
+// selectLead and helpers are pure sync (no DB, no async).
 // 3 async DB helpers are co-located for convenience (used by generate-brief).
+//
+// selectLead implements the C+D tiered selection from BRIEF-LEAD-SPEC.md:
+//   Gate 1 (major): significance >= 70 AND tracker ELEVATED or band crossing
+//   Gate 2 (edge):  delta-eligible stories ranked by inverse source ubiquity
+//   Fallback:       old hybrid logic when no delta-eligible stories exist (logged loudly)
+//
+// Delta classification (Haiku) is pre-computed in send-brief as classifyDeltaCandidates()
+// and passed here as deltaMap. actor/delta_verb/object from the classification are
+// reused by Stage 2 Model A/C headline generation — no second Haiku call needed.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
@@ -46,7 +55,11 @@ export interface TrackerScoreRow {
   score:           number;
   interpretation?: string | null;
   calculated_at:   string;
-  sparklineValues: number[]; // pre-fetched 12-week history
+  sparklineValues: number[];   // scores only, for sparkline rendering
+  // sparklineHistory includes timestamps for accurate band-crossing detection.
+  // Velocity cron runs every ~4 days (schedule: "0 6 */4 * *"), NOT weekly —
+  // array positions cannot define "this week". Always use calculated_at for windows.
+  sparklineHistory?: { score: number; calculated_at: string }[];
 }
 
 export interface GovernanceEventRow {
@@ -58,43 +71,136 @@ export interface GovernanceEventRow {
   governance_bodies?:{ name: string } | null;
 }
 
-// ── 1. selectLead ─────────────────────────────────────────────────────────────
+// ── Category classification result (Haiku, pre-computed in send-brief) ────────
 
 /**
- * Selects the single lead item for the brief.
+ * Result of categoryCandidates() Haiku call.
+ * category is the primary news angle of the story (phrasing-invariant by design).
+ * governance_significance is an advisory 0-100 score — NEVER used for gating or ordering.
+ * See brief-category-gate-redesign.md §3.1 for the Q5 reversal rationale.
  *
- * Three modes (relative significance threshold):
- * a) Story-led    — max significance in user-topic pool >= 50: clean story lead
- * b) Hybrid       — pool not empty but max significance < 50: tracker framing,
- *                   story body (significance scores vary widely by topic)
- * c) State-led    — empty pool: pure state-of-tracker for highest-pulse tracker
+ * governance_significance permissible uses:
+ *   (a) type definition — this interface
+ *   (b) cache write — INSERT into delta_classifications.governance_significance
+ *   (c) logging/diagnostics — Checkpoint 1 response only
+ * governance_significance MUST NOT appear in: sort comparators, gate conditions,
+ * floor checks, eligibility filters, or any code that influences lead selection.
+ * The 43% fragility finding (brief-category-gate-redesign.md §3.2) makes any
+ * accidental gov_sig reference in selection logic a silent rebuild of the fragile axis.
  */
-export function selectLead(
-  stories: StoryRow[],
-  trackers: TrackerScoreRow[],
-  userTopics: string[],        // tracker slugs, e.g. ['imo-shipping', 'bbnj']
-  recentlyLedIds: Set<string> = new Set(), // story IDs that led a brief in the last 7 days
+export interface CategoryClassification {
+  category: 'GOVERNANCE_CHANGE' | 'ANALYSIS_OR_FINDING' | 'COMMERCIAL_BUSINESS' | 'EXPLAINER_OR_DISCUSSION' | 'OTHER';
+  governance_significance: number;  // 0-100, ADVISORY ONLY — see comment above
+}
+
+/**
+ * @deprecated Verb-era classification (Delta Test, replaced by CategoryClassification).
+ * Old DB rows under prior prompt_versions still have these fields. Kept for rollback
+ * reference — one stable production week, then dropped with old columns.
+ */
+export interface DeltaClassification {
+  is_delta:   boolean;
+  actor:      string | null;
+  delta_verb: string | null;
+  object:     string | null;
+}
+
+// DELTA_VERB_ALLOWLIST removed — Delta Test abolished. See brief-category-gate-redesign.md.
+
+// ── 1. selectLead ─────────────────────────────────────────────────────────────
+
+/** Full result from selectLead, includes diagnostics for Checkpoint 1 logging. */
+export interface SelectLeadResult {
+  lead:                   LeadItem;
+  gate:                   'gate1' | 'gate2' | 'fallback';
+  leadStory:              StoryRow | null;   // null only on pure state fallback with no stories
+  categoryClassification: CategoryClassification | null;  // for Stage 2 Model A/C; null on fallback
+  diagnostics: {
+    totalCandidates:    number;   // stories matching user topics + has summary + not recently led
+    govChangeCount:     number;   // GOVERNANCE_CHANGE stories above SIG_FLOOR
+    oldTopStory:        StoryRow | null;  // what old significance-only logic would have chosen
+    gate1Count:         number;   // stories that cleared Gate 1 threshold
+    gate2Pool:          { storyId: string; title: string; ubiquity: number }[];
+    rejected:           { storyId: string; title: string; reason: string }[];
+  };
+}
+
+/** Returns all tracker slugs whose TRACKER_TO_TOPICS includes this story topic. */
+function topicsToTrackerSlugs(topic: string): string[] {
+  return Object.entries(TRACKER_TO_TOPICS)
+    .filter(([, topics]) => topics.includes(topic))
+    .map(([slug]) => slug);
+}
+
+/**
+ * Returns tracker slugs where the band changed in the last 7 days.
+ * Uses sparklineHistory with actual timestamps — velocity runs every ~4 days,
+ * not weekly, so "last 7 days" requires a calendar window, not array indexing.
+ * Trackers without sparklineHistory are skipped (treated as no crossing).
+ * bandForScore is the canonical function from utils.ts — no local redefinition.
+ */
+export function computeBandCrossings(trackers: TrackerScoreRow[]): Set<string> {
+  const windowStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const result      = new Set<string>();
+  for (const t of trackers) {
+    const hist = (t.sparklineHistory ?? [])
+      .slice()
+      .sort((a, b) => a.calculated_at.localeCompare(b.calculated_at));
+    if (hist.length < 2) continue;
+    const beforeWindow = hist.filter(h => new Date(h.calculated_at) < windowStart);
+    const inWindow     = hist.filter(h => new Date(h.calculated_at) >= windowStart);
+    if (beforeWindow.length === 0 || inWindow.length === 0) continue;
+    const bandBefore = bandForScore(beforeWindow[beforeWindow.length - 1].score);
+    const bandNow    = bandForScore(inWindow[inWindow.length - 1].score);
+    if (bandBefore !== bandNow) result.add(t.tracker_slug);
+  }
+  return result;
+}
+
+/**
+ * Counts distinct source organisations covering this story.
+ * Lower count = stronger edge signal for Gate 2 (fewer orgs know it).
+ * Near-duplicate: same topic + 3+ shared headline words + published within 7 days.
+ */
+export function computeSourceUbiquity(story: StoryRow, pool: StoryRow[]): number {
+  const sources    = new Set<string>([story.source_name]);
+  const storyWords = headlineWords(story.title);
+  for (const other of pool) {
+    if (other.id === story.id || other.topic !== story.topic) continue;
+    const diffDays =
+      Math.abs(new Date(story.published_at).getTime() - new Date(other.published_at).getTime()) /
+      (1000 * 60 * 60 * 24);
+    if (diffDays > 7) continue;
+    const otherWords = headlineWords(other.title);
+    let shared = 0;
+    for (const w of storyWords) if (otherWords.has(w)) shared++;
+    if (shared >= 3) sources.add(other.source_name);
+  }
+  return sources.size;
+}
+
+/**
+ * Returns true only when the story's topic maps to the given tracker slug.
+ * topic='all' always returns false — broad editorial stories have no tracker affinity
+ * and must never drive a tracker-branded headline.
+ */
+function topicMapsToTracker(topic: string, trackerSlug: string): boolean {
+  if (topic === 'all') return false;
+  return (TRACKER_TO_TOPICS[trackerSlug] ?? []).includes(topic);
+}
+
+/**
+ * Legacy significance-only lead logic, preserved exactly as the fallback path.
+ * Fires when no story passes the Haiku delta classification.
+ * Caller (send-brief) logs prominently and records delta_fallback=true in brief_sends.
+ */
+function selectLeadFallback(
+  baseCandidates: StoryRow[],          // pre-filtered + sorted sig desc
+  topTracker:     TrackerScoreRow | undefined,
 ): LeadItem {
-  // Derive content topic categories from tracker slugs
-  const contentTopics = new Set<string>(
-    userTopics.flatMap(t => TRACKER_TO_TOPICS[t] || [t])
-  );
+  const topStory = baseCandidates[0] ?? null;
+  const maxSig   = topStory?.significance_score ?? 0;
 
-  // Sort candidates by significance descending; require short_summary.
-  // Exclude stories that have already led a brief in the last 7 days.
-  const candidates = [...stories]
-    .filter(s => contentTopics.has(s.topic) && s.short_summary && !recentlyLedIds.has(s.id))
-    .sort((a, b) => (b.significance_score ?? 0) - (a.significance_score ?? 0));
-
-  const topStory  = candidates[0];
-  const maxSig    = topStory?.significance_score ?? 0;
-
-  // Top tracker for hybrid/state framing
-  const topTracker = [...trackers]
-    .filter(t => userTopics.includes(t.tracker_slug))
-    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-
-  // Mode a: story-led (significance threshold 35 — any summarised story of moderate relevance)
   if (topStory && maxSig >= 35) {
     return {
       type:           'story',
@@ -104,23 +210,19 @@ export function selectLead(
     };
   }
 
-  // Mode b: hybrid — tracker framing + story content.
-  // Guard: only fires when topTracker is WATCH band or above (score >= 4.0 per methodology Section 3).
-  // A LOW-band tracker must never headline the brief.
-  if (topStory && topTracker && topTracker.score >= 4.0) {
-    const trackerPart = `${TRACKER_LABELS[topTracker.tracker_slug] || topTracker.tracker_slug} at Pulse ${topTracker.score.toFixed(1)}`;
+  if (topStory && topTracker && topTracker.score >= 4.0
+      && topicMapsToTracker(topStory.topic, topTracker.tracker_slug)) {
+    const trackerPart     = `${TRACKER_LABELS[topTracker.tracker_slug] || topTracker.tracker_slug} at Pulse ${topTracker.score.toFixed(1)}`;
     const cleanStoryTitle = cleanTitle(topStory.title);
     return {
       type:            'state',
       headline:        `${trackerPart}. ${cleanStoryTitle}.`,
-      subjectHeadline: cleanStoryTitle,   // Bug 1 fix: short title for email subject
-      storyId:         topStory.id,       // Bug 2 fix: exclude from evidence
+      subjectHeadline: cleanStoryTitle,
+      storyId:         topStory.id,
       interpretation:  topStory.short_summary ?? topStory.description ?? '',
     };
   }
 
-  // LOW-band fallback: story exists but no tracker is WATCH+. Present as story-led
-  // so a quiet tracker never headlines the brief.
   if (topStory) {
     return {
       type:           'story',
@@ -130,7 +232,6 @@ export function selectLead(
     };
   }
 
-  // Mode c: state-led — pure tracker fallback
   if (topTracker) {
     const label = TRACKER_LABELS[topTracker.tracker_slug] || topTracker.tracker_slug;
     return {
@@ -140,11 +241,182 @@ export function selectLead(
     };
   }
 
-  // Absolute fallback (no stories, no trackers)
   return {
     type:           'state',
     headline:       'Quiet morning across your tracked domains.',
     interpretation: 'No significant developments in your areas in the last 48 hours.',
+  };
+}
+
+// Significance floor for THE LEAD slot.
+// NOTE: 35 is the starting value, carried over from the verb-era backtest for initial
+// implementation only. The 30-day category-gate backtest must report day-by-day leads
+// at floors 30 / 35 / 40 against the category-gated pool. The floor is chosen from
+// that data — not assumed to transfer from the verb era. Do not treat 35 as finalized.
+const SIG_FLOOR = 35;
+
+/**
+ * Selects the single lead item per brief-category-gate-redesign.md tiered selection.
+ *
+ * categoryMap must be pre-computed by categoryCandidates() in send-brief before
+ * the subscriber loop. When categoryMap is empty (e.g. unit tests), every story fails
+ * the GOVERNANCE_CHANGE filter and the function falls back to THE SIGNAL path,
+ * preserving all existing test behaviour.
+ *
+ * Gate 1: category=GOVERNANCE_CHANGE + sig>=70 + tracker ELEVATED or band crossing
+ * Gate 2: category=GOVERNANCE_CHANGE + sig>=SIG_FLOOR, ranked sig desc (ubiquity tiebreaker)
+ * THE SIGNAL (fallback): no qualifying GOVERNANCE_CHANGE → best story/tracker any category
+ *
+ * governance_significance from categoryMap is NEVER used for gating or ordering.
+ * It is written to the cache and logged in diagnostics only.
+ *
+ * Returns SelectLeadResult with full diagnostics for Checkpoint 1 logging.
+ */
+export function selectLead(
+  stories:        StoryRow[],
+  trackers:       TrackerScoreRow[],
+  userTopics:     string[],
+  recentlyLedIds: Set<string>                        = new Set(),
+  categoryMap:    Map<string, CategoryClassification> = new Map(),
+  bandCrossings:  Set<string>                        = new Set(),
+): SelectLeadResult {
+  const contentTopics = new Set<string>(
+    userTopics.flatMap(t => TRACKER_TO_TOPICS[t] || [t])
+  );
+
+  // Base candidates: topic-matched (or topic='all'), summarised, not recently led, sorted sig desc.
+  // topic='all' stories come from broad editorial sources (Oceana, Mongabay, Hakai, Oceanographic)
+  // and are eligible for all subscribers regardless of their specific topic subscriptions.
+  const baseCandidates = [...stories]
+    .filter(s => (contentTopics.has(s.topic) || s.topic === 'all') && s.short_summary && !recentlyLedIds.has(s.id))
+    .sort((a, b) => (b.significance_score ?? 0) - (a.significance_score ?? 0));
+
+  // What the old significance-only logic would have chosen (Checkpoint 1 comparison)
+  const oldTopStory = baseCandidates.find(s => (s.significance_score ?? 0) >= SIG_FLOOR) ?? null;
+
+  const topTracker = [...trackers]
+    .filter(t => userTopics.includes(t.tracker_slug))
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+
+  // Filter: GOVERNANCE_CHANGE + sig >= SIG_FLOOR
+  // governance_significance is NOT used here — category only, ordered by significance_score.
+  const rejected: SelectLeadResult['diagnostics']['rejected'] = [];
+  const govChangeEligible = baseCandidates.filter(s => {
+    const cls = categoryMap.get(s.id);
+    if (!cls || cls.category !== 'GOVERNANCE_CHANGE') {
+      rejected.push({ storyId: s.id, title: s.title, reason: `not GOVERNANCE_CHANGE (${cls?.category ?? 'unclassified'})` });
+      return false;
+    }
+    if ((s.significance_score ?? 0) < SIG_FLOOR) {
+      rejected.push({ storyId: s.id, title: s.title, reason: `sig ${s.significance_score} < ${SIG_FLOOR} floor` });
+      return false;
+    }
+    return true;
+  });
+
+  // Gate 1: sig >= 70 AND (story's tracker at ELEVATED OR band crossed this week)
+  const gate1 = govChangeEligible.filter(s => {
+    if ((s.significance_score ?? 0) < 70) return false;
+    const slugs      = topicsToTrackerSlugs(s.topic);
+    const isElevated = slugs.some(slug => {
+      const tr = trackers.find(t => t.tracker_slug === slug);
+      return tr && bandForScore(tr.score) === 'ELEVATED';
+    });
+    return isElevated || slugs.some(slug => bandCrossings.has(slug));
+  });
+
+  if (gate1.length > 0) {
+    const chosen = gate1[0]; // highest sig (already sorted)
+    const cls    = categoryMap.get(chosen.id)!;
+    gate1.slice(1).forEach(s =>
+      rejected.push({ storyId: s.id, title: s.title, reason: `lost Gate 1 ranking (sig: ${s.significance_score})` })
+    );
+    govChangeEligible
+      .filter(s => !gate1.some(g => g.id === s.id))
+      .forEach(s =>
+        rejected.push({ storyId: s.id, title: s.title, reason: `sig ${s.significance_score} < 70 or tracker not ELEVATED/crossing` })
+      );
+    return {
+      lead: {
+        type:           'story',
+        headline:       cleanTitle(chosen.title), // Stage 2 replaces with Model C
+        storyId:        chosen.id,
+        interpretation: chosen.short_summary ?? chosen.description ?? '',
+      },
+      gate:                   'gate1',
+      leadStory:              chosen,
+      categoryClassification: cls,
+      diagnostics: {
+        totalCandidates: baseCandidates.length,
+        govChangeCount:  govChangeEligible.length,
+        oldTopStory,
+        gate1Count:      gate1.length,
+        gate2Pool:       [],
+        rejected,
+      },
+    };
+  }
+
+  // Gate 2: all govChangeEligible, ranked significance_score desc (ubiquity as tiebreaker only).
+  // governance_significance is NOT referenced here.
+  if (govChangeEligible.length > 0) {
+    const ranked = govChangeEligible
+      .map(s => ({ story: s, ubiquity: computeSourceUbiquity(s, stories) }))
+      .sort((a, b) =>
+        (b.story.significance_score ?? 0) !== (a.story.significance_score ?? 0)
+          ? (b.story.significance_score ?? 0) - (a.story.significance_score ?? 0)
+          : a.ubiquity - b.ubiquity   // lower ubiquity = stronger edge signal, tiebreaker only
+      );
+    const chosen = ranked[0].story;
+    const cls    = categoryMap.get(chosen.id)!;
+    ranked.slice(1).forEach(r =>
+      rejected.push({
+        storyId: r.story.id,
+        title:   r.story.title,
+        reason:  `lost Gate 2 ranking (sig: ${r.story.significance_score}, ubiquity: ${r.ubiquity})`,
+      })
+    );
+    return {
+      lead: {
+        type:           'story',
+        headline:       cleanTitle(chosen.title), // Stage 2 replaces with Model A
+        storyId:        chosen.id,
+        interpretation: chosen.short_summary ?? chosen.description ?? '',
+      },
+      gate:                   'gate2',
+      leadStory:              chosen,
+      categoryClassification: cls,
+      diagnostics: {
+        totalCandidates: baseCandidates.length,
+        govChangeCount:  govChangeEligible.length,
+        oldTopStory,
+        gate1Count:      0,
+        gate2Pool:       ranked.map(r => ({
+          storyId:  r.story.id,
+          title:    r.story.title.slice(0, 70),
+          ubiquity: r.ubiquity,
+        })),
+        rejected,
+      },
+    };
+  }
+
+  // THE SIGNAL (fallback): no GOVERNANCE_CHANGE story at sig>=SIG_FLOOR.
+  // Fires selectLeadFallback — highest-sig story any category, or tracker state.
+  // Caller logs and records delta_fallback=true in brief_sends.
+  return {
+    lead:                   selectLeadFallback(baseCandidates, topTracker),
+    gate:                   'fallback',
+    leadStory:              baseCandidates[0] ?? null,
+    categoryClassification: null,
+    diagnostics: {
+      totalCandidates: baseCandidates.length,
+      govChangeCount:  0,
+      oldTopStory,
+      gate1Count:      0,
+      gate2Pool:       [],
+      rejected,
+    },
   };
 }
 
@@ -350,8 +622,9 @@ export function selectEvidence(
   );
 
   // Pass 1a: id exclusion
+  // topic='all' included: broad editorial sources are eligible evidence for all subscribers
   const candidates = stories.filter(
-    s => s.id !== leadId && !!s.short_summary && contentTopics.has(s.topic)
+    s => s.id !== leadId && !!s.short_summary && (contentTopics.has(s.topic) || s.topic === 'all')
   );
 
   // Pass 1b: anchor-based lead-proximity filter
@@ -431,8 +704,9 @@ export function selectAcrossSector(
     userTopics.flatMap(t => TRACKER_TO_TOPICS[t] || [t])
   );
 
+  // topic='all' excluded from cross-sector: it is in-scope for all subscribers (not genuinely cross-sector)
   const candidate = [...stories]
-    .filter(s => !contentTopics.has(s.topic) && !!s.short_summary)
+    .filter(s => !contentTopics.has(s.topic) && s.topic !== 'all' && !!s.short_summary)
     .sort((a, b) => (b.significance_score ?? 0) - (a.significance_score ?? 0))[0];
 
   if (!candidate) return null;
@@ -522,10 +796,16 @@ export async function fetchTrackerScores(
         .gte('calculated_at', d12w)
         .order('calculated_at', { ascending: true })
         .limit(12);
-      const sparklineValues = (hist ?? []).map(h => h.score ?? 0);
+      const histRows        = hist ?? [];
+      const sparklineValues = histRows.map(h => h.score ?? 0);
+      const sparklineHistory = histRows.map(h => ({
+        score:        h.score ?? 0,
+        calculated_at: h.calculated_at,
+      }));
       return {
         ...t,
-        sparklineValues: sparklineValues.length >= 2 ? sparklineValues : [t.score, t.score],
+        sparklineValues:   sparklineValues.length >= 2 ? sparklineValues : [t.score, t.score],
+        sparklineHistory:  sparklineHistory,
       };
     })
   );
