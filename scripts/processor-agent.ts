@@ -258,7 +258,7 @@ Return only corrected JSON. No markdown.`,
   const regionTags = Array.isArray(verified.region_tags) ? verified.region_tags as string[] : [];
 
   // STEP 5 — VALIDATE
-  if (primaryTitle.length <= 5 || /^https?:\/\//.test(primaryTitle) || /\.\w{2,4}$/.test(primaryTitle)) {
+  if (primaryTitle.length <= 5 || /^https?:\/\//.test(primaryTitle) || /\.[a-zA-Z]{2,4}$/.test(primaryTitle)) {
     await markFailed(item.id, `Validation failed: bad title "${primaryTitle}"`);
     return;
   }
