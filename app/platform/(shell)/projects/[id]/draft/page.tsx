@@ -15,10 +15,40 @@ import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
+import { Extension } from "@tiptap/core";
+
+// Custom FontSize extension — TextStyle does not include fontSize by default.
+// @tiptap/extension-font-size is Tiptap Pro (paid), so we declare the attribute inline.
+const FontSizeExtension = Extension.create({
+  name: "fontSize",
+  addOptions() { return { types: ["textStyle"] }; },
+  addGlobalAttributes() {
+    return [{
+      types: this.options.types,
+      attributes: {
+        fontSize: {
+          default: null,
+          parseHTML: (el: HTMLElement) => el.style.fontSize || null,
+          renderHTML: (attrs: Record<string, unknown>) =>
+            attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
+        },
+      },
+    }];
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: string) => ({ chain }: any) =>
+        chain().setMark("textStyle", { fontSize: size }).run(),
+      unsetFontSize: () => ({ chain }: any) =>
+        chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+    } as any;
+  },
+});
 
 const TEAL = "#1D9E75";
 const NAVY = "#0F1117";
-const F = "var(--font-ui), 'Inter', -apple-system, sans-serif";
+// Item 5: DM Sans locked per TIDELINE-CONTEXT.md, Inter removed
+const F = "var(--font-ui), 'DM Sans', system-ui, sans-serif";
 const BD = "#E8EAED";
 const T1 = "#202124";
 const T3 = "#5F6368";
@@ -39,6 +69,7 @@ const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48];
 
 type SaveState = "idle" | "saving" | "saved";
 
+// Kept for backward-compat: if stored content is plain text (old drafts), convert to minimal HTML
 function htmlFromMarkdown(md: string): string {
   if (!md) return "";
   const lines = md.split(/\r?\n/);
@@ -60,9 +91,15 @@ function htmlFromMarkdown(md: string): string {
   return out.join("");
 }
 
+interface ProjectSource {
+  name: string;
+  summary?: string;
+}
+
 export default function DraftEditorPage() {
   const params = useParams();
   const router = useRouter();
+  // projectId is the project NAME from the URL segment (workspace passes encodeURIComponent(activeProject))
   const projectId = decodeURIComponent(params.id as string);
 
   const [title, setTitle] = useState("Untitled draft");
@@ -73,16 +110,25 @@ export default function DraftEditorPage() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([]);
   const [outline, setOutline] = useState<{ id: string; level: number; text: string }[]>([]);
-  const [sources, setSources] = useState<{ name: string; type: string }[]>([]);
   const [wordCount, setWordCount] = useState(0);
   const [exportOpen, setExportOpen] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [fontSize, setFontSize] = useState(11);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [colorOpen, setColorOpen] = useState(false);
+  // Item 10: focus mode state
+  const [focusMode, setFocusMode] = useState(false);
+  // Item 9: word count toast state
+  const [wordCountToast, setWordCountToast] = useState(false);
+  // Item 3: real project UUID (project_drafts.project_id is uuid FK, URL param is project name)
+  const realProjectId = useRef<string>("");
+  // Item 2+3: project sources loaded on mount
+  const [projectSources, setProjectSources] = useState<ProjectSource[]>([]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentLoaded = useRef(false);
+  const menuBarRef = useRef<HTMLDivElement>(null);
+  const colorBtnRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }), []);
 
   const updateDerived = useCallback((editorInstance: ReturnType<typeof useEditor>) => {
@@ -117,16 +163,18 @@ export default function DraftEditorPage() {
     setOutline(headings);
   }, []);
 
+  // Item 1: save HTML, not plain text. Item 3: use realProjectId (UUID) not project name.
   const saveContent = useCallback(async (editorInstance: ReturnType<typeof useEditor>) => {
     if (!editorInstance) return;
+    const id = realProjectId.current || projectId;
     setSaveState("saving");
     try {
-      await fetch(`/api/projects/${projectId}/draft`, {
+      await fetch(`/api/projects/${encodeURIComponent(id)}/draft`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          content: editorInstance.getText(),
+          content: editorInstance.getHTML(), // Item 1: was getText()
           format,
           tone,
         }),
@@ -147,6 +195,7 @@ export default function DraftEditorPage() {
         types: ["heading", "paragraph"],
       }),
       TextStyle,
+      FontSizeExtension,
       Color,
       Highlight.configure({ multicolor: true }),
       FontFamily,
@@ -173,29 +222,60 @@ export default function DraftEditorPage() {
     },
   });
 
-  // Load draft
+  // Item 3: fetch project on mount to get real UUID + project sources
   useEffect(() => {
-    if (!editor) return;
+    let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/projects/${projectId}/draft`);
+        const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}`);
+        if (!res.ok || cancelled) return;
+        const d = await res.json();
+        if (d.project_id) realProjectId.current = d.project_id;
+        const stories: { title: string; short_summary?: string }[] = d.stories || [];
+        const docs: { title: string }[] = d.documents || [];
+        setProjectSources([
+          ...stories.map(s => ({ name: s.title, summary: s.short_summary || "" })),
+          ...docs.map(doc => ({ name: doc.title })),
+        ]);
+      } catch { /* non-fatal */ }
+    })();
+    return () => { cancelled = true; };
+  }, [projectId]);
+
+  // Load draft — uses realProjectId once set (waits for project fetch above)
+  useEffect(() => {
+    if (!editor) return;
+    let cancelled = false;
+    const load = async () => {
+      // Wait briefly for realProjectId to be populated by the project fetch
+      await new Promise(r => setTimeout(r, 100));
+      if (cancelled) return;
+      const id = realProjectId.current || projectId;
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(id)}/draft`);
         const json = await res.json();
         const d = json?.draft;
         if (d) {
           if (d.title) { setTitle(d.title); setProjectName(d.title); }
           if (d.format) setFormat(d.format);
           if (d.tone) setTone(d.tone);
-          const html = htmlFromMarkdown(d.content || "");
-          editor.commands.setContent(html);
-          contentLoaded.current = true;
-          updateDerived(editor);
+          // Item 1: if content is HTML (starts with <), load directly; else use markdown converter (backward compat)
+          const raw = d.content || "";
+          const html = raw.trimStart().startsWith("<") ? raw : htmlFromMarkdown(raw);
+          if (!cancelled) {
+            editor.commands.setContent(html);
+            contentLoaded.current = true;
+            updateDerived(editor);
+          }
         } else {
-          contentLoaded.current = true;
+          if (!cancelled) contentLoaded.current = true;
         }
       } catch {
-        contentLoaded.current = true;
+        if (!cancelled) contentLoaded.current = true;
       }
-    })();
+    };
+    load();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, projectId]);
 
@@ -203,17 +283,19 @@ export default function DraftEditorPage() {
     if (editor) saveContent(editor);
   }, [editor, saveContent]);
 
+  // Item 3: pass real project sources to compile; use realProjectId for URL
   const regenerate = async () => {
     if (regenerating || !editor) return;
     setRegenerating(true);
     try {
+      const id = realProjectId.current || projectId;
       const notes = editor.getText();
-      const res = await fetch(`/api/projects/${projectId}/draft/compile`, {
+      const res = await fetch(`/api/projects/${encodeURIComponent(id)}/draft/compile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notes,
-          sources: [],
+          sources: projectSources, // Item 3: was []
           format,
           tone,
           projectName: projectName || title,
@@ -222,7 +304,9 @@ export default function DraftEditorPage() {
       if (!res.ok) throw new Error("compile failed");
       const json = await res.json();
       const newContent: string = json?.draft?.content || "";
-      editor.commands.setContent(htmlFromMarkdown(newContent));
+      // Item 1: compile returns plain text from Claude, convert to HTML for editor
+      const html = newContent.trimStart().startsWith("<") ? newContent : htmlFromMarkdown(newContent);
+      editor.commands.setContent(html);
       updateDerived(editor);
     } catch {
       // swallow
@@ -231,12 +315,35 @@ export default function DraftEditorPage() {
     }
   };
 
-  // Close menus on outside click
+  // Close menus/pickers on outside click.
+  // e.stopPropagation() on React synthetic events does NOT stop native events from
+  // reaching document in React 17+ (delegation is at root, not document). Fix: bail
+  // out if the click originated inside the menu bar or colour picker wrapper.
   useEffect(() => {
-    const handler = () => { setOpenMenu(null); setColorOpen(false); };
+    const handler = (e: MouseEvent) => {
+      if (menuBarRef.current?.contains(e.target as Node)) return;
+      if (colorBtnRef.current?.contains(e.target as Node)) return;
+      setOpenMenu(null);
+      setColorOpen(false);
+    };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, []);
+
+  // Item 7: Ctrl+S keyboard shortcut. Item 10: Escape exits focus mode.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (editor) saveContent(editor);
+      }
+      if (e.key === "Escape" && focusMode) {
+        setFocusMode(false);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [editor, saveContent, focusMode]);
 
   const visibleWarnings = warnings.filter(w => !dismissedWarnings.includes(w));
 
@@ -246,13 +353,14 @@ export default function DraftEditorPage() {
     : editor?.isActive("heading", { level: 3 }) ? "Heading 3"
     : "Normal text";
 
-  const currentFont = (editor?.getAttributes("textStyle")?.fontFamily as string) || "Inter";
+  // Item 5: default fallback is DM Sans
+  const currentFont = (editor?.getAttributes("textStyle")?.fontFamily as string) || "DM Sans";
 
-  // Active button style helper
+  // Item 4: active state uses teal, not blue (#1A73E8 removed per CLAUDE_RULES.md)
   const tbBtnActive = (active: boolean): React.CSSProperties => ({
     ...tbBtn,
-    background: active ? "#E8F0FE" : "transparent",
-    color: active ? "#1A73E8" : T1,
+    background: active ? "rgba(29,158,117,0.12)" : "transparent",
+    color: active ? TEAL : T1,
   });
 
   // Menu dropdown items
@@ -268,7 +376,8 @@ export default function DraftEditorPage() {
       { label: "Select all", action: () => editor?.chain().focus().selectAll().run(), shortcut: "Ctrl+A" },
     ],
     View: [
-      { label: "Focus mode", action: () => {} },
+      // Item 10: focus mode wired
+      { label: focusMode ? "Exit focus mode" : "Focus mode", action: () => setFocusMode(f => !f) },
     ],
     Insert: [
       { label: "Link", action: () => { const u = prompt("Link URL"); if (u && editor) editor.chain().focus().setLink({ href: u }).run(); } },
@@ -279,7 +388,14 @@ export default function DraftEditorPage() {
       { label: "Clear formatting", action: () => editor?.chain().focus().clearNodes().unsetAllMarks().run() },
     ],
     Tools: [
-      { label: "Word count", action: () => alert(`${wordCount} words`) },
+      // Item 9: replace alert() with inline toast
+      {
+        label: "Word count",
+        action: () => {
+          setWordCountToast(true);
+          setTimeout(() => setWordCountToast(false), 2500);
+        },
+      },
     ],
   };
 
@@ -314,8 +430,8 @@ export default function DraftEditorPage() {
         </div>
       </div>
 
-      {/* MENU BAR */}
-      <div style={{ height: 36, background: "#fff", borderBottom: `1px solid ${BD}`, display: "flex", alignItems: "center", padding: "0 8px", flexShrink: 0, position: "relative" }}>
+      {/* MENU BAR — Item 10: hidden in focus mode */}
+      <div ref={menuBarRef} style={{ height: 36, background: "#fff", borderBottom: `1px solid ${BD}`, display: focusMode ? "none" : "flex", alignItems: "center", padding: "0 8px", flexShrink: 0, position: "relative" }}>
         {["File", "Edit", "View", "Insert", "Format", "Tools"].map(item => (
           <div key={item} style={{ position: "relative" }}>
             <span
@@ -385,15 +501,14 @@ export default function DraftEditorPage() {
         </select>
         <Sep />
 
-        {/* Font family */}
+        {/* Item 5: font family — Inter removed, DM Sans is default */}
         <select
           value={currentFont}
           onChange={e => editor?.chain().focus().setFontFamily(e.target.value).run()}
           style={tbSelect}
         >
-          <option value="Inter">Inter</option>
-          <option value="Georgia">Georgia</option>
           <option value="DM Sans">DM Sans</option>
+          <option value="Georgia">Georgia</option>
         </select>
         <Sep />
 
@@ -404,7 +519,7 @@ export default function DraftEditorPage() {
               const idx = FONT_SIZES.indexOf(fontSize);
               const next = FONT_SIZES[Math.max(0, idx - 1)] || FONT_SIZES[0];
               setFontSize(next);
-              editor?.chain().focus().setMark("textStyle", { fontSize: `${next}px` }).run();
+              editor?.chain().focus().setFontSize(`${next}px`).run();
             }}
             style={tbBtn}
           >
@@ -415,7 +530,7 @@ export default function DraftEditorPage() {
             onChange={e => {
               const s = parseInt(e.target.value);
               setFontSize(s);
-              editor?.chain().focus().setMark("textStyle", { fontSize: `${s}px` }).run();
+              editor?.chain().focus().setFontSize(`${s}px`).run();
             }}
             style={{ width: 44, height: 24, textAlign: "center", border: `1px solid ${BD}`, borderRadius: 3, fontFamily: F, fontSize: 12 }}
           >
@@ -426,7 +541,7 @@ export default function DraftEditorPage() {
               const idx = FONT_SIZES.indexOf(fontSize);
               const next = FONT_SIZES[Math.min(FONT_SIZES.length - 1, idx + 1)] || FONT_SIZES[FONT_SIZES.length - 1];
               setFontSize(next);
-              editor?.chain().focus().setMark("textStyle", { fontSize: `${next}px` }).run();
+              editor?.chain().focus().setFontSize(`${next}px`).run();
             }}
             style={tbBtn}
           >
@@ -443,8 +558,8 @@ export default function DraftEditorPage() {
         <Sep />
 
         {/* Text colour */}
-        <div style={{ position: "relative" }}>
-          <button onClick={e => { e.stopPropagation(); setColorOpen(!colorOpen); }} style={tbBtn}>
+        <div ref={colorBtnRef} style={{ position: "relative" }}>
+          <button onClick={() => setColorOpen(!colorOpen)} style={tbBtn}>
             <span style={{ borderBottom: `3px solid ${(editor?.getAttributes("textStyle")?.color as string) || "#000"}` }}>A</span>
           </button>
           {colorOpen && (
@@ -460,9 +575,9 @@ export default function DraftEditorPage() {
           )}
         </div>
 
-        {/* Highlight */}
+        {/* Item 8: Highlight — fixed active state (was always #FBBC04 on both branches) */}
         <button onClick={() => editor?.chain().focus().toggleHighlight({ color: "#FBBC04" }).run()} style={tbBtnActive(editor?.isActive("highlight") || false)}>
-          <span style={{ background: editor?.isActive("highlight") ? "#FBBC04" : "#FBBC04", padding: "0 2px", borderRadius: 2 }}>H</span>
+          <span style={{ background: editor?.isActive("highlight") ? "#FBBC04" : "transparent", padding: "0 2px", borderRadius: 2 }}>H</span>
         </button>
         <Sep />
 
@@ -514,14 +629,16 @@ export default function DraftEditorPage() {
 
       {/* BODY SPLIT */}
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        {/* LEFT PANEL */}
-        <div style={{ width: 240, background: "#fff", borderRight: `1px solid ${BD}`, overflowY: "auto", paddingTop: 16 }}>
+        {/* LEFT PANEL — Item 10: hidden in focus mode */}
+        <div style={{ width: 240, background: "#fff", borderRight: `1px solid ${BD}`, overflowY: "auto", paddingTop: 16, display: focusMode ? "none" : undefined }}>
           <div style={{ padding: "0 16px 12px", fontFamily: F, fontSize: 13, fontWeight: 500, color: T1 }}>Document outline</div>
+          {/* Item 2: renamed to "Sources", shows real count, removed hardcoded rows */}
           <div style={{ margin: "0 16px 12px", background: "rgba(29,158,117,0.06)", border: "1px solid rgba(29,158,117,0.2)", borderRadius: 6, padding: "10px 12px" }}>
-            <div style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, marginBottom: 6 }}>Draft integrity</div>
-            <div style={integrityRow}><span>Notes used</span><span style={{ color: TEAL }}>94%</span></div>
-            <div style={integrityRow}><span>Sources</span><span>{sources.length} files</span></div>
-            <div style={integrityRow}><span>Added by Tideline</span><span style={{ color: TEAL }}>None</span></div>
+            <div style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: TEAL, marginBottom: 6 }}>Sources</div>
+            <div style={integrityRow}>
+              <span>Attached</span>
+              <span>{projectSources.length} {projectSources.length === 1 ? "source" : "sources"}</span>
+            </div>
           </div>
           <div style={{ height: 1, background: "#F0F0F0" }} />
           {outline.length === 0 ? (
@@ -533,12 +650,11 @@ export default function DraftEditorPage() {
           ))}
           <div style={{ height: 1, background: "#F0F0F0", margin: "8px 0" }} />
           <div style={{ padding: "0 16px 8px", fontFamily: F, fontSize: 11, textTransform: "uppercase", color: T4 }}>Sources cited</div>
-          {sources.length === 0 ? (
+          {projectSources.length === 0 ? (
             <div style={{ padding: "0 16px 16px", fontFamily: F, fontSize: 12, color: T4 }}>No sources attached</div>
-          ) : sources.map((s, i) => (
-            <div key={i} style={{ padding: "6px 16px", fontFamily: F, fontSize: 12, color: T3, display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 3, background: "#F1F3F4", color: T3 }}>{s.type}</span>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
+          ) : projectSources.map((s, i) => (
+            <div key={i} style={{ padding: "6px 16px", fontFamily: F, fontSize: 12, color: T3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {s.name}
             </div>
           ))}
         </div>
@@ -560,7 +676,7 @@ export default function DraftEditorPage() {
               .tl-draft-body h3 { font-size: 14px; font-weight: 600; margin-top: 1.2em; margin-bottom: 0.4em; }
               .tl-draft-body ul, .tl-draft-body ol { padding-left: 24px; margin-bottom: 1em; }
               .tl-draft-body li { margin-bottom: 0.3em; }
-              .tl-draft-body a { color: #1A73E8; text-decoration: underline; }
+              .tl-draft-body a { color: #1D9E75; text-decoration: underline; }
               .tl-draft-body table { border-collapse: collapse; margin: 1em 0; width: 100%; }
               .tl-draft-body th, .tl-draft-body td { border: 1px solid ${BD}; padding: 8px 12px; text-align: left; font-size: 13px; }
               .tl-draft-body th { background: #F8F9FA; font-weight: 600; }
@@ -580,25 +696,58 @@ export default function DraftEditorPage() {
         </div>
       </div>
 
-      {/* STATUS BAR */}
-      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, height: 28, background: "#fff", borderTop: "1px solid #E0E0E0", display: "flex", alignItems: "center", padding: "0 16px", fontFamily: F, fontSize: 11, color: T3, gap: 16 }}>
+      {/* STATUS BAR — Item 10: hidden in focus mode */}
+      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, height: 28, background: "#fff", borderTop: "1px solid #E0E0E0", display: focusMode ? "none" : "flex", alignItems: "center", padding: "0 16px", fontFamily: F, fontSize: 11, color: T3, gap: 16 }}>
         <span>{wordCount} words</span>
         <span>{saveState === "saving" ? "Saving..." : "Saved just now"}</span>
-        <span>{sources.length} sources &middot; {format} &middot; {tone}</span>
+        <span>{projectSources.length} sources &middot; {format} &middot; {tone}</span>
       </div>
 
-      {/* EXPORT MODAL */}
+      {/* Item 9: word count toast */}
+      {wordCountToast && (
+        <div style={{ position: "fixed", bottom: 44, left: "50%", transform: "translateX(-50%)", background: "#202124", color: "#fff", borderRadius: 6, padding: "8px 16px", fontFamily: F, fontSize: 12, fontWeight: 500, zIndex: 500, whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+          {wordCount} words &middot; ~{Math.max(1, Math.ceil(wordCount / 200))} min read
+        </div>
+      )}
+
+      {/* EXPORT MODAL — Item 6: Word wired, others disabled with Coming soon */}
       {exportOpen && (
         <div onClick={() => setExportOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 8, width: 420, padding: 24, fontFamily: F }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: T1, marginBottom: 14 }}>Export draft</div>
             {[
-              { label: "Word (.docx)", action: "download" },
-              { label: "PDF", action: "download" },
-              { label: "Shareable link", action: "copy to clipboard" },
-              { label: "Citations (.bib)", action: "download" },
+              {
+                label: "Word (.docx)",
+                action: "download",
+                live: true,
+                onClick: async () => {
+                  const id = realProjectId.current || projectId;
+                  const res = await fetch(`/api/projects/${encodeURIComponent(id)}/draft/export`, { method: "POST" });
+                  if (!res.ok) return;
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "-").toLowerCase() || "draft"}.docx`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setExportOpen(false);
+                },
+              },
+              { label: "PDF", action: "Coming soon", live: false, onClick: undefined },
+              { label: "Shareable link", action: "Coming soon", live: false, onClick: undefined },
+              { label: "Citations (.bib)", action: "Coming soon", live: false, onClick: undefined },
             ].map(o => (
-              <button key={o.label} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 12px", marginBottom: 6, border: `1px solid ${BD}`, borderRadius: 4, background: "#fff", fontFamily: F, fontSize: 13, color: T1, cursor: "pointer" }}>
+              <button
+                key={o.label}
+                onClick={o.live && o.onClick ? o.onClick : undefined}
+                disabled={!o.live}
+                style={{
+                  display: "block", width: "100%", textAlign: "left", padding: "10px 12px", marginBottom: 6,
+                  border: `1px solid ${BD}`, borderRadius: 4, background: "#fff", fontFamily: F, fontSize: 13, color: o.live ? T1 : T4,
+                  cursor: o.live ? "pointer" : "not-allowed", opacity: o.live ? 1 : 0.55,
+                }}
+              >
                 {o.label}
                 <span style={{ float: "right", color: T4, fontSize: 11 }}>{o.action}</span>
               </button>
