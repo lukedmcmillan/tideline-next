@@ -2,6 +2,28 @@
 
 ---
 
+## FEED COVERAGE (P2): Add conservation-tagged source(s) for 30x30 and cites-marine trackers
+
+**Priority:** P2
+**Discovered:** 2026-05-18
+
+### Problem
+`TRACKER_TO_TOPICS` maps `30x30` → `["conservation", "mpa"]` and `cites-marine` → `["conservation", "science"]`. No source in `app/lib/sources.ts` produces `topic: "conservation"`. Both trackers rely entirely on secondary topic paths (mpa, science) for their brief content — they have no dedicated conservation content source.
+
+The mapping is intentionally left in place as a known-failing marker. Removing it would hide the coverage gap.
+
+### Candidate sources to add with `topic: "conservation"`
+- IUCN (iucnredlist.org or iucn.org/news/rss.xml) — currently listed as `topic: "iucn"` in original sources; reassign or add
+- WWF Oceans (removed from current active sources) — restore with `topic: "conservation"`
+- Blue Marine Foundation (currently `topic: "mpa"`) — could add separate conservation-specific feed
+
+### Acceptance criteria
+- At least one source with `topic: "conservation"` in `app/lib/sources.ts`, producing live stories in the DB
+- Verify stories appear in brief pool for gmail user (30x30 and cites-marine tracker subscribers)
+- Check `stories.topic` distribution after first fetch-feeds run with new source
+
+---
+
 ## BUG (PRIORITY 1 — next session): Workspace creation modal does not persist
 
 **Priority:** P1
@@ -543,6 +565,24 @@ Currently a story matching N entities produces 1 row attributed to whichever mat
 
 ---
 
+## 2026-05-12 additions
+
+### INVESTIGATE: IISD ENB CITES CoP20 coverage as secondary-source workaround
+
+**Priority:** Low
+**Discovered:** 2026-05-12
+
+CITES CoP20 Decisions (38 records) are unrecoverable via primary source — cites.org blocks Jina with CAPTCHA and InforMEA OData has no PDF attachments for these records. ENB (Earth Negotiations Bulletin) publishes PDF daily summaries covering CITES CoP sessions, including decision text. Less authoritative than the official cites.org records but would fill the missing operational layer for the CITES Marine tracker.
+
+### Work needed
+1. Locate IISD ENB CITES CoP20 coverage: `https://enb.iisd.org/cites/cop20/`
+2. Check if ENB CoP20 daily summaries contain verbatim decision text or paraphrased summaries
+3. Check if ENB publishes a structured index or RSS for the CoP20 session
+4. Decide: ingest as `document_type='report'` with `source_organisation='IISD ENB'` and note in `subtitle` that this is a secondary source
+5. If suitable: queue PDFs via document_queue and process via existing processor-agent pipeline
+
+---
+
 ## 2026-05-08 additions
 
 ### DATA AUDIT: Ambiguous short-name entities (matcher noise)
@@ -613,3 +653,6 @@ Route: app/api/cron/project-populate/route.ts
 
 ### 3. People-as-section question (defer to user research)
 The People/PeopleTabContent stub was removed with Intel and Live. Before rebuilding, confirm in the user research round (2 marine lawyers + 1 ESG analyst) whether tracked people deserve a separate section or whether they should live as entities in the Sources column. Do not implement until research is done.
+
+### 4. Reconcile TRACKER_LABELS duplicate source of truth (2026-05-26)
+`app/lib/brief/utils.ts` and `app/lib/tracker-metadata.ts` both define tracker display labels and have drifted. `utils.ts` had 'Marine Species' for cites-marine while `tracker-metadata.ts` had the correct 'CITES Marine'. Pick one as canonical (probably `tracker-metadata.ts` — it has broader metadata, correct labels, and is already used by tracker pages), delete the duplicate in `utils.ts`, update all consumers in `app/lib/brief/select.ts` (3 call sites import `TRACKER_LABELS` from utils). Cousin of the velocity.ts wrong-field bug — same class of failure mode.

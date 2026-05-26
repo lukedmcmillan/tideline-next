@@ -47,7 +47,7 @@ export const TRACKER_LABELS: Record<string, string> = {
   '30x30':         '30x30',
   'iuu':           'IUU Fishing',
   'wto-fisheries': 'Fisheries',
-  'cites-marine':  'Marine Species',
+  'cites-marine':  'CITES Marine',
   'blue-finance':  'Blue Finance',
   'plastics':      'Plastics Treaty',
   'offshore-wind': 'Offshore Wind',
