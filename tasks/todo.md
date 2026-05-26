@@ -656,3 +656,6 @@ The People/PeopleTabContent stub was removed with Intel and Live. Before rebuild
 
 ### 4. Reconcile TRACKER_LABELS duplicate source of truth (2026-05-26)
 `app/lib/brief/utils.ts` and `app/lib/tracker-metadata.ts` both define tracker display labels and have drifted. `utils.ts` had 'Marine Species' for cites-marine while `tracker-metadata.ts` had the correct 'CITES Marine'. Pick one as canonical (probably `tracker-metadata.ts` — it has broader metadata, correct labels, and is already used by tracker pages), delete the duplicate in `utils.ts`, update all consumers in `app/lib/brief/select.ts` (3 call sites import `TRACKER_LABELS` from utils). Cousin of the velocity.ts wrong-field bug — same class of failure mode.
+
+### 5. Audit PULSE_SCORE_METHODOLOGY.md against lib/velocity.ts (2026-05-26)
+The weekly-cadence mismatch was found by accident. Audit the remaining load-bearing claims in the methodology doc against the actual implementation. Specifically: four-component weights (35/30/20/15), score band thresholds (LOW/WATCH/ELEVATED), institutional risk multipliers, decision-language keyword list. Each is a published claim. Confirm each matches `app/lib/velocity.ts`. One-hour audit, run once, repeat quarterly. Same class of failure as the cadence mismatch — any doc claim that drifts from code is a credibility liability.

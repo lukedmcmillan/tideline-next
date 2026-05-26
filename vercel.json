@@ -29,7 +29,7 @@
     {"path": "/api/cron/score-significance", "schedule": "30 3 * * *"},
     {"path": "/api/cron/conversion-triggers", "schedule": "0 9 * * *"},
     {"path": "/api/cron/monitor-sources", "schedule": "0 7 * * 1"},
-    {"path": "/api/cron/velocity-scores", "schedule": "0 6 */4 * *"},
+    {"path": "/api/cron/velocity-scores", "schedule": "0 6 * * 1"},
     {"path": "/api/cron/generate-connections", "schedule": "0 7 * * *"},
     {"path": "/api/cron/threshold-alerts", "schedule": "0 8 * * *"},
     {"path": "/api/cron/embed-documents", "schedule": "0 3 * * *"},
