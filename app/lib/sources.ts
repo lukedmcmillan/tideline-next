@@ -31,6 +31,7 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Blue Marine Foundation", rss: "https://www.bluemarinefoundation.com/feed/", topic: "mpa", type: "ngo" },
   { name: "Global Fishing Watch", rss: "https://globalfishingwatch.org/feed/", topic: "iuu", type: "ngo" },
   { name: "High Seas Alliance", rss: "https://highseasalliance.org/feed/", topic: "governance", type: "ngo" },
+  { name: "The Ocean Foundation", rss: "https://oceanfdn.org/feed/", topic: "all", type: "ngo" },
   // DSCC removed 2026-04-22: savethehighseas.org/feed/ returns HTML not RSS. No alternative feed found. Consider adding to harvest-scraped-sources via Jina.
 
   // ─── RESEARCH & SCIENCE ───────────────────────────────────────────────────────
@@ -61,6 +62,35 @@ export const RSS_SOURCES: RSSSource[] = [
 
   // ─── ESG / FINANCE ────────────────────────────────────────────────────────────
   // Bloomberg Green removed 2026-04-22: re-audit confirmed 6 quarantines in 12h. General climate/ESG, rarely ocean-specific.
+
+  // ─── CARBON MARKETS & VOLUNTARY CREDIT REGISTRIES ────────────────────────────
+  // Sources added 2026-05-27 to support blue_carbon_credits tracker corpus.
+  // Haiku classifier (score-significance) assigns cross_tracker_flags at ingest — not set here.
+  //
+  // Standards bodies — OCEAN_DEDICATED (small volume; blanket relevance; keyword filter would
+  // miss methodology-approval items that lack explicit "ocean"/"marine" in title):
+  { name: "Verra", rss: "https://verra.org/feed/", topic: "climate", type: "reg" },
+  // blue_carbon_credits intent: VCS marine methodology approvals, project registrations, MRV protocol releases.
+  { name: "ICVCM", rss: "https://icvcm.org/feed/", topic: "governance", type: "reg" },
+  // blue_carbon_credits intent: Core Carbon Principles assessment decisions, CCP rule architecture updates.
+  { name: "VCMI", rss: "https://vcmintegrity.org/feed/", topic: "governance", type: "ngo" },
+  // blue_carbon_credits + blue_finance intent: Carbon market integrity guidance, claims framework updates.
+  //
+  // Trade press — keyword-filtered (broad carbon market coverage, not ocean-specific):
+  { name: "Carbon Pulse", rss: "https://carbon-pulse.com/feed/", topic: "climate", type: "media" },
+  // blue_carbon_credits intent: registry decisions, methodology approvals, credit market transactions.
+  // Free RSS tier confirmed; paywall only on full article body. Monitor quarantine rate.
+  { name: "Ecosystem Marketplace", rss: "https://www.ecosystemmarketplace.com/feed/", topic: "climate", type: "media" },
+  // blue_carbon_credits intent: blue/coastal carbon market transactions, offset price benchmarks.
+  // Forest Trends / Ecosystem Marketplace research arm. Covers all ecosystem services, not ocean-only.
+  { name: "Climate Home News", rss: "https://www.climatechangenews.com/feed/", topic: "climate", type: "media" },
+  // blue_carbon_credits + blue_finance intent: VCMI/ICVCM policy, blue carbon finance, carbon market governance.
+  // General climate news; keyword filter passes "carbon"/"climate" items. Monitor quarantine rate.
+  //
+  // No RSS found (backlog — add to harvest-scraped-sources via Jina scraper when scraper capacity allows):
+  //   Gold Standard (goldstandard.org): no /feed/, /rss, /news/feed/ or /blog/feed/ endpoint found
+  //   Plan Vivo (planvivo.org): no feed endpoint found at any standard path
+  //   Blue Carbon Initiative (thebluecarboninitiative.org): no feed endpoint found
 ];
 
 // Sources that are ocean-dedicated and bypass the keyword filter.
@@ -82,4 +112,8 @@ export const OCEAN_DEDICATED_SOURCES = new Set([
   'Nature Climate Change', 'Nature Sustainability', 'Nature Ecology & Evolution',
   // Government (ocean-specific remits)
   'UK MMO', 'Fisheries and Oceans Canada (DFO)',
+  // Carbon market standards bodies (added 2026-05-27 — small volume, blanket relevance)
+  'Verra', 'ICVCM', 'VCMI',
+  // Ocean NGOs (added 2026-05-27)
+  'The Ocean Foundation',
 ]);
