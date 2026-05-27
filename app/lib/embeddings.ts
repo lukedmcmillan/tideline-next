@@ -16,6 +16,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       model: "jina-embeddings-v2-base-en",
       input: [text],
     }),
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!res.ok) {

@@ -295,6 +295,7 @@ export async function GET(request: Request) {
   let entitiesMatched = 0
   let entityMatchErrors = 0
 
+  try {
   for (const story of pending) {
     try {
       // Source chain enforcement: no link, no publication
@@ -367,12 +368,14 @@ export async function GET(request: Request) {
     }
   }
 
-  await supabase.from('cron_log').insert({
-    agent_name: 'summarise-pending',
-    stories_processed: pending.length,
-    events_created: summarised,
-    errors: errors.length > 0 ? errors.join('; ') : null,
-  })
+  } finally {
+    await supabase.from('cron_log').insert({
+      agent_name: 'summarise-pending',
+      stories_processed: pending.length,
+      events_created: summarised,
+      errors: errors.length > 0 ? errors.join('; ') : null,
+    })
+  }
 
   return NextResponse.json({
     summarised,

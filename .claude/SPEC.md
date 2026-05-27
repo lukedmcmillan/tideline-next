@@ -1,6 +1,36 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-20 — Brief category gate architectural verification end-to-end
+## Last session: 2026-05-27 — Summarise-pending cron stall root-cause fix
+
+WHAT SHIPPED (2026-05-27):
+
+- **Root cause identified**: summarise-pending has been timing out on every run since ~April 30 when batch was bumped 20→50. `cron_log.insert` sits after the 50-story loop; function gets killed by Vercel's 60-second `maxDuration` before reaching it. Zero cron_log rows is not "no runs" — it is "every run timed out."
+- **Second cause**: `generateEmbedding()` in `app/lib/embeddings.ts` had no `AbortSignal.timeout()`. Called from entity-matching Pass 3 (when allMatches < 3), a slow Jina embeddings response caused the function to hang for the entire 60-second window, processing zero stories per run.
+- **Fix 1**: Added `AbortSignal.timeout(10000)` to `generateEmbedding` fetch call (`app/lib/embeddings.ts`)
+- **Fix 2**: Added specific `maxDuration: 300` entry for summarise-pending in `vercel.json`
+- **Fix 3**: Wrapped loop in `try/finally` so `cron_log.insert` runs even on unexpected throws
+- **SIXTEENTH lesson documented** in `tasks/lessons.md`
+- **Backlog**: 500+ stories with `null short_summary` going back to April 30. Next run should start draining at 50/run.
+
+PENDING:
+- Backfill verification: after next 2-3 cron runs, confirm cron_log rows appear and `short_summary` count drops
+- After pool refills (est. 1-2 days): re-run classifier false-positive audit on post-May-22 classifications
+- This week (not today): fallback labelling ("Quiet week for governance signals in your domains") + topic='all' filter to exclude Mongabay/Hakai/Oceanographic from lead fallback slot
+
+KNOWN ISSUES (carry forward):
+- **Finding A**: GOVERNANCE_CHANGE classifier has ~60% false-positive rate on current pool (5 of 8 classified stories are false positives: procedural guidance docs, Panama Canal congestion, account signup pages). Cannot audit properly until post-May-22 classifications accumulate. DO NOT change classifier prompt until 30-day backtest data exists.
+- **brief pool shrinking**: May 25=38 candidates → May 26=27 → May 27=14. Cause: post-May-22 stories have no short_summary (no significance score from score-significance). Pool recovers as summarise-pending drains backlog.
+- All prior known issues (RAG bugs, Stage 2 headline generation frozen, SIG_FLOOR unvalidated) carry forward unchanged.
+
+NEXT SESSION PRIORITIES (in order):
+1. Verify summarise-pending fix: check cron_log and null short_summary count after 1-2 runs
+2. Backfill monitoring: confirm 50 stories/run, pool refilling with newer content
+3. This week: fallback labelling + topic='all' exclusion for lead fallback slot
+4. Next week (after backtest data): classifier prompt tightening if >20% FP rate confirmed
+
+---
+
+## Previous: 2026-05-20 — Brief category gate architectural verification end-to-end
 
 WHAT SHIPPED (2026-05-20):
 
@@ -494,3 +524,30 @@ Priority order:
 - Katapult Ocean
 - SWEN Capital Partners
 - Aqua-Spark
+
+
+## Completed this session (2026-05-21) — Word processor Phase 1 fixes
+
+All 10 Phase 1 critical fixes shipped to `app/platform/(shell)/projects/[id]/draft/page.tsx`:
+
+1. **Content persistence (HTML)** — `getHTML()` replaces `getText()` on save; backward-compat HTML detection on load
+2. **Sources card** — renamed from "Draft integrity", shows real `projectSources.length`, no hardcoded rows
+3. **UUID routing bug** — mount-fetch `GET /api/projects/${name}` captures `d.project_id` into `realProjectId` ref; all draft API calls use real UUID
+4. **Teal active state** — toolbar buttons use `rgba(29,158,117,0.12)` bg + `#1D9E75` text; `#1A73E8` removed
+5. **DM Sans locked** — Inter removed from font dropdown and default; DM Sans is first/default option
+6. **Word .docx export** — `POST /api/projects/[id]/draft/export/route.ts` created; HTML-to-docx parser (headings h1-h3, paragraphs with inline bold/italic/underline, ul, ol, blockquote with teal left border); Calibri throughout; matches documents/[id]/export pattern
+7. **Cmd/Ctrl+S** — keyboard handler saves draft without browser save dialog
+8. **Highlight active bug** — `isActive ? "#FBBC04" : "transparent"` (was `"#FBBC04"` both branches)
+9. **Word count toast** — click word count chip shows `N words · ~X min read` toast, auto-dismisses at 2s
+10. **Focus mode** — menu bar, left panel, status bar hidden via `display: none`; Escape key exits
+
+3 Supabase migrations applied (Studio):
+- `20260518_brief_sends_delta_fallback.sql`
+- `20260518_delta_classifications_cache.sql`
+- `20260519_delta_classifications_category.sql`
+
+## Next
+- 30-day category gate backtest (verify Gate2=GOVERNANCE_CHANGE+sig>=35 lead quality)
+- LP briefing PDF layer (`lib/lp-briefing-pdf.ts` + `/api/lp-briefing/pdf`)
+- Fix 6 hardcoded auth fallbacks (hazard_auth_fallbacks.md — Part A: secureCookie fix, then Part B: remove fallbacks)
+- Word processor Phase 2: table insert, ordered-list numbering in .docx export, auth on draft endpoints
