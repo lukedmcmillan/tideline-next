@@ -80,6 +80,8 @@ plastics — Plastics Treaty (INC). Multilateral/contested. Covers INC sessions 
 
 offshore_wind — Offshore Wind. Unilateral/national. Covers national offshore wind licensing, planning approvals, auction results, grid connection decisions, and port infrastructure for turbine installation. Calibrated threshold: 4.5. True positive rate: ~80%.
 
+blue_carbon_credits — Blue Carbon & Biodiversity Credits. Type 6 / Voluntary standard-setting. Covers biodiversity credits, blue carbon credits, marine MRV (measurement, reporting, verification), and credit registries: Verra marine protocols, Plan Vivo Blue, Gold Standard marine, ICVCM Core Carbon Principles marine applications, mangrove/seagrass/salt marsh credits, ocean carbon removal credits (mCDR), and credit registry decisions or actions. Calibrated threshold: 7.0. True positive rate: ~70% policy-side (provisional — less than 6 months of data). Failure mode: Standards-body methodology releases generate signal that does not always translate to market uptake. Confidential offtake agreements between credit issuers and corporate buyers are structurally invisible. Do NOT assign blue_carbon_credits to blue bond issuance, debt-for-nature swaps, or TNFD framework adoption (those are blue_finance). Required test: is there a named credit instrument, registry action, MRV protocol, or market transaction specifically in the blue carbon or marine biodiversity credit domain?
+
 STRUCTURAL FAILURE MODES (verbatim from §6)
 These constrain tracker assignment — do not over-assign based on surface relevance:
 
@@ -97,7 +99,7 @@ ASSIGNMENT RULES
 Summary: ${story.short_summary}
 
 Return this exact JSON: { "score": 0-100, "trackers": [] }
-Valid tracker slugs: bbnj, isa, iuu, 30x30, blue_finance, imo_shipping, wto_fisheries, cites_marine, plastics, offshore_wind
+Valid tracker slugs: bbnj, isa, iuu, 30x30, blue_finance, imo_shipping, wto_fisheries, cites_marine, plastics, offshore_wind, blue_carbon_credits
 Score: 0-30 = routine update, 31-60 = noteworthy, 61-75 = significant development, 76-100 = major policy shift
 Only include slugs this story directly affects. Return only valid JSON.`,
           }],
@@ -110,7 +112,7 @@ Only include slugs this story directly affects. Return only valid JSON.`,
         const trackers = Array.isArray(parsed.trackers) ? parsed.trackers.filter((t: string) =>
           // Slug whitelist — must match PULSE_SCORE_METHODOLOGY.md §4 tracker domains exactly.
           // Uses underscore form for cross_tracker_flags column (velocity_scores uses hyphen form).
-          ['bbnj', 'isa', 'iuu', '30x30', 'blue_finance', 'imo_shipping', 'wto_fisheries', 'cites_marine', 'plastics', 'offshore_wind'].includes(t)
+          ['bbnj', 'isa', 'iuu', '30x30', 'blue_finance', 'imo_shipping', 'wto_fisheries', 'cites_marine', 'plastics', 'offshore_wind', 'blue_carbon_credits'].includes(t)
         ) : []
         const isFeatured = score > 75
 

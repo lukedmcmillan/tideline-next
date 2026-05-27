@@ -3,7 +3,7 @@ import { calculateVelocityScore } from "@/app/lib/velocity";
 
 export const maxDuration = 60;
 
-const TRACKER_SLUGS = ["isa", "bbnj", "iuu", "30x30", "blue-finance", "plastics", "imo-shipping", "offshore-wind", "cites-marine", "wto-fisheries"];
+const TRACKER_SLUGS = ["isa", "bbnj", "iuu", "30x30", "blue-finance", "plastics", "imo-shipping", "offshore-wind", "cites-marine", "wto-fisheries", "blue-carbon-credits"];
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");

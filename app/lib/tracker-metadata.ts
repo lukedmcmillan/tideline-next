@@ -9,6 +9,12 @@ export const INST_TYPE: Record<string, { type: string; label: string; multiplier
   "blue-finance": { type: "Type 6", label: "Voluntary standard-setting", multiplier: 0.80 },
   "offshore-wind": { type: "Type 1", label: "Commercial leasing", multiplier: 0.85 },
   "cites-marine": { type: "Type 2", label: "Majority vote", multiplier: 0.75 },
+  "blue-carbon-credits": {
+    type: "Type 6",
+    label: "Voluntary standard-setting",
+    multiplier: 0.80,
+    warning: "Emerging domain with limited historical validation data. Calibrated threshold (7.0) and true positive rate (~70%) are provisional and will be revised after 6 months of operational data.",
+  },
 };
 
 export const PREP_HORIZON: Record<string, string> = {
@@ -22,6 +28,7 @@ export const PREP_HORIZON: Record<string, string> = {
   "blue-finance": "6\u201310 weeks (framework release cycle)",
   "offshore-wind": "8\u201320 weeks (commercial planning cycles)",
   "cites-marine": "6\u201312 weeks (CoP proposal submission to vote)",
+  "blue-carbon-credits": "Indeterminate \u2014 credit market and registry decisions have no fixed session calendar",
 };
 
 export const DOMAIN_NAMES: Record<string, string> = {
@@ -35,6 +42,7 @@ export const DOMAIN_NAMES: Record<string, string> = {
   "blue-finance": "Blue Finance",
   "offshore-wind": "Offshore Wind",
   "cites-marine": "CITES Marine",
+  "blue-carbon-credits": "Blue Carbon & Biodiversity Credits",
 };
 
 export const HISTORICAL_CASES: Record<string, {
@@ -119,6 +127,11 @@ export const HISTORICAL_CASES: Record<string, {
     ],
     caveat: "CITES operates on a two-thirds majority vote with no single-state veto. One of the more predictable bodies in the framework. Next CoP is 2028 \u2014 implementation compliance for CoP20 listings is the live issue.",
   },
+  "blue-carbon-credits": {
+    threshold: 7.0, hitRate: "~70% policy-side (provisional \u2014 <6 months data)",
+    cases: [],
+    caveat: "This is an emerging domain with limited historical validation data. Calibrated threshold and true positive rate are provisional and will be revised after 6 months of operational data. Standards-body methodology releases generate signal that does not always translate to market uptake. Score readings should be interpreted alongside transaction volume from credit registries where available. Confidential offtake agreements between credit issuers and corporate buyers are structurally invisible to this index.",
+  },
 };
 
 export function alertBand(score: number, slug?: string): "HIGH" | "ELEVATED" | "WATCH" | "QUIET" {
@@ -151,6 +164,7 @@ export function interpretationSentence(slug: string, score: number, momentum: "u
     "blue-finance": "a framework release",
     "offshore-wind": "a leasing or planning decision",
     "cites-marine": "a CoP listing decision",
+    "blue-carbon-credits": "a registry or standards decision",
   };
   const h = horizons[slug] ?? "a governance event";
 

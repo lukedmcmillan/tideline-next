@@ -61,6 +61,7 @@ const TRACKERS = [
   { slug: "blue-finance", domain: "Blue Finance", name: "Blue Finance / TNFD", score: 4.7, sv: 4.9, sr: 6.2, ss: 1.6, mom: "flat" as const, traj: "Advancing", next: "ISSB draft \u00B7 Oct", history: [4.2,4.9,5.1,5.0,4.8,4.6,4.9,5.0,4.8,4.7], nextEvent: "ISSB exposure draft", nextDate: "2026-10-01" },
   { slug: "offshore-wind", domain: "Offshore Wind", name: "Offshore Wind & MSP", score: 5.0, sv: 5.3, sr: 6.5, ss: 2.6, mom: "flat" as const, traj: "Blocked (US)", next: "Appellate ruling \u00B7 2026", history: [5.0,6.1,6.6,6.3,5.9,5.6,5.8,5.4,5.2,5.0] },
   { slug: "cites-marine", domain: "CITES Marine", name: "CITES Marine Species", score: 4.0, sv: 4.2, sr: 5.1, ss: 1.5, mom: "flat" as const, traj: "Implementing", next: "Std Committee \u00B7 2026", history: [6.3,6.1,5.7,5.3,5.0,4.7,4.4,4.3,4.1,4.0], nextEvent: "CITES trade review", nextDate: "2026-06-01" },
+  { slug: "blue-carbon-credits", domain: "Blue Carbon & Credits", name: "Credit Markets", score: 0, sv: 0, sr: 0, ss: 0, mom: "flat" as const, traj: "New \u00B7 data from Monday", next: "First run \u00B7 Monday", history: [0,0,0,0,0,0,0,0,0,0], noData: true },
 ];
 
 const CDS = [
@@ -85,11 +86,13 @@ function Card({ t, anim, onClick, live }: {
   onClick: () => void; live?: { score: number; sv: number; sr: number; ss: number };
 }) {
   const [hov, setHov] = useState(false);
+  const hasLive = !!live;
+  const pending = ('noData' in t && t.noData) && !hasLive;
   const score = live?.score ?? t.score;
   const sv = live?.sv ?? t.sv;
   const sr = live?.sr ?? t.sr;
   const ss = live?.ss ?? t.ss;
-  const c = sc(score);
+  const c = pending ? TEXT2 : sc(score);
 
   const foot = trajFooterStyle(t.traj);
 
@@ -102,12 +105,15 @@ function Card({ t, anim, onClick, live }: {
       <div style={{ flex: 1, padding: "6px 9px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT1, marginBottom: 2 }}>{t.domain}</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 3 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
-          <span style={{ fontSize: 10, color: TEXT2, marginRight: 6 }}>/10</span>
-          <Mom m={t.mom} />
+          {pending
+            ? <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: TEXT2, lineHeight: 1 }}>&mdash;</span>
+            : <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
+          }
+          {!pending && <span style={{ fontSize: 10, color: TEXT2, marginRight: 6 }}>/10</span>}
+          {!pending && <Mom m={t.mom} />}
         </div>
         <div style={{ height: 2, background: BORDER, borderRadius: 1, marginBottom: 4 }}>
-          <div style={{ height: 2, borderRadius: 1, background: c, width: anim ? `${score * 10}%` : "0%", transition: "width 0.9s cubic-bezier(.4,0,.2,1)" }} />
+          {!pending && <div style={{ height: 2, borderRadius: 1, background: c, width: anim ? `${score * 10}%` : "0%", transition: "width 0.9s cubic-bezier(.4,0,.2,1)" }} />}
         </div>
         {/* sub-scores */}
         <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 4, flexShrink: 0 }}>
@@ -167,7 +173,8 @@ export default function TrackersPage() {
   /* ── Ticker uses live scores ── */
   const TICKER: { l: string; v: number | null; s?: string }[] = TRACKERS.map(t => ({
     l: t.domain,
-    v: liveScores[t.slug]?.score ?? t.score,
+    v: ('noData' in t && t.noData && !liveScores[t.slug]) ? null : (liveScores[t.slug]?.score ?? t.score),
+    s: ('noData' in t && t.noData && !liveScores[t.slug]) ? "\u2014" : undefined,
   }));
   const tkDupe = [...TICKER, ...TICKER];
 

@@ -17,29 +17,31 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 // stories unrelated to ocean blue finance, and topic='shipping' includes 94+ geopolitical
 // stories (Hormuz, naval) not within IMO regulatory scope.
 const TRACKER_FLAG: Record<string, string> = {
-  isa:              "isa",
-  bbnj:             "bbnj",
-  iuu:              "iuu",
-  "30x30":          "30x30",
-  "blue-finance":   "blue_finance",
-  plastics:         "plastics",
-  "imo-shipping":   "imo_shipping",
-  "offshore-wind":  "offshore_wind",
-  "cites-marine":   "cites_marine",
-  "wto-fisheries":  "wto_fisheries",
+  isa:                     "isa",
+  bbnj:                    "bbnj",
+  iuu:                     "iuu",
+  "30x30":                 "30x30",
+  "blue-finance":          "blue_finance",
+  plastics:                "plastics",
+  "imo-shipping":          "imo_shipping",
+  "offshore-wind":         "offshore_wind",
+  "cites-marine":          "cites_marine",
+  "wto-fisheries":         "wto_fisheries",
+  "blue-carbon-credits":   "blue_carbon_credits",
 };
 
 const INSTITUTIONAL_MULTIPLIER: Record<string, number> = {
-  "imo-shipping":  0.75,
-  "wto-fisheries": 0.75,
-  isa:             0.75,
-  bbnj:            0.46,
-  plastics:        0.46,
-  "30x30":         0.85,
-  iuu:             0.85,
-  "blue-finance":  0.80,
-  "offshore-wind": 0.85,
-  "cites-marine":  0.75,
+  "imo-shipping":          0.75,
+  "wto-fisheries":         0.75,
+  isa:                     0.75,
+  bbnj:                    0.46,
+  plastics:                0.46,
+  "30x30":                 0.85,
+  iuu:                     0.85,
+  "blue-finance":          0.80,
+  "offshore-wind":         0.85,
+  "cites-marine":          0.75,
+  "blue-carbon-credits":   0.80,  // Type 6 Voluntary standard-setting (Verra, Plan Vivo, Gold Standard, ICVCM)
 };
 
 const DECISION_PATTERN =
