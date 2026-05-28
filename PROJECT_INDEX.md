@@ -1,6 +1,6 @@
 # Project Index: Tideline
 
-Generated: 2026-05-20 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
+Generated: 2026-05-28 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
 
 ---
 
@@ -33,7 +33,7 @@ Generated: 2026-05-20 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 | `/platform/welcome` | `app/platform/(shell)/welcome/page.tsx` |
 
 ### Trackers
-`bbnj`, `governance`, `30x30`, `isa`, `blue-finance`, `cites-marine`, `imo-shipping`, `iuu`, `offshore-wind`, `plastics`, `wto-fisheries`
+`bbnj`, `governance`, `30x30`, `isa`, `blue-finance`, `blue-carbon-credits`, `cites-marine`, `imo-shipping`, `iuu`, `offshore-wind`, `plastics`, `wto-fisheries`
 
 ---
 
@@ -124,7 +124,7 @@ Generated: 2026-05-20 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 | `jina.ts` | Jina scraping wrapper (JINA_API_KEY) |
 | `ocean-relevance-gate.ts` | Claude relevance filter (prompt cached) |
 | `velocity.ts` | Velocity score interpretation |
-| `sources.ts` | Source registry |
+| `sources.ts` | Source registry (`RSSSource` interface incl. `skipGate?: boolean`) |
 | `subscription.ts` | Subscription status helpers |
 | `embeddings.ts` | Jina embedding calls |
 | `search.ts` | Full-text search helpers |
@@ -198,15 +198,19 @@ Generated: 2026-05-20 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 
 ---
 
-## Current Status (2026-05-19)
+## Current Status (2026-05-28)
 
-**Built**: Daily brief (89 sources), BBNJ tracker, RAG layer, entity directory (153 entities), auth+Stripe, lp_portfolios+lp_briefing view, Supabase MCP live, Ruflo V3 installed, bot-block strategy Phases 1-2B complete (`lib/http-client.ts` shared client with retry/bot-block logic; scraper-informea, scraper-ngo-reports, processor-agent migrated)
+**Built**: Daily brief (89 sources), BBNJ tracker, RAG layer, entity directory (153 entities), auth+Stripe, lp_portfolios+lp_briefing view, Supabase MCP live, Ruflo V3 installed, bot-block strategy Phases 1-2B complete, category gate LIVE (prompt_version=`f6491a2171c78bdf`, Gate2=GOVERNANCE_CHANGE+sig>=35), decision ID validator generalised (letter-suffix IDs: IWC/67/A, CMS, Ramsar formats), word processor Phase 1 complete (.docx export, UUID routing fix, teal active states, DM Sans, focus mode, word count toast), velocity cron corrected to weekly Monday, CITES Marine label renamed, **blue_carbon_credits tracker LIVE** (Type 6 voluntary, multiplier 0.80, threshold 7.0, stage=Nascent; first velocity score pending Monday 06:00 UTC), PULSE_SCORE_METHODOLOGY.md v2.0 (six-type schema)
 
-**Next**: LP briefing PDF layer (`lib/lp-briefing-pdf.ts` + `/api/lp-briefing/pdf`), Fund config UI, corporate Stripe tier, seed real funds into lp_portfolios
+**RSS source additions (2026-05-28)**: Verra, ICVCM, VCMI (`skipGate: true`), Carbon Pulse, Climate Home News, The Ocean Foundation. `skipGate` field added to `RSSSource` interface + `fetch-feeds` Phase 2 bypass for sources whose titles don't contain ocean keywords but are definitionally relevant.
+
+**Migrations applied**: `20260518_brief_sends_delta_fallback.sql`, `20260518_delta_classifications_cache.sql`, `20260519_delta_classifications_category.sql`
+
+**Next**: LP briefing PDF layer, 30-day category gate backtest (SIG_FLOOR calibration), fix 6 auth fallback routes, corporate Stripe tier, Gold Standard / Plan Vivo / Blue Carbon Initiative Jina scrapers
 
 **Known issues**:
 - Firecrawl MCP not connecting
-- IMO press briefings fix deployed — verify next cron run
 - 6 API routes have hardcoded email fallback (security bug) — see `hazard_auth_fallbacks.md`
-- DG MARE RSS endpoint unknown (commit 8a2828ee removed misconfigured feed)
+- DG MARE RSS endpoint unknown
 - EPA Water News needs correct topic-filtered feed
+- blue_carbon_credits velocity score pending first Monday run
