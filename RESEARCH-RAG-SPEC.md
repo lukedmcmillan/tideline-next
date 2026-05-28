@@ -17,7 +17,7 @@ A wrong cited answer is fatal to a £99/month professional tool. A "the library 
 
 ## 1. WHAT RESEARCH IS
 
-A closed-book retrieval-augmented question-answering system over Tideline's curated document library (~2,000+ primary and secondary sources). A subscriber asks a question; the system retrieves the most relevant passages from the library, and Claude writes a cited answer drawn ONLY from those passages.
+A closed-book retrieval-augmented question-answering system over Tideline's curated document library (7,698 primary and secondary sources as of 2026-05-28; the live counter at `/api/research/library-stats` is the source of truth as the library grows nightly). A subscriber asks a question; the system retrieves the most relevant passages from the library, and Claude writes a cited answer drawn ONLY from those passages.
 
 **What it is NOT:**
 - Not open-web search. It answers only from documents Tideline has ingested and embedded.
@@ -93,15 +93,17 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_tier text;   -- PRIMARY|SE
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_domain text; -- for allowlist matching
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS classified_at timestamptz;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS classify_confidence numeric(3,2);
--- embedding vector(1536) column already exists per TIDELINE-CONTEXT.md
+-- embedding column exists but is currently vector(768) (Jina jina-embeddings-v2-base-en).
+-- Step 2 must include the approved migration to alter it to vector(1536) to match
+-- OpenAI text-embedding-3-small. See Section 10 dimension-migration note.
 ```
 
 ### 4.2 `document_chunks` (table exists, currently empty — populate)
 ```sql
 -- Confirm shape; spec assumes:
 -- id uuid pk, document_id uuid fk -> documents(id),
--- chunk_index int, content text, token_count int,
--- embedding vector(1536), created_at timestamptz default now()
+-- chunk_index int, chunk_text text,
+-- embedding vector(768) currently → vector(1536) after dimension migration, created_at timestamptz default now()
 CREATE INDEX IF NOT EXISTS idx_chunks_embedding
   ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX IF NOT EXISTS idx_chunks_document ON document_chunks(document_id);
@@ -307,7 +309,19 @@ chunk is stripped; (d) an unsupported claim is stripped by faithfulness;
 
 ## 10. EMBEDDINGS PROVIDER (LOCKED)
 
-**OpenAI `text-embedding-3-small`, 1536 dimensions.** This is the locked choice: it matches the existing `vector(1536)` column already in the schema. No alternatives are in scope.
+**OpenAI `text-embedding-3-small`, 1536 dimensions.** This is the locked choice. No alternatives are in scope.
+
+**Dimension migration required.** The existing `document_chunks.embedding` column is currently `vector(768)` (Jina `jina-embeddings-v2-base-en`, used for story_chunks and previously for document_chunks). Switching to OpenAI 1536-d requires an explicit, approved migration before Step 2:
+```sql
+-- Run ONLY after backups confirmed and 0 chunks in document_chunks (currently true)
+ALTER TABLE document_chunks ALTER COLUMN embedding TYPE vector(1536);
+ALTER TABLE documents ALTER COLUMN embedding TYPE vector(1536);
+-- Drop and recreate the ivfflat index (or switch to hnsw if confirmed available)
+DROP INDEX IF EXISTS idx_document_chunks_embedding;
+CREATE INDEX idx_document_chunks_embedding ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+-- Rewrite the match_document_chunks and match_library_documents RPCs to use vector(1536)
+```
+This migration is safe now because `document_chunks` is empty (0 rows) and `documents.embedding` has never been populated (7,698 rows, all NULL). No data loss. The old dimension was 768; the new dimension is 1536.
 
 Confirm the OpenAI API key is present in `.env.local` and budgeted before running Step 2.
 
@@ -320,7 +334,7 @@ Confirm the OpenAI API key is present in `.env.local` and budgeted before runnin
 - 1 Haiku faithfulness call (batched) — cheap.
 - pgvector search — single-digit ms at this corpus size.
 Target end-to-end: 2-4s. The faithfulness pass adds ~0.5-1s and is worth it.
-Backfill (Steps 1-2) is a one-time cost: ~2,000 docs of embeddings + classification.
+Backfill (Steps 1-2) is a one-time cost: 7,698 docs of embeddings + classification.
 
 ---
 
