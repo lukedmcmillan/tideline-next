@@ -3,6 +3,10 @@ export interface RSSSource {
   rss: string;
   topic: string;
   type: string;
+  /** If true, items from this source bypass the ocean-relevance Haiku gate.
+   *  Use ONLY for sources that are definitionally relevant but whose items
+   *  do not mention "ocean"/"marine" explicitly (e.g. carbon market registries). */
+  skipGate?: boolean;
 }
 
 export const RSS_SOURCES: RSSSource[] = [
@@ -69,12 +73,15 @@ export const RSS_SOURCES: RSSSource[] = [
   //
   // Standards bodies — OCEAN_DEDICATED (small volume; blanket relevance; keyword filter would
   // miss methodology-approval items that lack explicit "ocean"/"marine" in title):
-  { name: "Verra", rss: "https://verra.org/feed/", topic: "climate", type: "reg" },
+  { name: "Verra", rss: "https://verra.org/feed/", topic: "climate", type: "reg", skipGate: true },
   // blue_carbon_credits intent: VCS marine methodology approvals, project registrations, MRV protocol releases.
-  { name: "ICVCM", rss: "https://icvcm.org/feed/", topic: "governance", type: "reg" },
+  // skipGate: items never say "ocean" explicitly; gate correctly rejects them but we need them for the tracker.
+  { name: "ICVCM", rss: "https://icvcm.org/feed/", topic: "governance", type: "reg", skipGate: true },
   // blue_carbon_credits intent: Core Carbon Principles assessment decisions, CCP rule architecture updates.
-  { name: "VCMI", rss: "https://vcmintegrity.org/feed/", topic: "governance", type: "ngo" },
+  // skipGate: "assessment decisions" / "CCP architecture" won't mention ocean even when marine projects are in scope.
+  { name: "VCMI", rss: "https://vcmintegrity.org/feed/", topic: "governance", type: "ngo", skipGate: true },
   // blue_carbon_credits + blue_finance intent: Carbon market integrity guidance, claims framework updates.
+  // skipGate: same reason — carbon market governance language is sector-agnostic.
   //
   // Trade press — keyword-filtered (broad carbon market coverage, not ocean-specific):
   { name: "Carbon Pulse", rss: "https://carbon-pulse.com/feed/", topic: "climate", type: "media" },

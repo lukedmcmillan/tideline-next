@@ -133,6 +133,7 @@ export async function GET(request: NextRequest) {
   interface EligibleItem {
     title: string; link: string; published_at: string; description: string | null;
     source_name: string; topic: string; source_type: string;
+    skipGate: boolean;
   }
   const eligible: EligibleItem[] = []
   const cutoff = new Date()
@@ -166,6 +167,7 @@ export async function GET(request: NextRequest) {
         source_name: source.name,
         topic: source.topic,
         source_type: source.type,
+        skipGate: source.skipGate === true,
       })
     }
   }
@@ -202,14 +204,21 @@ export async function GET(request: NextRequest) {
     capped.push(item)
   }
 
-  // Phase 2: Batch ocean-relevance gate calls (15 concurrent per batch)
+  // Phase 2: Batch ocean-relevance gate calls (15 concurrent per batch).
+  // Sources with skipGate=true bypass the Haiku call entirely — they are definitionally
+  // relevant to Tideline's domain (e.g. carbon market registries) but their item titles
+  // don't contain ocean/marine keywords, causing false rejections.
   const GATE_BATCH = 15
   const gateResults: Awaited<ReturnType<typeof checkOceanRelevance>>[] = []
 
   for (let i = 0; i < capped.length; i += GATE_BATCH) {
     const batch = capped.slice(i, i + GATE_BATCH)
     const batchResults = await Promise.all(
-      batch.map(item => checkOceanRelevance({ title: item.title, content: item.description || '' }))
+      batch.map(item =>
+        item.skipGate
+          ? Promise.resolve({ relevant: true, verdict: 'gate_bypass', duration_ms: 0, raw: '' })
+          : checkOceanRelevance({ title: item.title, content: item.description || '' })
+      )
     )
     gateResults.push(...batchResults)
   }
