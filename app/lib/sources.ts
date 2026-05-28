@@ -87,10 +87,10 @@ export const RSS_SOURCES: RSSSource[] = [
   { name: "Carbon Pulse", rss: "https://carbon-pulse.com/feed/", topic: "climate", type: "media" },
   // blue_carbon_credits intent: registry decisions, methodology approvals, credit market transactions.
   // Free RSS tier confirmed; paywall only on full article body. Monitor quarantine rate.
-  { name: "Ecosystem Marketplace", rss: "https://www.ecosystemmarketplace.com/feed/", topic: "climate", type: "media" },
-  // blue_carbon_credits intent: blue/coastal carbon market transactions, offset price benchmarks.
-  // Forest Trends / Ecosystem Marketplace research arm. Covers all ecosystem services, not ocean-only.
-  { name: "Climate Home News", rss: "https://www.climatechangenews.com/feed/", topic: "climate", type: "media" },
+  // Ecosystem Marketplace removed 2026-05-28: feed at /feed/ serves only stale 2016 archive content,
+  // not current articles. No current RSS endpoint found. Add to Jina scraper backlog if they publish
+  // a proper feed in future.
+{ name: "Climate Home News", rss: "https://www.climatechangenews.com/feed/", topic: "climate", type: "media" },
   // blue_carbon_credits + blue_finance intent: VCMI/ICVCM policy, blue carbon finance, carbon market governance.
   // General climate news; keyword filter passes "carbon"/"climate" items. Monitor quarantine rate.
   //
