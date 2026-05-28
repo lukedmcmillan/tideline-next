@@ -1,6 +1,51 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-27 — Summarise-pending cron stall root-cause fix
+## Last session: 2026-05-28 — blue_carbon_credits tracker build + source corpus
+
+WHAT SHIPPED (2026-05-27/28):
+
+- **blue_carbon_credits tracker complete end-to-end**
+  - `lib/velocity.ts`: TRACKER_FLAG + INSTITUTIONAL_MULTIPLIER entries
+  - `app/api/cron/velocity-scores/route.ts`: added to TRACKER_SLUGS (now 11)
+  - `app/api/cron/score-significance/route.ts`: full tracker definition + prompt tightening (exclusion clause + required-test strengthened after false-positive review)
+  - `app/lib/tracker-metadata.ts`: INST_TYPE, PREP_HORIZON, DOMAIN_NAMES, HISTORICAL_CASES, interpretationSentence horizon
+  - `app/platform/(shell)/trackers/page.tsx`: new card with `noData: true` pending-state (renders `—` instead of `0.0`)
+  - `app/platform/(shell)/tracker/blue-carbon-credits/page.tsx`: tracker page (VelocityScore, TrackerHistory, TrackerMethodology, DomainOverview, RecentEvents)
+  - `PULSE_SCORE_METHODOLOGY.md`: v2.0 committed externally (six-type schema, conflict scoring)
+
+- **Classifier tightening + false-positive cleanup**
+  - Backfill (500 stories, 60 days) tagged 3; re-evaluation with tightened prompt removed 2 false positives
+  - Net result: 1 true positive tagged (Verra wetland methodology, Phys.org Ocean, also blue_finance)
+  - `score-significance` prompt: exclusion clause now blocks innovation awards, science journalism, general ocean climate commentary; required test now demands named entity + specific action + specific instrument
+
+- **RSS source corpus for blue_carbon_credits**
+  - Added 7 sources to `app/lib/sources.ts`: Verra, ICVCM, VCMI (all `skipGate: true`), Carbon Pulse, Climate Home News, The Ocean Foundation
+  - Removed Ecosystem Marketplace (stale 2016 archive content, no leaked stories)
+  - Added `skipGate?: boolean` to `RSSSource` interface + Phase 2 gate bypass in `fetch-feeds/route.ts`
+  - Confirmed working: Carbon Pulse/Climate Home News/Ocean Foundation landing. Verra/ICVCM/VCMI were being quarantined (gate correctly rejecting non-ocean titles like "ICVCM assessment decisions") — fixed by skipGate
+
+- **Commits pushed**: `3ea15cf` (prompt tightening), `efe4a17` (sources added), `e59a145` (skipGate fix + EM removal), `aba92c6` (tracker + methodology v2.0)
+
+PENDING:
+- **First velocity score** for blue_carbon_credits: Monday 06:00 UTC cron. Dashboard card will drop `—` state automatically.
+- **score-significance for new sources**: Verra/ICVCM/VCMI now landing; Haiku scorer runs hourly and will classify + assign cross_tracker_flags. Check BCC tag count next session.
+- **30-day category backtest**: carried forward — let GC classifications accumulate before SIG_FLOOR tuning
+
+KNOWN ISSUES (carry forward):
+- **brief pool thin**: post-May-22 summarise-pending backlog still draining. Pool recovers as backlog clears.
+- **Stage 2 headline generation frozen** — BLOCKED on 30-day category backtest.
+- **SIG_FLOOR = 35 unvalidated** — carried forward.
+- All RAG bugs carry forward unchanged (Bugs 1-4).
+
+NEXT SESSION PRIORITIES (in order):
+1. Verify Verra/ICVCM/VCMI stories are landing + being scored (BCC tag count should grow)
+2. Check first Monday velocity score for blue_carbon_credits registers correctly
+3. Verify summarise-pending backlog continuing to drain (cron_log entries appearing)
+4. Gold Standard / Plan Vivo / Blue Carbon Initiative — Jina scraper candidates when capacity allows
+
+---
+
+## Previous: 2026-05-27 — Summarise-pending cron stall root-cause fix
 
 WHAT SHIPPED (2026-05-27):
 
