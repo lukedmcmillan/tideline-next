@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { classifySourceType } from "../lib/source-classifier";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -147,6 +148,7 @@ async function main() {
       document_type: "news",
       date_issued: s.published_at ? s.published_at.slice(0, 10) : null,
       source_url: s.link ?? null,
+      source_type: classifySourceType(s.source_name, s.link),
     }));
 
     const { error: insertError } = await supabase.from("story_chunks").insert(rows);

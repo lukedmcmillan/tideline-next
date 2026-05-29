@@ -1,20 +1,47 @@
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+
 import { createClient } from "@supabase/supabase-js";
+import { fetchAsTideline, RobotsBlocked } from "../app/lib/http-client";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// OAI-PMH endpoint — works without browser, unlike the search UI
+// OAI-PMH endpoint — machine-harvest interface exposed by the UN Digital Library.
+// NOT blocked by robots.txt (only /rss and /search are disallowed).
+// robots.txt specifies Crawl-Delay: 5 — honored automatically by fetchAsTideline.
 const OAI_BASE = "https://digitallibrary.un.org/oai2d";
-const USER_AGENT = "Tideline Library Bot/1.0";
 const MAX_PAGES = 50; // ~200 records/page = ~10,000 records scanned
 
-// Hard ocean terms — at least one must appear in subjects or title
+// UNBIS Thesaurus controlled vocabulary anchors (all-caps per UNBIS convention).
+// These are the subject headings stored in MARC 650 $a by the UN Digital Library.
+// A record passes the subject filter if ANY of its 650 $a values contains one of
+// these strings (case-insensitive partial match). This is the primary filter.
+//
+// Partial match is intentional: "FISHERIES POLICY", "FISHERIES MANAGEMENT",
+// "MARINE POLLUTION" all pass via their anchor term.
+const UNBIS_ANCHORS = [
+  "LAW OF THE SEA",
+  "MARINE",
+  "OCEAN",
+  "FISHERIES",
+  "MARITIME LAW",
+  "SEABED",
+  "HIGH SEAS",
+  "EXCLUSIVE ECONOMIC ZONE",
+  "CONTINENTAL SHELF",
+  "BBNJ",
+  "UNCLOS",
+];
+
+// Hard ocean terms — secondary filter applied to title + subjects if UNBIS primary misses.
+// Defense-in-depth against catalog-added-date noise.
 const HARD_OCEAN = /ocean|marine|sea\b|seas\b|maritime|fisheries|seabed|coral|unclos|bbnj|aquaculture|coastal|A\/CONF\.232|high seas|areas beyond national jurisdiction|biological diversity beyond/i;
-// Exclusion subjects — skip records about these topics
+// Exclusion subjects — skip records about these even if they match an anchor incidentally
 const EXCLUDE_SUBJECTS = /decolonization|colonial|apartheid|sanctions|terrorism|yugoslavia|libya\b|iraq\b/i;
-// Procedural filename patterns to skip (unless title is ocean-relevant)
+// Procedural filename patterns to skip
 const PROCEDURAL_FILE = /_PV\.|_SR\.|_PV-|_SR-/i;
 const NON_EN_PDF = /-AR\.pdf|-FR\.pdf|-ES\.pdf|-RU\.pdf|-ZH\.pdf|_AR\.|_FR\.|_ES\.|_RU\.|_ZH\./i;
 
@@ -89,6 +116,13 @@ function extractResumptionToken(xml: string): string | null {
   return match ? match[1] : null;
 }
 
+// Primary UNBIS subject filter: check MARC 650 $a values against anchor terms.
+function hasUnbisOceanSubject(subjects: string[]): boolean {
+  return subjects.some(s =>
+    UNBIS_ANCHORS.some(anchor => s.toUpperCase().includes(anchor))
+  );
+}
+
 function isOceanRelevant(record: ParsedRecord): boolean {
   if (record.pdfUrls.length === 0) return false;
 
@@ -100,21 +134,20 @@ function isOceanRelevant(record: ParsedRecord): boolean {
 
   const subjectText = record.subjects.join(" ");
 
-  // Exclude known irrelevant topics
+  // Exclude known irrelevant topics even if they incidentally contain an anchor
   if (EXCLUDE_SUBJECTS.test(subjectText)) return false;
 
   // Filter out procedural records (PV, SR)
   record.pdfUrls = record.pdfUrls.filter(url => !PROCEDURAL_FILE.test(url));
   if (record.pdfUrls.length === 0) return false;
 
-  // PASS if title contains ocean term (strong signal)
+  // PRIMARY: UNBIS subject heading match (MARC 650 $a)
+  if (hasUnbisOceanSubject(record.subjects)) return true;
+
+  // SECONDARY (defense-in-depth): title keyword match
   if (HARD_OCEAN.test(record.title)) return true;
 
-  // PASS if 2+ different ocean terms in subjects (not just one incidental "INDIAN OCEAN")
-  const oceanMatches = record.subjects.filter(s => HARD_OCEAN.test(s));
-  if (oceanMatches.length >= 2) return true;
-
-  // PASS if doc symbol indicates ocean body (A/CONF.62 = UNCLOS, ISBA = ISA)
+  // SECONDARY: doc symbol indicates ocean body (A/CONF.62 = UNCLOS, ISBA = ISA)
   if (/CONF\.62|ISBA|BBNJ|IMO|MEPC/i.test(record.docSymbol)) return true;
 
   return false;
@@ -174,32 +207,54 @@ function sleep(ms: number) {
 // --- Main ---
 
 async function main() {
-  console.log("=== Tideline UN Digital Library Scraper (OAI-PMH) ===\n");
+  const dryRun  = process.argv.includes("--dry-run");
+  const limitArg = process.argv.find(a => a.startsWith("--limit="));
+  const limit   = limitArg ? parseInt(limitArg.split("=")[1], 10) : Infinity;
 
-  // Harvest records from last 365 days
+  console.log(`=== Tideline UN Digital Library Scraper (OAI-PMH + UNBIS filter)${dryRun ? " (DRY RUN — no DB writes)" : ""} ===`);
+  console.log(`Endpoint: ${OAI_BASE} (robots.txt-permitted machine harvest interface)`);
+  console.log(`Primary filter: MARC 650 $a UNBIS subject anchors`);
+  console.log(`Secondary filter: HARD_OCEAN title/symbol regex`);
+  console.log(`Crawl-Delay: 5s (enforced by fetchAsTideline via robots-parser)`);
+
+  // Harvest records from last 90 days (bounded from+until — open-ended `from` triggers 503s).
+  // 90-day window captures all active UN governance cycles. Full backfill runs quarterly.
+  const until = new Date();
   const since = new Date();
-  since.setDate(since.getDate() - 365);
-  const fromDate = since.toISOString().split("T")[0];
+  since.setDate(since.getDate() - 90);
+  const fromDate  = since.toISOString().split("T")[0];
+  const untilDate = until.toISOString().split("T")[0];
 
-  let url = `${OAI_BASE}?verb=ListRecords&metadataPrefix=marcxml&from=${fromDate}`;
-  let totalQueued = 0;
-  let totalRecords = 0;
+  console.log(`Date window: ${fromDate} to ${untilDate}\n`);
+
+  let url = `${OAI_BASE}?verb=ListRecords&metadataPrefix=marcxml&from=${fromDate}&until=${untilDate}`;
+  let totalQueued   = 0;
+  let totalRecords  = 0;
   let totalRelevant = 0;
   let page = 0;
 
-  while (url && page < MAX_PAGES) {
+  // Dry-run diagnostics
+  const subjectFreq: Record<string, number> = {};
+  const yearFreq:    Record<string, number> = {};
+  let   sampleTitles: string[] = [];
+
+  while (url && page < MAX_PAGES && totalQueued < limit) {
     page++;
     console.log(`  Page ${page}: fetching...`);
 
     let xml: string;
     try {
-      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      const res = await fetchAsTideline(url);
       if (!res.ok) {
         console.log(`  HTTP ${res.status}, stopping`);
         break;
       }
       xml = await res.text();
     } catch (err) {
+      if (err instanceof RobotsBlocked) {
+        console.log(`  RobotsBlocked: domain=${err.domain} rule="${err.rule}" — stopping`);
+        break;
+      }
       console.log(`  Fetch error: ${err}`);
       break;
     }
@@ -212,17 +267,37 @@ async function main() {
 
     let pageQueued = 0;
     for (const record of records) {
+      // Accumulate diagnostics regardless of relevance (dry-run only, first 200 records)
+      if (dryRun && totalRecords <= 200) {
+        for (const s of record.subjects) {
+          const key = s.toUpperCase().slice(0, 40);
+          subjectFreq[key] = (subjectFreq[key] ?? 0) + 1;
+        }
+        const year = record.date ? record.date.slice(0, 4) : "unknown";
+        yearFreq[year] = (yearFreq[year] ?? 0) + 1;
+      }
+
       if (!isOceanRelevant(record)) continue;
       totalRelevant++;
 
-      for (const pdfUrl of record.pdfUrls) {
-        const queued = await queuePdf(pdfUrl, record.docSymbol);
-        if (queued) pageQueued++;
+      if (dryRun && sampleTitles.length < 10) {
+        sampleTitles.push(`  [${record.docSymbol}] ${record.title.slice(0, 80)}`);
       }
+
+      if (dryRun) {
+        pageQueued++;
+      } else {
+        for (const pdfUrl of record.pdfUrls) {
+          const queued = await queuePdf(pdfUrl, record.docSymbol);
+          if (queued) pageQueued++;
+        }
+      }
+
+      if (totalQueued + pageQueued >= limit) break;
     }
 
     totalQueued += pageQueued;
-    console.log(`  Page ${page}: ${pageQueued} ocean-relevant PDFs queued`);
+    console.log(`  Page ${page}: ${pageQueued} ocean-relevant records ${dryRun ? "would be queued" : "queued"}`);
 
     // Follow resumption token for next page
     const token = extractResumptionToken(xml);
@@ -232,13 +307,34 @@ async function main() {
       url = "";
     }
 
-    await sleep(1000); // polite delay
+    // sleep() call is defense-in-depth; fetchAsTideline already enforces Crawl-Delay: 5
+    await sleep(200);
   }
 
   console.log(`\n=== Complete ===`);
-  console.log(`  Records scanned: ${totalRecords}`);
-  console.log(`  Ocean-relevant: ${totalRelevant}`);
-  console.log(`  New PDFs queued: ${totalQueued}`);
+  console.log(`  Records scanned:  ${totalRecords}`);
+  console.log(`  Ocean-relevant:   ${totalRelevant}`);
+  console.log(`  PDFs ${dryRun ? "would be queued" : "queued"}: ${totalQueued}`);
+
+  if (dryRun) {
+    console.log(`\n--- Subject frequency (top 20 across scanned records) ---`);
+    const topSubjects = Object.entries(subjectFreq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20);
+    for (const [s, n] of topSubjects) console.log(`  ${n.toString().padStart(4)}  ${s}`);
+
+    console.log(`\n--- Year distribution (publication date) ---`);
+    const topYears = Object.entries(yearFreq)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 15);
+    for (const [y, n] of topYears) console.log(`  ${y}: ${n}`);
+
+    console.log(`\n--- Sample ocean-relevant titles ---`);
+    for (const t of sampleTitles) console.log(t);
+
+    console.log(`\n  Ocean-relevant ratio: ${totalRelevant}/${totalRecords} (${totalRecords > 0 ? Math.round(totalRelevant / totalRecords * 100) : 0}%)`);
+    console.log(`  (DRY RUN — no writes made to document_queue)`);
+  }
 }
 
 main().catch(console.error);
