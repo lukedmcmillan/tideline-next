@@ -264,7 +264,8 @@
       "Bash(node_modules/.bin/tsx scripts/test-jina-embedding.ts 2>&1)",
       "Bash(node_modules/.bin/tsx scripts/embed-documents.ts --sample=50 2>&1)",
       "Bash(node_modules/.bin/tsx scripts/diag-embed-state.ts 2>&1)",
-      "Bash(node_modules/.bin/tsx scripts/diag-insert-failed.ts 2>&1)"
+      "Bash(node_modules/.bin/tsx scripts/diag-insert-failed.ts 2>&1)",
+      "Bash(powershell -Command \"try { [System.IO.File]::OpenWrite\\('tasks\\\\\\\\lessons.md'\\).Close\\(\\); Write-Host 'unlocked' } catch { Write-Host 'locked:' \\\\$_.Exception.Message }\")"
     ]
   }
 }
