@@ -10,6 +10,7 @@
  * rule_applied = audit string for every row
  *
  * Resumable: skips any document where classified_at IS NOT NULL.
+ * Pass --force to re-classify all documents (override resumability).
  */
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
@@ -21,8 +22,21 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const FORCE = process.argv.includes("--force");
+
 type SourceType = "GOVERNMENT" | "NGO" | "ACADEMIC" | "PRESS";
 type SourceTier = "PRIMARY" | "SECONDARY";
+
+// ---------------------------------------------------------------------------
+// GOVERNMENT DOCUMENT TYPES — strongest signal, checked first
+// ---------------------------------------------------------------------------
+
+const GOV_DOC_TYPES = new Set([
+  "regulation",
+  "government_document",
+  "resolution",
+  "treaty",
+]);
 
 // ---------------------------------------------------------------------------
 // URL DOMAIN ALLOWLIST → source_type
@@ -133,28 +147,48 @@ const NGO_EXACT = new Set([
 ]);
 
 const GOVERNMENT_EXACT = new Set([
+  // CCAMLR — both forms
   "Commission for the Conservation of Antarctic Marine Living Resources (CCAMLR)",
   "CCAMLR (Commission for the Conservation of Antarctic Marine Living Resources)",
+  "Commission for the Conservation of Antarctic Marine Living Resources",
+  // CCSBT
+  "Commission for the Conservation of Southern Bluefin Tuna (CCSBT)",
+  "Commission for the Conservation of Southern Bluefin Tuna",
+  // RFMOs
   "Indian Ocean Tuna Commission (IOTC)",
   "Indian Ocean Tuna Commission",
   "International Commission for the Conservation of Atlantic Tunas (ICCAT)",
   "Inter-American Tropical Tuna Commission (IATTC)",
   "Western and Central Pacific Fisheries Commission (WCPFC)",
+  "Commission for the Conservation and Management of Highly Migratory Fish Stocks in the Western and Central Pacific Ocean",
   "General Fisheries Commission for the Mediterranean (GFCM)",
   "North East Atlantic Fisheries Commission (NEAFC)",
   "South Pacific Regional Fisheries Management Organisation",
   "Southern Indian Ocean Fisheries Agreement (SIOFA)",
   "Western Central Atlantic Fishery Commission (WECAFC)",
   "North Pacific Fisheries Commission",
+  // ISA / IWC
   "International Seabed Authority",
   "International Whaling Commission",
+  // ASCOBANS
   "ASCOBANS (Agreement on the Conservation of Small Cetaceans of the Baltic, North East Atlantic, Irish and North Seas)",
+  "Agreement on the Conservation of Small Cetaceans of the Baltic, North East Atlantic, Irish and North Seas (ASCOBANS)",
+  "UNEP/ASCOBANS",
+  // CITES COP
   "Conference of the Parties to the Convention on Biological Diversity",
+  "Conference of the Parties to the Convention on International Trade in Endangered Species of Wild Fauna and Flora (CITES)",
+  "CITES Conference of the Parties",
+  // EU institutions
   "European Commission",
   "Commission of the European Communities",
   "Council of the European Union",
   "European Parliament and Council of the European Union",
   "European Union",
+  "European Economic Community",
+  "European Community",
+  // FAO
+  "Food and Agriculture Organization of the United Nations (FAO)",
+  // Other
   "Foyle, Carlingford and Irish Lights Commission",
 ]);
 
@@ -168,15 +202,28 @@ const ACADEMIC_EXACT = new Set([
 
 // ---------------------------------------------------------------------------
 // GOVERNMENT KEYWORD PATTERNS
-// Applied only after NGO_EXACT check (step c before step e).
-// Returns matched pattern string, or null.
+// Applied only after NGO_EXACT check (step e before step f).
+// GOV_STARTS: matched via startsWith (case-insensitive on trimmed string).
+// GOV_INCLUDES: matched via includes (case-insensitive on trimmed string).
 // NOTE: " authority" has a leading space — matches " authority" as a
 // standalone word, not any org with "authority" as a substring fragment.
 // ---------------------------------------------------------------------------
 
 const GOV_STARTS: string[] = [
+  // Sovereign state prefixes
+  "republic of",
+  "kingdom of",
+  "commonwealth of",
+  "state of",
+  "federated states of",
+  "independent state of",
+  "principality of",
+  "grand duchy of",
+  // Legislative / executive bodies
   "government of",
   "parliament of",
+  "congress of",
+  // Intergovernmental
   "united nations",
   "un ",
   "international commission",
@@ -192,6 +239,7 @@ const GOV_INCLUDES: string[] = [
   " congress",
   "legislature",
   "ministry of",
+  "ministry for",
   "minister of",
   "ministers",
   "department of",
@@ -256,13 +304,25 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
   let source_type: SourceType | null = null;
   let rule_applied = "";
 
-  // a. document_type = scientific_paper → ACADEMIC
-  if (doc.document_type === "scientific_paper") {
+  // 1. Government document types (strongest editorial signal)
+  if (!source_type && doc.document_type && GOV_DOC_TYPES.has(doc.document_type)) {
+    source_type = "GOVERNMENT";
+    rule_applied = `doctype:${doc.document_type}`;
+  }
+
+  // 2. NGO document type
+  if (!source_type && doc.document_type === "ngo_report") {
+    source_type = "NGO";
+    rule_applied = "doctype:ngo_report";
+  }
+
+  // 3. Academic document type
+  if (!source_type && doc.document_type === "scientific_paper") {
     source_type = "ACADEMIC";
     rule_applied = "doctype:scientific_paper";
   }
 
-  // b. URL domain allowlist
+  // 4. URL domain allowlist
   if (!source_type && source_domain) {
     const t = classifyByDomain(source_domain);
     if (t) {
@@ -271,7 +331,7 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
     }
   }
 
-  // c. NGO exact match (before GOVERNMENT patterns)
+  // 5a. NGO exact match (before GOVERNMENT patterns)
   if (!source_type && doc.source_organisation) {
     const org = doc.source_organisation.trim();
     if (NGO_EXACT.has(org)) {
@@ -280,7 +340,7 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
     }
   }
 
-  // d. GOVERNMENT exact match
+  // 5b. GOVERNMENT exact match
   if (!source_type && doc.source_organisation) {
     const org = doc.source_organisation.trim();
     if (GOVERNMENT_EXACT.has(org)) {
@@ -289,7 +349,7 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
     }
   }
 
-  // e. GOVERNMENT keyword patterns
+  // 6. GOVERNMENT keyword patterns (startsWith then includes)
   if (!source_type && doc.source_organisation) {
     const pattern = matchGovernmentPattern(doc.source_organisation.trim());
     if (pattern) {
@@ -298,7 +358,7 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
     }
   }
 
-  // f. ACADEMIC exact match
+  // 7. ACADEMIC exact match
   if (!source_type && doc.source_organisation) {
     const org = doc.source_organisation.trim();
     if (ACADEMIC_EXACT.has(org)) {
@@ -307,7 +367,7 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
     }
   }
 
-  // g. No match
+  // 8. No match
   if (!source_type) {
     rule_applied = "NULL—no match";
   }
@@ -329,10 +389,10 @@ function classifyDocument(doc: DocRow, now: string): UpdateRow {
 
 async function main() {
   console.log("=== Tideline Source Classification Backfill ===");
-  console.log("Zero API calls — deterministic pass only.\n");
+  console.log(`Zero API calls — deterministic pass only.${FORCE ? " [--force: re-classifying all docs]" : ""}\n`);
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error("Missing SUPABASE env vars. Run via: npx tsx scripts/classify-documents.ts");
+    console.error("Missing SUPABASE env vars. Run via: node_modules/.bin/tsx scripts/classify-documents.ts");
     process.exit(1);
   }
 
@@ -361,17 +421,19 @@ async function main() {
 
   console.log(`Total approved documents: ${allDocs.length}`);
 
-  const toProcess = allDocs.filter((d) => !d.classified_at);
+  const toProcess = FORCE
+    ? allDocs
+    : allDocs.filter((d) => !d.classified_at);
   const alreadyDone = allDocs.length - toProcess.length;
-  if (alreadyDone > 0) console.log(`Already classified (skipping): ${alreadyDone}`);
+  if (alreadyDone > 0 && !FORCE) console.log(`Already classified (skipping): ${alreadyDone}`);
   console.log(`To classify: ${toProcess.length}\n`);
 
   if (toProcess.length === 0) {
-    console.log("All documents already classified.");
+    console.log("All documents already classified. Pass --force to re-classify.");
     return;
   }
 
-  // Batch size for upsert — 100 rows per round trip
+  // Batch size for update — 100 rows per round trip
   const BATCH = 100;
   const counts: Record<string, number> = {
     GOVERNMENT: 0, NGO: 0, ACADEMIC: 0, PRESS: 0, NULL: 0,
@@ -389,7 +451,6 @@ async function main() {
       return row;
     });
 
-    // UPDATE (not upsert) — avoids NOT NULL constraint on title during insert path.
     // Parallel updates within each batch for throughput.
     const results = await Promise.all(
       updates.map((u) =>
