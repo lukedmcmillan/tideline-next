@@ -93,7 +93,7 @@ An NGO *position statement* is a PRIMARY source for that NGO's stated view, even
 
 | Pool | Table | Contents | RPCs |
 |---|---|---|---|
-| Library | `document_chunks` | All ingested documents (7,698+) | `match_document_chunks` (unfiltered), `match_primary_chunks` (primary filter) |
+| Library | `document_chunks` | All ingested documents (7,698+) | `match_document_chunks` (unfiltered), `match_primary_chunks` (primary filter), `match_document_chunks_filtered` (source_tier + date pre-filter, returns document metadata via JOIN) |
 | Stories | `story_chunks` | RSS/scraped article chunks | `match_story_chunks` |
 
 **Primary/secondary is a JOIN filter, not a separate pool.**
@@ -103,8 +103,9 @@ primary-only table exists.
 
 **RPCs return minimal columns** (`chunk_index`, `chunk_text`, `document_id`,
 `similarity`). Metadata hydration (title, source_organisation, url,
-source_type, source_tier, tracker_tag) is a separate `SELECT` on `documents`
+source_type, source_tier) is a separate `SELECT` on `documents`
 after the RPC call. This is the correct pattern — matches `brief-reply`.
+`match_document_chunks_filtered` returns document metadata directly via JOIN — no separate hydration needed for that RPC.
 
 ### 4.1 Columns to add/confirm on `documents`
 ```sql
@@ -157,13 +158,14 @@ CREATE TABLE IF NOT EXISTS research_queries (
   source_surface text NOT NULL DEFAULT 'standalone_research',
                               -- 'brief_reply' | 'workspace_ask' | 'standalone_research' | 'projects_ask'
   project_id uuid,            -- nullable; populated when source_surface = 'projects_ask'
-  source_types text[],            -- filter applied (GOVERNMENT|NGO|ACADEMIC|PRESS)
+  source_tiers text[],            -- filter applied: PRIMARY | SECONDARY. Empty array {} = both tiers (no filter). NULL is not used.
   date_from date, date_to date,   -- filter applied
   scope text,                     -- 'all_library' | 'my_uploads'
   chunks_retrieved int,
   chunks_cited int,
   abstained boolean DEFAULT false,
-  faithfulness_stripped int DEFAULT 0,  -- claims removed by Mechanism 4
+  faithfulness_stripped int DEFAULT 0,   -- claims removed by Mechanism 4 (UNSUPPORTED verdict)
+  partial_citation_count int DEFAULT 0,  -- claims flagged PARTIAL by Mechanism 4 (kept, logged)
   answer text,
   cited_chunk_ids uuid[],
   latency_ms int,
@@ -176,7 +178,7 @@ This table powers the "Recent research" UI and the audit trail.
 faithfulness-strip counts broken down by surface). `project_id` links
 to the `projects` table for workspace project query history.
 
-*Note: `tracker_tag` is intentionally absent from this table. Tracker tags are source-level metadata displayed on cited source cards; they are not a retrieval filter. The three active filters are `source_types`, `date_from`/`date_to`, and `scope`.*
+*Note: The three active filters stored here are `source_tiers`, `date_from`/`date_to`, and `scope`. `tracker_tag` is omitted from v1 entirely.*
 
 ---
 
@@ -206,8 +208,8 @@ query + filters
   │
   │     All modes: return up to K=25 merged chunks with similarity scores.
   │     Metadata hydration (title, source_organisation, url, source_type,
-  │     source_tier, tracker_tag) via separate JOIN on documents after RPC.
-  │     source_type and tracker_tag are display metadata only — not filters.
+  │     source_tier) returned directly by match_document_chunks_filtered.
+  │     source_type is display metadata only — not a filter.
   │
   ├─3 ABSTENTION GATE (Mechanism 5):
   │     if best_sim < 0.72 or chunks_above_0.78 < 3 → return abstention. STOP.
@@ -228,7 +230,7 @@ query + filters
   │     divergence pair (join to divergences table), surface the
   │     honesty banner. Report the conflict; do not resolve it.
   │
-  └─9 RETURN: answer, cited sources (with type/tier/date/tracker_tag/similarity),
+  └─9 RETURN: answer, cited sources (with type/tier/date/similarity),
         retrieval funnel numbers, abstention/strip counts.
         Persist to research_queries.
 ```
@@ -247,16 +249,12 @@ interface ResearchOptions {
   sourceSurface: 'brief_reply' | 'workspace_ask' | 'standalone_research' | 'projects_ask';
   projectContext?: {
     projectId: string;
-    trackerTags?: string[];
     // attachedDocumentIds: deferred — depends on project_documents schema not yet designed
   };
 }
 ```
 
-`projectContext` is optional. When present (`projects_ask` surface), chunks
-whose parent document has a `tracker_tag` matching any value in
-`projectContext.trackerTags` have their similarity score **multiplied by 1.2**
-before sorting and the abstention gate. The embedding search is unchanged.
+`projectContext` is optional. Present when `source_surface = 'projects_ask'`.
 
 `attachedDocumentIds` is intentionally absent. It depends on a
 `project_documents` join table schema not yet designed. The contract will be
@@ -271,6 +269,10 @@ You are Tideline Research. You answer ONLY from the numbered source passages
 provided below. You may not use any knowledge outside these passages.
 
 RULES:
+- Citations use the bracket numbers from the SOURCE PASSAGES list: [1] refers
+  to the first passage listed, [2] to the second, and so on. Never write a
+  citation number outside the range [1]–[N] where N is the total number of
+  passages supplied.
 - Every factual claim must end with a citation [n] referencing the source
   passage number that supports it. Multiple: [2][5].
 - If a claim cannot be supported by a provided passage, DO NOT write it.
@@ -304,7 +306,12 @@ Return JSON array only: [{"id":1,"verdict":"SUPPORTED|PARTIAL|UNSUPPORTED"}]
 CLAIM 1: "{claim_text}"  SOURCE: "{cited_chunk_text}"
 CLAIM 2: ...
 ```
-SUPPORTED → keep. PARTIAL → keep, increment `faithfulness_stripped` is NOT incremented (it is flagged only). UNSUPPORTED → strip the claim, increment counter, log chunk + claim for review.
+SUPPORTED → keep. PARTIAL → keep, increment `partial_citation_count` (flagged for review, not stripped). UNSUPPORTED → strip the claim, increment `faithfulness_stripped`, log chunk + claim for review.
+
+**Reliability contract (fail-closed):**
+Retry the Haiku call once after 2 seconds on any error. If the retry also fails,
+the pipeline throws HTTP 503. Callers MUST NOT silently skip this step or allow
+unverified claims through. An unreachable Haiku surfaces as 503, not a silent pass.
 
 ---
 
@@ -324,8 +331,7 @@ SUPPORTED → keep. PARTIAL → keep, increment `faithfulness_stripped` is NOT i
   1. **Source-tier multi-select:** PRIMARY / SECONDARY. Shows live in-scope count. (`source_type` tag — GOVERNMENT / NGO / ACADEMIC / PRESS — is display metadata on each cited source card, not a filter.)
   2. **Date range:** `date_from` / `date_to` applied as a pre-retrieval SQL filter on `documents.created_at` (or publication date if available).
   3. **Scope toggle:** all library / my uploads only.
-  - No other retrieval filters. `tracker_tag` is not a filter; it is display metadata on cited source cards only.
-- **Per-claim citations:** hoverable, showing source name, type, tier, date, tracker tag, similarity %, and one-click to the original document.
+- **Per-claim citations:** hoverable, showing source name, type, tier, date, similarity %, and one-click to the original document.
 - **Sources-consulted rail (dedicated mode):** all cited sources, sorted by similarity, with relevance bars.
 - **Honesty banner:** fires on divergence overlay. Reports contradiction, does not adjudicate.
 - **Abstention state:** clean, non-embarrassing. "The library does not cover this reliably" + nearest documents found.
@@ -350,16 +356,10 @@ Script: `scripts/embed-documents.ts` (reuses embed-documents cron logic, JINA_AP
 - Jina `jina-embeddings-v2-base-en` 768-d confirmed reachable (HTTP 200)
 - 14 docs had transient insert errors on an earlier run; all re-embedded successfully on retry (verified 2026-05-29)
 
-### Step 3 — Retrieval + reliability library
-```
-/sc:implement "lib/research.ts implementing the pipeline in
-RESEARCH-RAG-SPEC.md Section 5. Functions: embedQuery, retrieveChunks
-(with source_type/date/scope pre-filter — no tracker_tag filter),
-abstentionGate, synthesise (closed-book prompt Section 6),
-verifyCitations (deterministic, Section 5 step 6), checkFaithfulness
-(Haiku, Section 7), assembleResponse. Return type includes funnel counts
-and strip counts. Do NOT skip the abstention gate or citation verification."
-```
+### Step 3 — Retrieval + reliability library ✓ COMPLETE (2026-05-29)
+Migrations: `supabase/migrations/20260529_match_document_chunks_filtered.sql`, `supabase/migrations/20260529_research_queries.sql`
+Library: `app/lib/research.ts` — 7 functions: `embedQuery`, `retrieveChunks`, `abstentionGate`, `synthesise`, `verifyCitations`, `checkFaithfulness`, `assembleResponse`
+Gap decisions locked: tracker_tag omitted from v1; citation-numbering explicit in synthesis prompt; Haiku fail-closed contract; my_uploads stubbed HTTP 400; inScopeCount parallel query; K=25 ties resolved by ORDER BY similarity DESC; chunk-level dedup only (no document-level dedup).
 
 ### Step 4 — The endpoint
 ```
@@ -433,7 +433,6 @@ Backfill (Steps 1-2) is a one-time cost: 7,698 docs of embeddings + classificati
 - Never adjudicate a source conflict. Report it, cite both (Divergence principle).
 - Never hardcode the funnel numbers in the UI. They are reliability claims.
 - Never hide the source filter's effect. Show in-scope counts honestly.
-- Never add `tracker_tag` as a retrieval filter. It is display metadata only.
 - No em dashes, no blue, no solid badges (standard Tideline rules).
 
 ---
