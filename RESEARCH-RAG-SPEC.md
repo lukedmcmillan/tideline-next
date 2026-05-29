@@ -93,17 +93,16 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_tier text;   -- PRIMARY|SE
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_domain text; -- for allowlist matching
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS classified_at timestamptz;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS classify_confidence numeric(3,2);
--- embedding column exists but is currently vector(768) (Jina jina-embeddings-v2-base-en).
--- Step 2 must include the approved migration to alter it to vector(1536) to match
--- OpenAI text-embedding-3-small. See Section 10 dimension-migration note.
+-- embedding vector(768) — Jina jina-embeddings-v2-base-en. No migration needed.
 ```
 
 ### 4.2 `document_chunks` (table exists, currently empty — populate)
 ```sql
 -- Confirm shape; spec assumes:
 -- id uuid pk, document_id uuid fk -> documents(id),
+-- id uuid pk, document_id uuid fk -> documents(id),
 -- chunk_index int, chunk_text text,
--- embedding vector(768) currently → vector(1536) after dimension migration, created_at timestamptz default now()
+-- embedding vector(768), created_at timestamptz default now()
 CREATE INDEX IF NOT EXISTS idx_chunks_embedding
   ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX IF NOT EXISTS idx_chunks_document ON document_chunks(document_id);
@@ -141,7 +140,7 @@ This table also powers the "Recent research" UI and gives you the audit trail to
 ```
 query + filters
   │
-  ├─1 EMBED query (text-embedding-3-small, 1536-d)
+  ├─1 EMBED query (Jina jina-embeddings-v2-base-en, 768-d)
   │
   ├─2 RETRIEVE: pgvector cosine search on document_chunks,
   │     pre-filtered by source_type[], date range, scope.
@@ -252,9 +251,10 @@ documents — propose the plan before running (CLAUDE-RULES.md plan-mode zone)."
 ```
 /sc:task "Chunk and embed all documents into document_chunks per
 RESEARCH-RAG-SPEC.md Section 4.2. ~500-800 token chunks with overlap,
-text-embedding-3-small (1536-d). Populate embedding column. Create the
-pgvector index (confirm hnsw vs ivfflat against the Supabase pgvector
-version first). Backfill script. Progress every 100 docs. Resumable if it
+Jina jina-embeddings-v2-base-en (768-d) — reuse the existing embed-documents
+cron logic and JINA_API_KEY. Confirm Jina embedding endpoint is reachable
+before starting. Populate embedding vector(768) column. Create the ivfflat
+index per Section 4.2. Backfill script. Progress every 100 docs. Resumable if it
 dies partway. Plan-mode: this writes to document_chunks."
 ```
 
@@ -309,21 +309,16 @@ chunk is stripped; (d) an unsupported claim is stripped by faithfulness;
 
 ## 10. EMBEDDINGS PROVIDER (LOCKED)
 
-**OpenAI `text-embedding-3-small`, 1536 dimensions.** This is the locked choice. No alternatives are in scope.
+**Jina `jina-embeddings-v2-base-en`, 768 dimensions.** This is the locked choice for v1. Reasons:
 
-**Dimension migration required.** The existing `document_chunks.embedding` column is currently `vector(768)` (Jina `jina-embeddings-v2-base-en`, used for story_chunks and previously for document_chunks). Switching to OpenAI 1536-d requires an explicit, approved migration before Step 2:
-```sql
--- Run ONLY after backups confirmed and 0 chunks in document_chunks (currently true)
-ALTER TABLE document_chunks ALTER COLUMN embedding TYPE vector(1536);
-ALTER TABLE documents ALTER COLUMN embedding TYPE vector(1536);
--- Drop and recreate the ivfflat index (or switch to hnsw if confirmed available)
-DROP INDEX IF EXISTS idx_document_chunks_embedding;
-CREATE INDEX idx_document_chunks_embedding ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
--- Rewrite the match_document_chunks and match_library_documents RPCs to use vector(1536)
-```
-This migration is safe now because `document_chunks` is empty (0 rows) and `documents.embedding` has never been populated (7,698 rows, all NULL). No data loss. The old dimension was 768; the new dimension is 1536.
+- Matches the existing `vector(768)` columns on both `documents` and `document_chunks` — no migration needed.
+- All `match_*` RPC functions (`match_document_chunks`, `match_library_documents`, `match_primary_chunks`, `match_story_chunks`) already declare `query_embedding vector(768)`.
+- The `embed-documents` cron and `scripts/embed-documents.ts` already use this model and the `JINA_API_KEY` is in production.
+- `PROJECT_INDEX.md` flags this model with "do not change" — a deliberate past decision on quality and cost grounds, confirmed.
 
-Confirm the OpenAI API key is present in `.env.local` and budgeted before running Step 2.
+OpenAI `text-embedding-3-small` (1536-d) is a deferred future optimisation, reconsidered post-launch with retention data, requiring a full re-embed and column/RPC migration — not a v1 dependency.
+
+Confirm the existing Jina embedding setup is reachable (`JINA_API_KEY` in `.env.local`) before running Step 2.
 
 ---
 
