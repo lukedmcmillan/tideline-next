@@ -81,3 +81,7 @@ cites-test.*
 **/*.bak.ts
 commit-*.txt
 diagnostic-*.txt
+
+# Supabase CLI cache
+supabase/.temp/
+

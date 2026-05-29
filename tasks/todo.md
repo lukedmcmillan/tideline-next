@@ -75,20 +75,54 @@ The 'weh' workspace shows isa and bbnj entity chips in the UI but `projects.topi
 
 ---
 
-## TICKET: Clean up untracked junk files in repo root
+## TICKET: Clean up untracked junk files in repo root — ✓ RESOLVED (2026-05-29)
 
-**Priority:** Low
-**Discovered:** 2026-05-06
+Git history cleanup (10-commit reconstruction, force-push-with-lease) removed all
+garbled-name junk files that were accidentally staged in c68aba1. Resolved.
 
-### Problem
-Untracked files with clearly corrupt names exist in the repo root (paste artifacts from terminal cross-contamination):
-- `1`, `10)`, `20%`, `console.error(e))`
+---
+
+## RAG BUILD: Step 1 — Source classification backfill
+
+**Priority:** P1 — unblocked
+**Spec:** RESEARCH-RAG-SPEC.md Sections 3, 4.1 | Build Guide Step 1
 
 ### Work needed
-```bash
-git clean -n   # preview — confirm only junk files listed
-git clean -f   # delete
-```
+- Before running: sample top-50 `source_organisation` values to validate allowlist coverage
+  ```sql
+  SELECT source_organisation, count(*) FROM documents
+  WHERE status = 'approved' GROUP BY source_organisation ORDER BY count DESC LIMIT 50;
+  ```
+- Run `scripts/classify-documents.ts` (deterministic, zero API cost for allowlist hits)
+- Verify: `SELECT source_tier, count(*) FROM documents GROUP BY source_tier;` — no NULLs
+- Migration `supabase/migrations/20260529_documents_source_classification.sql` already applied
+
+---
+
+## RAG BUILD: Step 2 — Story chunks backfill
+
+**Priority:** P1 — unblocked (document_chunks ✓ DONE, story_chunks remaining)
+**Spec:** Build Guide Step 2
+
+### Work needed
+1. Audit `scripts/embed-stories.ts` for three known bugs: pagination cap, text sanitization, success-counting
+2. Fix all three bugs (match `embed-documents.ts` pattern exactly)
+3. Run `--sample=50` first, then full backfill
+4. Wire into summarise-pending cron for ongoing ingest
+
+---
+
+## RAG BUILD: Step 3 — lib/research.ts unified engine
+
+**Priority:** P1 — unblocked after Step 2
+**Spec:** RESEARCH-RAG-SPEC.md Sections 5, 5.1, 6, 7 | Build Guide Step 3
+
+### Work needed
+- New file, no refactoring of existing callers
+- Three retrieval modes: ALL / PRIMARY_ONLY / PRIMARY_BOOST (0.65/top-15, 0.62/top-10)
+- All five reliability mechanisms: abstention gate (0.72/0.78), closed-book synthesis, citation verification, faithfulness pass, assemble response
+- projectContext: 1.2x similarity multiplier for trackerTags matches, no attachedDocumentIds
+- Metadata hydration via separate JOIN after RPC
 
 ---
 

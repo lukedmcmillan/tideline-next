@@ -1,6 +1,33 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-28 — blue_carbon_credits tracker build + source corpus
+## Last session: 2026-05-29 — Research RAG spec locked, build guide v2, research/inline deleted
+
+WHAT SHIPPED (2026-05-29):
+
+- **RESEARCH-RAG-SPEC.md v2** (commit `6b07f23` → further updated to `1d34fe7`):
+  - Section 4.0: two-pool architecture documented (document_chunks + story_chunks; primary/secondary is JOIN filter not separate pool; RPCs return minimal columns, metadata hydration is separate query)
+  - Section 4.3: `source_surface` + `project_id` columns added to research_queries schema
+  - Section 5: three retrieval modes (ALL, PRIMARY_ONLY, PRIMARY_BOOST) with production thresholds: PRIMARY_BOOST = full library 0.65/top-15, primary-only 0.62/top-10 (brief-reply production values)
+  - Section 5.1: lib/research.ts function contract — `primaryFilter: 'all'|'primary-only'|'primary-boost'`, `sourceSurface`, `projectContext` (trackerTags only; 1.2x boost multiplier named; attachedDocumentIds deferred)
+  - Section 8: per-surface defaults table added
+
+- **ASK-TIDELINE-BUILD-GUIDE.md v2** (commit `892cbfe`):
+  - Migration-aware: Phase 0.5 documents existing callers (workspace/ask PRODUCTION, brief-reply PRODUCTION, research/inline ORPHAN)
+  - 15 steps, 5 phases: Phase 2 = build new engine alongside old; Phase 3 = one-at-a-time migration with 24-48h gates; Phase 4 = new surfaces (parallel with Phase 3); Phase 5 = nightly hook
+  - Explicit gate criteria at Step 5 (8/10 parity + faithfulness fires) and Step 9 (four conditions, 48h)
+  - Step 1 (classification) marked COMPLETE; Step 2 revised to story_chunks-only
+
+- **Step 0.5.2 complete**: `app/api/research/inline/route.ts` deleted — zero callers confirmed, wrong model (jina-embeddings-v3), build clean after .next cache clear
+
+Git history cleanup ✓ DONE:
+- **c68aba1 resolved**: soft reset + 10-commit reconstruction + force-push-with-lease. All legitimate work preserved in proper commits; garbled-name junk files removed. History clean. Do NOT use `git add -A` in a dirty working tree — always stage specific files by name.
+
+NEXT SESSION PRIORITIES (in order):
+1. **Step 1 — source classification backfill**: sample top-50 `source_organisation` values first to validate allowlist, then run `scripts/classify-documents.ts`
+2. **Step 2 — embed-stories.ts audit + story_chunks backfill**: three known bugs (pagination cap, sanitization, success-counting); fix + sample=50 + full run
+3. **Step 3 — lib/research.ts**: unified engine, three retrieval modes, five reliability mechanisms (new file)
+
+## Previous session: 2026-05-28 — blue_carbon_credits tracker build + source corpus
 
 WHAT SHIPPED (2026-05-27/28):
 
