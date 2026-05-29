@@ -1,6 +1,6 @@
 # Project Index: Tideline
 
-Generated: 2026-05-28 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
+Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
 
 ---
 
@@ -206,7 +206,9 @@ Generated: 2026-05-28 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 
 **Migrations applied**: `20260518_brief_sends_delta_fallback.sql`, `20260518_delta_classifications_cache.sql`, `20260519_delta_classifications_category.sql`
 
-**Next**: LP briefing PDF layer, 30-day category gate backtest (SIG_FLOOR calibration), fix 6 auth fallback routes, corporate Stripe tier, Gold Standard / Plan Vivo / Blue Carbon Initiative Jina scrapers
+**RESEARCH-RAG-SPEC.md LOCKED (2026-05-29)**: Spec finalised — Jina `jina-embeddings-v2-base-en` 768-d locked (matches existing infra), 5 reliability mechanisms, 7-step build sequence. **Next build step: Step 1 — source classification backfill** (`source_type` + `source_tier` on `documents`, domain allowlist + Haiku fallback).
+
+**Next**: Research RAG Step 1 (source classification), LP briefing PDF layer, 30-day category gate backtest (SIG_FLOOR calibration), fix 6 auth fallback routes, corporate Stripe tier, Gold Standard / Plan Vivo / Blue Carbon Initiative Jina scrapers
 
 **Known issues**:
 - Firecrawl MCP not connecting

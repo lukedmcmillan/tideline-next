@@ -64,22 +64,25 @@ Before generation, check retrieval quality:
 
 ## 3. SOURCE CLASSIFICATION — PRIMARY VS SECONDARY
 
-Every document carries a `source_type` (GOVERNMENT / NGO / ACADEMIC / PRESS, reused from `divergences`) AND a derived `source_tier` (PRIMARY / SECONDARY). The UI filter is multi-select over `source_type`; PRIMARY/SECONDARY is derived from it plus the per-document classification.
+Every document carries a `source_tier` (PRIMARY / SECONDARY) and an optional `source_type` metadata tag (GOVERNMENT / NGO / ACADEMIC / PRESS).
 
-### Classification method (both, in order)
-1. **Domain allowlist first (deterministic).** Maintained list maps source domain → tier and type.
-   - PRIMARY / GOVERNMENT: isa.org.jm, imo.org, un.org, eur-lex.europa.eu, fao.org, ospar.org, cbd.int, wto.org, gov.uk, *.gov, treaty bodies, regulator filings.
-   - SECONDARY / PRESS: reuters.com, apnews.com, bloomberg.com, news outlets.
-   - NGO / ACADEMIC: tier depends on document role (see edge case below).
-2. **Haiku for unknowns.** Any document whose domain is not on the allowlist is classified by a single Haiku call at ingest, returning `{source_type, source_tier, confidence}`. Haiku classifications with confidence < 0.7 are flagged for manual review (reuse the existing library review-queue pattern). This threshold is normative; Section 9 Step 1 references it but does not override it.
+**`source_tier` is the user-facing retrieval filter.** Derived directly from `is_primary_source` (fully populated across all 7,698 documents): `true → PRIMARY`, `false → SECONDARY`. This matches how legal and ESG users think: primary record vs reporting layer.
+
+**`source_type` is display metadata only** — shown on source cards and hover citations. It is NOT a retrieval filter. Populated deterministically where unambiguous via an org/domain allowlist (maintained in `scripts/classify-documents.ts`). `NULL` is acceptable for any document not matched by a deterministic rule. No Haiku pass; ambiguous sources remain `NULL` and are flagged `needs_review = true` for future editorial review.
+
+### Classification method
+1. **`source_tier`:** `is_primary_source ? 'PRIMARY' : 'SECONDARY'`. No other logic.
+2. **`source_type`:** Domain allowlist → org exact set → org keyword patterns → NULL.
+   Priority: `doctype:scientific_paper` → domain allowlist → NGO exact → GOVERNMENT exact → GOVERNMENT keyword patterns → ACADEMIC exact → NULL.
+   Rule applied is recorded in `documents.rule_applied` for audit. No confidence threshold — no model inference in this pipeline.
 
 ### The edge case experts will notice
-An NGO *position statement* is a PRIMARY source for that NGO's stated view, even though the NGO is a SECONDARY source on the underlying event. v1 uses a fixed document-level tier (simple, shippable). v2 may add query-relative tiering. Document this limitation on the Research page the same way Pulse Score failure modes are documented — honesty is the brand.
+An NGO *position statement* is a PRIMARY source for that NGO's stated view, even though the NGO is a SECONDARY source on the underlying event. v1 uses a fixed document-level `source_tier` from `is_primary_source`. v2 may add query-relative tiering. Document this limitation on the Research page the same way Pulse Score failure modes are documented — honesty is the brand.
 
 ### Filtering behaviour
-- The `source_type` multi-select constrains retrieval BEFORE the vector search (a SQL `WHERE source_type = ANY(...)` on the joined `documents` row), so relevance scores are computed only within the chosen scope.
-- Default: all types selected. Narrowing is the user's deliberate act.
-- When a filter starves retrieval (triggers the abstention gate), say so explicitly: "Primary GOVERNMENT sources only: 3 passages found, below the reliability threshold. Widen the source filter or broaden the question."
+- The `source_tier` filter constrains retrieval BEFORE the vector search (a SQL `WHERE source_tier = ANY(...)` on the joined `documents` row), so relevance scores are computed only within the chosen scope.
+- Default: both tiers selected. Narrowing to PRIMARY only is the user's deliberate act.
+- When a filter starves retrieval (triggers the abstention gate), say so explicitly: "Primary sources only: 3 passages found, below the reliability threshold. Widen the source filter or broaden the question."
 - The retrieval transparency strip always shows scope honestly: "412 of 847 documents match your source filter."
 
 ---
@@ -143,9 +146,10 @@ query + filters
   ├─1 EMBED query (Jina jina-embeddings-v2-base-en, 768-d)
   │
   ├─2 RETRIEVE: pgvector cosine search on document_chunks,
-  │     pre-filtered by source_type[], date range, scope.
+  │     pre-filtered by source_tier[], date range, scope.
   │     Return top-K (K=25) with similarity scores + parent doc metadata
-  │     (including tracker_tag as display metadata only, not as filter).
+  │     (source_type as display metadata on cited source cards, not a filter;
+  │      tracker_tag as display metadata only, not a filter).
   │
   ├─3 ABSTENTION GATE (Mechanism 5):
   │     if best_sim < 0.72 or chunks_above_0.78 < 3 → return abstention. STOP.
@@ -221,7 +225,7 @@ SUPPORTED → keep. PARTIAL → keep, increment `faithfulness_stripped` is NOT i
 
 - **Retrieval transparency strip:** documents-in-scope → passages retrieved (with similarity floor) → sources cited → latency. Numbers come from the pipeline, not hardcoded.
 - **Filters (locked — three only):**
-  1. **Source-type multi-select:** GOVERNMENT / NGO / ACADEMIC / PRESS. Shows live in-scope count. PRIMARY/SECONDARY derivable as a quick toggle layered on top.
+  1. **Source-tier multi-select:** PRIMARY / SECONDARY. Shows live in-scope count. (`source_type` tag — GOVERNMENT / NGO / ACADEMIC / PRESS — is display metadata on each cited source card, not a filter.)
   2. **Date range:** `date_from` / `date_to` applied as a pre-retrieval SQL filter on `documents.created_at` (or publication date if available).
   3. **Scope toggle:** all library / my uploads only.
   - No other retrieval filters. `tracker_tag` is not a filter; it is display metadata on cited source cards only.
@@ -236,16 +240,12 @@ SUPPORTED → keep. PARTIAL → keep, increment `faithfulness_stripped` is NOT i
 
 Session opener first (per SUPERCLAUDE-COMMANDS.md), then:
 
-### Step 1 — Source classification backfill
-```
-/sc:task "Classify source_type and source_tier for every row in documents.
-See RESEARCH-RAG-SPEC.md Section 3. Method: domain allowlist first
-(deterministic), then a single Haiku call for any domain not on the
-allowlist, returning {source_type, source_tier, confidence}. Add columns
-per Section 4.1. Low-confidence (<0.7) rows flagged for review queue.
-Backfill script, not a cron. Show progress every 100 docs. This writes to
-documents — propose the plan before running (CLAUDE-RULES.md plan-mode zone)."
-```
+### Step 1 — Source classification backfill ✓ COMPLETE (2026-05-29)
+Migration: `supabase/migrations/20260529_documents_source_classification.sql`
+Script: `scripts/classify-documents.ts` (deterministic, zero API cost)
+- `source_tier` = `is_primary_source ? 'PRIMARY' : 'SECONDARY'` (all 7,698 docs)
+- `source_type` = deterministic allowlist (NULL acceptable; flagged `needs_review`)
+- `rule_applied` audit column populated on every row
 
 ### Step 2 — Embedding + chunking backfill
 ```
