@@ -89,6 +89,23 @@ An NGO *position statement* is a PRIMARY source for that NGO's stated view, even
 
 ## 4. DATA MODEL
 
+### 4.0 Two-pool retrieval architecture
+
+| Pool | Table | Contents | RPCs |
+|---|---|---|---|
+| Library | `document_chunks` | All ingested documents (7,698+) | `match_document_chunks` (unfiltered), `match_primary_chunks` (primary filter) |
+| Stories | `story_chunks` | RSS/scraped article chunks | `match_story_chunks` |
+
+**Primary/secondary is a JOIN filter, not a separate pool.**
+`match_primary_chunks` is a convenience RPC over the same `document_chunks`
+data with a JOIN on `documents.is_primary_source = true`. No separate
+primary-only table exists.
+
+**RPCs return minimal columns** (`chunk_index`, `chunk_text`, `document_id`,
+`similarity`). Metadata hydration (title, source_organisation, url,
+source_type, source_tier, tracker_tag) is a separate `SELECT` on `documents`
+after the RPC call. This is the correct pattern — matches `brief-reply`.
+
 ### 4.1 Columns to add/confirm on `documents`
 ```sql
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS source_type text;   -- GOVERNMENT|NGO|ACADEMIC|PRESS
@@ -118,6 +135,9 @@ CREATE TABLE IF NOT EXISTS research_queries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users(id),
   query text NOT NULL,
+  source_surface text NOT NULL DEFAULT 'standalone_research',
+                              -- 'brief_reply' | 'workspace_ask' | 'standalone_research' | 'projects_ask'
+  project_id uuid,            -- nullable; populated when source_surface = 'projects_ask'
   source_types text[],            -- filter applied (GOVERNMENT|NGO|ACADEMIC|PRESS)
   date_from date, date_to date,   -- filter applied
   scope text,                     -- 'all_library' | 'my_uploads'
@@ -132,7 +152,10 @@ CREATE TABLE IF NOT EXISTS research_queries (
 );
 CREATE INDEX idx_research_user ON research_queries(user_id, created_at DESC);
 ```
-This table also powers the "Recent research" UI and gives you the audit trail to prove reliability later.
+This table powers the "Recent research" UI and the audit trail.
+`source_surface` enables per-surface analytics (abstention rates,
+faithfulness-strip counts broken down by surface). `project_id` links
+to the `projects` table for workspace project query history.
 
 *Note: `tracker_tag` is intentionally absent from this table. Tracker tags are source-level metadata displayed on cited source cards; they are not a retrieval filter. The three active filters are `source_types`, `date_from`/`date_to`, and `scope`.*
 
@@ -145,11 +168,27 @@ query + filters
   │
   ├─1 EMBED query (Jina jina-embeddings-v2-base-en, 768-d)
   │
-  ├─2 RETRIEVE: pgvector cosine search on document_chunks,
-  │     pre-filtered by source_tier[], date range, scope.
-  │     Return top-K (K=25) with similarity scores + parent doc metadata
-  │     (source_type as display metadata on cited source cards, not a filter;
-  │      tracker_tag as display metadata only, not a filter).
+  ├─2 RETRIEVE (three modes, controlled by `primaryFilter` parameter):
+  │
+  │     ALL — match_document_chunks (unfiltered) + optionally match_story_chunks.
+  │           Pre-filter: date range, scope. Top-K=25.
+  │           Default for: workspace_ask, projects_ask.
+  │
+  │     PRIMARY_ONLY — match_document_chunks JOIN documents.is_primary_source = true.
+  │                    Same date/scope pre-filter. Top-K=25.
+  │                    Default for: standalone_research. User-toggleable to ALL.
+  │
+  │     PRIMARY_BOOST — dual query (brief-reply production values):
+  │                     (a) full library at retrieval threshold 0.65, top-K=15
+  │                     (b) primary-only at retrieval threshold 0.62, top-K=10
+  │                     Merge + deduplicate by chunk_id. Chunks appearing
+  │                     only in pass (b) receive a rank boost.
+  │                     Default for: brief_reply.
+  │
+  │     All modes: return up to K=25 merged chunks with similarity scores.
+  │     Metadata hydration (title, source_organisation, url, source_type,
+  │     source_tier, tracker_tag) via separate JOIN on documents after RPC.
+  │     source_type and tracker_tag are display metadata only — not filters.
   │
   ├─3 ABSTENTION GATE (Mechanism 5):
   │     if best_sim < 0.72 or chunks_above_0.78 < 3 → return abstention. STOP.
@@ -174,6 +213,35 @@ query + filters
         retrieval funnel numbers, abstention/strip counts.
         Persist to research_queries.
 ```
+
+### 5.1 `lib/research.ts` function contract
+
+```typescript
+type PrimaryFilter = 'all' | 'primary-only' | 'primary-boost';
+
+interface ResearchOptions {
+  query: string;
+  primaryFilter?: PrimaryFilter;      // default: 'primary-only'
+  dateFrom?: string;
+  dateTo?: string;
+  scope?: 'all_library' | 'my_uploads';
+  sourceSurface: 'brief_reply' | 'workspace_ask' | 'standalone_research' | 'projects_ask';
+  projectContext?: {
+    projectId: string;
+    trackerTags?: string[];
+    // attachedDocumentIds: deferred — depends on project_documents schema not yet designed
+  };
+}
+```
+
+`projectContext` is optional. When present (`projects_ask` surface), chunks
+whose parent document has a `tracker_tag` matching any value in
+`projectContext.trackerTags` have their similarity score **multiplied by 1.2**
+before sorting and the abstention gate. The embedding search is unchanged.
+
+`attachedDocumentIds` is intentionally absent. It depends on a
+`project_documents` join table schema not yet designed. The contract will be
+extended in a separate spec update when that schema is built.
 
 ---
 
@@ -222,6 +290,15 @@ SUPPORTED → keep. PARTIAL → keep, increment `faithfulness_stripped` is NOT i
 ---
 
 ## 8. UI CONTRACT (what the frontend renders, already prototyped)
+
+### Per-surface defaults
+
+| Surface | `primaryFilter` default | User-toggleable? | `projectContext`? |
+|---|---|---|---|
+| `brief_reply` | `'primary-boost'` | No (pipeline fixed) | No |
+| `workspace_ask` | `'all'` | No | No |
+| `standalone_research` | `'primary-only'` | Yes → `'all'` | No |
+| `projects_ask` | `'all'` | No | Yes |
 
 - **Retrieval transparency strip:** documents-in-scope → passages retrieved (with similarity floor) → sources cited → latency. Numbers come from the pipeline, not hardcoded.
 - **Filters (locked — three only):**
