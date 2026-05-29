@@ -116,10 +116,27 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS classify_confidence numeric(3,2);
 -- embedding vector(768) — Jina jina-embeddings-v2-base-en. No migration needed.
 ```
 
-### 4.2 `document_chunks` (table exists, currently empty — populate)
+### 4.2 `document_chunks` — chunking implementation
+
+*Implementation truth supersedes the token-based draft target in earlier versions of this spec. The values below match `scripts/embed-documents.ts` exactly.*
+
+**Chunking strategy (character-based, content-aware):**
+
+| Constant | Value | Notes |
+|---|---|---|
+| `ARTICLE_MAX` | 800 chars | Target chunk size for legal documents |
+| `PARA_MAX` | 600 chars | Target chunk size for all other documents |
+| `OVERLAP` | 100 chars | Trailing overlap carried into next chunk |
+| `HARD_CAP` | 1,200 chars | Sentence-boundary hard split for oversized chunks |
+| Min chunk | 100 chars | Chunks shorter than this are discarded |
+
+**Legal vs non-legal detection (content-based, not metadata-based):**
+The text is split on `\nArticle \d+` boundaries. If 3 or more such boundaries exist, the document is treated as "legal" and uses `ARTICLE_MAX` (800) per article section. Otherwise paragraph mode uses `PARA_MAX` (600), splitting on blank lines.
+
+**Pre-processing:** `sanitizeText()` strips null bytes (`\u0000`), escaped null bytes, and control characters in the range `\x00-\x08`, `\x0B`, `\x0C`, `\x0E-\x1F` before chunking. This prevents Postgres insert failures on malformed PDF text.
+
+**Table shape (confirmed):**
 ```sql
--- Confirm shape; spec assumes:
--- id uuid pk, document_id uuid fk -> documents(id),
 -- id uuid pk, document_id uuid fk -> documents(id),
 -- chunk_index int, chunk_text text,
 -- embedding vector(768), created_at timestamptz default now()
@@ -127,7 +144,9 @@ CREATE INDEX IF NOT EXISTS idx_chunks_embedding
   ON document_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX IF NOT EXISTS idx_chunks_document ON document_chunks(document_id);
 ```
-*Note: `ivfflat` needs `ANALYZE` after backfill. For <100k chunks, `hnsw` is the better index if available — confirm pgvector version in Supabase before choosing.*
+*Note: `ivfflat` needs `ANALYZE` after backfill to be effective.*
+
+**Current state (as of 2026-05-27):** 368,413 chunks live across 7,580 documents. Table is NOT empty.
 
 ### 4.3 `research_queries` (new — history + audit + Mechanism 5 logging)
 ```sql
@@ -324,16 +343,12 @@ Script: `scripts/classify-documents.ts` (deterministic, zero API cost)
 - `source_type` = deterministic allowlist (NULL acceptable; flagged `needs_review`)
 - `rule_applied` audit column populated on every row
 
-### Step 2 — Embedding + chunking backfill
-```
-/sc:task "Chunk and embed all documents into document_chunks per
-RESEARCH-RAG-SPEC.md Section 4.2. ~500-800 token chunks with overlap,
-Jina jina-embeddings-v2-base-en (768-d) — reuse the existing embed-documents
-cron logic and JINA_API_KEY. Confirm Jina embedding endpoint is reachable
-before starting. Populate embedding vector(768) column. Create the ivfflat
-index per Section 4.2. Backfill script. Progress every 100 docs. Resumable if it
-dies partway. Plan-mode: this writes to document_chunks."
-```
+### Step 2 — Embedding + chunking backfill ✓ COMPLETE (2026-05-27)
+Script: `scripts/embed-documents.ts` (reuses embed-documents cron logic, JINA_API_KEY)
+- 7,580 of 7,699 docs embedded; 368,413 chunks live in `document_chunks`
+- 119 URL-sourced HTML docs skipped (outside PDF pipeline) — see Section 14
+- Jina `jina-embeddings-v2-base-en` 768-d confirmed reachable (HTTP 200)
+- 14 docs had transient insert errors on an earlier run; all re-embedded successfully on retry (verified 2026-05-29)
 
 ### Step 3 — Retrieval + reliability library
 ```
@@ -451,6 +466,28 @@ WHERE status = 'approved';
 
 ### Build note:
 This is Step 5 in the build sequence (Section 9). It is a standalone, zero-dependency endpoint — build it first if the landing page or Research header needs the counter before the full pipeline is live.
+
+---
+
+---
+
+## 14. KNOWN COVERAGE LIMITATIONS
+
+**Coverage: 98.5% (7,580 of 7,699 approved documents embedded)**
+
+### HTML/URL-sourced documents (119 docs — outside PDF pipeline)
+
+119 approved documents have `file_url` pointing to external HTTP URLs rather than PDFs in the `tideline-documents` Supabase storage bucket:
+- IWC Decisions (CRM node pages: `https://crm.iwc.int/data/node/…`)
+- CBD COP Decision pages (`http://www.cbd.int/decision/cop/…`)
+
+These fail the `supabase.storage.download()` step in `processDocument()` with "Object not found" because they were ingested as web-scraped records, not as PDFs uploaded to storage. The current PDF-first embedding pipeline cannot fetch or chunk external URLs.
+
+**Impact:** All 119 are GOVERNMENT `source_type`, all `is_primary_source = true` (PRIMARY tier). They are IWC and CBD COP resolutions and decisions — relevant, but typically short. Their absence reduces primary-source embedding coverage by ~1.5%.
+
+**Remediation:** Deferred to Phase 4 alongside HTML auto-processing in the nightly ingest hook. The fix is a `fetchAndChunkUrl()` path in `embed-documents.ts` that Jina-fetches the URL, extracts text, and chunks it — no schema changes required. Priority: low. These documents are brief enough that their text is often substantially captured in the title and `description` fields already stored in `documents`.
+
+**No action required before Step 3.** The 1.5% gap is acceptable for v1.
 
 ---
 
