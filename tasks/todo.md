@@ -659,3 +659,124 @@ The People/PeopleTabContent stub was removed with Intel and Live. Before rebuild
 
 ### 5. Audit PULSE_SCORE_METHODOLOGY.md against lib/velocity.ts (2026-05-26)
 The weekly-cadence mismatch was found by accident. Audit the remaining load-bearing claims in the methodology doc against the actual implementation. Specifically: four-component weights (35/30/20/15), score band thresholds (LOW/WATCH/ELEVATED), institutional risk multipliers, decision-language keyword list. Each is a published claim. Confirm each matches `app/lib/velocity.ts`. One-hour audit, run once, repeat quarterly. Same class of failure as the cadence mismatch — any doc claim that drifts from code is a credibility liability.
+
+---
+
+## TASK 10: Library + Story Embeddings Pipeline (Plan Mode)
+**Status:** PLANNED — awaiting confirmation before execution
+**Date planned:** 2026-05-27
+
+### Pre-conditions confirmed
+- [x] OPENAI_API_KEY present in .env.local (unused by this task)
+- [x] JINA_API_KEY present — model: jina-embeddings-v2-base-en (768-dim)
+- [x] `document_chunks` table exists (vector(768), match_document_chunks RPC)
+- [x] `story_chunks` table exists (vector(768), match_story_chunks RPC)
+- [x] `scripts/embed-documents.ts` exists — will ENHANCE not rewrite
+- [x] `scripts/embed-stories.ts` exists — will ENHANCE not rewrite
+- [x] Jina cost estimate: ~$0.28 for full Part A backfill (~14M tokens at $0.02/1M)
+
+### Migrations required (write first, apply in Supabase Studio before running scripts)
+
+**Migration 1: documents.embedded_at**
+```sql
+ALTER TABLE documents
+  ADD COLUMN IF NOT EXISTS embedded_at timestamptz;
+```
+
+**Migration 2: embedding_errors table**
+```sql
+CREATE TABLE IF NOT EXISTS embedding_errors (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id uuid REFERENCES documents(id) ON DELETE SET NULL,
+  story_id uuid REFERENCES stories(id) ON DELETE SET NULL,
+  error_type text NOT NULL,  -- 'download_failed' | 'extract_failed' | 'embed_failed' | 'insert_failed'
+  error_message text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX idx_embedding_errors_document ON embedding_errors(document_id) WHERE document_id IS NOT NULL;
+CREATE INDEX idx_embedding_errors_story ON embedding_errors(story_id) WHERE story_id IS NOT NULL;
+```
+
+**Migration 3: story_chunks.source_type**
+```sql
+ALTER TABLE story_chunks
+  ADD COLUMN IF NOT EXISTS source_type text
+  CHECK (source_type IN ('GOVERNMENT', 'NGO', 'ACADEMIC', 'PRESS'));
+```
+
+**Migration 4: document_chunks ivfflat index (run AFTER full backfill completes)**
+```sql
+DROP INDEX IF EXISTS document_chunks_embedding_idx;
+CREATE INDEX idx_document_chunks_embedding ON document_chunks
+  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 600);
+-- lists=600: sqrt(352,049 projected chunks) ≈ 593, rounded to 600
+```
+
+**Migration 4 rollback reference (original index — no explicit lists, Postgres default):**
+```sql
+-- From supabase/migrations/20260410_create_document_chunks.sql line 12:
+create index on document_chunks using ivfflat (embedding vector_cosine_ops);
+-- Note: no WITH (lists=N). If Migration 4 needs reverting, drop the new index and recreate this.
+```
+
+### Part A — Library backfill (scripts/embed-documents.ts enhancements)
+
+Changes to existing script (enhancements only — preserves all existing logic):
+1. Remove `limit(200)` cap — fetch ALL approved documents
+2. Add `embedded_at` resumability: skip docs where `embedded_at IS NOT NULL`
+   (more reliable than chunk-count check — atomic with embedding write)
+3. Log failures to `embedding_errors` table (download fail, extract fail, embed fail)
+4. Progress reporting: count/total, elapsed, ETA, token estimate every 100 docs
+5. File logging: `--log=embed-documents-YYYY-MM-DD.log` flag
+6. Update `documents.embedded_at = NOW()` after all chunks inserted
+
+**50-doc sample first (MANDATORY):**
+- Run with `--sample=50` flag against 50 random unembedded docs
+- Report: actual avg tokens/doc, chunks/doc, cost, extrapolated total cost
+- WAIT FOR CONFIRMATION before full run
+
+**Full run command (after confirmation):**
+```
+npx tsx --env-file=.env.local scripts/embed-documents.ts
+```
+
+### Part B — Story pipeline
+
+**lib/source-classifier.ts (new file):**
+- `classifySourceType(sourceName: string, sourceUrl?: string): 'GOVERNMENT' | 'NGO' | 'ACADEMIC' | 'PRESS'`
+- Pattern matching: .gov / UN / IMO / ISA / FAO / CBD / CITES domains → GOVERNMENT
+- Known NGO names (WWF, Greenpeace, Oceana, WDC, MSC, etc.) → NGO
+- Academic domains (nature.com, science.org, plos.org, etc.) → ACADEMIC
+- Everything else → PRESS
+
+**embed-stories.ts additions (minor):**
+- Import classifySourceType
+- Add `source_type` to each row insert using `classifySourceType(s.source_name, s.link)`
+
+**fetch-feeds cron (NOT modifying today):**
+- Stories need `short_summary` before embedding — but summarise-pending runs 15m later
+- Correct wiring: embed in `summarise-pending` after short_summary is written
+- OR: run embed-stories.ts as standalone backfill + nightly cron
+- DECISION NEEDED before Part B wiring — flag at implementation time
+
+### Acceptance criteria
+- [ ] Migration 1-3 applied and verified in Studio
+- [ ] 50-doc sample run with confirmed cost/chunk estimates
+- [ ] Full Part A backfill completes: `SELECT COUNT(DISTINCT document_id) FROM document_chunks`
+- [ ] `documents.embedded_at` populated for all successfully embedded docs
+- [ ] `embedding_errors` logged for all failures
+- [ ] Part B: `lib/source-classifier.ts` created and tested
+- [ ] Part B: `story_chunks.source_type` populated for new story inserts
+- [ ] Post-backfill: run Migration 4 (ivfflat lists=200 rebuild)
+- [ ] Verification queries:
+  ```sql
+  SELECT COUNT(*) FROM document_chunks;
+  SELECT COUNT(*) FROM story_chunks;
+  SELECT COUNT(DISTINCT story_id) FROM story_chunks;
+  SELECT source_type, COUNT(*) FROM story_chunks GROUP BY source_type;
+  ```
+
+### DO NOT
+- Do not build /api/workspace/ask (Task 11)
+- Do not modify fetch-feeds cron today — story embedding wiring decision pending
+- Do not add OpenAI branch to generateEmbedding()
