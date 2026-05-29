@@ -64,3 +64,20 @@ __pycache__/
 rustup-init.exe
 tmp-*.html
 
+
+# Cleanup additions (May 2026)
+.playwright-mcp/
+remaining-files*.txt
+CLAUDE-RULES-backup-*.txt
+*-backup-*.md
+*.log
+embed-documents-*.log
+embed-stories-*.log
+cites-test.*
+*-test.png
+**/*.old.tsx
+**/*.bak.tsx
+**/*.old.ts
+**/*.bak.ts
+commit-*.txt
+diagnostic-*.txt
