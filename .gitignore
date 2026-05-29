@@ -85,3 +85,7 @@ diagnostic-*.txt
 # Supabase CLI cache
 supabase/.temp/
 
+
+# Catch numeric-only filenames in repo root (PowerShell redirection accidents)
+/[0-9]*
+
