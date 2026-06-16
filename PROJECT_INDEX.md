@@ -1,6 +1,6 @@
 # Project Index: Tideline
 
-Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
+Generated: 2026-06-16 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
 
 ---
 
@@ -50,8 +50,10 @@ Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 ### Content
 - `api/stories` — Feed stories (topic filter, pagination)
 - `api/summarise` — On-demand Claude summarisation (Sonnet)
-- `api/workspace/ask` — RAG research (Sonnet)
-- `api/research/inline` — Inline research with RAG (Sonnet)
+- `api/workspace/ask` — RAG research (Sonnet) **[PRODUCTION — migration to /api/research/ask pending Phase 3]**
+- `api/research/ask` — **NOT YET BUILT** — unified research engine (Step 4 next)
+- `api/research/inline` — **ORPHAN — DELETE (zero callers, wrong model jina-v3)**
+- `api/research/library-stats` — **NOT YET BUILT** (Step 5)
 - `api/search` — Full-text search
 - `api/governance-events` — Calendar events
 - `api/tracker-status/[slug]` — Per-tracker status
@@ -120,18 +122,20 @@ Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 | File | Purpose |
 |---|---|
 | `auth.ts` | `getEmailFromSession()` — shared auth helper |
-| `http-client.ts` | Shared HTTP client with retry/bot-block logic (Phase 2B) |
+| `http-client.ts` | Shared HTTP client with retry/bot-block logic |
 | `jina.ts` | Jina scraping wrapper (JINA_API_KEY) |
 | `ocean-relevance-gate.ts` | Claude relevance filter (prompt cached) |
 | `velocity.ts` | Velocity score interpretation |
 | `sources.ts` | Source registry (`RSSSource` interface incl. `skipGate?: boolean`) |
 | `subscription.ts` | Subscription status helpers |
-| `embeddings.ts` | Jina embedding calls |
+| `embeddings.ts` | Jina embedding calls (jina-embeddings-v2-base-en 768-d) |
 | `search.ts` | Full-text search helpers |
 | `signal-generation.ts` | Dashboard signal generation |
 | `confidence.ts` | Confidence scoring |
 | `query-expansion.ts` | RAG query expansion |
 | `trackers.ts` / `tracker-metadata.ts` | Tracker config |
+| `brief-reply.ts` | Brief reply RAG — copy-pasted retrieval logic, **migrate to lib/research.ts in Phase 3 Step 8** |
+| `research.ts` | **BUILT (Step 3 ✓)** — unified RAG engine: `embedQuery`, `retrieveChunks`, `abstentionGate`, `synthesise`, `verifyCitations`, `checkFaithfulness`, `assembleResponse` |
 | `brief/select.ts` | Brief story selection logic |
 | `brief/template.ts` | Brief email template |
 | `brief/utils.ts` | Brief utilities |
@@ -142,7 +146,7 @@ Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 ### `lib/` (project root)
 | File | Purpose |
 |---|---|
-| `entity-matching.ts` | Entity matching pipeline |
+| `entity-matching.ts` | Entity matching pipeline (`findOrCreateEntity`, `matchEntitiesToStory`) |
 | `lp-briefing-pdf.ts` | LP briefing PDF generation |
 | `email/alert-data.ts` | Alert email data helpers |
 | `email/sparkline.ts` | Sparkline SVG for emails |
@@ -157,6 +161,7 @@ Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 - **Scrapers**: `scraper-informea.ts`, `scraper-ngo-reports.ts`, `scraper-openalex.ts`, `scraper-playwright.ts`, `scraper-un-library.ts`, `processor-agent.ts`
 - **Entity**: `entity-matching.ts`, `merge-entity-duplicates.ts`, `cleanup-entities.ts`
 - **Testing**: `test-*.ts`, `verify-*.ts`, `replay-recent-matches.ts`
+- **Research RAG**: `embed-stories.ts` (story chunk backfill — pending run), `classify-documents.ts` (source classification, complete)
 
 ---
 
@@ -169,19 +174,19 @@ Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 
 ---
 
-## Model Assignments (CLAUDE_RULES.md — invariant)
+## Model Assignments (CLAUDE-RULES.md — invariant)
 
 | Model | Routes |
 |---|---|
-| `claude-haiku-4-5-20251001` | blue-finance-agent, generate-brief (quality gate), governance-agent, project-populate, score-significance |
-| `claude-sonnet-4-6` | ask, scrape-governance-calendar, summarise-pending, documents/generate-brief, research/inline, story/linkedin-draft, summarise, threads/match, webhooks/treaty-change, workspace/narrative |
+| `claude-haiku-4-5-20251001` | blue-finance-agent, generate-brief (quality gate), governance-agent, project-populate, score-significance, research faithfulness check |
+| `claude-sonnet-4-6` | ask, scrape-governance-calendar, summarise-pending, documents/generate-brief, story/linkedin-draft, summarise, threads/match, webhooks/treaty-change, workspace/narrative, research synthesis |
 
 ---
 
-## Design System (CLAUDE_RULES.md — invariant)
+## Design System (CLAUDE.md — invariant)
 
 - **Inline styles only** in JSX — no Tailwind utility classes
-- **Brand teal**: `#1D9E75` (not blue `#1a73e8`)
+- **Brand teal**: `#1D9E75`
 - **Fonts**: DM Sans (body), Georgia (serif headlines), DM Mono (mono)
 - **No em dashes** anywhere in codebase
 - **Workspace standard**: White bg, 48px left padding, teal top-border on selection, underline-only inputs, 4px radius buttons
@@ -190,29 +195,30 @@ Generated: 2026-05-29 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 
 ## Database (Supabase — 3 schemas: `public`, `auth`, `next_auth`)
 
-**Key tables**: `users`, `stories`, `scraped_sources`, `treaty_ratifications`, `scrape_runs`, `subscriptions`, `trial_signups`, `magic_links`, `governance_bodies`, `governance_events`, `expected_decisions`, `calendar_subscriptions`, `document_chunks`, `story_chunks`, `velocity_scores`, `entities`, `lp_portfolios`
+**Key tables**: `users`, `stories`, `scraped_sources`, `treaty_ratifications`, `scrape_runs`, `subscriptions`, `trial_signups`, `magic_links`, `governance_bodies`, `governance_events`, `expected_decisions`, `calendar_subscriptions`, `document_chunks`, `story_chunks`, `velocity_scores`, `entities`, `lp_portfolios`, `research_queries`
 
-**RAG**: `match_document_chunks` + `match_story_chunks` RPCs, Jina `jina-embeddings-v2-base-en` (768-dim, do not change)
+**RAG**: `match_document_chunks`, `match_primary_chunks`, `match_document_chunks_filtered`, `match_story_chunks` RPCs — Jina `jina-embeddings-v2-base-en` (768-dim, **do not change**)
 
 **Trigger**: `treaty_ratifications` INSERT → pg_net POST → `api/webhooks/treaty-change`
 
+**Document chunks**: 368,413 chunks across 7,580 docs (119 HTML/URL-sourced docs skipped, deferred Phase 5)
+
 ---
 
-## Current Status (2026-05-28)
+## Current Status (2026-06-16)
 
-**Built**: Daily brief (89 sources), BBNJ tracker, RAG layer, entity directory (153 entities), auth+Stripe, lp_portfolios+lp_briefing view, Supabase MCP live, Ruflo V3 installed, bot-block strategy Phases 1-2B complete, category gate LIVE (prompt_version=`f6491a2171c78bdf`, Gate2=GOVERNANCE_CHANGE+sig>=35), decision ID validator generalised (letter-suffix IDs: IWC/67/A, CMS, Ramsar formats), word processor Phase 1 complete (.docx export, UUID routing fix, teal active states, DM Sans, focus mode, word count toast), velocity cron corrected to weekly Monday, CITES Marine label renamed, **blue_carbon_credits tracker LIVE** (Type 6 voluntary, multiplier 0.80, threshold 7.0, stage=Nascent; first velocity score pending Monday 06:00 UTC), PULSE_SCORE_METHODOLOGY.md v2.0 (six-type schema)
+**Research RAG build progress (RESEARCH-RAG-SPEC.md)**:
+- Step 1 ✓ Source classification backfill complete (2026-05-29) — `source_tier`, `source_type`, `needs_review` on all 7,698 docs
+- Step 2 ✓ Document chunk embedding complete (2026-05-27) — 368,413 chunks live; **story_chunks backfill (embed-stories.ts) still pending**
+- Step 3 ✓ `lib/research.ts` + migrations complete (2026-05-29) — 7 functions, `research_queries` table, `match_document_chunks_filtered` RPC
+- **Step 4 NEXT**: Build `app/api/research/ask/route.ts` + `research_queries` surface columns migration
+- Step 0.5.2 pending: Delete `app/api/research/inline/route.ts` (orphan, wrong model)
 
-**RSS source additions (2026-05-28)**: Verra, ICVCM, VCMI (`skipGate: true`), Carbon Pulse, Climate Home News, The Ocean Foundation. `skipGate` field added to `RSSSource` interface + `fetch-feeds` Phase 2 bypass for sources whose titles don't contain ocean keywords but are definitionally relevant.
-
-**Migrations applied**: `20260518_brief_sends_delta_fallback.sql`, `20260518_delta_classifications_cache.sql`, `20260519_delta_classifications_category.sql`
-
-**RESEARCH-RAG-SPEC.md LOCKED (2026-05-29)**: Spec finalised — Jina `jina-embeddings-v2-base-en` 768-d locked (matches existing infra), 5 reliability mechanisms, 7-step build sequence. **Next build step: Step 1 — source classification backfill** (`source_type` + `source_tier` on `documents`, domain allowlist + Haiku fallback).
-
-**Next**: Research RAG Step 1 (source classification), LP briefing PDF layer, 30-day category gate backtest (SIG_FLOOR calibration), fix 6 auth fallback routes, corporate Stripe tier, Gold Standard / Plan Vivo / Blue Carbon Initiative Jina scrapers
+**Previously completed**: Daily brief (89 sources), BBNJ tracker, entity directory (153 entities), auth+Stripe, lp_portfolios+lp_briefing, category gate LIVE (`prompt_version=f6491a2171c78bdf`), blue_carbon_credits tracker LIVE, bot-block Phases 1-2B complete
 
 **Known issues**:
-- Firecrawl MCP not connecting
 - 6 API routes have hardcoded email fallback (security bug) — see `hazard_auth_fallbacks.md`
+- `app/api/research/inline/route.ts` is an orphan with wrong model (jina-v3) — delete before Step 4
+- story_chunks backfill not yet run (`scripts/embed-stories.ts` needs 3-bug audit first per BUILD GUIDE Step 2)
 - DG MARE RSS endpoint unknown
 - EPA Water News needs correct topic-filtered feed
-- blue_carbon_credits velocity score pending first Monday run
