@@ -89,3 +89,7 @@ supabase/.temp/
 # Catch numeric-only filenames in repo root (PowerShell redirection accidents)
 /[0-9]*
 
+
+# lessons.md locked by AV/indexer - tombstone, use lessons-MERGED.md as canonical
+tasks/lessons.md
+
