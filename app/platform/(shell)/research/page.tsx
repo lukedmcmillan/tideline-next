@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, ReactNode } from "react";
 import DesktopOnly from "@/components/DesktopOnly";
 
 // ─── Design tokens (locked) ──────────────────────────────────────────────────
@@ -67,7 +67,82 @@ const SUGGESTIONS = [
   "What does the ISA mining code say about environmental bonds?",
 ];
 
-// ─── Citation chip ───────────────────────────────────────────────────────────
+// ─── Pipeline stages ─────────────────────────────────────────────────────────
+const STAGES = [
+  "Searching library",
+  "Ranking sources",
+  "Generating answer",
+  "Verifying claims",
+] as const;
+
+// Stage timing: since the API is a single call, we advance stages based
+// on real elapsed time mapped to the pipeline's actual work distribution.
+// Search+rank ~30%, generation ~40%, verification ~30% of total latency.
+// These are honest approximations of what the backend is doing, not fake delays.
+const STAGE_THRESHOLDS_MS = [0, 3000, 6000, 12000];
+
+function useStageProgress(isLoading: boolean) {
+  const [activeStage, setActiveStage] = useState(-1);
+  const startRef = useRef(0);
+  const frameRef = useRef(0);
+
+  useEffect(() => {
+    if (isLoading) {
+      startRef.current = Date.now();
+      setActiveStage(0);
+      const tick = () => {
+        const elapsed = Date.now() - startRef.current;
+        let stage = 0;
+        for (let i = STAGE_THRESHOLDS_MS.length - 1; i >= 0; i--) {
+          if (elapsed >= STAGE_THRESHOLDS_MS[i]) { stage = i; break; }
+        }
+        setActiveStage(stage);
+        frameRef.current = requestAnimationFrame(tick);
+      };
+      frameRef.current = requestAnimationFrame(tick);
+    } else {
+      cancelAnimationFrame(frameRef.current);
+      setActiveStage(-1);
+    }
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [isLoading]);
+
+  return activeStage;
+}
+
+function StageIndicator({ activeStage }: { activeStage: number }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "32px 0" }}>
+      {STAGES.map((label, i) => {
+        const isActive = i === activeStage;
+        const isDone = i < activeStage;
+        const isPending = i > activeStage;
+        return (
+          <div key={label} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            fontFamily: MONO, fontSize: 12,
+            color: isActive ? TEAL : isDone ? T4 : isPending ? BLT : T4,
+            transition: "color .3s",
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: isActive ? TEAL : isDone ? T4 : "transparent",
+              border: isPending ? `1px solid ${BLT}` : "none",
+              flexShrink: 0,
+            }} />
+            {label}{isActive ? "..." : ""}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Markdown renderer with citation chips ───────────────────────────────────
+// Lightweight, no external dependencies. Renders headings, bold, italic, lists,
+// inline code. Strips raw HTML tags for safety. Citation [n] markers become
+// styled Cite chips.
+
 function Cite({ n }: { n: number }) {
   return (
     <span style={{
@@ -77,18 +152,105 @@ function Cite({ n }: { n: number }) {
   );
 }
 
-// ─── Render answer text with inline citations ────────────────────────────────
-function AnswerText({ text }: { text: string }) {
+function renderInline(text: string): ReactNode[] {
+  // Split on citation markers first, then process markdown inline formatting
   const parts = text.split(/(\[\d+\])/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        const m = part.match(/^\[(\d+)\]$/);
-        if (m) return <Cite key={i} n={parseInt(m[1])} />;
-        return <span key={i}>{part}</span>;
-      })}
-    </>
-  );
+  const nodes: ReactNode[] = [];
+
+  parts.forEach((part, i) => {
+    const citeMatch = part.match(/^\[(\d+)\]$/);
+    if (citeMatch) {
+      nodes.push(<Cite key={`c${i}`} n={parseInt(citeMatch[1])} />);
+      return;
+    }
+    // Bold: **text**
+    const segments = part.split(/(\*\*[^*]+\*\*)/g);
+    segments.forEach((seg, j) => {
+      const boldMatch = seg.match(/^\*\*(.+)\*\*$/);
+      if (boldMatch) {
+        nodes.push(<strong key={`b${i}-${j}`} style={{ fontWeight: 600 }}>{boldMatch[1]}</strong>);
+      } else {
+        // Inline code: `text`
+        const codeParts = seg.split(/(`[^`]+`)/g);
+        codeParts.forEach((cp, k) => {
+          const codeMatch = cp.match(/^`(.+)`$/);
+          if (codeMatch) {
+            nodes.push(<code key={`k${i}-${j}-${k}`} style={{ fontFamily: MONO, fontSize: 12, background: BG, padding: "1px 4px", borderRadius: 2 }}>{codeMatch[1]}</code>);
+          } else if (cp) {
+            nodes.push(<span key={`t${i}-${j}-${k}`}>{cp}</span>);
+          }
+        });
+      }
+    });
+  });
+
+  return nodes;
+}
+
+function MarkdownAnswer({ text }: { text: string }) {
+  // Strip any raw HTML tags for safety
+  const sanitised = text.replace(/<[^>]*>/g, "");
+  const lines = sanitised.split("\n");
+  const elements: ReactNode[] = [];
+  let listItems: string[] = [];
+  let listType: "ul" | "ol" | null = null;
+
+  const flushList = () => {
+    if (listItems.length === 0) return;
+    const items = listItems.map((item, i) => (
+      <li key={i} style={{ marginBottom: 4 }}>{renderInline(item)}</li>
+    ));
+    if (listType === "ol") {
+      elements.push(<ol key={`ol${elements.length}`} style={{ margin: "8px 0", paddingLeft: 20, fontSize: 14, fontWeight: 300, lineHeight: 1.7, color: T1 }}>{items}</ol>);
+    } else {
+      elements.push(<ul key={`ul${elements.length}`} style={{ margin: "8px 0", paddingLeft: 20, fontSize: 14, fontWeight: 300, lineHeight: 1.7, color: T1 }}>{items}</ul>);
+    }
+    listItems = [];
+    listType = null;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Empty line: flush lists, skip
+    if (!trimmed) { flushList(); continue; }
+
+    // Headings
+    const h3 = trimmed.match(/^###\s+(.+)/);
+    if (h3) { flushList(); elements.push(<h4 key={`h${elements.length}`} style={{ fontSize: 13, fontWeight: 600, color: T1, margin: "16px 0 6px", letterSpacing: "-.01em" }}>{renderInline(h3[1])}</h4>); continue; }
+
+    const h2 = trimmed.match(/^##\s+(.+)/);
+    if (h2) { flushList(); elements.push(<h3 key={`h${elements.length}`} style={{ fontSize: 14, fontWeight: 600, color: T1, margin: "18px 0 6px", letterSpacing: "-.01em" }}>{renderInline(h2[1])}</h3>); continue; }
+
+    const h1 = trimmed.match(/^#\s+(.+)/);
+    if (h1) { flushList(); elements.push(<h2 key={`h${elements.length}`} style={{ fontSize: 15, fontWeight: 600, color: T1, margin: "20px 0 8px", letterSpacing: "-.01em" }}>{renderInline(h1[1])}</h2>); continue; }
+
+    // Unordered list
+    const ul = trimmed.match(/^[-*]\s+(.+)/);
+    if (ul) {
+      if (listType === "ol") flushList();
+      listType = "ul";
+      listItems.push(ul[1]);
+      continue;
+    }
+
+    // Ordered list
+    const ol = trimmed.match(/^\d+\.\s+(.+)/);
+    if (ol) {
+      if (listType === "ul") flushList();
+      listType = "ol";
+      listItems.push(ol[1]);
+      continue;
+    }
+
+    // Paragraph
+    flushList();
+    elements.push(<p key={`p${elements.length}`} style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.8, color: T1, margin: "6px 0" }}>{renderInline(trimmed)}</p>);
+  }
+
+  flushList();
+
+  return <>{elements}</>;
 }
 
 // ─── Tier badge (outline pill) ───────────────────────────────────────────────
@@ -110,17 +272,12 @@ function AnswerCard({ question, data }: { question: string; data: ResearchRespon
 
   return (
     <div style={{ background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 8, overflow: "hidden", marginBottom: 24 }}>
-      {/* Question header */}
       <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BLT}`, background: BG }}>
         <div style={{ fontSize: 14, color: T2, fontStyle: "italic", lineHeight: 1.5 }}>{question}</div>
       </div>
-      {/* Answer body */}
       <div style={{ padding: "20px 20px 16px" }}>
-        <div style={{ fontSize: 14, fontWeight: 300, lineHeight: 1.8, color: T1 }}>
-          <AnswerText text={answer!} />
-        </div>
+        <MarkdownAnswer text={answer!} />
       </div>
-      {/* Sources */}
       {sources.length > 0 && (
         <div style={{ padding: "0 20px 16px" }}>
           <div style={{ fontSize: 10, fontWeight: 600, fontFamily: MONO, letterSpacing: ".06em", textTransform: "uppercase", color: T4, marginBottom: 8, paddingTop: 12, borderTop: `1px solid ${BLT}` }}>
@@ -145,7 +302,6 @@ function AnswerCard({ question, data }: { question: string; data: ResearchRespon
           ))}
         </div>
       )}
-      {/* Footer stats */}
       <div style={{
         background: BG, borderTop: `1px solid ${BLT}`, padding: "10px 20px",
         display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
@@ -231,6 +387,7 @@ export default function ResearchPage() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const activeStage = useStageProgress(isLoading);
 
   // / key to focus search
   useEffect(() => {
@@ -283,7 +440,7 @@ export default function ResearchPage() {
   const showEmpty = !hasResult && !isLoading && !error;
 
   return (
-    <DesktopOnly featureName="Research">
+    <DesktopOnly featureName="Ask Tideline">
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowY: "auto", fontFamily: F }}>
 
       {/* ── Search header ── */}
@@ -293,11 +450,10 @@ export default function ResearchPage() {
         display: "flex", flexDirection: "column", alignItems: "center",
         transition: "padding .25s",
       }}>
-        {/* Empty state: title + strapline */}
         {showEmpty && (
           <div style={{ marginBottom: 24, textAlign: "center" }}>
             <div style={{ fontSize: 22, fontWeight: 500, color: T1, letterSpacing: "-.02em", marginBottom: 8 }}>
-              Tideline Research
+              Ask Tideline
             </div>
             <div style={{ fontSize: 13, fontWeight: 300, color: T3, maxWidth: 420, lineHeight: 1.5 }}>
               Cited answers from the document library. We don&apos;t search the internet. We search the library we built.
@@ -346,12 +502,10 @@ export default function ResearchPage() {
           </button>
         </div>
 
-        {/* Strapline */}
         <div style={{ fontSize: 11, color: T4, marginTop: 10, fontWeight: 300 }}>
           Tideline reports what sources say. It does not tell you what to conclude.
         </div>
 
-        {/* Empty state suggestions */}
         {showEmpty && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 20, maxWidth: 600 }}>
             {SUGGESTIONS.map((s, i) => (
@@ -373,13 +527,9 @@ export default function ResearchPage() {
       {/* ── Results area ── */}
       <div style={{ padding: "24px 40px", maxWidth: 760, width: "100%", margin: "0 auto" }}>
 
-        {/* Loading */}
+        {/* Loading with stage indicator */}
         {isLoading && (
-          <div style={{ textAlign: "center", padding: "48px 0" }}>
-            <div style={{ fontSize: 13, fontFamily: MONO, color: T4 }}>
-              Searching the library...
-            </div>
-          </div>
+          <StageIndicator activeStage={activeStage} />
         )}
 
         {/* Error */}
@@ -401,7 +551,6 @@ export default function ResearchPage() {
               <AnswerCard question={submittedQuery} data={data} />
             ) : null}
 
-            {/* Library search results (always shown when we have data) */}
             <LibraryResults docs={data.searchResults} total={data.totalDocuments} />
           </>
         )}

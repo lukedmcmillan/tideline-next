@@ -186,7 +186,7 @@ function Sidebar({ onNav, urgentCount, trackerData, projectData, recentStories, 
     { ic: <IcTrackers />, label: "Trackers", href: "/platform/trackers" },
     { ic: <IcCal />, label: "Calendar", href: "/platform/calendar", badge: urgentCount && urgentCount > 0 ? String(urgentCount) : undefined, badgeColor: RED },
     { ic: <IcBook />, label: "Library", href: "/platform/library" },
-    { ic: <IcSearch />, label: "Research", href: "/platform/research" },
+    { ic: <IcSearch />, label: "Ask Tideline", href: "/platform/research" },
     // TODO: show for blue finance tier only
     // ...(tier === "corporate" ? [{ ic: <IcBrief />, label: "Briefings", href: "/platform/lp-briefing" }] : []),
     { ic: <IcDir />, label: "Directory", href: "/platform/directory" },
@@ -606,9 +606,9 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: T4, padding: "10px 22px 2px" }}>What people are asking Tideline today</div>
         <div style={{ fontSize: 12, color: T4, padding: "2px 22px 8px", fontStyle: "italic" }}>Rotating from this week's most-asked queries</div>
         {[
-          { q: "What changed in deep-sea mining regulation in the last 30 days?", sub: "Research \u00b7 Tideline Intelligence" },
-          { q: "Summarise BBNJ ratification and enforcement implications", sub: "Research \u00b7 Tideline Intelligence" },
-          { q: "What does the ISA deferral mean for my uploaded OSPAR report?", sub: "Research \u00b7 Uses your documents" },
+          { q: "What changed in deep-sea mining regulation in the last 30 days?", sub: "Ask Tideline \u00b7 Intelligence" },
+          { q: "Summarise BBNJ ratification and enforcement implications", sub: "Ask Tideline \u00b7 Intelligence" },
+          { q: "What does the ISA deferral mean for my uploaded OSPAR report?", sub: "Ask Tideline \u00b7 Uses your documents" },
         ].map((item, i) => (
           <a key={i} href="/platform/research" style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 22px", cursor: "pointer", textDecoration: "none", color: T1 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: BG, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -624,7 +624,7 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
           <span style={{ fontSize: 12, color: T4 }}>Enter to search &middot; Esc to close</span>
           <a href="/platform/research" style={{ display: "flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", border: "none", borderRadius: 20, padding: "8px 18px", fontFamily: F, fontSize: 13, fontWeight: 500, cursor: "pointer", textDecoration: "none" }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Open Research
+            Open Ask Tideline
           </a>
         </div>
       </div>
