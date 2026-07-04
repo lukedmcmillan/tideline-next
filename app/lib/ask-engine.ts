@@ -88,6 +88,8 @@ export interface AskResult {
 
 export interface AskOptions {
   scope?: "corpus" | "project";
+  /** Skip the Haiku faithfulness check for speed. Citation verification (deterministic) still runs. */
+  skipFaithfulness?: boolean;
 }
 
 // ─── System prompt ───────────────────────────────────────────────────────────
@@ -122,27 +124,24 @@ export async function askTideline(
   // 1. Expand query via Haiku
   const expanded = await expandQuery(question);
 
-  // 2. Generate embeddings for original + concept string + variations
+  // 2. Generate embeddings for original + concept string (skip variations for speed)
   const textsToEmbed = [
     question,
     expanded.concepts.length > 0 ? expanded.concepts.join(" ") : null,
-    ...expanded.variations,
   ].filter((t): t is string => !!t);
 
   const embeddings = await Promise.all(
     textsToEmbed.map((t) => generateEmbedding(t))
   );
 
-  // 3. Multi-strategy parallel search over both corpora
+  // 3. Parallel search: original query (tighter) + concept string (wider)
   const searchResults = await Promise.all(
     embeddings.map((emb, i) => {
       const embJson = JSON.stringify(emb);
       if (i === 0) {
-        return searchBothCorpora(embJson, 0.5, 0.45, 10, 8);
-      } else if (i === 1 && expanded.concepts.length > 0) {
-        return searchBothCorpora(embJson, 0.35, 0.3, 8, 6);
+        return searchBothCorpora(embJson, 0.45, 0.4, 12, 10);
       } else {
-        return searchBothCorpora(embJson, 0.25, 0.2, 5, 4);
+        return searchBothCorpora(embJson, 0.3, 0.25, 10, 8);
       }
     })
   );
@@ -287,21 +286,21 @@ export async function askTideline(
   const { answer: verifiedAnswer, stripCount: citationStripped } =
     verifyCitations(rawAnswer, topSources.length);
 
-  // 12. Faithfulness check (Mechanism 4 — Haiku, fail-closed)
+  // 12. Faithfulness check (Mechanism 4 — Haiku, optional for speed)
   let faithfulnessStripped = 0;
   let partialCount = 0;
   let finalAnswer = verifiedAnswer;
 
-  try {
-    const faithResult = await checkFaithfulness(verifiedAnswer, topSources);
-    finalAnswer = faithResult.answer;
-    faithfulnessStripped = faithResult.stripped;
-    partialCount = faithResult.partialCount;
-  } catch (err) {
-    // Fail closed: if Haiku is unavailable, still return the citation-verified answer
-    // but flag that faithfulness was not checked
-    console.warn("[ask-engine] faithfulness check failed, returning citation-verified answer only:", err);
-    finalAnswer = verifiedAnswer;
+  if (!opts?.skipFaithfulness) {
+    try {
+      const faithResult = await checkFaithfulness(verifiedAnswer, topSources);
+      finalAnswer = faithResult.answer;
+      faithfulnessStripped = faithResult.stripped;
+      partialCount = faithResult.partialCount;
+    } catch (err) {
+      console.warn("[ask-engine] faithfulness check failed, returning citation-verified answer only:", err);
+      finalAnswer = verifiedAnswer;
+    }
   }
 
   return {

@@ -50,8 +50,11 @@ export async function POST(req: NextRequest) {
 
   try {
     // Run ask engine and library search in parallel
+    // skipFaithfulness: true for interactive speed. Citation verification
+    // (deterministic, zero-cost) still runs. Faithfulness check (Haiku call,
+    // +3-5s) is available via workspace/ask for in-project deep research.
     const [askResult, libraryResult] = await Promise.all([
-      askTideline(query),
+      askTideline(query, { skipFaithfulness: true }),
       searchLibrary(query),
     ]);
 
