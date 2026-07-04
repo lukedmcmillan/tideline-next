@@ -1,6 +1,6 @@
 # TIDELINE RESEARCH — RAG & RELIABILITY SPECIFICATION
 ## Cited answers over the document library
-*Tideline Ocean Intelligence · v1 · May 2026*
+*Tideline Ocean Intelligence · v1.1 · July 2026*
 *This document is the source of truth for the Research engine: retrieval, generation, citation, verification, and source-type filtering. Implementation must match this spec. Deviations require updating this file first. Cross-references: TIDELINE-CONTEXT.md (Priority 3), DIVERGENCE_DETECTION_SPEC.md (source_type, non-adjudication principle), BRIEF-LEAD-SPEC.md (verification-over-trust principle), CLAUDE-RULES.md (plan-mode zones).*
 
 ---
@@ -197,7 +197,11 @@ query + filters
   │
   │     PRIMARY_ONLY — match_document_chunks JOIN documents.is_primary_source = true.
   │                    Same date/scope pre-filter. Top-K=25.
-  │                    Default for: standalone_research. User-toggleable to ALL.
+  │                    Default for: none (v1.1). User-selectable via primaryFilter toggle (Step 4).
+  │                    Rationale for change (2026-07-03): PRIMARY-only excluded 171 SECONDARY
+  │                    docs (2.2%) including 9/11 BBNJ documents, causing wrong-subject retrieval.
+  │                    SECONDARY contains high-quality NGO analysis (IUCN, OceanCare). Per-user
+  │                    primary-only toggle deferred to Step 4 with primaryFilter.
   │
   │     PRIMARY_BOOST — dual query (brief-reply production values):
   │                     (a) full library at retrieval threshold 0.65, top-K=15
@@ -323,7 +327,7 @@ unverified claims through. An unreachable Haiku surfaces as 503, not a silent pa
 |---|---|---|---|
 | `brief_reply` | `'primary-boost'` | No (pipeline fixed) | No |
 | `workspace_ask` | `'all'` | No | No |
-| `standalone_research` | `'primary-only'` | Yes → `'all'` | No |
+| `standalone_research` | `'all'` | Yes → `'primary-only'` (deferred to Step 4) | No |
 | `projects_ask` | `'all'` | No | Yes |
 
 - **Retrieval transparency strip:** documents-in-scope → passages retrieved (with similarity floor) → sources cited → latency. Numbers come from the pipeline, not hardcoded.

@@ -10,6 +10,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateEmbedding } from "./embeddings";
+import { extractKeywords } from "./query-expansion";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -209,12 +210,30 @@ async function buildInScopeCount(filters: ResearchFilters): Promise<number> {
  * Mechanism 5 — abstention gate.
  * Abstain if:
  *   (a) no chunks retrieved, OR
- *   (b) top similarity < ABSTAIN_TOP_THRESHOLD (0.72), OR
- *   (c) fewer than ABSTAIN_MIN_CHUNKS (3) chunks score >= ABSTAIN_MIN_THRESHOLD (0.78)
+ *   (b) keyword-intersection guard: zero chunks contain any query term
+ *       (catches wrong-subject retrieval on acronym queries), OR
+ *   (c) top similarity < ABSTAIN_TOP_THRESHOLD (0.72), OR
+ *   (d) fewer than ABSTAIN_MIN_CHUNKS (3) chunks score >= ABSTAIN_MIN_THRESHOLD (0.78)
  */
-export function abstentionGate(chunks: RetrievedChunk[]): AbstentionResult {
+export function abstentionGate(chunks: RetrievedChunk[], query: string): AbstentionResult {
   if (chunks.length === 0) {
     return { abstain: true, reason: "No relevant passages found in the library." };
+  }
+
+  // (b) Keyword-intersection guard: if no retrieved chunk contains any
+  // query keyword, the results are wrong-subject regardless of cosine score.
+  const keywords = extractKeywords(query);
+  if (keywords.length > 0) {
+    const anyChunkMatchesAnyKeyword = chunks.some((c) => {
+      const text = c.chunkText.toLowerCase();
+      return keywords.some((kw) => text.includes(kw));
+    });
+    if (!anyChunkMatchesAnyKeyword) {
+      return {
+        abstain: true,
+        reason: `Retrieved passages do not appear related to the query terms (${keywords.join(", ")}).`,
+      };
+    }
   }
 
   const topSim = chunks[0].similarity;
