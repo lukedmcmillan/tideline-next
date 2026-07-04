@@ -12,6 +12,13 @@ const anthropic = new Anthropic({
 });
 
 export async function POST(req: NextRequest) {
+  // Auth: verify bearer token. The Supabase pg_net trigger must send
+  // Authorization: Bearer <CRON_SECRET> in its HTTP request headers.
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const payload = await req.json();
 
