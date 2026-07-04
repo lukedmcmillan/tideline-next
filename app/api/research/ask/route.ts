@@ -50,9 +50,23 @@ export async function POST(req: NextRequest) {
 
   try {
     // Run ask engine and library search in parallel
-    // skipFaithfulness: true for interactive speed. Citation verification
-    // (deterministic, zero-cost) still runs. Faithfulness check (Haiku call,
-    // +3-5s) is available via workspace/ask for in-project deep research.
+    // DELIBERATE DECISION (2026-07-04): faithfulness check OFF on research
+    // surface for latency. Citation verification (deterministic, zero-cost)
+    // still runs — strips sentences citing non-existent sources.
+    //
+    // Faithfulness check (Haiku per-claim "does the source actually say this?")
+    // adds 3-5s latency. For an interactive search console, that's too slow.
+    // Workspace/ask retains the full check for in-project deep research.
+    //
+    // Phase 2 approach: async verify-after-answer. Return citation-verified
+    // answer immediately, fire Haiku faithfulness as background task, write
+    // result to research_queries.faithfulness_status. Frontend polls via
+    // GET /api/research/verify?queryId=X and transitions a badge from
+    // "Checking..." to "Verified" once complete. Gives speed AND trust signal.
+    //
+    // Trigger for Phase 2: paid conversion, not a support request. The current
+    // surface makes no verification claim it can't back — UI copy says only
+    // "N passages" and "N invalid citations removed", never "claims verified".
     const [askResult, libraryResult] = await Promise.all([
       askTideline(query, { skipFaithfulness: true }),
       searchLibrary(query),
