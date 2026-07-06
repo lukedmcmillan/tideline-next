@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
@@ -19,7 +18,8 @@ const SERIF = "Georgia, 'Times New Roman', serif";
 function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
-  const { update } = useSession();
+  // No SessionProvider wraps /subscribe, so useSession() is unavailable.
+  // JWT refresh happens via the 30-min TTL on next /platform/* request.
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -83,11 +83,10 @@ function CheckoutForm() {
 
     setSuccess(true);
     setSubmitting(false);
-    // Force JWT refresh so middleware sees subscription_status = 'active'
-    // on the first /platform/* request after redirect. The /api/subscribe
-    // route writes to users table synchronously before returning, so the
-    // DB has the correct status by the time update() reads it.
-    try { await update({}); } catch { /* redirect anyway — TTL catches it */ }
+    // /subscribe has no SessionProvider, so we can't call useSession().update()
+    // here. The 30-min JWT TTL in auth.ts will pick up subscription_status='active'
+    // on the first /platform/* request. The /api/subscribe route writes to users
+    // table synchronously, so the DB is correct by the time middleware re-reads.
     window.location.href = "/platform";
   };
 
