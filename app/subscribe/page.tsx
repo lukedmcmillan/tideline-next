@@ -88,7 +88,7 @@ function CheckoutForm() {
     // route writes to users table synchronously before returning, so the
     // DB has the correct status by the time update() reads it.
     try { await update({}); } catch { /* redirect anyway — TTL catches it */ }
-    window.location.href = "/platform/feed";
+    window.location.href = "/platform";
   };
 
   if (success) {

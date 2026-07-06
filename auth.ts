@@ -129,7 +129,7 @@ export const authOptions = {
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       if (url.startsWith(baseUrl)) return url
       if (url.startsWith('/')) return `${baseUrl}${url}`
-      return `${baseUrl}/platform/feed`
+      return `${baseUrl}/platform`
     },
     async signIn({ user, account }: { user: any; account: any }) {
       if (!user?.email) return false
