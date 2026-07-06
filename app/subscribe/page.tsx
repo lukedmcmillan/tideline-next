@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
@@ -18,6 +19,7 @@ const SERIF = "Georgia, 'Times New Roman', serif";
 function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
+  const { update } = useSession();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -81,6 +83,11 @@ function CheckoutForm() {
 
     setSuccess(true);
     setSubmitting(false);
+    // Force JWT refresh so middleware sees subscription_status = 'active'
+    // on the first /platform/* request after redirect. The /api/subscribe
+    // route writes to users table synchronously before returning, so the
+    // DB has the correct status by the time update() reads it.
+    try { await update({}); } catch { /* redirect anyway — TTL catches it */ }
     window.location.href = "/platform/feed";
   };
 

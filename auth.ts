@@ -175,12 +175,17 @@ export const authOptions = {
         token.name = user.name
       }
 
+      const TOKEN_TTL_MS = 30 * 60 * 1000 // 30 minutes
+      const tokenAge = token.refreshedAt ? Date.now() - (token.refreshedAt as number) : Infinity
+
       const shouldRefresh =
         !!user ||
         trigger === 'update' ||
         token.subscription_status === undefined ||
         token.subscription_status === null ||
-        token.onboarded_at === undefined
+        token.onboarded_at === undefined ||
+        token.onboarded_at === null ||
+        tokenAge > TOKEN_TTL_MS
 
       if (shouldRefresh && token.email) {
         try {
@@ -196,6 +201,7 @@ export const authOptions = {
             token.onboarding_completed = !!u.onboarded_at || u.onboarding_completed || false
             token.onboarded_at = u.onboarded_at ?? null
             token.role = u.role ?? null
+            token.refreshedAt = Date.now()
           } else {
             // User not in public.users yet. Set safe defaults so middleware never sees undefined.
             token.subscription_status = token.subscription_status ?? 'trial'

@@ -103,7 +103,7 @@ export default function OnboardingPage() {
               new Promise((_, reject) => setTimeout(() => reject(), 5000)),
             ]);
           } catch {}
-          window.location.href = "/platform/directory";
+          window.location.href = "/platform/feed";
         }
       })
       .catch(() => {})
