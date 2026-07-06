@@ -83,7 +83,12 @@ export default function OnboardingPage() {
   // Used to refresh JWT after onboarding DB write (fixes middleware staleness loop)
   const { update } = useSession();
 
-  // Detect timezone on mount, check if onboarding already done
+  // Detect timezone on mount, check if onboarding already done.
+  // CRITICAL: the form must NEVER render for an already-onboarded user.
+  // Completing onboarding writes job_type, topics, timezone to users —
+  // showing the form to a returning user risks overwriting their preferences.
+  // On error: redirect to /platform (safe — middleware will re-check),
+  // never fall through to the form.
   useEffect(() => {
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -91,12 +96,13 @@ export default function OnboardingPage() {
     } catch {}
 
     fetch("/api/subscription-status")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Status check failed: ${r.status}`);
+        return r.json();
+      })
       .then(async (d) => {
         if (!d.needsOnboarding) {
-          // JWT may be stale if middleware bounced us here after a failed update()
-          // in handleFinish. Refresh it before navigating. 5s timeout so a hung
-          // update() never strands the user on the loading screen.
+          // JWT is stale (middleware bounced us here). Refresh before navigating.
           try {
             await Promise.race([
               update({}),
@@ -104,10 +110,16 @@ export default function OnboardingPage() {
             ]);
           } catch {}
           window.location.href = "/platform";
+        } else {
+          // Genuinely needs onboarding — show the form
+          setCheckingSkip(false);
         }
       })
-      .catch(() => {})
-      .finally(() => setCheckingSkip(false));
+      .catch(() => {
+        // API error: redirect to /platform rather than risk showing the form
+        // to an already-onboarded user. Middleware will re-evaluate on arrival.
+        window.location.href = "/platform";
+      });
   }, []);
 
   // Load starter entities when job type is selected
@@ -264,7 +276,7 @@ export default function OnboardingPage() {
         }}
       >
         {checkingSkip ? (
-          <div style={{ fontSize: 13, color: TEXT2, padding: "40px 0", textAlign: "center" }}>Loading...</div>
+          <div style={{ fontSize: 13, color: TEXT2, padding: "60px 0", textAlign: "center" }}>Checking your account...</div>
         ) : (
           <>
             {/* Progress dots */}
