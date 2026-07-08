@@ -249,6 +249,33 @@ export async function GET(request: NextRequest) {
       continue // BLOCKING MODE: skip main stories insert
     }
 
+    // Date sanity guard: reject stories with published_at more than 48h in
+    // the future or more than 5 years in the past. Prevents poison rows from
+    // malformed RSS timestamps (e.g. WHOI event pages dated 2035) blocking
+    // the summarise-pending pipeline.
+    if (item.published_at) {
+      const pubDate = new Date(item.published_at).getTime()
+      const now = Date.now()
+      const FUTURE_LIMIT = 48 * 60 * 60 * 1000
+      const PAST_LIMIT = 5 * 365.25 * 24 * 60 * 60 * 1000
+      if (pubDate > now + FUTURE_LIMIT || pubDate < now - PAST_LIMIT) {
+        try {
+          await supabase.from('stories_quarantine').insert({
+            title: item.title,
+            source_name: item.source_name,
+            url: item.link,
+            published_at: item.published_at,
+            raw_content: (item.description || '').slice(0, 500),
+            rejection_reason: pubDate > now + FUTURE_LIMIT ? 'future-dated' : 'stale-dated',
+            haiku_verdict: 'date_guard',
+            haiku_raw_response: `published_at=${item.published_at}`,
+          })
+        } catch { /* quarantine insert non-fatal */ }
+        totalSkipped++
+        continue
+      }
+    }
+
     const storyData: Record<string, unknown> = {
       title: item.title,
       link: item.link,
