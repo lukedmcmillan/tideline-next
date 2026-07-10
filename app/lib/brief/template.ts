@@ -56,12 +56,19 @@ export interface ConditionRow {
   interpretation?: string | null; // one-line plain-language explanation of score
 }
 
+/** Typed insight panel for evidence items. */
+export interface InsightPanelData {
+  type: 'stakeholder' | 'tidelines_read';
+  text: string;
+}
+
 /** One item in THE EVIDENCE section. */
 export interface EvidenceItem {
   headline: string;
   body:     string;
   color:    EvidenceColor; // left-border colour
   storyId?: string;        // if set, headline is a link
+  insightPanel?: InsightPanelData | null; // typed panel, dropped on null/invalid
 }
 
 /** One row in WHAT TO WATCH. */
@@ -81,16 +88,20 @@ export interface AcrossSectorItem {
 
 /** All content data for one brief render. */
 export interface BriefData {
-  dateStr:         string;              // e.g. 'Tuesday, 5 May 2026'
-  preheader:       string;              // up to 90 chars, shown in inbox preview
-  lead:            LeadItem;
-  conditions:      ConditionRow[];      // 0-2 shown; empty = section hidden
-  evidence:        EvidenceItem[];      // 0-3 shown; empty = section hidden
-  whatToWatch:     WatchEvent[];        // 0-3 shown; empty = section hidden
-  acrossSector:    AcrossSectorItem | null;
-  quickAsk:        string;              // pre-selected ask copy
-  workRevealedLine:string;              // static or dynamic work-revealed sentence
-  signOff:         string;              // day-aware sign-off copy
+  dateStr:           string;
+  preheader:         string;
+  variant:           'A' | 'B';
+  lead:              LeadItem;
+  watchlistHitLine:  string | null;       // assembled hit-line or null (omit section)
+  conditions:        ConditionRow[];
+  evidence:          EvidenceItem[];      // max 2 (A) / 1 (B), each may have insightPanel
+  whatToWatch:       WatchEvent[];
+  acrossSector:      AcrossSectorItem | null;
+  conflictHeartbeat: string | null;       // appended to synthesis strip, null = omit
+  selectionMath:     { sourcesChecked: number; storiesIngested: number; thresholdPassers: number };
+  stakeholderType:   string;              // for insight panel labels
+  workRevealedLine:  string;
+  signOff:           string;
 }
 
 /** Per-user data needed for personalisation. */
@@ -209,7 +220,7 @@ function renderConditions(conditions: ConditionRow[]): string {
   </td></tr>`;
 }
 
-function renderEvidence(evidence: EvidenceItem[]): string {
+function renderEvidence(evidence: EvidenceItem[], stakeholderLabel: string): string {
   if (evidence.length === 0) return '';
   const items = evidence.slice(0, 3).map((e, i) => {
     const col   = evidenceBorderColor(e.color);
@@ -218,12 +229,14 @@ function renderEvidence(evidence: EvidenceItem[]): string {
     const headEl = e.storyId
       ? `<a href="https://www.thetideline.co/platform/story/${e.storyId}" style="font-family:${SYS};font-size:13px;font-weight:600;color:${CLR.textPrimary};text-decoration:none;display:block;margin-bottom:3px;">${e.headline}</a>`
       : `<div style="font-family:${SYS};font-size:13px;font-weight:600;color:${CLR.textPrimary};margin-bottom:3px;">${e.headline}</div>`;
+    const panelHtml = renderInsightPanel(e.insightPanel, stakeholderLabel);
     return `<tr><td style="padding-bottom:${pb};">
       <table width="100%" cellpadding="0" cellspacing="0"><tr>
         <td width="3" style="background:${col};vertical-align:top;"></td>
         <td style="padding-left:12px;">
           ${headEl}
           <p style="font-family:${SYS};font-size:12.5px;color:${CLR.textSecondary};line-height:1.6;margin:0;">${e.body}</p>
+          ${panelHtml}
         </td>
       </tr></table>
     </td></tr>`;
@@ -259,13 +272,36 @@ function renderAcrossSector(item: AcrossSectorItem | null): string {
   </td></tr>`;
 }
 
-function renderQuickAsk(copy: string): string {
-  return `<tr><td style="padding:14px 18px;border-top:0.5px solid ${CLR.border};">
-    <div style="background:${CLR.tealSoft};border-left:3px solid ${CLR.teal};padding:12px 14px;border-radius:0 4px 4px 0;">
-      <div style="font-family:${SYS};font-size:12px;font-weight:700;color:${CLR.teal};margin-bottom:5px;">Quick ask</div>
-      <p style="font-family:${SYS};font-size:13px;color:${CLR.textBody};line-height:1.6;margin:0;">${copy}</p>
-    </div>
+function renderWatchlistHitLine(line: string | null): string {
+  if (!line) return '';
+  return `<tr><td style="padding:8px 18px 0;">
+    <p style="font-family:${SYS};font-size:12px;color:${CLR.textMuted};line-height:1.5;margin:0;">${line}</p>
   </td></tr>`;
+}
+
+function renderConflictHeartbeat(line: string | null): string {
+  if (!line) return '';
+  return `<tr><td style="padding:8px 18px;border-top:0.5px solid ${CLR.border};">
+    <p style="font-family:${MONO};font-size:11px;color:${CLR.textMuted};line-height:1.5;margin:0;">${line}</p>
+  </td></tr>`;
+}
+
+function renderSelectionMath(math: { sourcesChecked: number; storiesIngested: number; thresholdPassers: number }): string {
+  return `<tr><td style="padding:8px 18px;border-top:0.5px solid ${CLR.border};">
+    <p style="font-family:${MONO};font-size:10px;color:${CLR.textMuted};line-height:1.5;margin:0;">${math.sourcesChecked} sources checked, ${math.storiesIngested} stories ingested, ${math.thresholdPassers} met the threshold for your domains.</p>
+  </td></tr>`;
+}
+
+function renderInsightPanel(panel: { type: 'stakeholder' | 'tidelines_read'; text: string } | null | undefined, stakeholderLabel: string): string {
+  if (!panel || (panel.type !== 'stakeholder' && panel.type !== 'tidelines_read')) return '';
+  const isStakeholder = panel.type === 'stakeholder';
+  const bg    = isStakeholder ? CLR.tealSoft : '#FDF3E3';
+  const label = isStakeholder ? stakeholderLabel : "Tideline's read:";
+  const color = isStakeholder ? CLR.teal : '#A5711A';
+  return `<div style="background:${bg};padding:8px 12px;border-radius:4px;margin-top:6px;">
+    <span style="font-family:${SYS};font-size:10px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.08em;">${label}</span>
+    <p style="font-family:${SYS};font-size:12px;color:${CLR.textBody};line-height:1.5;margin:3px 0 0;">${panel.text}</p>
+  </div>`;
 }
 
 function renderWorkRevealed(line: string): string {
@@ -321,14 +357,23 @@ function renderFooter(unsubscribeToken: string | null): string {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function compileBriefHtml(data: BriefData, user: BriefUser): string {
+  const stakeholderLabel = data.stakeholderType
+    ? (({ esg_finance: "For your screening:", legal: "For your practice:", compliance_shipping: "For your compliance:", ngo_policy: "For your campaigns:" } as Record<string, string>)[data.stakeholderType] ?? "For your screening:")
+    : "For your screening:";
+
+  // Variant B: cap evidence to 1 item
+  const evidenceItems = data.variant === 'B' ? data.evidence.slice(0, 1) : data.evidence;
+
   const body = [
     renderMasthead(data.dateStr),
+    renderWatchlistHitLine(data.watchlistHitLine),
     renderLead(data.lead),
+    renderConflictHeartbeat(data.conflictHeartbeat),
     renderConditions(data.conditions),
-    renderEvidence(data.evidence),
+    renderEvidence(evidenceItems, stakeholderLabel),
     renderWhatToWatch(data.whatToWatch),
     renderAcrossSector(data.acrossSector),
-    renderQuickAsk(data.quickAsk),
+    renderSelectionMath(data.selectionMath),
     renderWorkRevealed(data.workRevealedLine),
     renderSignOff(data.signOff),
     renderCTAs(),

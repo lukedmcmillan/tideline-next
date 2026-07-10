@@ -53,6 +53,14 @@ export const TRACKER_LABELS: Record<string, string> = {
   'offshore-wind': 'Offshore Wind',
 };
 
+// Brief personalisation: stakeholder_type → display label for insight panels
+export const STAKEHOLDER_LABELS: Record<string, string> = {
+  esg_finance: "For your screening:",
+  legal: "For your practice:",
+  compliance_shipping: "For your compliance:",
+  ngo_policy: "For your campaigns:",
+};
+
 // 10 story topic values — matches stories.topic column
 export const TOPIC_LABELS: Record<string, string> = {
   'governance':   'Governance',

@@ -17,12 +17,14 @@ import {
   selectWhatToWatch,
   selectAcrossSector,
   computeBandCrossings,
+  determineVariant,
+  computeWatchlistHits,
+  computeSelectionMath,
   type StoryRow,
   type TrackerScoreRow,
   type GovernanceEventRow,
   type CategoryClassification,
 } from "@/app/lib/brief/select";
-import { selectQuickAsk, type QuickAskContext } from "@/app/lib/brief/quick-asks";
 import {
   generateSignOff,
   currentWeekday,
@@ -30,8 +32,17 @@ import {
   isoWeekNumber,
   TRACKER_TO_TOPICS,
   STATIC_WORK_REVEALED,
+  STAKEHOLDER_LABELS,
   type Weekday,
 } from "@/app/lib/brief/utils";
+import { getStakesSentence } from "@/app/lib/brief/stakes";
+import { generateInsightPanel } from "@/app/lib/brief/insights";
+import {
+  computeConflictState,
+  validateHeartbeat,
+  countPriorCardAppearances,
+  type DivergenceRow,
+} from "@/app/lib/brief/conflicts";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -391,63 +402,89 @@ export async function GET(request: Request) {
       }));
     }
 
+    // ── 2b. Pre-subscriber shared queries ─────────────────────────────────────
+    // Active divergences (shared across all subscribers, filtered per-user by tracker_tag)
+    const { data: activeDivergences } = await supabase
+      .from("divergences")
+      .select("id, tracker_tag, headline, score, is_active, detected_at, resolved_outcome, resolved_at, source_a_name, source_a_claim, source_b_name, source_b_claim, why_it_matters")
+      .eq("is_active", true);
+    const allDivergences: DivergenceRow[] = (activeDivergences ?? []) as DivergenceRow[];
+
+    // Upcoming governance sessions for RESOLUTION_APPROACHING (next 7 days)
+    const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const { data: upcomingSessionsData } = await supabase
+      .from("governance_sessions")
+      .select("tracker_tag, start_date")
+      .gte("start_date", todayDate)
+      .lte("start_date", sevenDaysFromNow);
+    const upcomingSessions = (upcomingSessionsData ?? []).map(s => ({
+      tracker_tag: s.tracker_tag as string,
+      start_date: s.start_date as string,
+    }));
+
+    // Source count for selection math
+    const { count: totalSourceCount } = await supabase
+      .from("scraped_sources")
+      .select("id", { count: "exact", head: true });
+
     // ── 3. Per-subscriber loop ────────────────────────────────────────────────
     let sent    = 0;
     const errors: string[] = [];
     const sendType = isTestMode ? "test_send" : "production";
-    // Collected checkpoint1 data returned in JSON response in test mode
     let checkpoint1Response: Record<string, unknown> | null = null;
 
     for (const sub of subscribers) {
       if (!sub.email) continue;
       const userTopics: string[] = sub.topics;
+      const stakeholderType = sub.stakeholder_type ?? "esg_finance";
 
-      // ── 3a. Async context (1 DB call + 2 in-memory) ──
-      // isFirstBrief: any prior production OR test_send means the user has seen a brief.
-      // Exclude 'skip_no_topics' rows only — those are not real sends.
-      const { data: prevSends } = await supabase
-        .from("brief_sends")
-        .select("id")
-        .eq("user_id", sub.id)
-        .neq("send_type", "skip_no_topics")
-        .limit(1);
-      const isFirstBrief = !prevSends || prevSends.length === 0;
-
-      // Recently-led exclusion: stories that led a brief in the last 7 days
-      // are excluded from lead candidates so the same story cannot lead twice.
-      // Requires brief_sends.lead_story_id column (migration: see SPEC.md).
+      // ── 3a. Async context ──
+      // Previous brief_sends for recently-led exclusion + conflict state tracking
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       let recentlyLedIds = new Set<string>();
+      let lastDivergenceSnapshot: Record<string, number> = {};
+      let lastConflictCardIds: string[] = [];
+      let priorBriefSends: { conflict_card_ids: string[] | null }[] = [];
+
       if (sub.id !== "test") {
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const { data: recentLeads } = await supabase
+        const { data: recentSends } = await supabase
           .from("brief_sends")
-          .select("lead_story_id")
+          .select("lead_story_id, divergence_snapshot, conflict_card_ids")
           .eq("user_id", sub.id)
-          .not("lead_story_id", "is", null)
-          .gte("sent_at", sevenDaysAgo);
+          .gte("sent_at", sevenDaysAgo)
+          .order("sent_at", { ascending: false });
+
         recentlyLedIds = new Set(
-          (recentLeads ?? []).map(r => r.lead_story_id as string).filter(Boolean)
+          (recentSends ?? []).map(r => r.lead_story_id as string).filter(Boolean)
         );
+
+        // Last send's divergence snapshot for ESCALATED/DE_ESCALATED detection
+        const lastSend = recentSends?.[0];
+        if (lastSend?.divergence_snapshot && typeof lastSend.divergence_snapshot === "object") {
+          lastDivergenceSnapshot = lastSend.divergence_snapshot as Record<string, number>;
+        }
+        lastConflictCardIds = (lastSend?.conflict_card_ids as string[]) ?? [];
+
+        // All prior sends for 3-appearance cap counting
+        priorBriefSends = (recentSends ?? []).map(s => ({
+          conflict_card_ids: (s.conflict_card_ids as string[]) ?? null,
+        }));
       }
 
-      // Context signals derived from candidate pool (no extra DB call)
-      // topic='all' included: broad editorial sources count toward signal density for all subscribers
-      const userStories = pool.candidate_stories.filter(s =>
-        s.topic === 'all' ||
-        userTopics.length === 0 ||
-        userTopics.some(t => (TRACKER_TO_TOPICS[t] || [t]).includes(s.topic))
+      // User's tracked entities for watchlist hit-line
+      const { data: userEntityRows } = await supabase
+        .from("user_entities")
+        .select("entity_id")
+        .eq("user_id", sub.id);
+      const userEntityIds = new Set<string>(
+        (userEntityRows ?? []).map(r => r.entity_id as string)
       );
-      const recentHighSigCount    = userStories.filter(s => (s.significance_score ?? 0) >= 7).length;
-      const recentLowActivityWeek = userStories.length <= 3;
-
-      const quickAskCtx: QuickAskContext = { isFirstBrief, recentHighSigCount, recentLowActivityWeek };
 
       // ── 3b. Sync selectors ──
       const leadResult   = selectLead(pool.candidate_stories, pool.all_tracker_scores, userTopics, recentlyLedIds, categoryMap, bandCrossings);
       const lead         = leadResult.lead;
       const { gate: leadGate, leadStory, categoryClassification, diagnostics: leadDiag } = leadResult;
 
-      // THE SIGNAL fallback is loud — log prominently and it will be counted in brief_sends
       if (leadGate === 'fallback') {
         console.warn(
           `[send-brief] *** THE SIGNAL (fallback) for ${sub.email} *** ` +
@@ -456,17 +493,13 @@ export async function GET(request: Request) {
         );
       }
 
-      // Checkpoint 1: detailed selection data (test mode only)
-      // Returned in the HTTP response body so curl captures it without needing server stdout.
+      // Checkpoint 1 (test mode only)
       if (isTestMode) {
         const d = leadDiag;
         const oldCls = d.oldTopStory ? categoryMap.get(d.oldTopStory.id) : undefined;
         let oldVsNew: string;
         if (d.oldTopStory && leadStory && d.oldTopStory.id !== leadStory.id) {
-          const reason = oldCls?.category !== 'GOVERNANCE_CHANGE'
-            ? `failed category gate (${oldCls?.category ?? 'unclassified'})`
-            : "lost on Gate ranking";
-          oldVsNew = `DIVERGED — old choice ${reason}`;
+          oldVsNew = `DIVERGED — old choice ${oldCls?.category !== 'GOVERNANCE_CHANGE' ? `failed category gate (${oldCls?.category ?? 'unclassified'})` : "lost on Gate ranking"}`;
         } else if (d.oldTopStory && leadStory && d.oldTopStory.id === leadStory.id) {
           oldVsNew = "SAME story selected by both";
         } else if (!d.oldTopStory && leadStory) {
@@ -474,36 +507,15 @@ export async function GET(request: Request) {
         } else {
           oldVsNew = "Both lead with state/fallback";
         }
-
         checkpoint1Response = {
-          test_email_resolved:   testEmail,  // runtime echo — proves which env value was used
-          pool_total:            d.totalCandidates,
-          gov_change_eligible:   d.govChangeCount,
-          gov_change_rate:       `${d.govChangeCount}/${pool.candidate_stories.length} from full pool`,
-          band_crossings:        [...bandCrossings],
-          gate_fired:            leadGate.toUpperCase(),
-          fallback_fired:        leadGate === "fallback",
-          old_logic_lead: d.oldTopStory ? {
-            id:                d.oldTopStory.id,
-            sig:               d.oldTopStory.significance_score,
-            title:             d.oldTopStory.title.slice(0, 100),
-            category:          oldCls?.category ?? 'unclassified',
-            gov_sig:           oldCls?.governance_significance ?? null,
-          } : null,
-          new_logic_lead: leadStory ? {
-            id:                leadStory.id,
-            sig:               leadStory.significance_score,
-            title:             leadStory.title.slice(0, 100),
-            gate:              leadGate,
-            category:          categoryClassification?.category ?? null,
-            gov_sig:           categoryClassification?.governance_significance ?? null,
-          } : { state_lead: lead.headline },
-          old_vs_new:            oldVsNew,
-          gate2_pool:            d.gate2Pool.slice(0, 8),
-          rejected: d.rejected.slice(0, 15).map(r => ({
-            reason: r.reason,
-            title:  r.title.slice(0, 80),
-          })),
+          test_email_resolved: testEmail,
+          pool_total: d.totalCandidates,
+          gov_change_eligible: d.govChangeCount,
+          gate_fired: leadGate.toUpperCase(),
+          fallback_fired: leadGate === "fallback",
+          old_logic_lead: d.oldTopStory ? { id: d.oldTopStory.id, sig: d.oldTopStory.significance_score, title: d.oldTopStory.title.slice(0, 100) } : null,
+          new_logic_lead: leadStory ? { id: leadStory.id, sig: leadStory.significance_score, title: leadStory.title.slice(0, 100), gate: leadGate } : { state_lead: lead.headline },
+          old_vs_new: oldVsNew,
         };
       }
 
@@ -511,21 +523,96 @@ export async function GET(request: Request) {
       const evidence     = selectEvidence(pool.candidate_stories, lead, userTopics);
       const whatToWatch  = selectWhatToWatch(pool.all_events, userTopics, 14);
       const acrossSector = selectAcrossSector(pool.candidate_stories, userTopics);
-      const quickAsk     = selectQuickAsk(weekday, weekNum, quickAskCtx);
       const signOff      = generateSignOff(weekday);
 
-      // ── 3c. Build BriefData ──
+      // ── 3c. Conflict lifecycle ──
+      const userTrackerTags = new Set<string>(userTopics);
+      const userDivergences = allDivergences.filter(d => userTrackerTags.has(d.tracker_tag));
+      const conflictResults = userDivergences.map(div => {
+        const priorCount = countPriorCardAppearances(div.id, priorBriefSends);
+        return computeConflictState(div, lastDivergenceSnapshot, lastConflictCardIds, priorCount, upcomingSessions);
+      });
+      const conflictStateChanged = conflictResults.some(r => r.shouldRenderFullCard);
+      const heartbeatLines = conflictResults
+        .map(r => validateHeartbeat(r.heartbeatLine, userDivergences.find(d => d.id === r.divergenceId)!))
+        .filter(Boolean) as string[];
+      const conflictHeartbeat = heartbeatLines.length > 0 ? heartbeatLines[0] : null;
+      const activeDivergenceIds = userDivergences.map(d => d.id);
+      const cardDivergenceIds = conflictResults.filter(r => r.shouldRenderFullCard).map(r => r.divergenceId);
+
+      // ── 3d. Variant determination ──
+      const variant = determineVariant(leadGate, bandCrossings, userTopics, conflictStateChanged);
+
+      // ── 3e. Watchlist hit-line ──
+      const briefStoryIds = [lead.storyId, ...evidence.map(e => e.storyId)].filter(Boolean) as string[];
+      let watchlistHitLine: string | null = null;
+      if (userEntityIds.size > 0 && briefStoryIds.length > 0) {
+        const { data: mentionRows } = await supabase
+          .from("entity_mentions")
+          .select("story_id, entity_id, entities(name)")
+          .in("story_id", briefStoryIds)
+          .in("entity_id", Array.from(userEntityIds));
+        const mentions = (mentionRows ?? []).map((r: any) => ({
+          story_id: r.story_id as string,
+          entity_id: r.entity_id as string,
+          entity_name: r.entities?.name as string ?? "",
+        }));
+        const hits = computeWatchlistHits(briefStoryIds, userEntityIds, mentions);
+        if (hits) {
+          watchlistHitLine = `Today's brief touches ${hits.count} entit${hits.count === 1 ? "y" : "ies"} you track: ${hits.names.join(", ")}.`;
+        }
+      }
+
+      // ── 3f. Stakes sentence (cached per stakeholder_type per day) ──
+      const stakesSentence = leadStory
+        ? await getStakesSentence(stakeholderType, todayDate, leadStory.title, leadStory.short_summary ?? leadStory.description ?? "", anthropic)
+        : null;
+      // Append stakes to lead interpretation if available
+      if (stakesSentence) {
+        const stakeholderLabel = STAKEHOLDER_LABELS[stakeholderType] ?? "For your screening:";
+        lead.interpretation = `${lead.interpretation} ${stakeholderLabel} ${stakesSentence}`;
+      }
+
+      // ── 3g. Insight panels for evidence items ──
+      const evidenceWithPanels = await Promise.all(
+        evidence.map(async (item) => {
+          if (!item.storyId) return item;
+          const story = pool.candidate_stories.find(s => s.id === item.storyId);
+          if (!story) return item;
+          const panel = await generateInsightPanel(
+            item.storyId, story.title, story.short_summary ?? story.description ?? "", stakeholderType, anthropic
+          );
+          return { ...item, insightPanel: panel };
+        })
+      );
+
+      // ── 3h. Selection math ──
+      const userStories = pool.candidate_stories.filter(s =>
+        s.topic === 'all' || userTopics.length === 0 ||
+        userTopics.some(t => (TRACKER_TO_TOPICS[t] || [t]).includes(s.topic))
+      );
+      const selectionMath = computeSelectionMath(
+        totalSourceCount ?? 89,
+        pool.candidate_stories.length,
+        userStories.filter(s => !!s.short_summary).length,
+      );
+
+      // ── 3i. Build BriefData ──
       const preheader = lead.interpretation.slice(0, 90).replace(/\n/g, " ").trim();
 
       const briefData: BriefData = {
         dateStr,
         preheader,
+        variant,
         lead,
+        watchlistHitLine,
         conditions,
-        evidence,
+        evidence: evidenceWithPanels,
         whatToWatch,
         acrossSector,
-        quickAsk,
+        conflictHeartbeat,
+        selectionMath,
+        stakeholderType,
         workRevealedLine: STATIC_WORK_REVEALED,
         signOff,
       };
@@ -535,61 +622,57 @@ export async function GET(request: Request) {
         unsubscribeToken: sub.unsubscribe_token,
       };
 
-      // ── 3d. Render HTML ──
+      // ── 3j. Render HTML ──
       const html = compileBriefHtml(briefData, briefUser);
 
-      // ── 3e. Generate subject ──
+      // ── 3k. Generate subject ──
       const subject = buildSubject(lead, conditions, whatToWatch);
 
-      // ── 3f. Log selection context ──
+      // ── 3l. Log selection context ──
       console.log(
-        `[send-brief] ${sub.email} → lead: [${lead.type}] "${lead.headline.slice(0, 60)}" | ` +
-        `conditions: ${conditions.length} | evidence: ${evidence.length} | ` +
+        `[send-brief] ${sub.email} → variant:${variant} lead: [${lead.type}] "${lead.headline.slice(0, 60)}" | ` +
+        `conditions: ${conditions.length} | evidence: ${evidenceWithPanels.length} | ` +
+        `conflicts: ${userDivergences.length} (${cardDivergenceIds.length} cards) | ` +
         `subject: "${subject.slice(0, 70)}"`
       );
 
-      // ── 3g. Send ──
+      // ── 3m. Send ──
       const ok = await sendEmail(sub.email, subject, html);
 
       if (ok) {
         sent++;
 
-        // Update last_brief_sent (production only)
         if (!isTestMode) {
-          supabase
-            .from("users")
-            .update({ last_brief_sent: nowIso })
-            .eq("id", sub.id)
-            .then(() => {});
+          supabase.from("users").update({ last_brief_sent: nowIso }).eq("id", sub.id).then(() => {});
         }
 
-        // Top tracker slug for brief_sends (highest-score tracker in user's topics)
         const topTrackerSlug = pool.all_tracker_scores
           .filter(t => userTopics.length === 0 || userTopics.includes(t.tracker_slug))
           .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]?.tracker_slug ?? null;
 
-        // Collect all story IDs included in this brief for freshness tracking
-        const briefStoryIds = [
-          lead.storyId,
-          ...evidence.map(e => e.storyId),
-        ].filter(Boolean) as string[];
+        // Build divergence snapshot: {divergence_id: score} for ESCALATED/DE_ESCALATED detection
+        const divergenceSnapshot: Record<string, number> = {};
+        for (const div of userDivergences) {
+          divergenceSnapshot[div.id] = div.score;
+        }
 
         supabase
           .from("brief_sends")
           .insert({
-            user_id:        sub.id === "test" ? null : sub.id,
-            email:          sub.email,
-            story_count:    evidence.length,
-            tracker_slug:   topTrackerSlug,
-            send_type:      sendType,
-            brief_date:     todayDate,
-            lead_story_id:  lead.storyId ?? null,
-            delta_fallback: leadGate === "fallback",
-            // v2 columns
-            variant:        leadGate === "fallback" ? "B" : "A",
-            story_ids:      briefStoryIds.length > 0 ? briefStoryIds : null,
-            synthesis_line: lead.interpretation ?? null,
-            // divergence_ids and resend_message_id: populated in Phase 2
+            user_id:              sub.id === "test" ? null : sub.id,
+            email:                sub.email,
+            story_count:          evidenceWithPanels.length,
+            tracker_slug:         topTrackerSlug,
+            send_type:            sendType,
+            brief_date:           todayDate,
+            lead_story_id:        lead.storyId ?? null,
+            delta_fallback:       leadGate === "fallback",
+            variant,
+            story_ids:            briefStoryIds.length > 0 ? briefStoryIds : null,
+            synthesis_line:       lead.interpretation ?? null,
+            divergence_ids:       activeDivergenceIds.length > 0 ? activeDivergenceIds : null,
+            divergence_snapshot:  Object.keys(divergenceSnapshot).length > 0 ? divergenceSnapshot : null,
+            conflict_card_ids:    cardDivergenceIds.length > 0 ? cardDivergenceIds : null,
           })
           .then(() => {});
       } else {

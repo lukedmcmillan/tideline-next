@@ -33,7 +33,6 @@ import {
 
 // Re-export TOPIC_LABELS so callers (send-brief, template helpers) import from one place
 export { TOPIC_LABELS };
-import { selectQuickAsk, type QuickAskContext } from './quick-asks';
 
 // ── Input row types (DB shapes) ───────────────────────────────────────────────
 
@@ -719,11 +718,71 @@ export function selectAcrossSector(
   };
 }
 
-// ── 6. selectQuickAsk (re-export with context builder) ───────────────────────
+// ── 6. determineVariant ──────────────────────────────────────────────────────
 
-export { selectQuickAsk };
+/**
+ * Determines brief variant A or B. Pure code, no model judgement.
+ * A: lead-eligible GOVERNANCE_CHANGE exists, OR band crossed in last 24h,
+ *    OR an active conflict changed state.
+ * B: otherwise (quiet day, shorter read).
+ */
+export function determineVariant(
+  leadGate: 'gate1' | 'gate2' | 'fallback',
+  bandCrossings: Set<string>,
+  userTopics: string[],
+  conflictStateChanged: boolean,
+): 'A' | 'B' {
+  // Gate1 or Gate2 = lead-eligible GOVERNANCE_CHANGE exists
+  if (leadGate === 'gate1' || leadGate === 'gate2') return 'A';
+  // Band crossing in any of user's tracked domains
+  if (userTopics.some(t => bandCrossings.has(t))) return 'A';
+  // Active conflict changed state
+  if (conflictStateChanged) return 'A';
+  return 'B';
+}
 
-// ── 7. generateSignOff ───────────────────────────────────────────────────────
+// ── 7. computeWatchlistHits ─────────────────────────────────────────────────
+
+/**
+ * Joins today's brief story IDs against user's tracked entity IDs
+ * via the entity_mentions map. Returns count + entity names for the hit-line.
+ * All ASSEMBLED, never generated.
+ */
+export function computeWatchlistHits(
+  briefStoryIds: string[],
+  userEntityIds: Set<string>,
+  entityMentions: { story_id: string; entity_id: string; entity_name: string }[],
+): { count: number; names: string[] } | null {
+  if (userEntityIds.size === 0 || briefStoryIds.length === 0) return null;
+  const briefSet = new Set(briefStoryIds);
+  const hitNames = new Set<string>();
+  for (const m of entityMentions) {
+    if (briefSet.has(m.story_id) && userEntityIds.has(m.entity_id)) {
+      hitNames.add(m.entity_name);
+    }
+  }
+  if (hitNames.size === 0) return null;
+  return { count: hitNames.size, names: Array.from(hitNames).slice(0, 5) };
+}
+
+// ── 8. computeSelectionMath ─────────────────────────────────────────────────
+
+/**
+ * Direct reads for the credibility line. No computation beyond counting.
+ */
+export function computeSelectionMath(
+  totalSources: number,
+  totalIngested: number,
+  userFilteredCount: number,
+): { sourcesChecked: number; storiesIngested: number; thresholdPassers: number } {
+  return {
+    sourcesChecked: totalSources,
+    storiesIngested: totalIngested,
+    thresholdPassers: userFilteredCount,
+  };
+}
+
+// ── 9. generateSignOff ───────────────────────────────────────────────────────
 
 export { generateSignOff } from './utils';
 
