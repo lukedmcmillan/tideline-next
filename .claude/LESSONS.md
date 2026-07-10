@@ -190,6 +190,39 @@
 - **`npx tsx --env-file .env.local scripts/foo.ts` is the correct invocation pattern** on this machine. `npx @dotenvx/dotenvx run -f .env.local --` does not work reliably from Claude Code Bash tool (npm treats the scoped package name as a script name). Use `--env-file` flag directly on tsx (Node 20.6+ feature, tsx passes it through).
 - **Diagnostic scripts should print full org strings, not truncated**: using `org.substring(0,80)` in the diagnostic output hid the exact mismatch — the OECD string ended with `"(FAO)"` not `"of the United Nations"` and that difference only showed when we fetched `len=105` with the full value. Always log the full string length alongside the content.
 
+## RAG retrieval trust (2026-07-04)
+
+- **Cosine similarity is subject-blind on short queries**: "what is bbnj" embedded as a 768-d vector is cosine-close to any ocean governance text. Without keyword re-scoring, the retrieval returns MARPOL instead of BBNJ. The abstention gate passes because the noise chunks score 0.55-0.75 — well above threshold. Fix: keyword-intersection guard (if zero retrieved chunks contain any query keyword, abstain regardless of cosine score) + scoreChunk re-ranking (keyword match bonus + authority boost + recency boost).
+- **PRIMARY-only default hid 9/11 BBNJ documents**: SECONDARY tier is 2.2% of corpus (171 docs) but contains the best analytical material (IUCN guides, OceanCare briefings). The default excluded them before vector search even ran. Changed to PRIMARY+SECONDARY; per-user toggle deferred.
+- **Hardcoded demo data renders as live data**: the research page had a static MARPOL answer with fake "847 documents searched" text rendered as if it were a real API result. The API endpoint existed and worked but was never wired to the frontend. Audit every surface for mocked content before showing the product to anyone.
+- **Trust mechanisms verify answer-matches-sources, not sources-match-question**: citation verification + faithfulness check confirm the answer is faithful to the retrieved chunks. They cannot detect that the wrong chunks were retrieved. The keyword guard is the structural fix for wrong-subject retrieval.
+
+## Auth / JWT staleness (2026-07-06)
+
+- **JWT callback `shouldRefresh` must cover all stale states**: the original condition checked `undefined` but not `null` for `onboarded_at`. Null was set on first login and never corrected because the refresh condition didn't fire. Every token field that can have a meaningful null must be in the refresh condition.
+- **Middleware reads the JWT cookie as-is, no callback**: `getToken()` in middleware decodes the existing cookie without triggering the jwt callback. The callback only fires on API routes and explicit `update()` calls. A stale cookie causes one wrong-routing request per login, corrected on the next request. The fix is a loading gate on the target page, not a middleware change.
+- **30-min TTL on JWT claims**: re-reads the users table once per 30 minutes via `token.refreshedAt` timestamp. Catches subscription_status, tier, role changes. Single indexed lookup, negligible load. The alternative (check DB on every middleware run) adds latency to every page load.
+- **Post-payment instant refresh needs SessionProvider**: `/subscribe` is outside the platform shell layout. `useSession().update()` requires a SessionProvider ancestor. Without it, the build crashes during static prerender. Fix: add a scoped `subscribe/layout.tsx` with SessionProvider.
+- **Completing onboarding overwrites preferences**: the `/api/onboarding` POST writes job_type, topics, timezone, brief_time via `.update()`. Showing the form to an already-onboarded user risks overwriting their real preferences. On mount-check error, redirect to /platform rather than falling through to the form.
+
+## Pipeline architecture (2026-07-08)
+
+- **summarise-pending is the system's single point of failure**: every downstream system (tracker tags, category classifier, entity matching, velocity scores, brief lead selection) depends on short_summary being populated. A stall in summarise-pending makes the entire tracker system read as "nothing is happening" when stories are actually arriving.
+- **Poison rows in batch queries are invisible for months**: two WHOI stories with dates in 2030/2035 sorted to the top of every batch (ORDER BY published_at DESC), failed on every run, and stayed in the queue forever. The per-story try/catch kept the loop running but wasted 10-15s of the 60s window on each run. Fix: date guard at ingest (reject > now+48h or < now-5y) + failure_count column (drop out after 3 failures).
+- **Vercel Hobby plan hard-caps functions at 60s**: `maxDuration: 300` in vercel.json is silently ignored. The actual limit is determined by the billing plan, not the config file. At 60s with ~4s/story, capacity is ~15 stories/run. This means the cron design must be: cron handles daily flow, script handles backlog.
+- **No sentinel values in data columns**: `short_summary = 'FAILED'` forces every downstream consumer to know the magic string. Dedicated columns (summarise_status, failure_count, last_failure_reason) are self-describing, queryable, and export-safe. Stories table is export-grade; no magic values.
+- **Backfill scripts must produce identical output to the cron**: if the cron writes short_summary + full_summary + confidence + controversy + entity matching, the backfill script must write the same columns. Two silently different data populations in the same table is exactly what a licensing buyer's consistency check finds.
+- **Score annotations for data quality incidents**: additive table (score_annotations) linked by tracker_slug + date range. Never modify velocity_scores rows retroactively. A 2029 buyer sees "weeks X-Y underscored, ingestion incident" instead of finding an unexplained dip.
+- **Cron heartbeat table**: cron_runs records start + completion + duration + items processed. A stall is detected by: `WHERE status='running' AND started_at < NOW() - INTERVAL '5 minutes'`. Without this, a stalled cron is completely silent.
+- **Node 24 --env-file for scripts**: `node --env-file=.env.local --import tsx scripts/foo.ts` loads env vars before any module init. Required when transitive imports (embeddings.ts) create Supabase clients at module load time. `dotenv.config()` in the script body runs too late.
+
+## Entity registry quality (2026-07-08)
+
+- **Entity matcher extracts from non-ocean stories**: ~150 junk entities (tirzepatide, Bloom's Taxonomy, Orion capsule) were extracted from stories that leaked through before the ocean relevance gate was active. The entities themselves are the symptom; the disease was the unfiltered PLOS ONE Marine RSS feed.
+- **Duplicate entities from timing races**: TMC duplicate was created before the seed loader added "TMC" as an alias to "The Metals Company". findOrCreateEntity Pass 2 (alias lookup) would have matched, but the entity was created in Pass 5 (insert new) during a window when no alias existed. Fix: merge infrastructure, not code change.
+- **Countries typed as "organisation"**: ~20 countries (China, UK, France, Peru) are typed "organisation" in the entity registry. The type taxonomy has no "state" type. Need a reclassification migration.
+- **Gate false-negative rate is ~1%**: random sample of 100 quarantined stories from May-June showed 1 ocean-relevant item incorrectly quarantined ("Vessel lists over 10 metres" from UK MMO). Operationally acceptable.
+
 ## Codebase archaeology patterns (2026-05-08)
 
 - **Read migrations before assuming schema state**: the live schema may have diverged significantly from the CLAUDE.md table list. Three tables in CLAUDE.md were dropped or replaced by the time of the RAG audit. Always read the migration sequence (sorted by date) to reconstruct current schema state.
