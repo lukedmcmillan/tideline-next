@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       accounts: {
@@ -291,38 +266,70 @@ export type Database = {
       brief_sends: {
         Row: {
           brief_date: string | null
+          delta_fallback: boolean | null
+          divergence_ids: string[] | null
           email: string
           id: string
           lead_story_id: string | null
+          resend_message_id: string | null
           send_type: string | null
           sent_at: string | null
           story_count: number | null
+          story_ids: string[] | null
+          synthesis_line: string | null
           tracker_slug: string | null
           user_id: string | null
+          variant: string | null
         }
         Insert: {
           brief_date?: string | null
+          delta_fallback?: boolean | null
+          divergence_ids?: string[] | null
           email: string
           id?: string
           lead_story_id?: string | null
+          resend_message_id?: string | null
           send_type?: string | null
           sent_at?: string | null
           story_count?: number | null
+          story_ids?: string[] | null
+          synthesis_line?: string | null
           tracker_slug?: string | null
           user_id?: string | null
+          variant?: string | null
         }
         Update: {
           brief_date?: string | null
+          delta_fallback?: boolean | null
+          divergence_ids?: string[] | null
           email?: string
           id?: string
           lead_story_id?: string | null
+          resend_message_id?: string | null
           send_type?: string | null
           sent_at?: string | null
           story_count?: number | null
+          story_ids?: string[] | null
+          synthesis_line?: string | null
           tracker_slug?: string | null
           user_id?: string | null
+          variant?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "brief_sends_lead_story_id_fkey"
+            columns: ["lead_story_id"]
+            isOneToOne: false
+            referencedRelation: "lp_briefing"
+            referencedColumns: ["story_id"]
+          },
+          {
+            foreignKeyName: "brief_sends_lead_story_id_fkey"
+            columns: ["lead_story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "brief_sends_user_id_fkey"
             columns: ["user_id"]
@@ -389,6 +396,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_runs: {
+        Row: {
+          completed_at: string | null
+          cron_name: string
+          duration_ms: number | null
+          error_summary: string | null
+          id: string
+          items_failed: number | null
+          items_processed: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          cron_name: string
+          duration_ms?: number | null
+          error_summary?: string | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          cron_name?: string
+          duration_ms?: number | null
+          error_summary?: string | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       daily_signals: {
         Row: {
           authored_by: string | null
@@ -419,6 +462,57 @@ export type Database = {
         }
         Relationships: []
       }
+      delta_classifications: {
+        Row: {
+          actor: string | null
+          category: string | null
+          classified_at: string
+          delta_verb: string | null
+          governance_significance: number | null
+          is_delta: boolean
+          object: string | null
+          prompt_version: string
+          story_id: string
+        }
+        Insert: {
+          actor?: string | null
+          category?: string | null
+          classified_at?: string
+          delta_verb?: string | null
+          governance_significance?: number | null
+          is_delta: boolean
+          object?: string | null
+          prompt_version: string
+          story_id: string
+        }
+        Update: {
+          actor?: string | null
+          category?: string | null
+          classified_at?: string
+          delta_verb?: string | null
+          governance_significance?: number | null
+          is_delta?: boolean
+          object?: string | null
+          prompt_version?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delta_classifications_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "lp_briefing"
+            referencedColumns: ["story_id"]
+          },
+          {
+            foreignKeyName: "delta_classifications_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       divergences: {
         Row: {
           detected_at: string | null
@@ -426,6 +520,8 @@ export type Database = {
           headline: string | null
           id: string
           is_active: boolean | null
+          resolved_at: string | null
+          resolved_outcome: string | null
           retired_at: string | null
           score: number
           source_a_claim: string | null
@@ -449,6 +545,8 @@ export type Database = {
           headline?: string | null
           id?: string
           is_active?: boolean | null
+          resolved_at?: string | null
+          resolved_outcome?: string | null
           retired_at?: string | null
           score: number
           source_a_claim?: string | null
@@ -472,6 +570,8 @@ export type Database = {
           headline?: string | null
           id?: string
           is_active?: boolean | null
+          resolved_at?: string | null
+          resolved_outcome?: string | null
           retired_at?: string | null
           score?: number
           source_a_claim?: string | null
@@ -537,6 +637,7 @@ export type Database = {
           is_primary_source: boolean | null
           processed_at: string | null
           source_domain: string
+          source_format: string | null
           source_url: string
           status: string | null
         }
@@ -550,6 +651,7 @@ export type Database = {
           is_primary_source?: boolean | null
           processed_at?: string | null
           source_domain: string
+          source_format?: string | null
           source_url: string
           status?: string | null
         }
@@ -563,6 +665,7 @@ export type Database = {
           is_primary_source?: boolean | null
           processed_at?: string | null
           source_domain?: string
+          source_format?: string | null
           source_url?: string
           status?: string | null
         }
@@ -601,20 +704,31 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          canonical_url: string | null
+          classified_at: string | null
+          classify_confidence: number | null
           contributor_confirmed: boolean | null
           created_at: string | null
           document_type: string | null
+          embedded_at: string | null
           embedding: string | null
           file_size_bytes: number | null
           file_url: string | null
           id: string
           is_primary_source: boolean | null
           is_public: boolean | null
+          needs_review: boolean | null
           published_date: string | null
           region_tags: string[] | null
+          rule_applied: string | null
+          source_domain: string | null
+          source_format: string | null
           source_organisation: string | null
+          source_tier: string | null
+          source_type: string | null
           status: string | null
           submitted_by: string | null
+          subtitle: string | null
           title: string
           topic_tags: string[] | null
           updated_at: string | null
@@ -622,20 +736,31 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          canonical_url?: string | null
+          classified_at?: string | null
+          classify_confidence?: number | null
           contributor_confirmed?: boolean | null
           created_at?: string | null
           document_type?: string | null
+          embedded_at?: string | null
           embedding?: string | null
           file_size_bytes?: number | null
           file_url?: string | null
           id?: string
           is_primary_source?: boolean | null
           is_public?: boolean | null
+          needs_review?: boolean | null
           published_date?: string | null
           region_tags?: string[] | null
+          rule_applied?: string | null
+          source_domain?: string | null
+          source_format?: string | null
           source_organisation?: string | null
+          source_tier?: string | null
+          source_type?: string | null
           status?: string | null
           submitted_by?: string | null
+          subtitle?: string | null
           title: string
           topic_tags?: string[] | null
           updated_at?: string | null
@@ -643,28 +768,89 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          canonical_url?: string | null
+          classified_at?: string | null
+          classify_confidence?: number | null
           contributor_confirmed?: boolean | null
           created_at?: string | null
           document_type?: string | null
+          embedded_at?: string | null
           embedding?: string | null
           file_size_bytes?: number | null
           file_url?: string | null
           id?: string
           is_primary_source?: boolean | null
           is_public?: boolean | null
+          needs_review?: boolean | null
           published_date?: string | null
           region_tags?: string[] | null
+          rule_applied?: string | null
+          source_domain?: string | null
+          source_format?: string | null
           source_organisation?: string | null
+          source_tier?: string | null
+          source_type?: string | null
           status?: string | null
           submitted_by?: string | null
+          subtitle?: string | null
           title?: string
           topic_tags?: string[] | null
           updated_at?: string | null
         }
         Relationships: []
       }
+      embedding_errors: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          error_message: string | null
+          error_type: string
+          id: string
+          story_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          error_message?: string | null
+          error_type: string
+          id?: string
+          story_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          error_message?: string | null
+          error_type?: string
+          id?: string
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embedding_errors_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embedding_errors_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "lp_briefing"
+            referencedColumns: ["story_id"]
+          },
+          {
+            foreignKeyName: "embedding_errors_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entities: {
         Row: {
+          aliases: string[]
           created_by: string | null
           description: string | null
           embedding: string | null
@@ -676,9 +862,13 @@ export type Database = {
           metadata: Json | null
           name: string
           parent_entity_id: string | null
+          quarantine_reason: string | null
+          quarantined_at: string | null
+          status: string | null
           tracker_tag: string | null
         }
         Insert: {
+          aliases?: string[]
           created_by?: string | null
           description?: string | null
           embedding?: string | null
@@ -690,9 +880,13 @@ export type Database = {
           metadata?: Json | null
           name: string
           parent_entity_id?: string | null
+          quarantine_reason?: string | null
+          quarantined_at?: string | null
+          status?: string | null
           tracker_tag?: string | null
         }
         Update: {
+          aliases?: string[]
           created_by?: string | null
           description?: string | null
           embedding?: string | null
@@ -704,6 +898,9 @@ export type Database = {
           metadata?: Json | null
           name?: string
           parent_entity_id?: string | null
+          quarantine_reason?: string | null
+          quarantined_at?: string | null
+          status?: string | null
           tracker_tag?: string | null
         }
         Relationships: [
@@ -828,6 +1025,65 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "stories"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_merges: {
+        Row: {
+          aliases_transferred: string[] | null
+          canonical_id: string
+          duplicate_id: string
+          id: string
+          mentions_repointed: number | null
+          merged_at: string | null
+          reason: string | null
+        }
+        Insert: {
+          aliases_transferred?: string[] | null
+          canonical_id: string
+          duplicate_id: string
+          id?: string
+          mentions_repointed?: number | null
+          merged_at?: string | null
+          reason?: string | null
+        }
+        Update: {
+          aliases_transferred?: string[] | null
+          canonical_id?: string
+          duplicate_id?: string
+          id?: string
+          mentions_repointed?: number | null
+          merged_at?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_merges_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_merges_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "lp_briefing"
+            referencedColumns: ["entity_id"]
+          },
+          {
+            foreignKeyName: "entity_merges_duplicate_id_fkey"
+            columns: ["duplicate_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_merges_duplicate_id_fkey"
+            columns: ["duplicate_id"]
+            isOneToOne: false
+            referencedRelation: "lp_briefing"
+            referencedColumns: ["entity_id"]
           },
         ]
       }
@@ -1086,6 +1342,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      governance_sessions: {
+        Row: {
+          body: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          session_name: string
+          significance: string | null
+          source_url: string | null
+          start_date: string
+          tracker_tag: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          session_name: string
+          significance?: string | null
+          source_url?: string | null
+          start_date: string
+          tracker_tag: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          session_name?: string
+          significance?: string | null
+          source_url?: string | null
+          start_date?: string
+          tracker_tag?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       isa_contractors: {
         Row: {
@@ -1642,6 +1943,69 @@ export type Database = {
         }
         Relationships: []
       }
+      research_queries: {
+        Row: {
+          abstained: boolean | null
+          answer: string | null
+          chunks_cited: number | null
+          chunks_retrieved: number | null
+          cited_chunk_ids: string[] | null
+          created_at: string | null
+          date_from: string | null
+          date_to: string | null
+          faithfulness_stripped: number | null
+          id: string
+          latency_ms: number | null
+          partial_citation_count: number | null
+          project_id: string | null
+          query: string
+          scope: string | null
+          source_surface: string
+          source_tiers: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          abstained?: boolean | null
+          answer?: string | null
+          chunks_cited?: number | null
+          chunks_retrieved?: number | null
+          cited_chunk_ids?: string[] | null
+          created_at?: string | null
+          date_from?: string | null
+          date_to?: string | null
+          faithfulness_stripped?: number | null
+          id?: string
+          latency_ms?: number | null
+          partial_citation_count?: number | null
+          project_id?: string | null
+          query: string
+          scope?: string | null
+          source_surface?: string
+          source_tiers?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          abstained?: boolean | null
+          answer?: string | null
+          chunks_cited?: number | null
+          chunks_retrieved?: number | null
+          cited_chunk_ids?: string[] | null
+          created_at?: string | null
+          date_from?: string | null
+          date_to?: string | null
+          faithfulness_stripped?: number | null
+          id?: string
+          latency_ms?: number | null
+          partial_citation_count?: number | null
+          project_id?: string | null
+          query?: string
+          scope?: string | null
+          source_surface?: string
+          source_tiers?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       saved_stories: {
         Row: {
           created_at: string
@@ -1690,6 +2054,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      score_annotations: {
+        Row: {
+          annotation_type: string
+          created_at: string | null
+          id: string
+          note: string
+          period_end: string
+          period_start: string
+          tracker_slug: string
+        }
+        Insert: {
+          annotation_type: string
+          created_at?: string | null
+          id?: string
+          note: string
+          period_end: string
+          period_start: string
+          tracker_slug: string
+        }
+        Update: {
+          annotation_type?: string
+          created_at?: string | null
+          id?: string
+          note?: string
+          period_end?: string
+          period_start?: string
+          tracker_slug?: string
+        }
+        Relationships: []
       }
       scrape_runs: {
         Row: {
@@ -1838,16 +2232,20 @@ export type Database = {
           description: string | null
           document_type: string | null
           entities_extracted: boolean | null
+          failure_count: number | null
           fetched_at: string | null
           full_summary: string | null
           id: string
           is_featured: boolean
           is_pro: boolean | null
           issuing_body: string | null
+          last_failure_reason: string | null
           link: string
           overridden_at: string | null
           overridden_by: string | null
           published_at: string | null
+          quarantine_reason: string | null
+          quarantined_at: string | null
           short_summary: string | null
           significance_score: number
           source_name: string | null
@@ -1855,6 +2253,7 @@ export type Database = {
           source_type: string | null
           source_url: string | null
           status: string | null
+          summarise_status: string | null
           summary: string | null
           summary_generated_at: string | null
           title: string
@@ -1871,16 +2270,20 @@ export type Database = {
           description?: string | null
           document_type?: string | null
           entities_extracted?: boolean | null
+          failure_count?: number | null
           fetched_at?: string | null
           full_summary?: string | null
           id?: string
           is_featured?: boolean
           is_pro?: boolean | null
           issuing_body?: string | null
+          last_failure_reason?: string | null
           link: string
           overridden_at?: string | null
           overridden_by?: string | null
           published_at?: string | null
+          quarantine_reason?: string | null
+          quarantined_at?: string | null
           short_summary?: string | null
           significance_score?: number
           source_name?: string | null
@@ -1888,6 +2291,7 @@ export type Database = {
           source_type?: string | null
           source_url?: string | null
           status?: string | null
+          summarise_status?: string | null
           summary?: string | null
           summary_generated_at?: string | null
           title: string
@@ -1904,16 +2308,20 @@ export type Database = {
           description?: string | null
           document_type?: string | null
           entities_extracted?: boolean | null
+          failure_count?: number | null
           fetched_at?: string | null
           full_summary?: string | null
           id?: string
           is_featured?: boolean
           is_pro?: boolean | null
           issuing_body?: string | null
+          last_failure_reason?: string | null
           link?: string
           overridden_at?: string | null
           overridden_by?: string | null
           published_at?: string | null
+          quarantine_reason?: string | null
+          quarantined_at?: string | null
           short_summary?: string | null
           significance_score?: number
           source_name?: string | null
@@ -1921,6 +2329,7 @@ export type Database = {
           source_type?: string | null
           source_url?: string | null
           status?: string | null
+          summarise_status?: string | null
           summary?: string | null
           summary_generated_at?: string | null
           title?: string
@@ -1977,6 +2386,7 @@ export type Database = {
           embedding: string | null
           id: string
           issuing_body: string | null
+          source_type: string | null
           source_url: string | null
           story_id: string | null
         }
@@ -1989,6 +2399,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           issuing_body?: string | null
+          source_type?: string | null
           source_url?: string | null
           story_id?: string | null
         }
@@ -2001,6 +2412,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           issuing_body?: string | null
+          source_type?: string | null
           source_url?: string | null
           story_id?: string | null
         }
@@ -2701,6 +3113,7 @@ export type Database = {
           role: string | null
           sector: string | null
           show_name_on_contributions: boolean | null
+          stakeholder_type: string | null
           streak_days: number | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -2735,6 +3148,7 @@ export type Database = {
           role?: string | null
           sector?: string | null
           show_name_on_contributions?: boolean | null
+          stakeholder_type?: string | null
           streak_days?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -2769,6 +3183,7 @@ export type Database = {
           role?: string | null
           sector?: string | null
           show_name_on_contributions?: boolean | null
+          stakeholder_type?: string | null
           streak_days?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -2904,6 +3319,30 @@ export type Database = {
           similarity: number
         }[]
       }
+      match_document_chunks_filtered: {
+        Args: {
+          filter_date_from?: string
+          filter_date_to?: string
+          filter_source_tiers?: string[]
+          match_count: number
+          match_threshold: number
+          query_embedding: string
+        }
+        Returns: {
+          canonical_url: string
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          document_id: string
+          document_type: string
+          id: string
+          similarity: number
+          source_organisation: string
+          source_tier: string
+          source_type: string
+          title: string
+        }[]
+      }
       match_documents: {
         Args: { match_count: number; query_embedding: string }
         Returns: {
@@ -3005,6 +3444,15 @@ export type Database = {
           issuing_body: string
           similarity: number
           source_url: string
+        }[]
+      }
+      search_entities: {
+        Args: { lim?: number; q: string }
+        Returns: {
+          entity_type: string
+          id: string
+          mention_count: number
+          name: string
         }[]
       }
       show_limit: { Args: never; Returns: number }
@@ -3138,9 +3586,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

@@ -348,6 +348,7 @@ export async function GET(request: Request) {
       unsubscribe_token: string | null;
       topics: string[];
       created_at: string | null;
+      stakeholder_type: string | null;
     };
 
     let subscribers: Subscriber[];
@@ -356,7 +357,7 @@ export async function GET(request: Request) {
       // In test mode, look up the actual user by email so topics/token are real
       const { data: testUser } = await supabase
         .from("users")
-        .select("id, email, unsubscribe_token, topics, created_at")
+        .select("id, email, unsubscribe_token, topics, created_at, stakeholder_type")
         .eq("email", testEmail)
         .single();
 
@@ -366,12 +367,13 @@ export async function GET(request: Request) {
         unsubscribe_token: testUser?.unsubscribe_token ?? null,
         topics:            Array.isArray(testUser?.topics) ? testUser.topics : [],
         created_at:        testUser?.created_at ?? null,
+        stakeholder_type:  testUser?.stakeholder_type ?? null,
       }];
       console.log(`[send-brief] TEST MODE → ${testEmail}, topics: ${subscribers[0].topics.join(",")}`);
     } else {
       const { data: users, error: subError } = await supabase
         .from("users")
-        .select("id, email, unsubscribe_token, topics, created_at")
+        .select("id, email, unsubscribe_token, topics, created_at, stakeholder_type")
         .in("subscription_status", ["active", "trial", "trialing"])
         .not("onboarded_at", "is", null);
 
@@ -385,6 +387,7 @@ export async function GET(request: Request) {
       subscribers = users.map(u => ({
         ...u,
         topics: Array.isArray(u.topics) ? u.topics : [],
+        stakeholder_type: u.stakeholder_type ?? null,
       }));
     }
 
@@ -565,17 +568,28 @@ export async function GET(request: Request) {
           .filter(t => userTopics.length === 0 || userTopics.includes(t.tracker_slug))
           .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]?.tracker_slug ?? null;
 
+        // Collect all story IDs included in this brief for freshness tracking
+        const briefStoryIds = [
+          lead.storyId,
+          ...evidence.map(e => e.storyId),
+        ].filter(Boolean) as string[];
+
         supabase
           .from("brief_sends")
           .insert({
             user_id:        sub.id === "test" ? null : sub.id,
             email:          sub.email,
-            story_count:    evidence.length,   // items user actually saw in Evidence section
-            tracker_slug:   topTrackerSlug,    // top tracker for this user (was daily rotation)
+            story_count:    evidence.length,
+            tracker_slug:   topTrackerSlug,
             send_type:      sendType,
             brief_date:     todayDate,
             lead_story_id:  lead.storyId ?? null,
-            delta_fallback: leadGate === "fallback",  // true = no delta-eligible story found
+            delta_fallback: leadGate === "fallback",
+            // v2 columns
+            variant:        leadGate === "fallback" ? "B" : "A",
+            story_ids:      briefStoryIds.length > 0 ? briefStoryIds : null,
+            synthesis_line: lead.interpretation ?? null,
+            // divergence_ids and resend_message_id: populated in Phase 2
           })
           .then(() => {});
       } else {

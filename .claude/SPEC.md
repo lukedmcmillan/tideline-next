@@ -1,6 +1,49 @@
 ﻿# Tideline — Live Project Status
 
-## Last session: 2026-05-29 — Research RAG spec locked, build guide v2, research/inline deleted
+## Last session: 2026-07-10 — Brief v2 Phase 1 schema + code patches
+
+WHAT SHIPPED (2026-07-10):
+
+- **Brief v2 Phase 1 migration applied and verified in production** (Supabase Studio):
+  - `users.stakeholder_type` text column (4 values: `esg_finance`, `legal`, `compliance_shipping`, `ngo_policy`)
+  - Backfill: all existing users set to derived value from `job_type` (or `esg_finance` default)
+  - `brief_sends` +5 columns: `variant`, `story_ids uuid[]`, `divergence_ids uuid[]`, `synthesis_line`, `resend_message_id`
+  - `divergences` +2 columns: `resolved_outcome` (5 values), `resolved_at` — landed before detection cron writes
+  - `governance_sessions` reference table created (What to Watch data source for brief Section 8)
+  - All new tables/columns have RLS enabled (service role bypasses)
+  - Index: `idx_brief_sends_user_sent (user_id, sent_at DESC)`, `idx_governance_sessions_upcoming`, `idx_governance_sessions_tracker`
+
+- **Types regenerated** — `app/lib/types/supabase.ts` from live schema (3592 lines). All new columns confirmed.
+
+- **Onboarding patched** — `app/api/onboarding/route.ts` now writes `stakeholder_type` derived from `job_type`:
+  - `esg_analyst`/`blue_finance`/`generalist` → `esg_finance`
+  - `marine_lawyer` → `legal`, `shipping_compliance` → `compliance_shipping`, `ngo_campaigner` → `ngo_policy`
+
+- **send-brief patched** — `app/api/cron/send-brief/route.ts`:
+  - Subscriber query now fetches `stakeholder_type`
+  - `brief_sends` insert writes `variant` (A if lead passed gate, B if fallback), `story_ids`, `synthesis_line`
+  - `divergence_ids` and `resend_message_id` left for Phase 2
+
+- **PROJECT_INDEX.md updated** (2026-07-10)
+
+KNOWN ISSUES (carry forward):
+- `app/api/reserve/route.ts` (untracked) — missing `resend` import causes build error. Triage needed.
+- 6 API routes have hardcoded email fallback (security bug) — `hazard_auth_fallbacks.md`
+- Stage 2 headline generation FROZEN pending 30-day backtest
+- scraper-ngo-reports BROKEN (regex misses modern NGO page patterns)
+- wto-fisheries and plastics trackers have zero source coverage
+- entity_type column has 15+ inconsistent values (architectural debt)
+- document_queue backlog (~10K pending)
+
+NEXT SESSION PRIORITIES:
+1. **Brief v2 Phase 2**: Template v5 HTML rebuild (visual system from BRIEF-V2-SPEC.md Section 4), variant A/B rendering, stakeholder-type cached generation
+2. Populate `governance_sessions` reference table from existing `governance_events` data
+3. Triage `app/api/reserve/route.ts` — commit or delete
+4. auth fallbacks fix (hazard_auth_fallbacks.md)
+
+---
+
+## Previous session: 2026-05-29 — Research RAG spec locked, build guide v2, research/inline deleted
 
 WHAT SHIPPED (2026-05-29):
 

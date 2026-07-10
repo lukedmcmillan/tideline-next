@@ -3,6 +3,16 @@ import { createClient } from "@supabase/supabase-js";
 import { getEmailFromSession, getUserIdFromSession } from "@/app/lib/auth";
 import { JOB_TYPES, type JobType } from "@/app/lib/onboarding/starter-sets";
 
+// Derive stakeholder_type from job_type for brief personalisation (4 cached variants)
+const STAKEHOLDER_MAP: Record<string, string> = {
+  esg_analyst: "esg_finance",
+  blue_finance: "esg_finance",
+  generalist: "esg_finance",
+  marine_lawyer: "legal",
+  shipping_compliance: "compliance_shipping",
+  ngo_campaigner: "ngo_policy",
+};
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -88,6 +98,7 @@ export async function POST(req: NextRequest) {
     .from("users")
     .update({
       job_type,
+      stakeholder_type: STAKEHOLDER_MAP[job_type] ?? "esg_finance",
       brief_time,
       timezone,
       topics: topics.length > 0 ? topics : undefined,
