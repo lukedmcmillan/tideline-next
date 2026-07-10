@@ -272,12 +272,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const cronStart = Date.now()
+
+  // Heartbeat: record cron run start
+  const { data: runRow } = await supabase
+    .from('cron_runs')
+    .insert({ cron_name: 'summarise-pending', status: 'running' })
+    .select('id')
+    .single()
+  const runId = runRow?.id
+
+  // Exclude quarantined and permanently-failed stories.
+  // Batch reduced to 15 to fit within Vercel Hobby 60s timeout.
   const { data: pending, error } = await supabase
     .from('stories')
     .select('id, title, link, source_name, description')
     .is('short_summary', null)
+    .is('quarantined_at', null)
+    .neq('summarise_status', 'failed')
     .order('published_at', { ascending: false })
-    .limit(50)
+    .limit(15)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -345,6 +359,9 @@ export async function GET(request: Request) {
           controversy_score: controversy.score,
           controversy_label: controversy.label,
           controversy_reason: controversy.reason,
+          summarise_status: 'done',
+          failure_count: 0,
+          last_failure_reason: null,
         })
         .eq('id', story.id)
       summarised++
@@ -365,6 +382,16 @@ export async function GET(request: Request) {
       const msg = err instanceof Error ? err.message : String(err)
       errors.push(`${story.id}: ${msg}`)
       console.error(`Failed to summarise story ${story.id}:`, err)
+      // Increment failure_count; mark as 'failed' after 3 attempts
+      try {
+        const { data: cur } = await supabase.from('stories').select('failure_count').eq('id', story.id).single()
+        const newCount = (cur?.failure_count || 0) + 1
+        await supabase.from('stories').update({
+          failure_count: newCount,
+          last_failure_reason: msg.slice(0, 500),
+          summarise_status: newCount >= 3 ? 'failed' : 'pending',
+        }).eq('id', story.id)
+      } catch { /* non-fatal */ }
     }
   }
 
@@ -375,6 +402,18 @@ export async function GET(request: Request) {
       events_created: summarised,
       errors: errors.length > 0 ? errors.join('; ') : null,
     })
+
+    // Heartbeat: record cron run completion
+    if (runId) {
+      const durationMs = Date.now() - cronStart
+      await supabase.from('cron_runs').update({
+        completed_at: new Date().toISOString(),
+        status: errors.length > 0 ? 'failed' : 'completed',
+        items_processed: summarised,
+        items_failed: errors.length,
+        error_summary: errors.length > 0 ? errors.slice(0, 3).join('; ').slice(0, 500) : null,
+      }).eq('id', runId)
+    }
   }
 
   return NextResponse.json({
