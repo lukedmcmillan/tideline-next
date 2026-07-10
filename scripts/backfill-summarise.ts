@@ -9,10 +9,13 @@
  * Point-in-time rule: processed_at stamped NOW so downstream consumers
  * know this was a backfill, not real-time processing.
  *
- * Usage:
- *   npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-summarise.ts
- *   npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-summarise.ts --limit=100
- *   npx @dotenvx/dotenvx run -f .env.local -- npx tsx scripts/backfill-summarise.ts --dry-run
+ * Usage (Node 24+ --env-file loads vars before module init):
+ *   node --env-file=.env.local --import tsx scripts/backfill-summarise.ts
+ *   node --env-file=.env.local --import tsx scripts/backfill-summarise.ts --limit=100
+ *   node --env-file=.env.local --import tsx scripts/backfill-summarise.ts --dry-run
+ *
+ * Rate: ~2 stories/min. Full 2,800 backlog takes ~24h.
+ * Idempotent: safe to restart. Failed stories get failure_count++.
  */
 
 import { createClient } from "@supabase/supabase-js";
