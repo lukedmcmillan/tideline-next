@@ -1,6 +1,6 @@
 # Project Index: Tideline
 
-Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
+Generated: 2026-07-10 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Supabase, Stripe, Resend, Claude API
 
 ---
 
@@ -24,6 +24,7 @@ Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 | `/onboarding` | `app/onboarding/page.tsx` |
 | `/subscribe` | `app/subscribe/page.tsx` |
 | `/pricing` | `app/pricing/page.tsx` |
+| `/platform` | `app/platform/(shell)/page.tsx` |
 | `/platform/feed` | `app/platform/(shell)/feed/page.tsx` |
 | `/platform/story/[id]` | `app/platform/(shell)/story/[id]/page.tsx` |
 | `/platform/projects` | `app/platform/(shell)/projects/page.tsx` |
@@ -50,22 +51,24 @@ Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 ### Auth & User
 - `api/auth/[...nextauth]` — NextAuth handler
 - `api/auth/verify` — Magic link verification
-- `api/subscription-status` — Session + needsOnboarding flag
 - `api/subscription-access` — Paywall check
+- `api/subscription-status` — Status + needsOnboarding flag
+- `api/subscribe` — Stripe customer + subscription creation
 - `api/user/topics`, `sector`, `update-last-seen`, `complete-onboarding`, `dismiss-modal`, `modal-status`, `onboarding-status`
+- `api/onboarding/starter-set`, `entity-match` — Onboarding helpers
+- `api/survey`, `api/survey-v2`, `api/waitlist` — Signup surveys
 
 ### Content
 - `api/stories` — Feed stories (topic filter, pagination)
 - `api/stories/save`, `api/stories/comments` — Save/comment on stories
 - `api/summarise` — On-demand Claude summarisation (Sonnet)
-- `api/workspace/ask` — RAG research (Sonnet) **[PRODUCTION — migration to /api/research/ask pending Phase 3]**
 - `api/workspace/quick-note` — Quick note save
 - `api/search` — Full-text search
 - `api/governance-events` — Calendar events
 - `api/tracker-status/[slug]` — Per-tracker status
 - `api/tracker-events` — Tracker event data
 - `api/sidebar-data` — Feed sidebar counts
-- `api/dashboard/*` — Signals, readiness, upcoming-30d
+- `api/dashboard/*` — Signals, readiness, upcoming-30d, hero-signal, overnight, ticker, proof-of-work, reveal, new-stories
 - `api/landing-data` — Marketing page data
 
 ### Payments
@@ -84,13 +87,14 @@ Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 - `api/community-documents`
 
 ### Intelligence
-- `api/ask` — Short ask endpoint (possibly orphaned — investigate)
+- `api/ask` — RAG ask endpoint (Sonnet)
 - `api/threads/*` — Crosscurrent connection threads (Sonnet)
 - `api/connections` — Story connections
 - `api/alerts/preferences` — Alert prefs
 - `api/story/linkedin-draft` — LinkedIn draft (Sonnet)
 - `api/notifications` — User notifications
 - `api/consultations` — Consultations data
+- `api/entities/track`, `detail`, `dashboard` — Entity intelligence
 
 ### Tracker-specific
 - `api/treaty-status` — BBNJ treaty ratification data
@@ -118,7 +122,7 @@ Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 | `generate-connections` | Daily 7am | Crosscurrent connections |
 | `threshold-alerts` | Daily 8am | Velocity threshold alerts |
 | `conversion-triggers` | Daily 9am | Conversion nudges |
-| `velocity-scores` | Every 4d 6am | Velocity score recalculation |
+| `velocity-scores` | Mon 6am | Velocity score recalculation |
 | `governance-agent` | Mon 4am | Governance event classification (Haiku) |
 | `blue-finance-agent` | Mon 4:30am | Blue finance classification (Haiku) |
 | `scrape-governance-calendar` | Every 10d 3am | Governance calendar scrape (Sonnet) |
@@ -136,37 +140,45 @@ Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 ### Admin
 - `api/admin/story-override` — Story override
 - `api/admin/backfill-velocity` — Velocity backfill
+- `api/admin/backfill-entities` — Entity backfill
 - `api/admin/documents/*` — Document review, upload
 
 ---
 
 ## Shared Libraries
 
-### `app/lib/` (22 files)
+### `app/lib/` (35 files)
 | File | Purpose |
 |---|---|
 | `auth.ts` | `getEmailFromSession()` — shared auth helper |
-| `brief-reply.ts` | Brief reply RAG — **migrate to lib/research.ts in Phase 3 Step 8** |
+| `ask-engine.ts` | RAG pipeline for Ask Tideline |
+| `brief-reply.ts` | Brief reply RAG |
+| `brief/select.ts` | Brief lead story selection (category gate) |
+| `brief/template.ts` | Brief email HTML template |
+| `brief/utils.ts` | Brief utility functions |
+| `brief/quick-asks.ts` | Brief quick-ask suggestions |
 | `confidence.ts` | Confidence scoring |
 | `constants.ts` | Shared constants |
 | `embeddings.ts` | Jina embedding calls (jina-embeddings-v2-base-en 768-d) |
 | `events.ts` | Event helpers |
 | `html.ts` | HTML parsing utilities |
-| `http-client.ts` | Shared HTTP client with retry/bot-block logic |
+| `http-client.ts` | Shared HTTP client with robots.txt compliance |
 | `jina.ts` | Jina scraping wrapper (JINA_API_KEY) |
 | `ocean-relevance-gate.ts` | Claude relevance filter (prompt cached) |
 | `query-expansion.ts` | RAG query expansion |
-| `research.ts` | Unified RAG engine (Step 3 complete) |
+| `research.ts` | Unified RAG engine |
 | `search.ts` | Full-text search helpers |
 | `signal-generation.ts` | Dashboard signal generation |
-| `sources.ts` | Source registry (`RSSSource`, `skipGate?: boolean`) |
+| `sources.ts` | Source registry (~89 RSS sources) |
 | `subscription.ts` | Subscription status helpers |
 | `tracker-descriptions.ts` | Tracker one-liners |
 | `tracker-metadata.ts` | Tracker config (INST_TYPE, PREP_HORIZON, etc.) |
-| `trackers.ts` | Tracker constants |
+| `trackers.ts` | Tracker constants + TRACKER_TO_TOPICS map |
 | `user-preferences.ts` | User preference helpers |
 | `velocity.ts` | Velocity score interpretation |
 | `entity-type-label.ts` | Entity type label mapping |
+| `onboarding/starter-sets.ts` | Onboarding starter set definitions |
+| `welcome/topic-mapping.ts`, `data.ts`, `rules.ts` | Welcome flow logic |
 
 ### `lib/` (project root)
 | File | Purpose |
@@ -176,35 +188,36 @@ Generated: 2026-07-02 | Stack: Next.js 16, React 19, TypeScript, Tailwind v4, Su
 | `email/alert-data.ts` | Alert email data helpers |
 | `email/sparkline.ts` | Sparkline SVG for emails |
 
-### Components (33 files in `components/`)
-Key: `Header`, `Paywall`, `TrackerHero`, `TrackerHistory`, `TrackerMethodology`, `VelocityScore`, `AlertToggle`, `HeroSignal*`, `Sparkline`, `TickerStrip`, `SignalFeed`, `StoryCard`, `FeedSidebar`, `TopicsSelector`
+### Components (34 files in `components/`)
+Key: `Header`, `LandingHeader`, `Paywall`, `TrackerHero`, `TrackerHistory`, `TrackerMethodology`, `VelocityScore`, `AlertToggle`, `HeroSignal*`, `Sparkline`, `TickerStrip`, `SignalFeed`, `StoryCard`, `FeedSidebar`, `TopicsSelector`, `BriefPreview`, `DirectoryPreview`, `ConversionModal`, `EarlyAccessModal`
 
 ---
 
-## Scripts (`scripts/`) — 90+ files
+## Scripts (`scripts/`) — 100+ files
 
-- **Diagnostic**: `diag-*.ts` (20+), `probe-*.ts`
+- **Diagnostic**: `diag-*.ts` (25+), `probe-*.ts`
 - **Backfill**: `backfill-*.ts`, `embed-*.ts`, `recalc-*.ts`
 - **Scrapers**: `scraper-informea.ts`, `scraper-ngo-reports.ts`, `scraper-openalex.ts`, `scraper-playwright.ts`, `scraper-un-library.ts`, `processor-agent.ts`
 - **Entity**: `merge-entity-duplicates.ts`, `cleanup-entities.ts`, `fix-entities.ts`
 - **Testing**: `test-*.ts`, `verify-*.ts`
-- **Research RAG**: `embed-stories.ts`, `classify-documents.ts`
+- **Research RAG**: `embed-stories.ts`
 
 ---
 
 ## Tests
 
 - `__tests__/entity-matching.idempotency.test.ts` — Entity counter idempotency
+- `app/lib/brief/select.test.ts` — Brief selection logic
 - Framework: Vitest (`vitest.config.ts` with `@/` alias)
 
 ---
 
 ## Key Configuration
 
-- `vercel.json` — Cron schedules; 512MB default / 1GB embed-documents
+- `vercel.json` — Cron schedules; 512MB default / 1GB embed-documents / 300s summarise-pending
 - `tsconfig.json` — `@/*` alias = project root
 - `.env.local` — All secrets (never commit)
-- `supabase/migrations/` — 60 migration files (20260330–20260529)
+- `supabase/migrations/` — 68 migration files
 
 ---
 
@@ -219,7 +232,7 @@ Key: `Header`, `Paywall`, `TrackerHero`, `TrackerHistory`, `TrackerMethodology`,
 
 ## Database (Supabase — 3 schemas: `public`, `auth`, `next_auth`)
 
-**Key tables**: `users`, `stories`, `scraped_sources`, `treaty_ratifications`, `scrape_runs`, `subscriptions`, `trial_signups`, `governance_bodies`, `governance_events`, `expected_decisions`, `calendar_subscriptions`, `document_chunks`, `story_chunks`, `velocity_scores`, `entities`, `entity_mentions`, `entity_aliases`, `lp_portfolios`, `research_queries`, `delta_classifications`, `brief_sends`, `signal_events`, `documents`, `document_queue`
+**Key tables**: `users`, `stories`, `scraped_sources`, `treaty_ratifications`, `scrape_runs`, `subscriptions`, `trial_signups`, `governance_bodies`, `governance_events`, `expected_decisions`, `calendar_subscriptions`, `document_chunks`, `story_chunks`, `velocity_scores`, `entities`, `entity_mentions`, `entity_aliases`, `entity_merges`, `lp_portfolios`, `research_queries`, `delta_classifications`, `brief_sends`, `signal_events`, `documents`, `document_queue`
 
 **RAG RPCs**: `match_document_chunks`, `match_primary_chunks`, `match_document_chunks_filtered`, `match_story_chunks` — Jina `jina-embeddings-v2-base-en` (768-dim, **do not change**)
 
@@ -227,19 +240,16 @@ Key: `Header`, `Paywall`, `TrackerHero`, `TrackerHistory`, `TrackerMethodology`,
 
 ---
 
-## Current Status (2026-07-02)
+## Current Status (2026-07-10)
 
-**Research RAG build (RESEARCH-RAG-SPEC.md)**:
-- Step 1 DONE: Source classification (79 docs reclassified, commit `2ae4de3`)
-- Step 2 DONE: Document chunk embedding (368,413 chunks); **story_chunks backfill pending (embed-stories.ts 3-bug audit)**
-- Step 3 DONE: `lib/research.ts` + migrations
-- **Step 4 NEXT**: Build `app/api/research/ask/route.ts`
-- Step 0.5.2 pending: Delete orphan `app/api/research/inline/route.ts`
+**Recent commits**: pipeline backfill script + cron hardening + heartbeat, date guard + quarantine infrastructure + score annotations, onboarding loading gate fix, SessionProvider for /subscribe
 
 **Category gate LIVE**: `prompt_version=f6491a2171c78bdf`, Gate2=GOVERNANCE_CHANGE+sig>=35
 
 **Known issues**:
 - 6 API routes have hardcoded email fallback (security bug) — `hazard_auth_fallbacks.md`
-- story_chunks backfill not yet run (3-bug audit needed)
 - Stage 2 headline generation FROZEN pending 30-day backtest
 - scraper-ngo-reports BROKEN (regex misses modern NGO page patterns)
+- wto-fisheries and plastics trackers have zero source coverage
+- entity_type column has 15+ inconsistent values (architectural debt)
+- document_queue backlog (~10K pending)

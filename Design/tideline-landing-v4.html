@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tideline · The ocean governance terminal</title>
+<meta name="description" content="Treaty library, regulatory trackers, entity directory, live feed and workspace for ocean governance professionals.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF9F5;
+  --bg2:#F3F1EA;
+  --card:#FFFFFF;
+  --line:#E7E5DC;
+  --ink:#15201B;
+  --body:#42504A;
+  --muted:#6E7C75;
+  --green:#149A73;
+  --green-dark:#0F7C5C;
+  --green-tint:#E9F5F0;
+  --amber:#DD9414;
+  --amber-tint:#FBF3E2;
+  --red:#D14F4C;
+  --red-tint:#FBEBEA;
+  --side:#0C2A23;
+  --side2:#123B31;
+  --side-text:#AFC6BD;
+  --side-bright:#EAF4EF;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--body);font-family:'DM Sans',sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);letter-spacing:-.028em}
+.g{color:var(--green)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 32px}
+.num{font-variant-numeric:tabular-nums slashed-zero}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:14px}
+.section{padding:108px 0}
+.section-head{max-width:660px;margin:0 auto 60px;text-align:center}
+.section-head h2{font-weight:800;font-size:clamp(28px,3.4vw,40px);line-height:1.15;margin-bottom:14px}
+.section-head p{font-size:18px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-weight:600;font-size:15.5px;padding:12px 24px;border:1px solid transparent;transition:background .15s,border-color .15s}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-dark)}
+.btn-secondary{border-color:#D8D5CB;color:var(--ink);background:var(--card)}
+.btn-secondary:hover{border-color:#B9B5A8}
+.btn-lg{padding:14px 28px;font-size:16.5px}
+
+/* ---------- NAV ---------- */
+nav{position:sticky;top:0;z-index:100;background:rgba(250,249,245,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--ink);display:flex;align-items:center;gap:10px}
+.logo-mark{width:26px;height:26px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.nav-links{display:flex;gap:30px;font-size:15px;font-weight:500}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{display:flex;gap:14px;align-items:center}
+.nav-cta .signin{font-size:15px;font-weight:500}
+.nav-cta .signin:hover{color:var(--ink)}
+
+/* ---------- HERO ---------- */
+.hero{padding:92px 0 0;text-align:center;position:relative;z-index:1}
+.hero h1{font-weight:800;font-size:clamp(40px,5.4vw,64px);line-height:1.06;max-width:780px;margin:0 auto 22px;letter-spacing:-.035em}
+.hero-sub{font-size:19.5px;max-width:620px;margin:0 auto 10px}
+.hero-sub strong{color:var(--ink);font-weight:600}
+.hero-surfaces{font-size:15.5px;color:var(--muted);margin-bottom:36px}
+.hero-ctas{display:flex;gap:12px;justify-content:center;margin-bottom:18px}
+.hero-note{font-size:14px;color:var(--muted)}
+.hero-note b{color:var(--ink);font-weight:600}
+
+/* ---------- APP FRAME (faithful to product) ---------- */
+.app-outer{margin:60px auto 0;max-width:1160px;padding:0 32px;position:relative;z-index:1}
+.app{border-radius:14px;overflow:hidden;background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px rgba(21,32,27,.05),0 22px 54px -26px rgba(21,32,27,.22);text-align:left}
+.app-top{display:flex;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--card)}
+.app-logo{display:flex;align-items:center;gap:9px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:16px;color:var(--ink);min-width:150px}
+.app-logo .mark{width:26px;height:26px;border-radius:7px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+.app-logo .sub{display:block;font-family:'DM Sans',sans-serif;font-weight:600;font-size:8.5px;letter-spacing:.14em;color:var(--muted)}
+.app-search{flex:1;max-width:480px;background:#F2F4F3;border-radius:99px;padding:9px 16px;font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:9px}
+.app-search .kbd{margin-left:auto;font-size:11px;color:var(--muted);border:1px solid #DDE1DF;border-radius:5px;padding:1px 6px;background:#fff}
+.app-user{display:flex;align-items:center;gap:12px;margin-left:auto;font-size:13px;color:var(--body)}
+.app-user .plan{border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-weight:500}
+.app-user .avatar{width:30px;height:30px;border-radius:50%;background:var(--side);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700}
+.app-body{display:grid;grid-template-columns:212px 1fr;min-height:540px}
+
+/* dark green product sidebar, as in the real app */
+.app-side{background:var(--side);color:var(--side-text);padding:0;display:flex;flex-direction:column}
+.side-date{padding:18px 18px 16px;border-bottom:1px solid rgba(175,198,189,.14)}
+.side-date .day{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:16px;color:#fff}
+.side-date .full{font-size:12.5px;margin-top:1px}
+.side-date .time{font-size:12.5px;color:#35C99B;margin-top:1px;font-weight:600}
+.side-nav{padding:10px;display:flex;flex-direction:column;gap:1px}
+.side-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;font-size:14px;font-weight:500;color:var(--side-text);background:transparent;border:none;text-align:left;width:100%}
+.side-item svg{flex-shrink:0;opacity:.85}
+.side-item:hover{color:var(--side-bright);background:rgba(255,255,255,.05)}
+.side-item[aria-selected="true"]{color:#fff;background:var(--side2)}
+.side-item[aria-selected="true"] svg{stroke:#35C99B;opacity:1}
+.side-item .badge{margin-left:auto;background:#35C99B;color:var(--side);font-size:10.5px;font-weight:700;border-radius:99px;min-width:19px;height:19px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.side-ready{margin-top:auto;margin:auto 12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(175,198,189,.16);border-radius:10px;padding:12px 14px}
+.side-ready .lab{font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--side-text)}
+.side-ready .val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;color:#fff;margin-top:3px}
+.side-ready .sub{font-size:11px;color:#35C99B;margin-top:1px}
+
+.app-main{padding:22px 26px;background:#FBFBF9;overflow:hidden}
+.panel{display:none}
+.panel.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:var(--ink);display:flex;align-items:center;gap:9px}
+.panel-title .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.panel-meta{font-size:12.5px;color:var(--muted)}
+.panel-link{font-size:13px;font-weight:600;color:var(--green)}
+
+/* light content components, matching product */
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-bottom:9px}
+.tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.08em;border-radius:6px;padding:3px 8px}
+.tag.new{background:var(--green);color:#fff}
+.tag.cat{background:transparent;color:var(--muted);padding-left:0}
+.story-top{display:flex;gap:9px;align-items:center;margin-bottom:7px}
+.story-time{margin-left:auto;font-size:12px;color:var(--muted)}
+.story-h{font-weight:700;font-size:14.5px;line-height:1.4;color:var(--ink)}
+.story-d{font-size:13px;color:var(--body);margin-top:4px;line-height:1.55}
+.story-src{font-size:12px;color:var(--muted);margin-top:7px}
+.story-src b{color:var(--green);font-weight:600}
+
+.t-row{display:grid;grid-template-columns:minmax(168px,1.35fr) 96px 1fr 52px;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 15px;margin-bottom:8px}
+.t-name{font-weight:600;font-size:14px;color:var(--ink)}
+.t-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+.pill{display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:.07em;padding:4px 11px;border-radius:99px}
+.pill.low{color:#B23F3C;background:var(--red-tint)}
+.pill.watch{color:#A66A05;background:var(--amber-tint)}
+.pill.elev{color:#0E7A59;background:var(--green-tint)}
+.bar{height:5px;border-radius:99px;background:#EDECE5;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;width:0;transition:width .9s cubic-bezier(.22,.9,.35,1)}
+.bar i.low{background:var(--red)}.bar i.watch{background:var(--amber)}.bar i.elev{background:var(--green)}
+.t-score{font-weight:700;font-size:14.5px;text-align:right}
+.t-score.low{color:var(--red)}.t-score.watch{color:#C07F0C}.t-score.elev{color:var(--green)}
+
+.d-row{display:flex;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 15px;margin-bottom:8px;align-items:flex-start}
+.d-ic{width:32px;height:32px;border-radius:8px;background:var(--green-tint);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0}
+.d-t{font-weight:600;font-size:13.5px;line-height:1.4;color:var(--ink)}
+.d-m{font-size:12px;color:var(--muted);margin-top:2px}
+.d-rel{margin-left:auto;font-size:11.5px;color:var(--green);font-weight:700;white-space:nowrap;padding-top:2px}
+
+.e-row{display:flex;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 15px;margin-bottom:8px;align-items:center}
+.e-av{width:34px;height:34px;border-radius:9px;background:#F0F2F0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;color:var(--ink)}
+.e-n{font-weight:600;font-size:14px;color:var(--ink)}
+.e-a{font-size:12px;color:var(--muted);margin-top:1px}
+.e-star{margin-left:auto;font-size:16px;color:#D9D6CC;background:none;border:none;line-height:1}
+.e-star.on{color:var(--amber)}
+.e-status{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);background:#F2F2EC;border-radius:99px;padding:4px 10px;margin-left:8px}
+
+.ask-panel{text-align:center;padding:26px 10px 10px}
+.ask-ic{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.ask-panel h4{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:21px;color:var(--ink);margin-bottom:8px}
+.ask-panel .sub{font-size:14px;color:var(--body);max-width:420px;margin:0 auto 20px}
+.ask-bar{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:7px 8px 7px 20px;max-width:520px;margin:0 auto 12px;box-shadow:0 1px 2px rgba(21,32,27,.04)}
+.ask-bar .q{font-size:14px;color:var(--muted);flex:1;text-align:left}
+.ask-bar .go{background:var(--green);color:#fff;border:none;border-radius:99px;padding:9px 22px;font-weight:600;font-size:14px}
+.ask-hint{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+.chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:8px 15px;font-size:13px;color:var(--ink)}
+.chip .lab{font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--green-dark);background:var(--green-tint);border-radius:5px;padding:2px 7px}
+
+.ws-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:19px;color:var(--ink);margin-bottom:10px}
+.ws-tabs{display:flex;gap:4px;background:#F0F0EA;border-radius:9px;padding:3px;width:fit-content;margin-bottom:14px}
+.ws-tab{font-size:12.5px;font-weight:600;color:var(--muted);padding:6px 13px;border-radius:7px;border:none;background:transparent}
+.ws-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(21,32,27,.08)}
+.ws-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.ws-chip{font-size:12px;color:var(--body);background:var(--card);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+.ws-chip.add{color:var(--green);border-color:#BFE3D6;font-weight:600}
+.ws-new{border-left:3px solid var(--amber);background:var(--card);border-radius:0 10px 10px 0;padding:10px 14px;margin-bottom:8px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ws-new .t{font-weight:600;font-size:13px;color:var(--ink)}
+.ws-new .m{font-size:11.5px;color:var(--muted);margin-top:1px}
+.ws-actions{display:flex;gap:9px;margin-top:14px}
+.ws-btn{font-size:13px;font-weight:600;border-radius:99px;padding:8px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.ws-btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+
+/* realistic panel layouts */
+.feed-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:9px;margin-bottom:9px}
+.feed-side{display:flex;flex-direction:column;gap:9px}
+.feed-side .card{margin-bottom:0;flex:1}
+.feed-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.feed-row .card{margin-bottom:0}
+
+.ws-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:11px}
+.ed{background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.ed-bar{display:flex;align-items:center;gap:2px;padding:8px 12px;border-bottom:1px solid var(--line);background:#FCFCFA}
+.ed-t{width:26px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-size:12.5px;color:var(--body);font-weight:600}
+.ed-t:hover{background:#F0F0EA}
+.ed-t.b{font-weight:800}.ed-t.i{font-style:italic}.ed-t.u{text-decoration:underline}
+.ed-sep{width:1px;height:15px;background:var(--line);margin:0 6px}
+.ed-status{margin-left:auto;font-size:11px;color:var(--muted)}
+.ed-body{padding:14px 16px}
+.ed-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:16px;color:var(--ink);margin-bottom:8px}
+.ed-p{font-size:12.5px;line-height:1.6;color:var(--body);margin-bottom:10px}
+.ed-quote{border-left:3px solid var(--green);padding:7px 12px;background:var(--green-tint);border-radius:0 8px 8px 0;font-size:12px;font-style:italic;color:var(--ink);line-height:1.55;margin-bottom:6px}
+.ed-cite{font-size:11px;color:var(--muted);margin-bottom:10px}
+.ed-cite b{color:var(--green);font-weight:600;font-style:normal}
+.tip{background:var(--green-tint);border:1px solid #CBE7DB;border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.55;color:var(--ink);margin-bottom:10px}
+
+.dir-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:11px}
+.dir-list .e-row{padding:10px 13px}
+.dir-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.dir-f{font-size:10px;font-weight:700;letter-spacing:.06em;border-radius:99px;padding:4px 11px;background:var(--card);border:1px solid var(--line);color:var(--muted)}
+.dir-f.on{background:var(--green);border-color:var(--green);color:#fff}
+.dir-detail{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.dd-kind{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted)}
+.dd-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--ink);margin:2px 0 3px}
+.dd-meta{font-size:12px;color:var(--muted);margin-bottom:11px}
+.dd-tabs{display:flex;gap:16px;border-bottom:1px solid var(--line);margin-bottom:11px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.dd-tabs span{padding-bottom:7px}
+.dd-tabs .on{color:var(--green-dark);border-bottom:2px solid var(--green)}
+.dd-track{display:flex;align-items:center;gap:9px;background:#FAFAF7;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:11.5px;margin-bottom:10px}
+.dd-track .star{color:var(--amber);font-size:13px}
+.dd-track b{color:var(--ink);font-weight:600}
+.dd-untrack{margin-left:auto;font-size:11px;font-weight:600;border:1px solid var(--line);background:#fff;border-radius:7px;padding:4px 11px;color:var(--body)}
+.dd-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.dd-stat{border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.dd-stat .lab{font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.freq{display:flex;align-items:flex-end;gap:3px;height:34px}
+.freq i{flex:1;background:#D8EDE4;border-radius:3px 3px 0 0;height:22%}
+.freq i.hot{background:var(--green);height:100%}
+.ctx-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--body);padding:2px 0}
+.ctx-row .d{width:7px;height:7px;border-radius:50%}
+.ctx-row .n{margin-left:auto;font-weight:700;color:var(--ink)}
+.dd-mention{border-top:1px solid var(--line);padding-top:10px}
+.dd-mention .m-top{display:flex;gap:8px;align-items:center;margin-bottom:5px}
+.dd-mention .m-date{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.06em}
+.dd-mention .m-tag{font-size:9px;font-weight:700;letter-spacing:.08em;color:#B23F3C;background:var(--red-tint);border-radius:5px;padding:2px 7px}
+.dd-mention p{font-size:12px;line-height:1.55;color:var(--body)}
+
+/* ---------- NUMBERS ---------- */
+.numbers{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:92px;background:var(--card)}
+.numbers-inner{display:grid;grid-template-columns:repeat(4,1fr)}
+.n-cell{padding:42px 28px;border-right:1px solid var(--line)}
+.n-cell:last-child{border-right:none}
+.n-fig{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:38px;color:var(--ink);letter-spacing:-.02em;line-height:1}
+.n-lab{font-size:14.5px;margin-top:10px;line-height:1.5;max-width:220px}
+.n-sources{border-top:1px solid var(--line);padding:16px 32px;text-align:center;font-size:13px;color:var(--muted);line-height:1.6}
+.n-sources b{color:var(--body);font-weight:600}
+
+/* ---------- SURFACES ---------- */
+.surface{display:grid;grid-template-columns:1fr 1.08fr;gap:76px;align-items:center;margin-bottom:116px}
+.surface:last-child{margin-bottom:0}
+.surface:nth-child(even) .surface-copy{order:2}
+.surface h3{font-weight:800;font-size:clamp(25px,2.8vw,33px);line-height:1.16;margin-bottom:16px}
+.surface p{font-size:17px;max-width:480px;margin-bottom:14px}
+.surface p:last-child{margin-bottom:0}
+.surface .fine{font-size:14.5px;color:var(--muted)}
+.surface .fine a{color:var(--green);font-weight:600}
+.method-strip{display:flex;align-items:center;gap:14px;background:var(--green-tint);border:1px solid #CBE7DB;border-radius:11px;padding:13px 16px;margin-top:18px;max-width:480px}
+.method-strip .ic{width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #CBE7DB;color:var(--green-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.method-strip .txt{font-size:13.5px;line-height:1.5;color:var(--ink)}
+.method-strip .txt a{color:var(--green-dark);font-weight:700}
+.mini{border-radius:13px;background:var(--bg2);border:1px solid var(--line);padding:16px}
+.mini .card,.mini .t-row,.mini .d-row,.mini .e-row,.mini .ws-new{box-shadow:0 1px 2px rgba(21,32,27,.03)}
+
+/* ---------- BRIEF ---------- */
+.brief-section{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.brief-grid{display:grid;grid-template-columns:1fr 1fr;gap:76px;align-items:center}
+.brief-copy h2{font-weight:800;font-size:clamp(28px,3.2vw,38px);line-height:1.15;margin-bottom:18px}
+.brief-copy p{margin-bottom:16px;max-width:480px}
+.brief-copy .kicker{color:var(--ink);font-weight:600}
+.phone{width:326px;margin:0 auto;background:#15201B;border-radius:42px;padding:12px;box-shadow:0 22px 54px -22px rgba(21,32,27,.3)}
+.phone-screen{background:#FDFCF9;border-radius:32px;padding:26px 22px 30px;min-height:500px}
+.phone-notch{width:108px;height:25px;background:#15201B;border-radius:14px;margin:0 auto 18px}
+.b-app{font-size:12px;color:var(--muted);margin-bottom:10px}
+.b-head{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:19px;color:var(--ink);line-height:1.25;margin-bottom:6px}
+.b-date{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--green);margin-bottom:14px}
+.b-rule{border:none;border-top:1px solid #ECEAE2;margin:14px 0}
+.b-lab{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:7px}
+.b-item-t{font-weight:700;font-size:13.5px;color:var(--ink)}
+.b-item-d{font-size:12.5px;margin-top:2px}
+.b-ent{display:flex;align-items:baseline;gap:7px;margin-top:9px}
+.b-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.b-ent-n{font-weight:700;font-size:13px;color:var(--ink)}
+.b-ent-d{font-size:12px;margin-top:1px;margin-left:14px}
+.b-up{font-size:11px;font-weight:700;color:var(--amber)}
+
+/* ---------- TIMELINE ---------- */
+.timeline{max-width:620px;margin:0 auto}
+.tl-row{display:grid;grid-template-columns:60px 1fr;gap:20px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.tl-row:last-child{border-bottom:none}
+.tl-time{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;color:var(--ink);text-align:right}
+.tl-text{font-size:14.5px}
+.tl-text q{color:var(--ink);font-style:italic}
+.tl-tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.09em;color:var(--green-dark);background:var(--green-tint);border-radius:99px;padding:2px 9px;margin-left:9px;position:relative;top:-1px;white-space:nowrap}
+
+/* ---------- PERSONAS ---------- */
+.personas{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.persona-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg)}
+.persona{padding:34px 30px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg)}
+.persona:nth-child(3n){border-right:none}
+.persona:nth-child(n+4){border-bottom:none}
+.persona h3{font-size:16.5px;font-weight:700;margin-bottom:9px;letter-spacing:-.01em}
+.persona p{font-size:15px;line-height:1.6}
+
+/* ---------- NOTS ---------- */
+.nots{display:grid;grid-template-columns:repeat(3,1fr);gap:56px;max-width:1060px;margin:0 auto;text-align:center}
+.not h3{font-size:19px;font-weight:800;margin-bottom:10px}
+.not p{font-size:15.5px}
+
+/* ---------- FOUNDER ---------- */
+.founder{max-width:620px;margin:0 auto}
+.founder p{margin-bottom:18px;font-size:17.5px}
+.founder .sig{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:var(--ink);margin-top:6px}
+.founder .sig span{display:block;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;color:var(--muted);margin-top:2px}
+.founder-cta{margin-top:26px}
+
+/* ---------- PRICING ---------- */
+.pricing{background:var(--card);border-top:1px solid var(--line)}
+.price-kicker{text-align:center;max-width:560px;margin:0 auto 54px;font-size:18px}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1020px;margin:0 auto}
+.tier{border:1px solid var(--line);border-radius:16px;padding:34px 30px;background:var(--bg);display:flex;flex-direction:column}
+.tier.feature{border-color:var(--green);background:#fff;box-shadow:0 14px 34px -18px rgba(20,154,115,.3);position:relative}
+.tier-tag{position:absolute;top:-13px;left:28px;background:var(--green);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:5px 13px;border-radius:99px}
+.tier h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.tier-price{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:40px;color:var(--ink);letter-spacing:-.02em}
+.tier-price span{font-size:15px;color:var(--muted);font-weight:500;font-family:'DM Sans',sans-serif;letter-spacing:0}
+.tier-sub{font-size:14px;margin:8px 0 22px;line-height:1.55}
+.tier ul{list-style:none;margin-bottom:28px;flex:1}
+.tier li{font-size:14.5px;padding:6px 0 6px 26px;position:relative}
+.tier li::before{content:"";position:absolute;left:3px;top:13px;width:11px;height:6px;border-left:2px solid var(--green);border-bottom:2px solid var(--green);transform:rotate(-45deg)}
+.tier .btn{width:100%}
+.places{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.places-bar{flex:1;height:5px;border-radius:99px;background:#E8EFEA;overflow:hidden}
+.places-bar i{display:block;height:100%;width:86%;background:var(--green);border-radius:99px}
+.places-n{font-size:12.5px;font-weight:600;color:var(--green-dark);white-space:nowrap}
+.why-39{max-width:720px;margin:44px auto 0;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:28px 32px}
+.why-39 h3{font-size:17px;font-weight:800;margin-bottom:10px}
+.why-39 p{font-size:15.5px;line-height:1.65}
+
+/* ---------- FINAL ---------- */
+.final{padding:108px 0;text-align:center;background:var(--bg)}
+.final-card{max-width:860px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:72px 48px;box-shadow:0 20px 50px -30px rgba(21,32,27,.18)}
+.final h2{font-weight:800;font-size:clamp(30px,3.8vw,44px);margin-bottom:16px}
+.final p{font-size:18px;max-width:560px;margin:0 auto 12px}
+.final .promise{color:var(--ink);font-weight:600}
+.final-ctas{display:flex;gap:12px;justify-content:center;margin-top:30px}
+
+footer{padding:34px 0;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.foot-inner{display:flex;justify-content:space-between;align-items:center}
+.foot-inner a:hover{color:var(--ink)}
+
+.close-q{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}
+.close-q .inner{max-width:680px;margin:0 auto}
+.close-q h2{font-weight:800;font-size:clamp(28px,3.4vw,40px);line-height:1.16;margin-bottom:22px}
+.close-q p{font-size:18px;margin-bottom:18px}
+.close-q .ask-line{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:clamp(21px,2.5vw,27px);color:var(--ink);line-height:1.3;margin:34px auto 20px;max-width:600px;letter-spacing:-.02em}
+.close-q .land{font-size:18px;color:var(--ink);font-weight:600}
+
+.reveal{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .bar i{transition:none}
+  .panel.active{animation:none}
+  html{scroll-behavior:auto}
+}
+
+@media (max-width:980px){
+  .app-body{grid-template-columns:1fr}
+  .app-side{flex-direction:row;align-items:center;overflow-x:auto;padding:0}
+  .side-date,.side-ready{display:none}
+  .side-nav{flex-direction:row;padding:8px}
+  .side-item{width:auto;white-space:nowrap}
+  .side-item .badge{display:none}
+  .t-row{grid-template-columns:1.4fr 84px 48px}
+  .t-row .bar{display:none}
+  .feed-grid,.ws-grid,.dir-grid,.feed-row{grid-template-columns:1fr}
+  .surface{grid-template-columns:1fr;gap:34px;margin-bottom:86px}
+  .surface:nth-child(even) .surface-copy{order:0}
+  .numbers-inner{grid-template-columns:1fr 1fr}
+  .n-cell:nth-child(2){border-right:none}
+  .n-cell{border-bottom:1px solid var(--line)}
+  .n-cell:nth-child(3),.n-cell:nth-child(4){border-bottom:none}
+  .brief-grid{grid-template-columns:1fr;gap:46px}
+  .persona-grid{grid-template-columns:1fr}
+  .persona{border-right:none!important;border-bottom:1px solid var(--line)!important}
+  .persona:last-child{border-bottom:none!important}
+  .nots{grid-template-columns:1fr;gap:36px}
+  .tiers{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .section{padding:78px 0}
+  .app-user{display:none}
+}
+@media (max-width:560px){
+  .hero-ctas,.final-ctas{flex-direction:column;align-items:center}
+  .wrap{padding:0 20px}
+  .app-outer{padding:0 14px}
+  .tl-row{grid-template-columns:56px 1fr;gap:16px}
+  .phone{width:288px}
+  .final-card{padding:52px 24px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="logo" href="#"><span class="logo-mark">T</span>Tideline</a>
+    <div class="nav-links">
+      <a href="#platform">Platform</a>
+      <a href="#brief">The brief</a>
+      <a href="#who">Who it's for</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <div class="nav-cta">
+      <a class="signin" href="#">Sign in</a>
+      <a class="btn btn-primary" href="#pricing">Claim a founding place</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<header class="hero">
+  <div class="wrap">
+    <h1 class="reveal">The ocean governance <span class="g">terminal</span>.</h1>
+    <p class="hero-sub reveal">Most professionals in this sector have six tabs open right now. <strong>Tideline is one.</strong></p>
+    <p class="hero-surfaces reveal">Treaty library · regulatory trackers · entity directory · live feed · workspace</p>
+    <div class="hero-ctas reveal">
+      <a class="btn btn-primary btn-lg" href="#pricing">Claim a founding place</a>
+      <a class="btn btn-secondary btn-lg" href="#founder">15 minutes with the founder</a>
+    </div>
+    <p class="hero-note reveal"><b>£39 a month</b> for founding members, locked for life. 50 places, then it's gone.</p>
+  </div>
+</header>
+
+<!-- ==================== APP FRAME ==================== -->
+<div class="app-outer reveal" id="platform">
+  <div class="app">
+    <div class="app-top">
+      <div class="app-logo"><span class="mark">T</span><span>Tideline<span class="sub">OCEAN INTELLIGENCE</span></span></div>
+      <div class="app-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Search or ask Tideline anything
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="app-user"><span class="plan">Individual</span><span class="avatar">LM</span></div>
+    </div>
+    <div class="app-body">
+      <div class="app-side">
+        <div class="side-date">
+          <div class="day">Tuesday</div>
+          <div class="full num">7 July 2026</div>
+          <div class="time num">09:23 BST</div>
+        </div>
+        <div class="side-nav" role="tablist" aria-label="Platform surfaces">
+          <button class="side-item" role="tab" aria-selected="true" data-panel="feed">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+            News Feed
+          </button>
+          <button class="side-item" role="tab" aria-selected="false" data-panel="workspace">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+            My Workspace <span class="badge num">2</span>
+          </button>
+          <button class="side-item" role="tab" aria-selected="false" data-panel="trackers">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+            Trackers
+          </button>
+          <button class="side-item" role="tab" aria-selected="false" data-panel="library">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+            Library
+          </button>
+          <button class="side-item" role="tab" aria-selected="false" data-panel="ask">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Ask Tideline
+          </button>
+          <button class="side-item" role="tab" aria-selected="false" data-panel="directory">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Directory
+          </button>
+        </div>
+        <div class="side-ready">
+          <div class="lab">READINESS</div>
+          <div class="val">MEPC 84</div>
+          <div class="sub num">Session in 16 days</div>
+        </div>
+      </div>
+
+      <div class="app-main">
+
+        <!-- NEWS FEED -->
+        <section class="panel active" id="panel-feed" role="tabpanel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span>What you've missed <span class="panel-meta num" style="font-weight:500">· 50 unread</span></div>
+            <a class="panel-link" href="#">Mark all read</a>
+          </div>
+          <div class="feed-grid">
+            <div class="card" style="margin-bottom:0">
+              <div class="story-top"><span class="tag new">NEW</span><span class="tag cat">SHIPPING</span></div>
+              <div class="story-h" style="font-size:16.5px">Evergreen raided in insider trading probe</div>
+              <div class="story-d">Taiwanese prosecutors raided Evergreen Marine's offices and nine other locations as part of an insider trading investigation, summoning nine suspects for questioning on suspicion of trading shares during a prohibited period. The investigation is linked to a related-party transaction announced in 2023 and valued at NT$13.35bn ($417m).</div>
+              <div class="story-src"><b>Splash247</b> · View original ↗ · 7 Jul, 06:40</div>
+            </div>
+            <div class="feed-side">
+              <div class="card">
+                <div class="story-top"><span class="tag new">NEW</span><span class="tag cat">SHIPPING</span></div>
+                <div class="story-h">GMS sees US recycling license as blueprint to retire shadow fleet vessels</div>
+                <div class="story-src"><b>gCaptain</b> · View original ↗ · 6 Jul, 19:40</div>
+              </div>
+              <div class="card">
+                <div class="story-top"><span class="tag new">NEW</span><span class="tag cat">CLIMATE</span></div>
+                <div class="story-h">The 20th anniversary of the NOAA Marine Debris Program</div>
+                <div class="story-src"><b>NOAA</b> · View original ↗ · 6 Jul, 18:59</div>
+              </div>
+            </div>
+          </div>
+          <div class="feed-row">
+            <div class="card">
+              <div class="story-top"><span class="tag new">NEW</span><span class="tag cat">OCEAN</span><span class="story-time num">18h ago</span></div>
+              <div class="story-h">Dolphins increasingly reliant on trawler bycatch in overfished Adriatic</div>
+              <div class="story-src"><b>Mongabay</b> · View original ↗</div>
+            </div>
+            <div class="card">
+              <div class="story-top"><span class="tag new">NEW</span><span class="tag cat">OCEAN</span><span class="story-time num">20h ago</span></div>
+              <div class="story-h">Sightings off Southern Africa suggest blue and fin whales may be rebounding</div>
+              <div class="story-src"><b>Mongabay</b> · View original ↗</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- WORKSPACE -->
+        <section class="panel" id="panel-workspace" role="tabpanel">
+          <div class="panel-head">
+            <div class="panel-title">My Workspace</div>
+            <a class="panel-link" href="#">Export report</a>
+          </div>
+          <div class="ws-grid">
+            <div class="ed">
+              <div class="ed-bar">
+                <span class="ed-t b">B</span><span class="ed-t i">I</span><span class="ed-t u">U</span>
+                <span class="ed-sep"></span>
+                <span class="ed-t">H2</span><span class="ed-t">"</span><span class="ed-t">Aa</span>
+                <span class="ed-status num">3,091 words · Ready to draft</span>
+              </div>
+              <div class="ed-body">
+                <div class="ed-title">MEPC 84 briefing note</div>
+                <div class="ed-p">The revised CII framework reaches the committee with two flag states still diverging on implementation dates. For the fleet, the material question is whether the reduction factors adopted in the autumn session apply from the 2027 reporting year or are phased.</div>
+                <div class="ed-quote">"Protected marine areas function as engines for wildlife population recovery, and the expedition team explicitly frame the findings as supporting the Biodiversity Framework's 30-by-2030 target."</div>
+                <div class="ed-cite"><b>Oceanographic Magazine</b> · Read source · pulled without leaving the page</div>
+                <div class="ws-actions" style="margin-top:2px">
+                  <button class="ws-btn">↑ Upload</button>
+                  <button class="ws-btn">Ask Tideline</button>
+                  <button class="ws-btn primary">Draft from notes</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="tip">Pick the people, companies and bodies you want to follow. Tideline attaches relevant stories as they arrive.</div>
+              <div class="ws-chips">
+                <span class="ws-chip">BBNJ Agreement ×</span>
+                <span class="ws-chip">ISA Secretariat ×</span>
+                <span class="ws-chip">Int. Whaling Commission ×</span>
+                <span class="ws-chip add">+ Add entity</span>
+              </div>
+              <div class="panel-meta" style="margin-bottom:8px"><b style="color:var(--ink)">2 new</b> since your last visit</div>
+              <div class="ws-new"><div class="t">Council circulates revised consolidated text on exploitation regulations</div><div class="m num">ISA · 6 Jul</div></div>
+              <div class="ws-new" style="margin-bottom:0"><div class="t">Listen to whales to improve connection, study finds</div><div class="m num">Mongabay Oceans · 6 Jul</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TRACKERS -->
+        <section class="panel" id="panel-trackers" role="tabpanel">
+          <div class="panel-head">
+            <div class="panel-title">Trackers</div>
+            <div class="panel-meta num">Scored Monday 06:00</div>
+          </div>
+          <div class="t-row"><div><div class="t-name">30x30 / MPA Designations</div><div class="t-sub num">3 weeks at band</div></div><span class="pill elev">Elevated</span><div class="bar"><i class="elev" data-w="77"></i></div><div class="t-score elev num">7.7</div></div>
+          <div class="t-row"><div><div class="t-name">BBNJ High Seas Treaty</div><div class="t-sub">Accelerating</div></div><span class="pill elev">Elevated</span><div class="bar"><i class="elev" data-w="72"></i></div><div class="t-score elev num">7.2</div></div>
+          <div class="t-row"><div><div class="t-name">Plastics Treaty (INC)</div><div class="t-sub">Accelerating</div></div><span class="pill watch">Watch</span><div class="bar"><i class="watch" data-w="69"></i></div><div class="t-score watch num">6.9</div></div>
+          <div class="t-row"><div><div class="t-name">IMO Shipping Emissions</div><div class="t-sub num">MEPC in 16 days</div></div><span class="pill watch">Watch</span><div class="bar"><i class="watch" data-w="64"></i></div><div class="t-score watch num">6.4</div></div>
+          <div class="t-row"><div><div class="t-name">ISA Deep-Sea Mining</div><div class="t-sub">Below threshold</div></div><span class="pill watch">Watch</span><div class="bar"><i class="watch" data-w="61"></i></div><div class="t-score watch num">6.1</div></div>
+          <div class="panel-meta num" style="margin-top:11px">+ 10 more domains · alerts fire when a domain crosses a band</div>
+        </section>
+
+        <!-- LIBRARY -->
+        <section class="panel" id="panel-library" role="tabpanel">
+          <div class="panel-head">
+            <div class="panel-title">Library</div>
+            <div class="panel-meta num">10,000+ sources · 500,000+ passages</div>
+          </div>
+          <div class="ask-bar" style="max-width:none;margin:0 0 10px">
+            <span class="q" style="color:var(--ink)">area-based management tools high seas</span>
+            <button class="go">Search</button>
+          </div>
+          <div class="panel-meta num" style="margin-bottom:9px">4 of 128 results · searched by meaning, not keywords · 0.4s</div>
+          <div class="d-row"><div class="d-ic">PDF</div><div><div class="d-t">BBNJ Agreement, Part III: Area-Based Management Tools including Marine Protected Areas</div><div class="d-m num">UN DOALOS · Treaty text · Art. 17 to 26 · 2023</div></div><div class="d-rel num">0.94</div></div>
+          <div class="d-row"><div class="d-ic">DOC</div><div><div class="d-t">CCAMLR Conservation Measure 91-05: Ross Sea Region Marine Protected Area</div><div class="d-m num">CCAMLR · In force · 2016</div></div><div class="d-rel num">0.91</div></div>
+          <div class="d-row"><div class="d-ic">PDF</div><div><div class="d-t">ISA Draft Regulations on Exploitation of Mineral Resources in the Area, consolidated text</div><div class="d-m num">International Seabed Authority · ISBA/29/C · 2025</div></div><div class="d-rel num">0.89</div></div>
+          <div class="d-row" style="margin-bottom:0"><div class="d-ic">RES</div><div><div class="d-t">IMO Resolution MEPC.377(80): 2023 Strategy on Reduction of GHG Emissions from Ships</div><div class="d-m num">IMO · Adopted · 2023</div></div><div class="d-rel num">0.86</div></div>
+        </section>
+
+        <!-- ASK TIDELINE -->
+        <section class="panel" id="panel-ask" role="tabpanel">
+          <div class="ask-panel">
+            <div class="ask-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+            <h4>Ask Tideline</h4>
+            <p class="sub">Cited answers from the document library. We don't search the internet. We search the library we built.</p>
+            <div class="ask-bar">
+              <span class="q">Ask anything about ocean governance, regulation, or policy...</span>
+              <button class="go">Search</button>
+            </div>
+            <p class="ask-hint">Tideline reports what sources say. It does not tell you what to conclude.</p>
+            <div class="chips">
+              <span class="chip"><span class="lab">TREATY</span>What is BBNJ?</span>
+              <span class="chip"><span class="lab">REGULATION</span>What changed in deep-sea mining regulation recently?</span>
+              <span class="chip"><span class="lab">POLICY</span>What does the ISA mining code say about environmental bonds?</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- DIRECTORY -->
+        <section class="panel" id="panel-directory" role="tabpanel">
+          <div class="panel-head">
+            <div class="panel-title">Directory</div>
+            <div class="panel-meta num">My tracked (10) · All entities (1,000+)</div>
+          </div>
+          <div class="dir-grid">
+            <div class="dir-list">
+              <div class="dir-filters">
+                <span class="dir-f on">COMPANY</span><span class="dir-f">FUND</span><span class="dir-f on">TREATY</span><span class="dir-f">NGO</span><span class="dir-f">PERSON</span><span class="dir-f">VESSEL</span>
+              </div>
+              <div class="e-row"><div class="e-av">BB</div><div><div class="e-n">BBNJ Agreement</div><div class="e-a">TREATY · BBNJ</div></div><span class="e-status">DORMANT</span><button class="e-star on">★</button></div>
+              <div class="e-row" style="border-color:var(--green)"><div class="e-av">MW</div><div><div class="e-n">Mowi</div><div class="e-a num">COMPANY · 22h ago</div></div><span class="e-status">QUIET</span><button class="e-star on">★</button></div>
+              <div class="e-row"><div class="e-av">PA</div><div><div class="e-n">Pacific Andes International</div><div class="e-a">COMPANY · IUU</div></div><button class="e-star">★</button></div>
+              <div class="e-row" style="margin-bottom:0"><div class="e-av">YM</div><div><div class="e-n">Yang Ming Marine Transport</div><div class="e-a">COMPANY · IMO</div></div><button class="e-star">★</button></div>
+            </div>
+            <div class="dir-detail">
+              <div class="dd-kind">COMPANY</div>
+              <div class="dd-name">Mowi</div>
+              <div class="dd-meta num">1 mention in last 30 days · Last seen 22h ago</div>
+              <div class="dd-tabs"><span class="on">Overview</span><span>Timeline</span><span>Stories</span></div>
+              <div class="dd-track"><span class="star">★</span><span><b>YOUR TRACKING</b> · Tracking since 21 April</span><button class="dd-untrack">Untrack</button></div>
+              <div class="dd-stats">
+                <div class="dd-stat">
+                  <div class="lab">MENTION FREQUENCY</div>
+                  <div class="freq"><i></i><i></i><i></i><i></i><i></i><i class="hot"></i><i></i></div>
+                </div>
+                <div class="dd-stat">
+                  <div class="lab">CONTEXT BREAKDOWN</div>
+                  <div class="ctx-row"><span class="d" style="background:var(--green)"></span>Regulatory<span class="n num">3</span></div>
+                  <div class="ctx-row"><span class="d" style="background:var(--amber)"></span>Developing<span class="n num">3</span></div>
+                  <div class="ctx-row"><span class="d" style="background:var(--red)"></span>Enforcement<span class="n num">2</span></div>
+                </div>
+              </div>
+              <div class="dd-mention">
+                <div class="m-top"><span class="m-date num">6 JUL 10:01</span><span class="m-tag">ENFORCEMENT</span></div>
+                <p>Hampidjan Group is merging its two Norwegian fishery businesses, Morenot Fishery and Vonin Refa, into a single combined company.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== NUMBERS ==================== -->
+<div class="numbers reveal">
+  <div class="wrap numbers-inner">
+    <div class="n-cell"><div class="n-fig num">10,000+</div><div class="n-lab">treaty and regulatory sources</div></div>
+    <div class="n-cell"><div class="n-fig num">1,000+</div><div class="n-lab">companies and individuals you can follow for updates</div></div>
+    <div class="n-cell"><div class="n-fig num">15</div><div class="n-lab">domains tracked and scored weekly</div></div>
+    <div class="n-cell"><div class="n-fig num">100+</div><div class="n-lab">news sources read and summarised daily</div></div>
+  </div>
+  <div class="n-sources wrap" style="max-width:900px"><b>Sourced from the record itself:</b> IMO and UNCLOS filings, RFMO records, flag-state registries, treaty-body databases, ISA, DOALOS, OSPAR, CBD, FAO and IWC, alongside 100+ monitored news outlets.</div>
+</div>
+
+<!-- ==================== SURFACES ==================== -->
+<section class="section">
+  <div class="wrap">
+
+    <div class="surface reveal">
+      <div class="surface-copy">
+        <div class="eyebrow">The trackers</div>
+        <h3>Know which domains are <span class="g">about to move</span>.</h3>
+        <p>Each of the fifteen domains gets a score every Monday, based on how much is happening and how serious it looks. When ISA starts building toward a session, the score climbs weeks in advance, which is usually enough time to write the client note or prepare the review before anyone asks for it. Set an alert on a domain and the crossing comes to you, so you don't have to keep checking.</p>
+        <div class="method-strip">
+          <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="txt">The scoring method is published in full, hit rates and blind spots included. <a href="https://thetideline.co/methodology">Read the methodology →</a></div>
+        </div>
+      </div>
+      <div class="mini">
+        <div class="t-row"><div><div class="t-name">30x30 / MPA</div><div class="t-sub num">3 weeks at band</div></div><span class="pill elev">Elevated</span><div class="bar"><i class="elev" data-w="77"></i></div><div class="t-score elev num">7.7</div></div>
+        <div class="t-row"><div><div class="t-name">BBNJ Treaty</div><div class="t-sub">Accelerating</div></div><span class="pill elev">Elevated</span><div class="bar"><i class="elev" data-w="72"></i></div><div class="t-score elev num">7.2</div></div>
+        <div class="t-row"><div><div class="t-name">ISA Mining</div><div class="t-sub">Below threshold</div></div><span class="pill watch">Watch</span><div class="bar"><i class="watch" data-w="61"></i></div><div class="t-score watch num">6.1</div></div>
+        <div class="t-row" style="margin-bottom:0"><div><div class="t-name">Offshore Wind</div><div class="t-sub">Quiet</div></div><span class="pill low">Low</span><div class="bar"><i class="low" data-w="36"></i></div><div class="t-score low num">3.6</div></div>
+      </div>
+    </div>
+
+    <div class="surface reveal">
+      <div class="surface-copy">
+        <div class="eyebrow">The library</div>
+        <h3>Every treaty, regulation and decision. <span class="g">One search</span>.</h3>
+        <p>Over 10,000 sources from ISA, IMO, DOALOS, CBD, FAO, OSPAR and more, broken into 500,000+ searchable passages. Ask in plain language and you get the exact article back, with the citation. It's the afternoon of research most of us have been doing by hand for years, done in a query.</p>
+      </div>
+      <div class="mini">
+        <div class="d-row"><div class="d-ic">PDF</div><div><div class="d-t">UNCLOS Part XI: The Area, and the 1994 Implementing Agreement</div><div class="d-m num">UN DOALOS · Treaty text · 1982 / 1994</div></div><div class="d-rel num">0.96</div></div>
+        <div class="d-row"><div class="d-ic">REG</div><div><div class="d-t">FAO Port State Measures Agreement: implementation review, third meeting</div><div class="d-m num">FAO · Review · 2024</div></div><div class="d-rel num">0.92</div></div>
+        <div class="d-row" style="margin-bottom:0"><div class="d-ic">DEC</div><div><div class="d-t">IWC Resolution 2024-2 on the Eastern Pacific gray whale</div><div class="d-m num">IWC · Resolution · 2024</div></div><div class="d-rel num">0.88</div></div>
+      </div>
+    </div>
+
+    <div class="surface reveal">
+      <div class="surface-copy">
+        <div class="eyebrow">The directory</div>
+        <h3>1,000+ companies and people. <span class="g">Follow the ones that matter</span>.</h3>
+        <p>Every company, regulator, treaty body and key individual that moves this sector, with every alias resolved, so when NORI files you already know that means The Metals Company and Nauru. Follow the ones you work on and Tideline brings you everything they touch: stories, filings, documents, score movements. You get an alert when something happens, not a feed to scroll.</p>
+      </div>
+      <div class="mini">
+        <div class="e-row"><div class="e-av">TM</div><div><div class="e-n">The Metals Company</div><div class="e-a num">TMC · DeepGreen · NORI · 47 stories</div></div><span class="e-status num">3 this week</span><button class="e-star on">★</button></div>
+        <div class="e-row"><div class="e-av">RN</div><div><div class="e-n">Republic of Nauru</div><div class="e-a num">Sponsoring state · 31 stories</div></div><span class="e-status">DORMANT</span><button class="e-star">★</button></div>
+        <div class="e-row" style="margin-bottom:0"><div class="e-av">IS</div><div><div class="e-n">International Seabed Authority</div><div class="e-a num">ISA · 214 stories · 340 documents</div></div><span class="e-status num">ACTIVE</span><button class="e-star on">★</button></div>
+      </div>
+    </div>
+
+    <div class="surface reveal">
+      <div class="surface-copy">
+        <div class="eyebrow">The live feed</div>
+        <h3>100+ sources, read and summarised. <span class="g">Every day</span>.</h3>
+        <p>Regulator releases, treaty communiqués, trade press, NGO reports, wire coverage. All of it pulled in daily, checked, summarised and tagged to the domains and entities you follow, with the things you care about at the top.</p>
+        <p class="fine">The brief comes to you at 7am. The feed is here for the rest of the day, whenever you go looking.</p>
+      </div>
+      <div class="mini">
+        <div class="card"><div class="story-top"><span class="tag new">NEW</span><span class="tag cat">TREATY</span><span class="story-time num">5h ago</span></div><div class="story-h">Two further BBNJ ratifications deposited, count advances toward entry into force</div><div class="story-src"><b>UN DOALOS</b> · View original ↗</div></div>
+        <div class="card"><div class="story-top"><span class="tag new">NEW</span><span class="tag cat">ENFORCEMENT</span><span class="story-time num">9h ago</span></div><div class="story-h">Commission issues formal notice to flag state over IUU control failures</div><div class="story-src"><b>EU DG MARE</b> · View original ↗</div></div>
+        <div class="card" style="margin-bottom:0"><div class="story-top"><span class="tag new">NEW</span><span class="tag cat">FINANCE</span><span class="story-time num">14h ago</span></div><div class="story-h">Sovereign blue bond priced at 745m USD with debt-for-nature structure</div><div class="story-src"><b>Reuters</b> · View original ↗</div></div>
+      </div>
+    </div>
+
+    <div class="surface reveal">
+      <div class="surface-copy">
+        <div class="eyebrow">The workspace</div>
+        <h3>The only tab you <span class="g">don't have to leave</span>.</h3>
+        <p>A proper word processor with the whole platform behind it. Ask the database a question mid-sentence, pull a cited passage without opening another window, and take a brief or a pre-meeting note from blank page to export in one place.</p>
+        <p>And your projects fill themselves. Choose what to follow, and the platform watches: when one of your entities or domains shows up in the press, a document or a filing, it attaches itself to the right project overnight. You open it in the morning and the new material is already in the source list.</p>
+      </div>
+      <div class="mini">
+        <div class="ws-title" style="font-size:16px">ISA exploitation regs watch</div>
+        <div class="ws-chips"><span class="ws-chip">ISA ×</span><span class="ws-chip">The Metals Company ×</span><span class="ws-chip add">+ Add entity</span></div>
+        <div class="ws-new"><div class="t">Council circulates revised consolidated text</div><div class="m num">ISA · attached overnight</div></div>
+        <div class="ws-new"><div class="t">ITLOS opinion cited in Council working paper</div><div class="m num">ISA · attached overnight</div></div>
+        <div class="ws-actions" style="margin-top:12px"><button class="ws-btn">Ask Tideline</button><button class="ws-btn primary">Draft from notes</button></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== THE BRIEF ==================== -->
+<section class="section brief-section" id="brief">
+  <div class="wrap brief-grid">
+    <div class="brief-copy reveal">
+      <div class="eyebrow">The brief</div>
+      <h2>Your morning, <span class="g">before 7am</span>.</h2>
+      <p>Every weekday morning you get a short brief built only from what you follow. If you track ISA, two mining companies and a handful of flag states, that's what your brief is about. Your colleague tracking plastics and port state control gets a completely different one.</p>
+      <p>It's drawn from the overnight feed, scored against the trackers, and checked before it sends. And if nothing meaningful happened on your patch, it says so, rather than dressing quiet news up as important. That honesty is the point: <span class="kicker">when your brief says something moved, it moved.</span></p>
+      <p>Ninety seconds with your coffee, and you're across it.</p>
+    </div>
+    <div class="reveal">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-notch"></div>
+          <div class="b-app num">Tideline · 6:47</div>
+          <div class="b-head">Tuesday · 2 entities moved overnight</div>
+          <div class="b-date num">TUESDAY 7 JULY</div>
+          <hr class="b-rule">
+          <div class="b-lab">GOOD MORNING</div>
+          <div class="b-item-d">2 of your 6 tracked entities moved yesterday. One domain is approaching its threshold.</div>
+          <hr class="b-rule">
+          <div class="b-lab">THE WATCH</div>
+          <div class="b-item-t">ISA defers vote on mining code</div>
+          <div class="b-item-d">Council postponed following ITLOS objections.</div>
+          <hr class="b-rule">
+          <div class="b-lab">YOUR ENTITIES</div>
+          <div class="b-ent"><span class="b-dot" style="background:var(--green)"></span><span class="b-ent-n">ACME Shipping</span></div>
+          <div class="b-ent-d num">MEPC 83 papers reference fleet emissions.</div>
+          <div class="b-ent"><span class="b-dot" style="background:var(--amber)"></span><span class="b-ent-n">Pacific Minerals</span> <span class="b-up num">↑ 7.2</span></div>
+          <div class="b-ent-d num">ISA Pulse moved 6.4 to 7.2 overnight.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TOMORROW ==================== -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">One day with it</div>
+      <h2>What tomorrow <span class="g">looks like</span>.</h2>
+    </div>
+    <div class="timeline reveal">
+      <div class="tl-row"><div class="tl-time num">6:47</div><div class="tl-text">The brief lands. Two of your entities moved overnight, one flagged. You read it with your coffee.<span class="tl-tag">THE BRIEF</span></div></div>
+      <div class="tl-row"><div class="tl-time num">8:30</div><div class="tl-text">The partner asks about the ISA decision. <q>Council deferred the vote. Here's the citation.</q><span class="tl-tag">THE LIBRARY</span></div></div>
+      <div class="tl-row"><div class="tl-time num">9:15</div><div class="tl-text">An alert: the Plastics Treaty domain crossed into elevated. You block out Thursday to prepare, weeks before the session.<span class="tl-tag">THE TRACKERS</span></div></div>
+      <div class="tl-row"><div class="tl-time num">11:00</div><div class="tl-text">You open the BBNJ briefing note. Twelve new documents attached themselves overnight. You write instead of hunting.<span class="tl-tag">THE WORKSPACE</span></div></div>
+      <div class="tl-row"><div class="tl-time num">14:20</div><div class="tl-text">A company you don't recognise comes up on a call. You look it up while they're still talking: a subsidiary of one you already follow.<span class="tl-tag">THE DIRECTORY</span></div></div>
+      <div class="tl-row"><div class="tl-time num">16:30</div><div class="tl-text">A client emails asking what Pacific Minerals is doing. You reply in four minutes, straight from the entity page.<span class="tl-tag">THE DIRECTORY</span></div></div>
+      <div class="tl-row"><div class="tl-time num">17:15</div><div class="tl-text">One last pass of the feed: everything new on your domains, already sorted and summarised. You close the laptop knowing nothing slipped.<span class="tl-tag">THE LIVE FEED</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== WHO IT'S FOR ==================== -->
+<section class="section personas" id="who">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Who it's for</div>
+      <h2>Built around the moments that this job <span class="g">gets hard</span>.</h2>
+      <p>We asked professionals across the ocean sector what slows them down, and nearly everyone gave one of four answers: no single place covers what I need, stories are hard to track as they evolve, citable sources take too long to find, and I'm searching across too many sources. Tideline was built against those four answers.</p>
+    </div>
+    <div class="persona-grid reveal">
+      <div class="persona"><h3>ESG and sustainable finance</h3><p>Nearly every finance professional we spoke to gave the same answer: there is no single place that covers what they need. The fund asks about seabed mining exposure and the picture is scattered across a dozen sources. Tideline puts the entity's full regulatory history in front of you before the meeting ends.</p></div>
+      <div class="persona"><h3>Consultants and advisers</h3><p>Consultants were one of the largest groups in the research, and their pain was consistent: too long spent searching across too many sources. They asked for all the relevant events in one place. That's the product. The client report starts from an assembled picture, not a blank tab.</p></div>
+      <div class="persona"><h3>Shipping and compliance teams</h3><p>The regulatory landscape shifts twice between reviews, and tracking how a rule evolved is nobody's day job. Shipping professionals told us this is exactly where they lose time. MEPC is in 16 days and your fleet note is already drafted, because the alert came a month ago.</p></div>
+      <div class="persona"><h3>Journalists and editors</h3><p>Journalists in the research were the ones tracking the widest range of topics and spending the most hours doing it. The pain they named was searching across too many sources. The primary documents, the timeline and everyone involved are in one place, so the afternoon goes on writing.</p></div>
+      <div class="persona"><h3>NGO and policy teams</h3><p>The single largest group in the research, and their top two answers were the same: stories are hard to track as they evolve, and citable sources take too long to find. When a funder asks who said what and when, the timeline and the citation are one click away, not somewhere in last month's tabs.</p></div>
+      <div class="persona"><h3>Scientists and researchers</h3><p>Researchers told us the same two things again and again: citable sources are slow to find, and regulation is hard to follow from the outside. When reviewer two wants the policy relevance spelled out, the current state of the negotiations, and the treaty text behind it, is one search away.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== WHAT IT ISN'T ==================== -->
+<section class="section">
+  <div class="wrap">
+    <div class="nots reveal">
+      <div class="not"><h3>Not Google Alerts.</h3><p>Volume is not signal. Tideline scores activity, attributes sources, and tracks how stories evolve.</p></div>
+      <div class="not"><h3>Not a chatbot.</h3><p>Every answer cites the document it came from. Nothing lands in your inbox unverified.</p></div>
+      <div class="not"><h3>Not an academic database.</h3><p>For working professionals who need the answer in five minutes, not the literature review in five hours.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOUNDER ==================== -->
+<section class="section personas" id="founder">
+  <div class="wrap">
+    <div class="section-head reveal" style="margin-bottom:44px">
+      <div class="eyebrow">Why I built this</div>
+    </div>
+    <div class="founder reveal">
+      <p>I'm Luke. I covered this sector for years, and like everyone in it I did the job with six tabs open, a folder of PDFs, and the quiet worry that something had moved without me noticing. Tideline is the tool I wanted on those mornings.</p>
+      <p>It hasn't been built in a vacuum. I've spoken to people right across the ocean sector, ESG analysts, lawyers, compliance leads, journalists and policy officers, and a group of them tells me every week what's working and what's still missing. The product follows what they say, not what I guess.</p>
+      <p>If you want to talk it through, book 15 minutes. You get me, not a sales team.</p>
+      <div class="sig">Luke McMillan<span>Founder, Tideline</span></div>
+      <div class="founder-cta"><a class="btn btn-secondary" href="#">Book 15 minutes</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PRICING ==================== -->
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head reveal" style="margin-bottom:20px">
+      <h2>One platform. Priced for the person, the team, <span class="g">or the firm</span>.</h2>
+    </div>
+    <p class="price-kicker reveal">Most of the professionals we spoke to spend between one and five hours a week just keeping across the sector, some far more. Tideline is built to give most of that back, and to hand it to the parts of your job that actually need you.</p>
+    <div class="tiers reveal">
+      <div class="tier feature">
+        <div class="tier-tag">FOUNDING · 50 PLACES</div>
+        <h3>Founding Member</h3>
+        <div class="tier-price num">£39<span>/month</span></div>
+        <div class="tier-sub">Locked for life. This is the thank-you for joining early, and when the places are gone, they're gone.</div>
+        <div class="places"><div class="places-bar"><i></i></div><div class="places-n num">43 of 50 remaining</div></div>
+        <ul>
+          <li>Full platform access</li>
+          <li>Morning brief and alerts</li>
+          <li>Direct line to the founder</li>
+        </ul>
+        <a class="btn btn-primary" href="#">Claim a founding place</a>
+      </div>
+      <div class="tier">
+        <h3>Individual</h3>
+        <div class="tier-price num">£99<span>/month</span></div>
+        <div class="tier-sub">Free trial, full access, no card required. Cancel any time.</div>
+        <ul>
+          <li>Everything in Founding</li>
+          <li>Ask Tideline, with citations</li>
+          <li>Unlimited projects and exports</li>
+        </ul>
+        <a class="btn btn-secondary" href="#">Start the free trial</a>
+      </div>
+      <div class="tier">
+        <h3>Team</h3>
+        <div class="tier-price num">£699<span>/month</span></div>
+        <div class="tier-sub">10 seats. If three or more of you would use it, this is the sensible tier.</div>
+        <ul>
+          <li>Everything in Individual, 10 seats</li>
+          <li>Shared projects and workspaces</li>
+          <li>Priority onboarding</li>
+        </ul>
+        <a class="btn btn-secondary" href="#">Talk to the founder</a>
+      </div>
+    </div>
+    <div class="why-39 reveal">
+      <h3>Why £39?</h3>
+      <p>Because founding members aren't just early customers. You get the platform before the market does, and in return I ask for the one thing money can't buy: honest feedback from people who do this work every day. What you flag gets fixed. What you ask for gets built. Tideline becomes the platform of record for this sector by being shaped by the people in it, and the founding rate is locked for life because the people who helped build it should never pay full price for it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CLOSING QUESTION ==================== -->
+<section class="section close-q">
+  <div class="wrap">
+    <div class="inner reveal">
+      <div class="eyebrow" style="justify-content:center">Why it exists</div>
+      <h2>Built for the people whose business is <span class="g">the ocean</span>.</h2>
+      <p>Tideline wasn't built in a boardroom. It was built by talking to the people who work in this sector, asking what a good morning actually looks like, and then making the thing that delivers it. Everything on this page came from what they said they needed to do their best work.</p>
+      <div class="ask-line">So the real question isn't what Tideline does. It's what you need to be the best version of yourself at this work, every day.</div>
+      <p class="land">Whatever the answer, it probably starts with knowing you haven't missed anything.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FINAL ==================== -->
+<section class="final">
+  <div class="wrap">
+    <div class="final-card reveal">
+      <h2>Become a <span class="g">founding member</span>.</h2>
+      <p style="max-width:620px">£39 a month, locked for life, full platform access. 50 places, then the rate is gone for good. If you'd rather look around first, the trial is seven days with no card, and either way, pick what you follow and your first brief arrives tomorrow morning.</p>
+      <div class="final-ctas">
+        <a class="btn btn-primary btn-lg" href="#pricing">Claim a founding place</a>
+        <a class="btn btn-secondary btn-lg" href="#founder">15 minutes with the founder</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div>© 2026 Tideline Ocean Intelligence</div>
+    <div><a href="https://thetideline.co/methodology">Methodology</a> · <a href="#">Privacy</a> · <a href="#">Contact</a></div>
+  </div>
+</footer>
+
+<script>
+const tabs = document.querySelectorAll('.side-item');
+const panels = document.querySelectorAll('.panel');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.setAttribute('aria-selected','false'));
+    panels.forEach(p => p.classList.remove('active'));
+    tab.setAttribute('aria-selected','true');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+    fillBars();
+  });
+});
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+function fillBars(){
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar i').forEach(b => { b.style.width = b.dataset.w + '%'; });
+  });
+}
+window.addEventListener('load', () => setTimeout(fillBars, 400));
+</script>
+</body>
+</html>
