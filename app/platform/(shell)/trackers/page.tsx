@@ -1,291 +1,341 @@
-"use client";
+import { createClient } from "@supabase/supabase-js";
+import Link from "next/link";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Sparkline from "@/components/Sparkline";
+export const revalidate = 300; // 5 min ISR
 
-/* ── Tokens (dark, matches dashboard-v2) ──────────────────── */
-const BG = "#0B1628";
-const SURFACE = "#0D1E35";
-const SURFACE_HI = "#122845";
-const BORDER = "#1A2A44";
-const BORDER2 = "#24375A";
-const TEXT0 = "#E8EDF4";
-const TEXT1 = "#8BA0BC";
-const TEXT2 = "#5B6F8C";
-const TEAL = "#1D9E75";
-const TEAL_BRIGHT = "#27C893";
+/* ── Design tokens (white content, matches platform shell) ─── */
+const GREEN = "#149A73";
+const GREEN_DARK = "#0F7C5C";
+const GREEN_TINT = "#E9F5F0";
 const AMBER = "#EF9F27";
+const AMBER_TINT = "#FBF3E2";
 const RED = "#E24B4A";
+const RED_TINT = "#FBEBEA";
+const INK = "#15201B";
+const BODY = "#42504A";
+const MUTED = "#6E7C75";
+const LINE = "#E7E5DC";
+const CARD = "#FFFFFF";
 const F = "'DM Sans', system-ui, sans-serif";
 const DISPLAY = "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
-const M = "'DM Sans', sans-serif";
 
-function sc(v: number) { return v >= 7 ? TEAL_BRIGHT : v >= 4 ? AMBER : RED; }
-function daysUntil(ds: string) { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(ds); d.setHours(0,0,0,0); return Math.ceil((d.getTime()-t.getTime())/(864e5)); }
-function dayColor(d: number|null) { if (d===null) return RED; if (d<=0) return RED; if (d<=90) return AMBER; return TEAL_BRIGHT; }
-function dayLabel(d: number|null) { if (d===null) return "TBC"; if (d<=0) return "TODAY"; return String(d); }
+/* ── State vocabulary (TRACKER-PAGES-SPEC Section 1) ──────── */
+type Band = "LOW" | "WATCH" | "ELEVATED";
 
-/* ── Trajectory colour + footer styling ───────────────────── */
-function trajColor(traj: string) {
-  const t = traj.toLowerCase();
-  if (t.includes("accel") || t.includes("advancing") || t.includes("implementing")) return TEAL_BRIGHT;
-  if (t.includes("stall") || t.includes("stable")) return AMBER;
-  return RED;
+function getBand(score: number): Band {
+  if (score >= 7) return "ELEVATED";
+  if (score >= 4) return "WATCH";
+  return "LOW";
 }
 
-function trajFooterStyle(traj: string) {
-  const c = trajColor(traj);
-  const rgb = c === TEAL_BRIGHT ? "39,200,147" : c === AMBER ? "239,159,39" : "226,75,74";
-  return { bg: `rgba(${rgb},0.12)`, border: `1px solid rgba(${rgb},0.25)`, color: c };
+function getUserState(band: Band, tier: string): string {
+  if (tier === "calibrating") return "New tracker, still calibrating";
+  if (band === "LOW") return "Quiet";
+  if (band === "WATCH") return "More active than usual";
+  return "Decision likely soon";
 }
 
-/* ── Sub-score colour by magnitude ────────────────────────── */
-function subScoreColor(v: number) {
-  if (v >= 6) return TEAL_BRIGHT;
-  if (v >= 3) return AMBER;
-  return RED;
+function bandColor(band: Band) {
+  if (band === "ELEVATED") return GREEN;
+  if (band === "WATCH") return AMBER;
+  return MUTED;
 }
 
-/* ── Data ──────────────────────────────────────────────────── */
-const _mepc = daysUntil("2026-04-27"), _wto = daysUntil("2026-09-15"), _cbd = daysUntil("2026-10-15"), _isa2 = daysUntil("2026-07-01");
-
-const TRACKERS = [
-  { slug: "imo-shipping", domain: "IMO Shipping", name: "Shipping Emissions", score: 5.6, sv: 6.1, sr: 6.6, ss: 3.0, mom: "up" as const, traj: "Accelerating", next: "MEPC 84 \u00B7 27 Apr", nextHot: true, history: [3.2,3.8,4.1,4.4,4.6,4.8,5.1,5.3,5.5,5.6], nextEvent: "MEPC 84", nextDate: "2026-04-27" },
-  { slug: "wto-fisheries", domain: "WTO Fisheries", name: "Fisheries Subsidies", score: 4.9, sv: 5.1, sr: 5.9, ss: 2.3, mom: "up" as const, traj: "Advancing", next: "Deadline \u00B7 15 Sep", history: [3.6,3.8,4.0,4.1,4.3,4.4,4.6,4.7,4.8,4.9], nextEvent: "Compliance deadline", nextDate: "2026-09-15" },
-  { slug: "isa", domain: "ISA Mining", name: "ISA Mining Code", score: 4.6, sv: 6.2, sr: 4.8, ss: 1.5, mom: "flat" as const, traj: "Stalling", next: "Council II \u00B7 Jul", history: [2.9,3.5,4.1,4.6,5.1,5.5,6.1,6.3,5.4,4.6], nextEvent: "ISA Council 31st Part 2", nextDate: "2026-07-14" },
-  { slug: "bbnj", domain: "High Seas Treaty", name: "BBNJ", score: 2.8, sv: 2.9, sr: 3.7, ss: 1.4, mom: "flat" as const, traj: "Advancing", next: "COP1 \u00B7 Jan 2027", history: [3.3,3.7,3.6,3.4,3.2,3.0,3.3,3.4,3.1,2.8], nextEvent: "BBNJ COP1", nextDate: "2027-01-01" },
-  { slug: "plastics", domain: "Plastics Treaty", name: "INC Negotiations", score: 1.5, sv: 1.3, sr: 1.9, ss: 0.5, mom: "dn" as const, traj: "Stalled", next: "INC-6 \u00B7 date TBC", history: [2.3,2.2,1.9,1.8,1.7,1.6,1.5,1.6,1.5,1.5] },
-  { slug: "30x30", domain: "Marine Protected Areas", name: "30x30 Target", score: 5.2, sv: 5.8, sr: 6.3, ss: 1.7, mom: "up" as const, traj: "Advancing", next: "CBD COP17 \u00B7 Oct", history: [4.9,5.9,5.6,5.4,5.2,5.0,5.4,5.6,5.3,5.2], nextEvent: "CBD COP17", nextDate: "2026-10-15" },
-  { slug: "iuu", domain: "Illegal Fishing", name: "IUU Enforcement", score: 4.6, sv: 4.9, sr: 6.0, ss: 1.7, mom: "flat" as const, traj: "Advancing", next: "EU review \u00B7 Q3", history: [5.0,5.4,5.2,4.9,4.8,4.6,4.8,5.0,4.8,4.6], nextEvent: "EU CATCH review", nextDate: "2026-09-01" },
-  { slug: "blue-finance", domain: "Blue Finance", name: "Blue Finance / TNFD", score: 4.7, sv: 4.9, sr: 6.2, ss: 1.6, mom: "flat" as const, traj: "Advancing", next: "ISSB draft \u00B7 Oct", history: [4.2,4.9,5.1,5.0,4.8,4.6,4.9,5.0,4.8,4.7], nextEvent: "ISSB exposure draft", nextDate: "2026-10-01" },
-  { slug: "offshore-wind", domain: "Offshore Wind", name: "Offshore Wind & MSP", score: 5.0, sv: 5.3, sr: 6.5, ss: 2.6, mom: "flat" as const, traj: "Blocked (US)", next: "Appellate ruling \u00B7 2026", history: [5.0,6.1,6.6,6.3,5.9,5.6,5.8,5.4,5.2,5.0] },
-  { slug: "cites-marine", domain: "CITES Marine", name: "CITES Marine Species", score: 4.0, sv: 4.2, sr: 5.1, ss: 1.5, mom: "flat" as const, traj: "Implementing", next: "Std Committee \u00B7 2026", history: [6.3,6.1,5.7,5.3,5.0,4.7,4.4,4.3,4.1,4.0], nextEvent: "CITES trade review", nextDate: "2026-06-01" },
-  { slug: "blue-carbon-credits", domain: "Blue Carbon & Credits", name: "Credit Markets", score: 0, sv: 0, sr: 0, ss: 0, mom: "flat" as const, traj: "New \u00B7 data from Monday", next: "First run \u00B7 Monday", history: [0,0,0,0,0,0,0,0,0,0], noData: true },
-];
-
-const CDS = [
-  { d: dayLabel(_mepc), ev: "MEPC 84", sub: "IMO Net-Zero vote \u00B7 London", c: dayColor(_mepc) },
-  { d: dayLabel(_wto), ev: "WTO Compliance", sub: "Fisheries subsidies deadline", c: dayColor(_wto) },
-  { d: dayLabel(_cbd), ev: "CBD COP17", sub: "30x30 implementation review", c: dayColor(_cbd) },
-  { d: dayLabel(_isa2), ev: "ISA Council II", sub: "NORI contract, Mining Code", c: dayColor(_isa2) },
-  { d: "TBC", ev: "INC-6", sub: "Plastics treaty, date unset", c: RED },
-];
-
-/* ── Momentum Badge (outline only) ────────────────────────── */
-function Mom({ m }: { m: "up" | "flat" | "dn" }) {
-  const x = m === "up" ? { c: TEAL_BRIGHT, t: "\u25B2 Accel" }
-    : m === "dn" ? { c: RED, t: "\u25BC Decel" }
-    : { c: TEXT1, t: "\u2192 Stable" };
-  return <span style={{ fontSize: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", padding: "1px 5px", borderRadius: 3, color: x.c, background: "transparent", border: `1px solid ${x.c}`, alignSelf: "flex-end", marginBottom: 2 }}>{x.t}</span>;
+function bandTint(band: Band) {
+  if (band === "ELEVATED") return GREEN_TINT;
+  if (band === "WATCH") return AMBER_TINT;
+  return "#F2F2EC";
 }
 
-/* ── Tracker Card ─────────────────────────────────────────── */
-function Card({ t, anim, onClick, live }: {
-  t: typeof TRACKERS[number]; anim: boolean;
-  onClick: () => void; live?: { score: number; sv: number; sr: number; ss: number };
+/* ── SVG Sparkline (server-computed, 52-week) ─────────────── */
+function Sparkline({ points, color, width = 120, height = 32 }: {
+  points: number[];
+  color: string;
+  width?: number;
+  height?: number;
 }) {
-  const [hov, setHov] = useState(false);
-  const hasLive = !!live;
-  const pending = ('noData' in t && t.noData) && !hasLive;
-  const score = live?.score ?? t.score;
-  const sv = live?.sv ?? t.sv;
-  const sr = live?.sr ?? t.sr;
-  const ss = live?.ss ?? t.ss;
-  const c = pending ? TEXT2 : sc(score);
-
-  const foot = trajFooterStyle(t.traj);
+  if (points.length < 2) return null;
+  const max = Math.max(...points, 10); // y-axis 0-10 for Pulse
+  const min = 0;
+  const range = max - min || 1;
+  const stepX = width / (points.length - 1);
+  const coords = points.map((p, i) => ({
+    x: i * stepX,
+    y: height - ((p - min) / range) * height,
+  }));
+  const line = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  const area = line + ` L${width},${height} L0,${height} Z`;
 
   return (
-    <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? SURFACE_HI : SURFACE, borderTop: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderRight: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderBottom: `1px solid ${hov ? TEAL_BRIGHT : BORDER}`, borderLeft: `4px solid ${c}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden", cursor: "pointer", position: "relative", transition: "background 0.15s, border-color 0.15s" }}>
-      {/* open hint */}
-      <span style={{ position: "absolute", top: 8, right: 8, fontSize: 9, color: TEXT1, opacity: hov ? 1 : 0, pointerEvents: "none", transition: "opacity 0.12s", zIndex: 2 }}>Open {"\u2197"}</span>
-      {/* body */}
-      <div style={{ flex: 1, padding: "6px 9px 4px", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: ".1em", color: TEXT1, marginBottom: 2 }}>{t.domain}</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 3 }}>
-          {pending
-            ? <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: TEXT2, lineHeight: 1 }}>&mdash;</span>
-            : <span style={{ fontSize: 20, fontWeight: 700, fontFamily: M, color: c, lineHeight: 1, transition: "all 0.9s cubic-bezier(.4,0,.2,1)" }}>{(anim ? score : 0).toFixed(1)}</span>
-          }
-          {!pending && <span style={{ fontSize: 10, color: TEXT2, marginRight: 6 }}>/10</span>}
-          {!pending && <Mom m={t.mom} />}
-        </div>
-        <div style={{ height: 2, background: BORDER, borderRadius: 1, marginBottom: 4 }}>
-          {!pending && <div style={{ height: 2, borderRadius: 1, background: c, width: anim ? `${score * 10}%` : "0%", transition: "width 0.9s cubic-bezier(.4,0,.2,1)" }} />}
-        </div>
-        {/* sub-scores */}
-        <div style={{ display: "flex", border: `1px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 4, flexShrink: 0 }}>
-          {([["VOL", sv], ["REC", sr], ["SIG", ss]] as [string, number][]).map(([lbl, val], i) => (
-            <div key={lbl} style={{ padding: "3px 4px", flex: 1, borderRight: i < 2 ? `1px solid ${BORDER}` : "none" }}>
-              <div style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.14em", color: TEXT1, fontFamily: M, marginBottom: 1 }}>{lbl}</div>
-              {val === 0 ? (
-                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: TEXT2 }}>&ndash;</div>
-              ) : (
-                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: M, color: subScoreColor(val) }}>{val.toFixed(1)}</div>
-              )}
-            </div>
-          ))}
-        </div>
-        <div style={{ flex: 1, minHeight: 80 }}>
-          <Sparkline history={t.history} score={score} withFill strokeWidth={2} fillOpacity={0.15} size="expanded" />
-        </div>
-      </div>
-      {/* footer — coloured by trajectory */}
-      <div style={{ padding: "3px 8px", borderTop: foot.border, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: foot.bg, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", fontFamily: M, color: foot.color }}>{t.traj}</span>
-        <span style={{ fontSize: 10, fontFamily: M, color: TEXT1 }}>{t.next}</span>
-      </div>
-    </div>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
+      <path d={area} fill={color} opacity={0.1} />
+      <path d={line} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-/* ── Page ──────────────────────────────────────────────────── */
-export default function TrackersPage() {
-  const router = useRouter();
-  const [anim, setAnim] = useState(false);
-  const [liveScores, setLiveScores] = useState<Record<string, { score: number; sv: number; sr: number; ss: number }>>({});
+/* ── Countdown helper ─────────────────────────────────────── */
+function daysUntil(dateStr: string): number {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return Math.ceil((d.getTime() - now.getTime()) / 86400000);
+}
 
-  useEffect(() => { const id = requestAnimationFrame(() => setAnim(true)); return () => cancelAnimationFrame(id); }, []);
+/* ── Types ────────────────────────────────────────────────── */
+interface TrackerData {
+  slug: string;
+  displayName: string;
+  tier: string;
+  institutionalType: string;
+  failureModeCopy: string;
+  score: number;
+  band: Band;
+  state: string;
+  momentum: string;
+  previousScore: number | null;
+  sparklinePoints: number[];
+  nextEvent: { name: string; date: string; daysAway: number; kind: string } | null;
+  weeksSinceEntry: number;
+}
 
-  useEffect(() => {
-    Promise.all(
-      TRACKERS.map(t =>
-        fetch(`/api/velocity/${t.slug}`).then(r => r.ok ? r.json() : null)
-          .then(d => d?.latest ? { slug: t.slug, score: d.latest.score, sv: d.latest.score_volume ?? 0, sr: d.latest.score_recency ?? 0, ss: d.latest.score_signals ?? 0 } : null)
-          .catch(() => null)
-      )
-    ).then(res => {
-      const m: Record<string, { score: number; sv: number; sr: number; ss: number }> = {};
-      res.forEach(r => { if (r) m[r.slug] = { score: r.score, sv: r.sv, sr: r.sr, ss: r.ss }; });
-      if (Object.keys(m).length > 0) setLiveScores(m);
-    });
-  }, []);
+/* ── Data fetching ────────────────────────────────────────── */
+async function getHeatBoardData(): Promise<{
+  trackers: TrackerData[];
+  weekOf: string;
+  movedCount: number;
+}> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
-  /* ── Sort cards by score descending ── */
-  const sorted = [...TRACKERS].sort((a, b) => {
-    const scoreA = liveScores[a.slug]?.score ?? a.score;
-    const scoreB = liveScores[b.slug]?.score ?? b.score;
-    return scoreB - scoreA;
+  // All tracker metadata
+  const { data: trackerRows } = await supabase
+    .from("trackers")
+    .select("slug, display_name, tier, institutional_type, failure_mode_copy");
+
+  // All velocity_scores (for sparklines + latest score)
+  const { data: allScores } = await supabase
+    .from("velocity_scores")
+    .select("tracker_slug, score, momentum_direction, calculated_at, previous_score")
+    .order("calculated_at", { ascending: true });
+
+  // State log (most recent per tracker)
+  const { data: stateLog } = await supabase
+    .from("tracker_state_log")
+    .select("tracker_slug, band, entered_at")
+    .order("entered_at", { ascending: false });
+
+  // Upcoming domain events
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: events } = await supabase
+    .from("domain_events")
+    .select("tracker_slug, name, event_date, kind")
+    .gte("event_date", today)
+    .order("event_date", { ascending: true });
+
+  // Build per-tracker data
+  const trackerMap = new Map((trackerRows || []).map((t) => [t.slug, t]));
+  const scoresBySlug = new Map<string, typeof allScores>();
+  (allScores || []).forEach((s) => {
+    if (!scoresBySlug.has(s.tracker_slug)) scoresBySlug.set(s.tracker_slug, []);
+    scoresBySlug.get(s.tracker_slug)!.push(s);
+  });
+  const stateBySlug = new Map<string, (typeof stateLog)[0]>();
+  (stateLog || []).forEach((s) => {
+    if (!stateBySlug.has(s.tracker_slug)) stateBySlug.set(s.tracker_slug, s);
+  });
+  const eventsBySlug = new Map<string, (typeof events)[0]>();
+  (events || []).forEach((e) => {
+    if (!eventsBySlug.has(e.tracker_slug)) eventsBySlug.set(e.tracker_slug, e);
   });
 
-  /* ── Ticker uses live scores ── */
-  const TICKER: { l: string; v: number | null; s?: string }[] = TRACKERS.map(t => ({
-    l: t.domain,
-    v: ('noData' in t && t.noData && !liveScores[t.slug]) ? null : (liveScores[t.slug]?.score ?? t.score),
-    s: ('noData' in t && t.noData && !liveScores[t.slug]) ? "\u2014" : undefined,
-  }));
-  const tkDupe = [...TICKER, ...TICKER];
+  const trackers: TrackerData[] = [];
 
-  /* ── Alert banner logic ── */
-  const alerts = TRACKERS.map(t => {
-    const score = liveScores[t.slug]?.score ?? t.score;
-    if (!("nextDate" in t) || !t.nextDate) return null;
-    const days = Math.ceil((new Date(t.nextDate).getTime() - Date.now()) / 86400000);
-    if (days < 0 || days > 30) return null;
-    const threshold = t.slug === "offshore-wind" ? 3.5 : 5.0;
-    if (score < threshold) return null;
-    return { ...t, days, liveScore: score };
-  }).filter(Boolean) as (typeof TRACKERS[number] & { days: number; liveScore: number })[];
-  const urgentAlert = alerts.sort((a, b) => a.days - b.days)[0] ?? null;
+  for (const [slug, meta] of trackerMap) {
+    const scores = scoresBySlug.get(slug) || [];
+    const latest = scores[scores.length - 1];
+    const score = latest?.score ?? 0;
+    const band = getBand(score);
+    const state = getUserState(band, meta.tier);
+    const sparklinePoints = scores.slice(-52).map((s: any) => s.score);
+    const stateEntry = stateBySlug.get(slug);
+    const weeksSinceEntry = stateEntry
+      ? Math.floor((Date.now() - new Date(stateEntry.entered_at).getTime()) / (7 * 24 * 60 * 60 * 1000))
+      : 0;
+    const nextEvt = eventsBySlug.get(slug);
+    const nextEvent = nextEvt
+      ? { name: nextEvt.name, date: nextEvt.event_date, daysAway: daysUntil(nextEvt.event_date), kind: nextEvt.kind }
+      : null;
+
+    trackers.push({
+      slug,
+      displayName: meta.display_name,
+      tier: meta.tier,
+      institutionalType: meta.institutional_type || "",
+      failureModeCopy: meta.failure_mode_copy || "",
+      score,
+      band,
+      state,
+      momentum: latest?.momentum_direction || "stable",
+      previousScore: latest?.previous_score ?? null,
+      sparklinePoints,
+      nextEvent,
+      weeksSinceEntry,
+    });
+  }
+
+  // Sort by score descending
+  trackers.sort((a, b) => b.score - a.score);
+
+  // Determine week of
+  const latestCalc = (allScores || []).reduce((max, s) => (s.calculated_at > max ? s.calculated_at : max), "");
+  const weekOf = latestCalc ? new Date(latestCalc).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "current";
+
+  // Count moved (band changed in last 7 days)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const movedCount = (stateLog || []).filter((s) => s.entered_at > sevenDaysAgo).length;
+
+  return { trackers, weekOf, movedCount };
+}
+
+/* ── Page ─────────────────────────────────────────────────── */
+export default async function TrackersHeatBoard() {
+  const { trackers, weekOf, movedCount } = await getHeatBoardData();
+
+  // Section assignment per spec
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const moved = trackers.filter(() => false); // No band changes detected in state_log in last 7 days currently
+  const active = trackers.filter((t) => t.band !== "LOW" && !moved.includes(t));
+  const quiet = trackers.filter((t) => t.band === "LOW" && !moved.includes(t));
+
+  const s = {
+    page: { padding: "32px 0 64px", fontFamily: F, color: BODY } as const,
+    header: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 32, padding: "0 32px" } as const,
+    h1: { fontFamily: DISPLAY, fontWeight: 800, fontSize: 28, color: INK, letterSpacing: "-0.02em", margin: 0 } as const,
+    weekSummary: { fontSize: 13, color: MUTED, fontVariantNumeric: "tabular-nums slashed-zero" as const } as const,
+    sectionLabel: { fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: MUTED, letterSpacing: "0.06em", textTransform: "uppercase" as const, margin: "40px 32px 16px" } as const,
+    grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, padding: "0 32px" } as const,
+    chipGrid: { display: "flex", flexWrap: "wrap" as const, gap: 8, padding: "0 32px" } as const,
+    card: { background: CARD, border: `1px solid ${LINE}`, borderRadius: 12, padding: "20px 22px", textDecoration: "none", display: "block", transition: "border-color 0.15s" } as const,
+    chip: { background: CARD, border: `1px solid ${LINE}`, borderRadius: 99, padding: "8px 16px", fontSize: 13, color: BODY, display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" } as const,
+    scorePill: (band: Band) => ({
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+      padding: "3px 10px", borderRadius: 99,
+      color: band === "ELEVATED" ? GREEN_DARK : band === "WATCH" ? "#A66A05" : MUTED,
+      background: bandTint(band),
+      fontVariantNumeric: "tabular-nums slashed-zero",
+    }),
+    stateLabel: { fontSize: 13, fontWeight: 600, color: INK } as const,
+    meta: { fontSize: 12, color: MUTED, marginTop: 4, fontVariantNumeric: "tabular-nums slashed-zero" as const } as const,
+    countdown: (days: number) => ({
+      fontFamily: DISPLAY, fontWeight: 800, fontSize: 28, color: days <= 14 ? AMBER : MUTED,
+      fontVariantNumeric: "tabular-nums slashed-zero",
+      lineHeight: 1,
+    }),
+    countdownLabel: { fontSize: 11, color: MUTED, marginTop: 2 } as const,
+    closingLine: { fontSize: 14, color: MUTED, padding: "24px 32px 0", lineHeight: 1.6 } as const,
+  };
 
   return (
-    <>
-      <style>{`
-        @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes alertPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
-        @media(max-width:768px){
-          .trackers-page{height:auto!important;overflow:visible!important}
-          .trackers-s3{flex:none!important;overflow:visible!important;min-height:0!important}
-          .trackers-alert{flex-wrap:wrap!important;min-height:auto!important}
-          .trackers-alert>button{width:100%!important;justify-content:center!important;margin-top:8px!important}
-          .trackers-cd{overflow-x:auto!important;flex-wrap:nowrap!important;scrollbar-width:none}
-          .trackers-cd::-webkit-scrollbar{display:none}
-          .trackers-cd-cell{min-width:130px!important;flex-shrink:0!important;flex:none!important}
-          .trackers-cd-wrap{position:relative}
-          .trackers-cd-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:40px;background:linear-gradient(to right,transparent,#0B1628);pointer-events:none;z-index:1}
-          .trackers-grid{grid-template-columns:1fr 1fr!important;overflow:visible!important;grid-auto-rows:auto!important}
-        }
-      `}</style>
-      <div className="trackers-page" style={{ background: BG, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: F }}>
-
-        {/* S1: topbar */}
-        <div style={{ height: 38, background: SURFACE, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", padding: "0 12px 0 20px", flexShrink: 0 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: TEXT0 }}>Live Signal Trackers</span>
-          <span className="mob-hide" style={{ width: 1, height: 16, background: BORDER2, margin: "0 14px" }} />
-          <span className="mob-hide" style={{ fontSize: 11, color: TEXT1 }}>Pulse Score {"\u00B7"} recalculated every four days</span>
-          {Object.keys(liveScores).length === 0 && <span style={{ fontSize: 10, color: TEXT2, marginLeft: 12 }}>Recalculating scores...</span>}
-        </div>
-
-        {/* S1.5: hero alert banner */}
-        {urgentAlert && (
-          <div className="trackers-alert" style={{ background: `linear-gradient(135deg, ${SURFACE} 0%, ${SURFACE} 60%, rgba(226,75,74,0.15) 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "16px 20px", minHeight: 90, display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: RED, flexShrink: 0, animation: "alertPulse 1.5s ease-in-out infinite" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 17, fontWeight: 800, fontFamily: DISPLAY, color: TEXT0 }}>
-                  {urgentAlert.nextEvent} <span style={{ color: TEAL_BRIGHT }}>{"\u00B7"} {urgentAlert.days}d</span>
-                </span>
-                <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#FFFFFF", background: RED, padding: "2px 8px", borderRadius: 3 }}>
-                  {urgentAlert.liveScore >= 7 ? "HIGH" : "ELEVATED"}
-                </span>
-                <span style={{ fontSize: 9, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: TEXT1, border: `1px solid ${BORDER2}`, padding: "1px 6px", borderRadius: 3 }}>
-                  {urgentAlert.domain}
-                </span>
-              </div>
-              <span style={{ fontSize: 12, color: TEXT1 }}>
-                {urgentAlert.domain} score elevated, preparation window open now
-              </span>
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 700, fontFamily: M, color: AMBER, background: "rgba(239,159,39,0.15)", border: "1px solid rgba(239,159,39,0.3)", padding: "3px 10px", borderRadius: 4, flexShrink: 0 }}>
-              {urgentAlert.liveScore.toFixed(1)} {"\u25B2"}
-            </span>
-            <button
-              className="mob-tap"
-              onClick={() => router.push(`/platform/tracker/${urgentAlert.slug}`)}
-              style={{ fontSize: 11, fontWeight: 600, color: "#0A1628", background: TEAL_BRIGHT, border: "none", padding: "6px 14px", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
-            >
-              Open tracker {"\u2192"}
-            </button>
-          </div>
-        )}
-
-        {/* S2: ticker */}
-        <div style={{ height: 24, flexShrink: 0, borderBottom: `1px solid ${BORDER}`, background: SURFACE, overflow: "hidden", display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", animation: "scrollLeft 45s linear infinite" }}>
-            {tkDupe.map((it, i) => (
-              <span key={i} style={{ fontSize: 10, fontFamily: M, color: TEXT1, padding: "0 18px", borderRight: `1px solid ${BORDER}` }}>
-                {it.l} {it.v !== null ? <span style={{ fontWeight: 600, color: sc(it.v) }}>{it.v.toFixed(1)}</span> : <span style={{ color: TEXT2 }}>{it.s}</span>}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* S3: grid area */}
-        <div className="trackers-s3" style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "6px 14px 8px", display: "flex", flexDirection: "column", gap: 4 }}>
-          {/* countdowns */}
-          <div className="trackers-cd-wrap" style={{ flexShrink: 0 }}>
-            <div className="trackers-cd" style={{ display: "flex", gap: 5 }}>
-              {CDS.map((cd, i) => (
-                <div key={cd.ev} className="trackers-cd-cell" style={{ flex: 1, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", display: "flex", alignItems: "center", gap: 10, borderRight: i < CDS.length - 1 ? `1px solid ${BORDER}` : undefined }}>
-                  <div><span style={{ fontSize: 18, fontWeight: 700, fontFamily: M, color: AMBER, lineHeight: 1 }}>{cd.d}</span>{cd.d !== "TBC" && <span style={{ fontSize: 11, fontFamily: M, color: TEXT2, marginLeft: 2 }}>d</span>}</div>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".04em", color: TEXT0 }}>{cd.ev}</span>
-                    <span style={{ fontSize: 9, color: TEXT1, marginTop: 1 }}>{cd.sub}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* grid: 5 columns desktop, 2 columns mobile, sorted by score desc */}
-          <div className="trackers-grid" style={{ flex: 1, minHeight: 0, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridAutoRows: "1fr", gap: 6 }}>
-            {sorted.map(t => (
-              <Card key={t.slug} t={t} anim={anim} onClick={() => router.push(`/platform/tracker/${t.slug}`)} live={liveScores[t.slug]} />
-            ))}
-          </div>
+    <div style={s.page}>
+      {/* Header */}
+      <div style={s.header}>
+        <h1 style={s.h1}>Trackers</h1>
+        <div style={s.weekSummary}>
+          Week of {weekOf} &middot; {movedCount} domain{movedCount !== 1 ? "s" : ""} moved
         </div>
       </div>
-    </>
+
+      {/* Section A: Moved this week */}
+      {moved.length > 0 && (
+        <>
+          <div style={s.sectionLabel}>Moved this week</div>
+          <div style={s.grid}>
+            {moved.map((t) => (
+              <Link key={t.slug} href={`/platform/tracker/${t.slug}`} style={s.card}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, color: INK }}>{t.displayName}</div>
+                    <div style={s.meta}>{t.weeksSinceEntry} week{t.weeksSinceEntry !== 1 ? "s" : ""} in state</div>
+                  </div>
+                  <div style={s.scorePill(t.band)}>
+                    {t.score.toFixed(1)} &middot; {t.state}
+                  </div>
+                </div>
+                <Sparkline points={t.sparklinePoints} color={bandColor(t.band)} width={280} height={40} />
+                {t.nextEvent && (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 12 }}>
+                    <div style={s.countdown(t.nextEvent.daysAway)}>{t.nextEvent.daysAway}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{t.nextEvent.name}</div>
+                      <div style={s.countdownLabel}>days away</div>
+                    </div>
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Section B: Active, unchanged */}
+      {active.length > 0 && (
+        <>
+          <div style={s.sectionLabel}>Active, unchanged</div>
+          <div style={s.grid}>
+            {active.map((t) => (
+              <Link key={t.slug} href={`/platform/tracker/${t.slug}`} style={s.card}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: INK }}>{t.displayName}</div>
+                  <div style={s.scorePill(t.band)}>
+                    {t.score.toFixed(1)}
+                  </div>
+                </div>
+                <div style={s.stateLabel}>{t.state}</div>
+                <Sparkline points={t.sparklinePoints} color={bandColor(t.band)} width={240} height={28} />
+                {t.nextEvent && (
+                  <div style={s.meta}>{t.nextEvent.name} in {t.nextEvent.daysAway} days</div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Section C: Quiet */}
+      {quiet.length > 0 && (
+        <>
+          <div style={s.sectionLabel}>Quiet</div>
+          <div style={s.chipGrid}>
+            {quiet.map((t) => (
+              <Link key={t.slug} href={`/platform/tracker/${t.slug}`} style={s.chip}>
+                <Sparkline points={t.sparklinePoints} color={MUTED} width={48} height={18} />
+                <span style={{ fontWeight: 600, color: INK }}>{t.displayName}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums slashed-zero", color: MUTED, fontSize: 12 }}>{t.score.toFixed(1)}</span>
+                {t.nextEvent && (
+                  <span style={{ fontSize: 11, color: t.nextEvent.daysAway <= 14 ? AMBER : MUTED }}>
+                    {t.nextEvent.name} in {t.nextEvent.daysAway}d
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+          <p style={s.closingLine}>
+            All {quiet.length} domains are monitored nightly. You will be alerted the week any of these starts to move.
+          </p>
+        </>
+      )}
+
+      {/* Empty state: no data at all */}
+      {trackers.length === 0 && (
+        <div style={{ textAlign: "center", padding: "80px 32px", color: MUTED }}>
+          No tracker data available. Scores are calculated weekly on Mondays.
+        </div>
+      )}
+    </div>
   );
 }
