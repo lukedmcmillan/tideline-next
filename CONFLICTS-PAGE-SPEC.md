@@ -242,50 +242,56 @@ Add `DivergenceCallout` component above the main story list. Headline: "Sources 
 
 ## UI COMPONENT SPEC — DivergenceCard
 
-Follow the dark Google-style pattern from the Trackers page. These are the component rules:
+**Visual specification superseded.** The dark-palette card structure (`#0B1628`, DM Mono scores) is retired. The canonical visual reference is now `public/demo/tideline-source-conflicts.html` under **UI-SYSTEM.md**. Build against the mockup, not the section below.
 
-### Card structure (top to bottom):
+The following structural and copy rules **still stand** (mockup implements them):
+- Severity derived from score: HIGH (red, `#C0472E`) at 8.0+, MEDIUM (amber, `#B5791C`) at 5.0-7.9, not surfaced below 5.0
+- Two-column source grid with "vs" pip, full text wrap, no truncation
+- "Why this matters" insight row, mandatory
+- Footer actions: Add to workspace, View sources, Track dispute, Dismiss
+- Copy constraints: no em dashes, DM Sans body, tabular-nums on all figures
 
-**1. Meta row**
-- Severity pill: filled colour (HIGH red / MEDIUM amber), label text
-- Domain pill: outline only (no solid fill — design rule), tracker_tag in title case
-- Timestamp: right-aligned, time-ago format, DM Mono, muted colour `#8BA0BC`
+### Resolution type rendering (added July 2026)
 
-**2. Divergence bar row**
-- Label: "DIVERGENCE" in DM Mono caps, muted
-- Progress bar: 0–10 scale, coloured by severity
-- Score: right-aligned "7.8 / 10" in severity colour, DM Mono
+When a conflict reaches resolution, render a resolution pill on the card header:
 
-**3. Headline**
-- Large bold text, full width
-- Falls back to tracker_tag in title case if no headline stored
-- DM Sans, no em dashes
+| `resolution_type` | Pill colour | Label |
+|---|---|---|
+| `converged` | Green (`#149A73` / tint `#E8F6F0`) | Converged |
+| `superseded` | Blue (`#2C6BB5` / tint `#EAF1FA`) | Superseded |
+| `expired` | Stone (`#8A929B` / tint `#EDF0F4`) | Expired |
 
-**4. Two-column source grid**
-- Vertical divider between columns, centred "vs" pip
-- Each column: source avatar (square, initial letter), bold source name, mono-caps source type label (GOVERNMENT / NGO / ACADEMIC / PRESS), claim text (full wrap, no truncation), mono date below
-- **Critical:** `min-width: 0` on both columns. No `overflow: hidden`. Text wraps fully.
+Resolution pills replace the severity pill when the conflict is no longer active. The card body remains visible (both claims, why-it-matters) but footer actions are removed except "View sources".
 
-**5. Insight row**
-- Left border: amber `#EF9F27`
-- "Why this matters:" bold label + body text
-- Star icon left
+### P1 schema columns (from RISK-SCREENER-SPEC Part 5, via TIDELINE-BUILD-PLAN)
 
-**6. Footer actions**
-- "Add to workspace" — teal filled button
-- "View sources" — ghost button
-- "Track dispute" — ghost button
-- "Dismiss" — plain text far right, wires to `PATCH /api/divergences/[id]/dismiss`
+The following columns must exist on the `divergences` table before the detection cron writes its first row:
 
-### Design constraints (all standard Tideline rules):
-- No em dashes anywhere
-- No blue colour
-- No solid domain badges — outline only
-- No beige backgrounds
-- DM Sans for all body text
-- DM Mono for scores, timestamps, source type labels
-- Background: `#0B1628` / `#0D1E35`
-- Text primary: `#E8EDF4`, muted: `#8BA0BC`
+```sql
+-- P1 additions (additive, plan-mode)
+ALTER TABLE divergences
+  ADD COLUMN IF NOT EXISTS factual_alignment numeric(3,1),
+  ADD COLUMN IF NOT EXISTS conclusion_alignment numeric(3,1),
+  ADD COLUMN IF NOT EXISTS framing_alignment numeric(3,1),
+  ADD COLUMN IF NOT EXISTS authority_weight numeric(3,1),
+  ADD COLUMN IF NOT EXISTS classifier_version text,
+  ADD COLUMN IF NOT EXISTS resolution_type text
+    CHECK (resolution_type IN ('converged', 'superseded', 'expired')),
+  ADD COLUMN IF NOT EXISTS supersedes_id uuid REFERENCES divergences(id);
+
+COMMENT ON COLUMN divergences.classifier_version IS
+  'Haiku model + prompt hash that produced the dimension scores. Enables re-scoring audits.';
+```
+
+These store the four scoring dimensions (composite = factual 0.40 + conclusion 0.30 + framing 0.20 + authority 0.10), the classifier version for audit, the resolution outcome, and a chain pointer for superseded conflicts.
+
+---
+
+## Locked page copy (do not rewrite)
+
+- **Page sub / lede:** "When authoritative sources contradict each other on the same story, Tideline flags the conflict, scores it, and tells you why it matters. Tideline does not adjudicate who is correct."
+- **Positioning line**, for the marketing site and any explainer copy: "Something a Google Alert cannot give you."
+- **Empty-state line**, for the case of zero active conflicts: "No active conflicts on your domains right now. Detection ran today at [time] and compared [N] story pairs."
 
 ---
 

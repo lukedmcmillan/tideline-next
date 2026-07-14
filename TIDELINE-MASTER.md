@@ -155,23 +155,11 @@ Path to £300k ARR: team and corporate tier mix plus potential data licensing. N
 
 Environment: PowerShell on Windows. Repo at `C:\Users\luke.mcmillan\tideline-next`.
 
-## 3.2 Design system (locked)
+## 3.2 Design system
 
-| Element | Value |
-|---|---|
-| Primary background | `#0B1628` dark navy |
-| Secondary background | `#0D1E35` |
-| Accent | `#1D9E75` teal |
-| Text primary / muted | `#E8EDF4` / `#8BA0BC` |
-| Amber / Red | `#EF9F27` / `#E24B4A` |
-| Primary font | DM Sans |
-| Marketing headlines | Plus Jakarta Sans 800 |
+**Superseded.** The dark navy palette (`#0B1628`) is retired. The canonical product design system is now **UI-SYSTEM.md** (repo root, July 2026). Reference implementations: the nine locked mockups in `public/demo/`. Canvas is `#F4F6F8` (light grey), cards are white, colour encodes state per UI-SYSTEM.md Section 3. DM Mono ban confirmed and resolved: all numerals use `font-variant-numeric: tabular-nums` on DM Sans / Plus Jakarta Sans.
 
-**Hard rules:** no em dashes in any copy. No blue (`#1A73E8` explicitly excluded). No Instrument Serif. No solid domain badges (outline only). No beige. **DM Mono is banned.**
-
-**OPEN CONFLICT REQUIRING LUKE'S CALL:** the divergence/conflicts specs mandate DM Mono for scores, timestamps, and source-type labels. The DM Mono ban is the newer locked decision, so the default resolution is: replace DM Mono in those components with DM Sans using tabular numerals (`font-variant-numeric: tabular-nums`) for score alignment. Confirm before building DivergenceCard.
-
-**Copy rules:** never "Tideline's agents"; say "overnight" or "while you were sleeping". Replies and outreach must not sound AI-generated or over-structured. LinkedIn messages short and direct.
+**Copy rules (unchanged):** no em dashes in any copy. Never "Tideline's agents"; say "overnight" or "while you were sleeping". Replies and outreach must not sound AI-generated or over-structured. LinkedIn messages short and direct.
 
 ---
 

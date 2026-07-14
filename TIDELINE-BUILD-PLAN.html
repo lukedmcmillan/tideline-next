@@ -156,6 +156,15 @@ li{margin:3px 0}
   <tr><td>Liveness footers (every page)</td><td><b>cron_runs</b> heartbeat</td><td><span class="st mig">MIGRATION</span></td></tr>
 </table>
 
+<h3>Cross-cutting data items (flagged July 2026)</h3>
+<table>
+  <tr><th>Module</th><th>Source</th><th>Status</th></tr>
+  <tr><td>Instruments table</td><td>Status derived from document metadata (in force / in draft / adopted-awaiting / superseded). Powers the instrument-first library view in <code>tideline-library.html</code>.</td><td><span class="st mig">MIGRATION</span> <b>[FLAGGED BUILD ITEM]</b></td></tr>
+  <tr><td>Story thread clustering</td><td>Groups stories covering the same developing event across time. Thread marker on feed: "Developing story, nth update since [date]". Requires a clustering key on stories (event_thread_id or similar).</td><td><span class="st mig">MIGRATION</span> <b>[FLAGGED BUILD ITEM]</b></td></tr>
+  <tr><td>Deadline extraction</td><td>Typed dates extracted from stories and documents (submission windows, entry-into-force dates, session dates). Schema-validated before insert. Feeds both the feed (deadline chips) and the regulatory calendar.</td><td><span class="st mig">MIGRATION</span> <b>[FLAGGED BUILD ITEM]</b></td></tr>
+  <tr><td>Landing page</td><td>Marketing homepage at <code>app/page.tsx</code> with cream design system (Newsreader, #f4f0e8). Live platform demo via 9 iframe mockups in <code>public/demo/</code>. Reserve flow via <code>/api/reserve</code>.</td><td><span class="st live">LIVE</span> <b>[DONE — shipped July 2026]</b></td></tr>
+</table>
+
 <h2><span class="n">3</span>The session plan</h2>
 <p>Rules that apply to every session: opener + <b>/sc:index-repo</b> first; one prompt per turn; diagnostic and fix are separate turns; database writes and git operations reviewed here before execution; verify against the live artifact and state the environment; end with <b>/sc:save</b> and the SPEC.md / lessons-MERGED.md update. The prompts below are session <b>openers only</b>.</p>
 
