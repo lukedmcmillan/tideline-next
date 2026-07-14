@@ -345,6 +345,7 @@ const DEMO_TABS: { label: string; src: string; caption: string }[] = [
   { label: "Directory", src: "/demo/tideline-directory.html", caption: "Organisations, people and instruments connected to your work." },
   { label: "Entity", src: "/demo/tideline-entity.html", caption: "One organisation or person. Mentions, connections and recent activity." },
   { label: "Calendar", src: "/demo/tideline-regulatory-calendar.html", caption: "Formal dates, deadlines and sessions connected to your policy areas." },
+  { label: "Workspace", src: "/demo/tideline-workspace.html", caption: "Notes, sources and dates together while you write a briefing or report." },
 ];
 
 // Design width of the demo pages. The iframe renders at this width and is
