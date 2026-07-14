@@ -143,11 +143,11 @@ async function getHeatBoardData(): Promise<{
     if (!scoresBySlug.has(s.tracker_slug)) scoresBySlug.set(s.tracker_slug, []);
     scoresBySlug.get(s.tracker_slug)!.push(s);
   });
-  const stateBySlug = new Map<string, (typeof stateLog)[0]>();
+  const stateBySlug = new Map<string, NonNullable<typeof stateLog>[0]>();
   (stateLog || []).forEach((s) => {
     if (!stateBySlug.has(s.tracker_slug)) stateBySlug.set(s.tracker_slug, s);
   });
-  const eventsBySlug = new Map<string, (typeof events)[0]>();
+  const eventsBySlug = new Map<string, NonNullable<typeof events>[0]>();
   (events || []).forEach((e) => {
     if (!eventsBySlug.has(e.tracker_slug)) eventsBySlug.set(e.tracker_slug, e);
   });
