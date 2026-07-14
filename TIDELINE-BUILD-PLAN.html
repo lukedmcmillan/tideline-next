@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tideline · UI Rebuild Build Plan v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16211C;--ink-soft:#48544D;--ink-mute:#7C877F;
+  --rule:#DFE3DF;--rule-heavy:#16211C;
+  --green:#149A73;--green-deep:#0F7C5C;--green-tint:#E7F5EF;
+  --amber:#A5711A;--amber-tint:#FDF3E3;--red:#B23A22;--red-bright:#C2472F;--red-tint:#FBEDE9;
+  --stone:#F4F5F3;--stone-ink:#8A9089;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased;max-width:1060px;margin:0 auto;padding:40px 32px 80px}
+.masthead{border-top:3px solid var(--rule-heavy);border-bottom:1px solid var(--rule);padding:16px 0 12px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.mast-title{font-family:'Plus Jakarta Sans';font-weight:800;font-size:14px;letter-spacing:.14em;text-transform:uppercase}
+.mast-sub{font-size:12.5px;color:var(--ink-mute)}
+.ticker{display:flex;border-bottom:1px solid var(--rule);padding:10px 0;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap}
+.tick{padding-right:16px;margin-right:16px;border-right:1px solid var(--rule)}
+.tick:last-child{border-right:none}
+.tick b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tick b.r{color:var(--red)}
+.tick b.g{color:var(--green-deep)}
+h2{font-family:'Plus Jakarta Sans';font-weight:800;font-size:19px;letter-spacing:-.01em;margin:42px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--rule-heavy)}
+h2 .n{color:var(--ink-mute);font-size:13px;font-weight:700;margin-right:10px}
+h3{font-family:'Plus Jakarta Sans';font-weight:700;font-size:14.5px;margin:24px 0 6px}
+p{font-size:13.5px;line-height:1.65;color:var(--ink-soft);margin:8px 0;max-width:82ch}
+p b,li b{color:var(--ink);font-weight:600}
+.warn{border-left:3px solid var(--red-bright);padding:4px 0 4px 14px;margin:14px 0}
+.warn p{margin:4px 0}
+.note{border-left:3px solid var(--amber);padding:4px 0 4px 14px;margin:14px 0}
+.ok{border-left:3px solid var(--green);padding:4px 0 4px 14px;margin:14px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;text-align:left;padding:7px 12px 7px 0;border-bottom:1px solid var(--rule-heavy)}
+td{padding:9px 12px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5}
+td b{font-weight:600}
+.st{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.st.live{color:var(--green-deep)}
+.st.mig{color:var(--amber)}
+.st.new{color:var(--amber)}
+.st.seed{color:var(--red)}
+.st.gen{color:var(--red)}
+.st.calc{color:var(--ink-mute)}
+pre{background:var(--stone);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:10px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap}
+.session{border-bottom:1px solid var(--rule);padding:18px 0 20px 17px;position:relative}
+.session::before{content:"";position:absolute;left:0;top:22px;bottom:24px;width:3px;border-radius:2px;background:var(--green)}
+.session.blocked::before{background:var(--red-bright)}
+.session.decision::before{background:var(--amber)}
+.s-title{font-family:'Plus Jakarta Sans';font-weight:800;font-size:15px}
+.s-title small{font-family:'DM Sans';font-weight:600;font-size:11px;color:var(--ink-mute);margin-left:10px;letter-spacing:.08em;text-transform:uppercase}
+.s-meta{font-size:12px;color:var(--ink-mute);margin:3px 0 8px}
+ul{margin:8px 0 8px 18px;font-size:13px;line-height:1.65;color:var(--ink-soft)}
+li{margin:3px 0}
+.done-when{font-size:12.5px;color:var(--ink-soft);border-top:1px dotted var(--rule);margin-top:10px;padding-top:8px}
+.done-when b{color:var(--green-deep);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
+.kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--ink-mute);margin-top:26px}
+.foot{margin-top:44px;border-top:1px solid var(--rule);padding-top:12px;font-size:11.5px;color:var(--ink-mute)}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <span class="mast-title">Tideline UI Rebuild · Build Plan</span>
+  <span class="mast-sub">v1 · 12 July 2026 · governs the conversion of the live product to the ruled editorial-terminal system</span>
+</div>
+<div class="ticker">
+  <span class="tick"><b>9</b> mockup pages</span>
+  <span class="tick"><b>3</b> spec documents</span>
+  <span class="tick"><b>~7</b> additive migrations</span>
+  <span class="tick"><b>11</b> Claude Code sessions</span>
+  <span class="tick"><b class="r">2</b> open incidents gate database work</span>
+  <span class="tick"><b class="g">0</b> destructive changes anywhere in this plan</span>
+</div>
+
+<p style="margin-top:18px">This document is the map. It does not violate PROMPTING-RULES.md: only the <b>opening prompt of each session</b> is pre-written; every subsequent prompt in a session is written after the previous output exists. Sessions marked amber contain a decision point where Luke reviews before anything runs. Every database change in this plan is additive and plan-mode-zone.</p>
+
+<h2><span class="n">0</span>The artifacts</h2>
+<p>Everything produced in the design sessions, and where it goes in the repo. The mockups are the <b>visual contract</b>: the live pages must be indistinguishable from them in structure, hierarchy, and tokens. They are not the implementation: nine files of duplicated CSS become one token sheet and a shared component set.</p>
+<table>
+  <tr><th>File</th><th>What it is</th><th>Repo destination</th></tr>
+  <tr><td><b>UI-SYSTEM.md</b></td><td>Canonical design system. Supersedes TIDELINE-MASTER 3.2. White canvas locked.</td><td>repo root</td></tr>
+  <tr><td><b>SIGNIFICANCE-METHODOLOGY.md</b></td><td>Story scoring methodology, v0.1 draft. [PROPOSED] values need Luke's sign-off.</td><td>repo root</td></tr>
+  <tr><td>tideline-dashboard-v4.html</td><td>Morning Edition dashboard (incl. "You might have missed")</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-trackers-v1.html</td><td>Trackers board: moved / active / quiet hierarchy, threshold notches</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-tracker-detail-v1.html</td><td>Tracker detail: components, 12-week band history, contributing stories</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-conflicts-v1.html</td><td>Conflicts page: severity per spec bands, resolution types, never-empty</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-feed-v1.html</td><td>Feed: lens (For you / All ocean news), visit marker, compression, conflict callout, explore section</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-library-v1.html</td><td>Library: added-overnight, document table</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-directory-v2.html</td><td>Directory: split view with preview rail, watched stars, alias search</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-entity-v1.html</td><td>Entity page: identifiers, lineage, exposure, mentions, conflict involvement</td><td>design/mockups/</td></tr>
+  <tr><td>tideline-calendar-v1.html</td><td>Calendar: preparation-horizon lead, month groups, concluded outcomes</td><td>design/mockups/</td></tr>
+</table>
+
+<h2><span class="n">1</span>Gate zero: before any session runs</h2>
+<div class="warn">
+  <p><b>Manual, Luke, today:</b> resolve the two open incidents per OPS-RUNBOOK Sections 2 and 3 (credential rotation in full, including redeploy and dead-credential verification; Supabase project restart). No Claude Code session in this plan touches the database until both are logged in the incident table.</p>
+</div>
+<p><b>Manual, Luke, before Session 1:</b> download all 11 files from this chat, place them at the repo destinations above, and commit. Then confirm the open decisions in Section 5 of this plan; three of them block specific sessions and are marked where they bite.</p>
+
+<h2><span class="n">2</span>Data reality map: what feeds each module</h2>
+<p>Status legend: <span class="st live">LIVE</span> exists in production now · <span class="st mig">MIGRATION</span> additive schema change in Session 2 · <span class="st seed">SEED</span> seed rows until the real pipeline ships · <span class="st gen">GATED GEN</span> constrained generation behind the quality gate · <span class="st calc">COMPUTED</span> query-time calculation over live tables.</p>
+
+<h3>Dashboard (Morning Edition)</h3>
+<table>
+  <tr><th>Module</th><th>Source</th><th>Status</th></tr>
+  <tr><td>Edition number</td><td>Days since global launch epoch, or a one-row counter</td><td><span class="st calc">COMPUTED</span></td></tr>
+  <tr><td>Ticker funnel (docs scanned / sources / matched / flagged)</td><td><b>cron_runs</b> + ingest counts + stories counts</td><td><span class="st mig">MIGRATION</span> (cron_runs, = RISK-SCREENER P5)</td></tr>
+  <tr><td>"Since your last visit" deltas</td><td><b>users.last_seen_at</b> + counts over stories / project entries / entity mentions</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Lead + secondary signals</td><td>stories: top significance since last visit, classifier-gated</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Edge line ("the detail most coverage missed")</td><td>Model C constrained generation from lead story, quality-gated, provenance line attached</td><td><span class="st gen">GATED GEN</span> · ships in S11, dashboard launches without it</td></tr>
+  <tr><td>You might have missed</td><td>stories ≥60 [PROPOSED], past 7 days, never led a brief (brief lead log)</td><td><span class="st calc">COMPUTED</span></td></tr>
+  <tr><td>Pulse table + weekly deltas</td><td>velocity_scores (current + prior week)</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Your projects (+n new)</td><td>project_entities / project_auto_entries vs last_seen_at (note open issue: dashboard currently reads legacy topic_tags; this build fixes it)</td><td><span class="st live">LIVE</span> + <span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Entities you follow</td><td><b>entity_watches</b> (new) + mention counts</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Conflict card</td><td>divergences table</td><td><span class="st seed">SEED</span> until divergence Phase 1 (S8)</td></tr>
+  <tr><td>Coming up</td><td>events/calendar source [CONFIRM current table shape in S2 diagnostic]</td><td><span class="st live">LIVE</span> [CONFIRM]</td></tr>
+  <tr><td>Verdict strip</td><td>Deterministic template assembly over the counts above, pre-send equality check, same discipline as brief synthesis line</td><td><span class="st calc">COMPUTED</span></td></tr>
+</table>
+
+<h3>Trackers board + tracker detail</h3>
+<table>
+  <tr><th>Module</th><th>Source</th><th>Status</th></tr>
+  <tr><td>Scores, bands, weekly deltas, momentum</td><td>velocity_scores series</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Component values (A–D) on detail page</td><td>velocity_scores component columns (methodology Sec 8 says stored; <b>verify against a production row</b>, = RISK-SCREENER P6)</td><td><span class="st live">LIVE</span> [CONFIRM]</td></tr>
+  <tr><td>Threshold notch, institutional type, multiplier, hit rate, lead time, failure-mode disclosure</td><td>Per-domain methodology constants: <b>domains reference table</b> (from trackers table + methodology v1.2, incl. Type 6). Varies per tracker as agreed.</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>12-week band history strip</td><td>velocity_scores time series</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>What-changed line on moved domains</td><td>Top GOVERNANCE_CHANGE story of the week in that domain (deterministic pick, its own summary)</td><td><span class="st calc">COMPUTED</span></td></tr>
+  <tr><td>Contributing stories</td><td>stories by tracker_tag, significance-ordered</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Alert state ("you were alerted Tuesday")</td><td>user_alert_preferences + alert send log</td><td><span class="st live">LIVE</span> [CONFIRM log queryable]</td></tr>
+</table>
+
+<h3>Feed</h3>
+<table>
+  <tr><th>Module</th><th>Source</th><th>Status</th></tr>
+  <tr><td>Lens (For you)</td><td><b>users.user_role</b> + <b>role_profiles</b> mapping table; query-time filter/boost only, never mutates scores; ≥70 override always shows</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Lens reason chips</td><td>Deterministic: matched profile element name</td><td><span class="st calc">COMPUTED</span></td></tr>
+  <tr><td>Visit marker</td><td>users.last_seen_at</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Significance numerals + &lt;40 compression</td><td>stories.significance_score (exists); component breakdown click-through needs <b>significance component columns</b></td><td><span class="st live">LIVE</span> + <span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Conflict callout (feed top, ships before conflicts page per spec)</td><td>divergences</td><td><span class="st seed">SEED</span> until S8</td></tr>
+  <tr><td>Beyond your lens / All ocean news</td><td>Same stories table, lens filter off; explore section = ANALYSIS/EXPLAINER from tier ≥ trade-press sources</td><td><span class="st calc">COMPUTED</span></td></tr>
+</table>
+
+<h3>Conflicts · Library · Directory · Entity · Calendar</h3>
+<table>
+  <tr><th>Module</th><th>Source</th><th>Status</th></tr>
+  <tr><td>Conflicts page (all of it)</td><td>divergences, built to CONFLICTS-PAGE schema <b>plus RISK-SCREENER P1 columns (dimension scores, classifier_version, resolution_type, supersedes_id) before first insert</b></td><td><span class="st seed">SEED</span> → live at S8</td></tr>
+  <tr><td>Library table + added-overnight</td><td>documents table + ingest timestamps</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Directory list, alias search</td><td>entities + GIN alias index</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Watched stars (directory + dashboard module, one dataset)</td><td><b>entity_watches</b> (user_id, entity_id, created_at)</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Entity identifiers + lineage blocks</td><td><b>entity_identifiers</b>, <b>entity_successions</b> (= RISK-SCREENER P3, P4); render "backfill in progress" honestly where empty</td><td><span class="st mig">MIGRATION</span></td></tr>
+  <tr><td>Calendar events + outcomes</td><td>Existing events source [CONFIRM shape]; concluded outcomes link to library docs</td><td><span class="st live">LIVE</span> [CONFIRM]</td></tr>
+  <tr><td>Liveness footers (every page)</td><td><b>cron_runs</b> heartbeat</td><td><span class="st mig">MIGRATION</span></td></tr>
+</table>
+
+<h2><span class="n">3</span>The session plan</h2>
+<p>Rules that apply to every session: opener + <b>/sc:index-repo</b> first; one prompt per turn; diagnostic and fix are separate turns; database writes and git operations reviewed here before execution; verify against the live artifact and state the environment; end with <b>/sc:save</b> and the SPEC.md / lessons-MERGED.md update. The prompts below are session <b>openers only</b>.</p>
+
+<div class="session">
+  <div class="s-title">S1 · Commit and reconcile the specs <small>no database</small></div>
+  <div class="s-meta">Makes the paper match the decisions. Blocks everything else.</div>
+  <pre>/sc:implement "Spec reconciliation. UI-SYSTEM.md is now canonical for all
+visual matters. 1) Cut TIDELINE-MASTER.md section 3.2 to a pointer at
+UI-SYSTEM.md, marking the dark navy palette retired. 2) Revise
+TRACKER-PAGES-SPEC.md: the heat board and tracker detail visual sections are
+superseded by design/mockups/tideline-trackers-v1.html and
+tideline-tracker-detail-v1.html under UI-SYSTEM.md; keep all data, state, and
+migration content. 3) Patch CONFLICTS-PAGE-SPEC.md: retire all dark-palette,
+DM Mono, and card-structure visual sections in favour of
+design/mockups/tideline-conflicts-v1.html; detection logic, schema, locked
+copy lines, and build order stand; add the P1 columns from
+RISK-SCREENER-SPEC Part 5 to the schema block. Show me the diffs before
+committing. Do not touch any other file."</pre>
+  <div class="done-when"><b>Done when</b> Diffs reviewed here, committed, and git log shows the commit. The old card-based Prompt 2 is formally dead.</div>
+</div>
+
+<div class="session decision">
+  <div class="s-title">S2 · Diagnostic, then the migration batch <small>plan-mode · database · decision point</small></div>
+  <div class="s-meta">Requires gate zero cleared and Section 5 decisions 1–3 confirmed. Two turns by design: diagnose, then migrate.</div>
+  <pre>/sc:analyze "Diagnostic only, no writes. Report against PRODUCTION, stating
+the environment for every check: 1) velocity_scores: confirm component values
+and calculated_at are stored per run (show one real row). 2) stories: does an
+ingest timestamp exist separate from published_at? Exact column names for
+significance_score. 3) users: existing last-seen or session tracking? 4) The
+events/calendar source table shape. 5) trackers table columns available for a
+domains reference view. 6) Existing alert send log queryability. Output a
+findings table. Do not propose fixes yet."</pre>
+  <p>Then, shaped by the findings, the migration proposal turn covers (all additive, reviewed as SQL here before running): <b>cron_runs</b> · <b>users.user_role + role_profiles</b> · <b>entity_watches</b> · <b>users.last_seen_at</b> (+ update hook) · <b>stories significance component columns</b> + detected_at/classifier_version if absent (P2) · <b>domains reference table</b> (thresholds, types incl. Type 6, hit rates, failure-mode text) · <b>entity_identifiers / entity_successions</b> (P3, P4). Each verified with a SELECT.</p>
+  <div class="done-when"><b>Done when</b> Every new table answers a SELECT in production, results pasted here, and TIDELINE-MASTER Part 2 updated.</div>
+</div>
+
+<div class="session">
+  <div class="s-title">S3 · Shared UI foundation <small>no database</small></div>
+  <div class="s-meta">The one place the mockup CSS becomes real code. Everything after this consumes it.</div>
+  <pre>/sc:workflow "Shared UI foundation per UI-SYSTEM.md (canonical) and the
+mockups in design/mockups/. Extract the token sheet (colours, type,
+tabular-nums) and build the shared components: AppShell (sidebar + topbar,
+matching current shell), Masthead, TickerRow, Kicker, StateRule, Gauge
+(10-segment, half-fill, threshold notch, 4 sizes), BandHistoryStrip,
+SignalRow, LivenessFooter, RuledSection. No page work yet. Render all
+components on a /dev/system scratch route for visual verification against
+the mockups. No entrance animations anywhere. Return the plan before
+writing code."</pre>
+  <div class="done-when"><b>Done when</b> /dev/system on the preview deployment visually matches the mockup components side by side, checked by Luke, not claimed by Claude Code.</div>
+</div>
+
+<div class="session">
+  <div class="s-title">S4 · Trackers board <small>live data</small></div>
+  <pre>/sc:implement "Trackers board page replicating
+design/mockups/tideline-trackers-v1.html exactly, using the S3 components,
+per revised TRACKER-PAGES-SPEC.md. Live data: velocity_scores for scores,
+bands, weekly deltas; domains reference table for state sentences, types,
+multipliers, thresholds, hit rates, footnote disclosures. Moved / active /
+quiet grouping from band-crossing detection over the score series.
+What-changed line = highest-significance GOVERNANCE_CHANGE story this week
+in that domain (deterministic). Liveness footer from cron_runs. Return the
+plan before writing code."</pre>
+  <div class="done-when"><b>Done when</b> The live URL renders real scores grouped correctly and Luke confirms it against the mockup and against a hand-checked velocity_scores query.</div>
+</div>
+
+<div class="session">
+  <div class="s-title">S5 · Tracker detail <small>live data</small></div>
+  <pre>/sc:implement "Tracker detail page replicating
+design/mockups/tideline-tracker-detail-v1.html, using S3 components, per
+revised TRACKER-PAGES-SPEC.md. Live data: score + stored component values
+from velocity_scores (confirmed in S2); 12-week BandHistoryStrip from the
+score series; methodology rail from the domains reference table (content
+varies per tracker); contributing stories by tracker_tag ordered by
+significance with source links; alert state from user_alert_preferences and
+the send log. Conflict rail block reads divergences (seed rows until S8).
+Return the plan before writing code."</pre>
+  <div class="done-when"><b>Done when</b> Two different trackers render with visibly different methodology panels and correct band history, verified against raw queries.</div>
+</div>
+
+<div class="session decision">
+  <div class="s-title">S6 · Dashboard <small>live data · decision point</small></div>
+  <div class="s-meta">Largest page. Ships WITHOUT the edge line (S11). Verdict is deterministic template assembly with the brief's pre-send equality check; omit on mismatch.</div>
+  <pre>/sc:workflow "Morning Edition dashboard replicating
+design/mockups/tideline-dashboard-v4.html, using S3 components. Modules and
+sources per BUILD-PLAN Section 2: edition number; ticker funnel from
+cron_runs and ingest counts; since-last-visit deltas from users.last_seen_at;
+lead + two secondaries from top-significance classifier-gated stories since
+last visit; 'You might have missed' (significance >= 60, past 7 days, never
+led); pulse table from velocity_scores; projects module reading
+project_entities/project_auto_entries (NOT legacy topic_tags - this fixes
+the known unification issue); entities module from entity_watches; conflict
+card from divergences (seed); coming up from the events source. Verdict
+strip: deterministic template over these counts with pre-send equality
+check. EXCLUDE the edge line module entirely this session. Plan first,
+including the empty states: Edition No. 1 with zero projects and zero
+watches, and a fully quiet week. Return the plan before writing code."</pre>
+  <div class="done-when"><b>Done when</b> The live dashboard matches the mockup with real numbers Luke can reconcile by hand, AND the cold-start render (new test account) is acceptable.</div>
+</div>
+
+<div class="session">
+  <div class="s-title">S7 · Feed with lens <small>live data</small></div>
+  <pre>/sc:implement "News feed replicating design/mockups/tideline-feed-v1.html,
+using S3 components. Lens: users.user_role + role_profiles as query-time
+filter and sort boost ONLY; stored significance never mutated; every For-you
+story carries its deterministic lens-reason chip; significance >= 70 on a
+tracked domain always shows with the override note. 'All ocean news' = lens
+off. Visit marker from last_seen_at. Day grouping with < 40 compression
+lines. Conflict callout at feed top from divergences (seed rows). 'Beyond
+your lens' = ANALYSIS/EXPLAINER from trade-press-tier-or-above sources
+outside the user's lens. Add role selection as an onboarding step writing
+user_role. Return the plan before writing code."</pre>
+  <div class="done-when"><b>Done when</b> Two test accounts with different roles see demonstrably different For-you views, the same All-ocean-news view, and the ≥70 story appears in both.</div>
+</div>
+
+<div class="session decision">
+  <div class="s-title">S8 · Divergence detection Phase 1 + conflicts page <small>plan-mode · database · decision point</small></div>
+  <div class="s-meta">The differentiator goes live. Backend first (its own decision point), UI second.</div>
+  <pre>/sc:implement "Divergence detection Phase 1 per CONFLICTS-PAGE-SPEC.md as
+patched in S1 (P1 columns included from row one: four dimension scores,
+classifier_version, resolution_type, supersedes_id). Build: divergences
+table, lib/divergence.ts, cron at app/api/cron/divergence-detection/route.ts
+(04:04 UTC), schema-validated Haiku JSON with reject-on-missing-field, seed
+rows from the spec. NO UI this session beyond confirming the feed callout
+and page read live rows. Auto-dismiss writes resolution_type EXPIRED.
+Return the plan before writing code; the cron schedule and any insert
+logic get reviewed before running."</pre>
+  <p>Second half of the session (separate prompt after backend verification): conflicts page replicating tideline-conflicts-v1.html, severity bands per spec (7.8 = Medium), resolved list with resolution types, never-empty rule.</p>
+  <div class="done-when"><b>Done when</b> The cron runs clean in production, at least one real divergence is detected from the live feed, and the page + feed callout + dashboard card all read the same table.</div>
+</div>
+
+<div class="session">
+  <div class="s-title">S9 · Library + Calendar <small>live data</small></div>
+  <pre>/sc:implement "Two pages, library first. Library replicating
+design/mockups/tideline-library-v1.html: added-overnight from ingest
+timestamps, document table over documents with type/domain filters and real
+citation identifiers, ticker stats (count, chunks, coverage, FAOLEX phase)
+computed live. Calendar replicating tideline-calendar-v1.html: preparation-
+horizon lead selection (nearest event whose domain is at or above threshold
+within its horizon), month-grouped list, concluded section linking outcome
+documents in the library. Liveness footers from cron_runs. Return the plan
+before writing code."</pre>
+  <div class="done-when"><b>Done when</b> Library counts reconcile with SELECT COUNT(*) run by hand; calendar lead selection picks MEPC 84 (or current equivalent) for the right reason.</div>
+</div>
+
+<div class="session">
+  <div class="s-title">S10 · Directory + entity pages <small>live data</small></div>
+  <pre>/sc:implement "Directory replicating design/mockups/tideline-directory-v2.html:
+split view with sticky preview rail (click row = preview, Open full page =
+navigate), watched section + star toggles writing entity_watches (same table
+the dashboard module reads), scoped search hitting the GIN alias index with
+the alias hint line. Entity page replicating tideline-entity-v1.html:
+identifiers from entity_identifiers (render 'backfill in progress' where
+empty, never fake), lineage from entity_successions, exposure gauges from
+mention counts by domain, mention stream by significance, conflict
+involvement from divergences. Return the plan before writing code."</pre>
+  <div class="done-when"><b>Done when</b> Starring an entity in the directory changes the dashboard module on next load; searching "DeepGreen" resolves to The Metals Company on the live site.</div>
+</div>
+
+<div class="session decision">
+  <div class="s-title">S11 · Generation surfaces + system pass <small>decision point</small></div>
+  <div class="s-meta">Last because riskiest. Everything before this shipped deterministic.</div>
+  <ul>
+    <li><b>Edge line:</b> Model C constrained generation from the lead story, through the existing quality gate, provenance line rendered beneath, omitted entirely on gate failure (a missing edge line is invisible; a wrong one is fatal). Copy button.</li>
+    <li><b>Classification label tooltips:</b> the label table from UI-SYSTEM.md (pending the Analysis rename decision), one-line definitions on hover.</li>
+    <li><b>Significance click-through:</b> component breakdown per story (needs the S2 columns populated going forward; historical rows show composite only, honestly).</li>
+    <li><b>Conversion checklist sweep:</b> run UI-SYSTEM.md Section 11 against every page; fix failures; remove any card container or animation that crept in.</li>
+  </ul>
+  <div class="done-when"><b>Done when</b> Every page passes the Section 11 checklist including the cold-start states, checked page by page by Luke.</div>
+</div>
+
+<h2><span class="n">4</span>Standing rules for every session</h2>
+<ul>
+  <li><b>Visual contract:</b> the mockup is the acceptance test. If the live page and the mockup differ, the live page is wrong or the mockup gets consciously revised here first.</li>
+  <li><b>Plan-mode zones unchanged:</b> stories, velocity_scores, divergences, document_queue, Stripe/Resend/auth, crons, migrations. All migrations in this plan are additive; anything else stops and asks.</li>
+  <li><b>Export-grade discipline:</b> no UPDATE ever rewrites a historical score, classification, or divergence. Corrections are new rows.</li>
+  <li><b>Numbers are doors:</b> a module that displays a count must link to its evidence, or it does not merge.</li>
+  <li><b>Honest empties:</b> "backfill in progress", "calibrating", "quiet" render as designed. Nothing fakes data it does not have.</li>
+  <li><b>Old dashboard stays live</b> until S6 passes its gate; build on parallel routes, switch atomically.</li>
+</ul>
+
+<h2><span class="n">5</span>Open decisions: confirm before the session that needs them</h2>
+<table>
+  <tr><th>#</th><th>Decision</th><th>Blocks</th></tr>
+  <tr><td>1</td><td>SIGNIFICANCE-METHODOLOGY [PROPOSED] values: component weights, tier scores, band edges (70/40/60), global-score lock, re-scoring cadence</td><td>S2 (columns), S6, S7</td></tr>
+  <tr><td>2</td><td>Role list for the lens (proposed: ESG &amp; finance / legal &amp; GC / shipping compliance / NGO &amp; policy / research &amp; journalism) and the role_profiles mapping content</td><td>S2, S7</td></tr>
+  <tr><td>3</td><td>Edition number epoch (global launch date vs per-user first visit)</td><td>S6</td></tr>
+  <tr><td>4</td><td>"Analysis" label: rename to "Finding" / "Research &amp; data" / keep with tooltip</td><td>S11 (S4–S10 can ship with current label)</td></tr>
+  <tr><td>5</td><td>Extended institutional type taxonomy (Type 6, 0.80) published in methodology v1.2</td><td>S4 rail content; already a TIDELINE-MASTER 4.3 open item</td></tr>
+</table>
+
+<div class="note">
+  <p><b>Sequencing note:</b> this plan is UI-track. It does not replace the existing priority list's RAG track (HNSW → verification → Step 4 → Phase 3), which proceeds in parallel sessions and is untouched here except that Ask Tideline remains a nav item. Sales conversations remain a calendar item, not a build item; nothing in this plan is a reason to skip a week of them.</p>
+</div>
+
+<div class="foot">
+  Build Plan v1 · 12 July 2026 · Companion files: UI-SYSTEM.md, SIGNIFICANCE-METHODOLOGY.md, design/mockups/* · Update this file's session statuses as gates pass; a stale plan is the failure mode the master file exists to prevent.
+</div>
+
+</body>
+</html>
