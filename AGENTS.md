@@ -6,6 +6,10 @@ Tideline is an ocean governance intelligence platform built with Next.js App Rou
 
 AGENTS.md governs the Codex workflow. Claude-specific command and session instructions are historical only and must not control Codex.
 
+The Claude to Codex migration changes the development assistant only. It does not authorise changing Haiku, Jina, prompts, classifiers, scoring logic, or any other runtime product dependency.
+
+A specification defines intended behaviour. It is never proof that code is built, deployed, configured, scheduled, or working in any environment.
+
 `TIDELINE-MASTER.md` is the consolidated product authority and patches older specifications. Verify its build-state claims in the relevant environment. Use `tasks/lessons-MERGED.md` for relevant historical lessons.
 
 ## Safety And Approval
