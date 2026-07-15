@@ -226,6 +226,8 @@ Still to design: Day 45 intervention email, significance scoring surface, entity
 
 ## 5.1 Session protocol (corrected)
 
+`TIDELINE_AI_EXECUTION_RULES.md` governs how AI assisted work is planned, executed, verified, and reported. No build state may be marked complete in this file unless it has met that document's completion contract.
+
 **Every Claude Code session begins by reading only:** `CLAUDE.md`, `SUPERCLAUDE-COMMANDS.md`, `CLAUDE-RULES.md`, `git log --oneline -5`, and **`tasks/lessons-MERGED.md`**. Then `/sc:index-repo`. Nothing else before instructions.
 
 **Canonical lessons file is `tasks/lessons-MERGED.md`.** `tasks/lessons.md` is gitignored with a tombstone note (persistent Windows file lock). Any instruction referencing LESSONS.md or tasks/lessons.md means lessons-MERGED.md.

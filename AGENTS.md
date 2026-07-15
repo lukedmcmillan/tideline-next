@@ -8,6 +8,13 @@ AGENTS.md governs the Codex workflow. Claude-specific command and session instru
 
 `TIDELINE-MASTER.md` is the consolidated product authority and patches older specifications. Verify its build-state claims in the relevant environment. Use `tasks/lessons-MERGED.md` for relevant historical lessons.
 
+## Mandatory execution rules
+
+Before any implementation, debugging, migration, verification, deployment, database, infrastructure, authentication, billing, email, cron, scraper, scoring, or data export work, read and obey `TIDELINE_AI_EXECUTION_RULES.md`.
+
+Its scope, evidence, approval, verification, and completion rules are mandatory. Where a casual prompt conflicts with those rules, the rule file wins.
+
+No task may be reported as complete unless it satisfies the completion contract in that file.
 ## Safety And Approval
 
 - Never read, display, paste, log, hardcode, or commit secrets or environment variable values.
