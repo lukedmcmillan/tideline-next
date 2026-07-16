@@ -66,9 +66,12 @@ Historical export-grade tables are additive only. Never rewrite historical score
 The Tideline design system and product copy are locked.
 
 - Read `UI-SYSTEM.md` before visual work and `MESSAGING_HOUSE.md` before changing product copy.
-- Use the applicable locked mockup under `public/demo/` as the visual reference.
-- Keep the existing dark navy platform shell and use white for the main content area. Do not introduce blue accents, beige content backgrounds, or DM Mono.
-- Use current design-system typography and tabular numerals for scores, dates, and counts.
+- The complete approved July 2026 visual reference suite under `Design/approved-2026-07/` governs visual outcome and information architecture. Assess design changes against the complete suite rather than one page in isolation.
+- Current application code remains the implementation base. The approved HTML files are visual references; prototype data, claims, and controls are not evidence that displayed data or functionality is live.
+- Public marketing pages may use cream, Newsreader, Plus Jakarta Sans, DM Sans, and restrained coral as shown in the approved homepage.
+- Authenticated platform pages use the approved deep green sidebar, white working canvas, Newsreader headings, DM Sans interface text, and semantic green, amber, and red. Blue is limited to the neutral verified identifiers or external-record metadata permitted by `UI-SYSTEM.md` and supported by the approved suite.
+- DM Mono remains banned. Use tabular numerals for scores, dates, and counts.
+- Older mockups cannot override the approved suite.
 - Do not invent tokens, copy, navigation, pricing, or visual conventions where a locked decision exists.
 - Pricing is locked. Do not alter or revisit pricing unless Luke explicitly requests it.
 - Use British English. Do not use em dashes in product copy.
@@ -104,8 +107,8 @@ npx tsc --noEmit
 - **Database work:** Read `DATA-LICENSING-DESIGN.md`, `OPS-RUNBOOK.md`, the owning feature specification, relevant sections of `tasks/lessons-MERGED.md`, existing migrations, and `app/lib/types/supabase.ts`.
 - **Divergence work:** Read `TIDELINE-MASTER.md` section 4.4 before `CONFLICTS-PAGE-SPEC.md`. The master file's patches take precedence.
 - **Morning brief work:** Read `TIDELINE-MASTER.md` section 4.2 before `BRIEF-LEAD-SPEC.md`. The category classifier supersedes the old verb-allowlist gate.
-- **Tracker page work:** Read `TRACKER-PAGES-SPEC.md`, `UI-SYSTEM.md`, and the applicable tracker mockup under `public/demo/`.
+- **Tracker page work:** Read `TRACKER-PAGES-SPEC.md`, `UI-SYSTEM.md`, and the applicable approved tracker references under `Design/approved-2026-07/`.
 - **Ask Tideline work:** Read `TIDELINE-MASTER.md` section 4.5, `RESEARCH-RAG-SPEC.md`, and `ASK-TIDELINE-BUILD-GUIDE.md`. Preserve the Jina 768-dimension invariant.
-- **Homepage and visual work:** Read `MESSAGING_HOUSE.md`, `UI-SYSTEM.md`, and the applicable locked mockups under `public/demo/`.
+- **Homepage and visual work:** Read `MESSAGING_HOUSE.md`, `UI-SYSTEM.md`, and the complete approved suite under `Design/approved-2026-07/`.
 
 If a required specification is missing or contradicts a locked decision, stop and ask Luke rather than reconstructing intended behaviour.
