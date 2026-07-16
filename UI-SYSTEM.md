@@ -73,11 +73,11 @@ One loud zone per page. **Boards and the dashboard may shout:** state-tinted hea
 - **State chips** (pill, tint + border + dot) with the locked plain-English states: *Quiet / More active than usual / Decision likely soon*. Event-driven domains drop the pill for a pace sentence.
 - **Delta pills**, **10-segment gauges** with threshold notch (labelled on large sizes), **12-week history** (micro strip on cards, value bars on detail pages).
 - **Signal rows:** tinted significance square (red at lead level, green normal, slate soft), headline, summary, chip row.
-- **Chips:** classification (green tint for Governance change), domain (slate), entity (outlined), deadline (amber, clock + date), document/citation ID (blue), lens reason (blue), Gate-1 override (red, "Shows for everyone · N").
+- **Chips:** classification (green tint for Governance change), domain (slate), entity (outlined), deadline (amber, clock + date), document/citation ID (blue only when it is verified external-record metadata), lens reason (stone), Gate-1 override (red, "Shows for everyone · N").
 - **Thread marker:** green dot + "Developing story · nth update since [date]" + View thread link.
 - **Insets and callouts:** grey inset for "what changed"; amber bordered callout for footnotes, disclosures, backfill notes; **green liveness footer on every page** (sources reporting, last run, next run, methodology link).
 - **Rail cards:** 4px top edge red for conflict, green for edge line; kicker heading; key/value rows.
-- **Status pills:** In force (green) / In draft (amber) / Adopted-awaiting (blue) / Superseded (slate). **Resolution pills:** Converged (green) / Superseded (blue) / Expired (slate).
+- **Status and resolution pills:** use semantic green, amber, red, or stone according to the approved suite. Blue is permitted only when the label is a neutral verified identifier or external-record metadata, never to communicate state.
 - **Calendar tiles** (month/day blocks, state-tinted), **filter pills**, **tab pills** (green fill when active), **card-foot doors** ("N more... with link").
 
 ## 6. Behavioural rules (design rules, not engineering nice-to-haves)
@@ -97,4 +97,4 @@ Workspace has an approved reference. The Dashboard has minor token differences f
 
 ## 8. Conversion checklist (run on every page before it merges)
 
-Canvas #F4F6F8, white cards, correct shadows and radii · colour used only per Section 3, blue only per the exception · no icons, no identity hues, no health bar, no DM Mono, no em dashes · tabular-nums on all figures · one loud zone max · every number a door · liveness footer present and truthful · honest empty states render · no entrance animations · matches its mockup side by side.
+White working canvas, deep green sidebar, Newsreader headings, DM Sans interface text, correct borders, shadows, and radii · colour used only per Section 3, blue only per the verified-metadata exception · no identity hues, no health bar, no DM Mono, no em dashes · tabular-nums on all figures · one loud zone max · every number a door · liveness footer present and truthful · honest empty states render · no entrance animations · matches the complete approved suite side by side.
