@@ -3,32 +3,36 @@ Operational procedures for a solo-founder production system
 Version 1.0, July 2026. The runbook is the on-call. Referenced by TIDELINE-MASTER.md 2.2.
 Items marked [CONFIRM] must be verified against production (vercel.json, Supabase dashboard, Resend dashboard) in the next session and this file updated. Do not treat unconfirmed schedules as fact; that is the exact failure mode the master file exists to prevent.
 
-1. Immediate open incidents (July 2026)
+1. Current incidents and priorities (July 2026)
 
-Exposed database credential. Procedure in Section 2, run it in full, not just the password reset.
-Supabase pooler authentication failures. Procedure in Section 3.
-Cron liveness unknown across pipeline. Audit in Section 4 is an open priority item.
+Resolved 20 July 2026: the exposed Tideline database credential was rotated and independently verified. The incident record is in Section 7.
+Open: Supabase pooler authentication failures. Use the evidence based procedure in Section 3.
+Open: cron liveness remains unknown across parts of the pipeline. The audit in Section 4 is a priority.
 
+2. Secrets rotation procedure
 
-2. Secrets rotation procedure (run now for the exposed credential; reuse for any future exposure)
+1. Rotate at source first. In Supabase, use Database Settings to reset the database password. For provider API keys, revoke and reissue the key in the provider dashboard. Do not create a second live credential while leaving the exposed one active.
+2. Identify every real consumer before changing environments. Check Vercel Production, Preview and Development variables, shared variables, local environment files, GitHub Actions secrets, scripts, notebooks and external services. Record consumers that do not hold the credential. Do not invent a new environment variable merely to satisfy the checklist.
+3. Update each confirmed consumer. A consumer that uses only a Supabase API URL and service role key does not need updating when the separate Postgres database password changes.
+4. Redeploy only deployments whose environment variables changed. Environment changes do not affect an existing Vercel deployment until it is redeployed.
+5. Prove the previous credential is dead by attempting the correct authentication path with the previous value. It must fail with an authentication error. A timeout, DNS error or refused connection does not prove invalidation.
+6. Prove the current credential works through the intended connection path.
+7. Check the exposure surface. Search tracked files, Git history, local environment variable names, workflow references and provider environments without printing secret values.
+8. Record the incident in Section 7.
 
-Rotate at source first. Supabase dashboard → Settings → Database → reset password. For API keys (Anthropic, Jina, Resend, Stripe, Firecrawl): revoke and reissue in the provider dashboard. Revoke, do not just add a new key alongside the old one.
-Update every consumer. Vercel → project → Settings → Environment Variables → update the value in ALL environments (Production, Preview, Development). Then check: local .env files, GitHub Actions secrets, and any script or notebook with a hardcoded value.
-Redeploy. Vercel env changes do not apply to running deployments. Trigger a redeploy and confirm the new deployment is serving.
-Verify the old credential is dead. Attempt a connection with the old value; it must fail. A rotation is not complete until the old secret is proven dead.
-Check exposure blast radius. If the credential was in a git commit: it is in history forever; rotation is the only fix, plus confirm the repo is private. If it was in a pasted log or chat: rotate and move on.
-Log it in Section 7.
-
-Standing rule: secrets never appear in code, commits, spec files, or pasted Claude Code output. If Claude Code echoes a secret in a session log, that counts as exposure; rotate.
+Standing rule: secrets must never appear in code, commits, specifications, pasted AI output or session logs. If an AI tool prints a secret, treat that as exposure and rotate it.
 
 3. Supabase pooler failure procedure
-Symptoms: intermittent auth failures on pooled connections while direct connections work, or crons failing with connection errors.
 
-Supabase dashboard → project → Restart project (Settings → General). This clears pooler state.
-After restart, verify: run one read query through the pooled connection string and one through direct. State which environment each check ran against (per verification rules, TIDELINE-MASTER.md 5.3).
-If failures recur within days: check whether crons are exhausting the pool (connections not released). Vercel serverless + Supabase should use the transaction pooler port (6543) with ?pgbouncer=true semantics, not the session pooler, for short-lived function connections. [CONFIRM current connection strings match this]
-If the credential was rotated (Section 2) and pooler failures started after: the pooler can cache old auth; the restart is the fix, do it after every rotation.
+Symptoms: authentication failures on pooled connections, direct connections behaving differently, or scheduled jobs reporting database connection errors.
 
+1. Confirm the exact Supabase project name and project reference before testing. Do not substitute another project with a similar name.
+2. Test the previous password against the same pooler endpoint used for the current password. A password authentication failure proves that previous credential is invalid.
+3. Test the current password with a read only query such as `select 1;`. Record the host type, port, project reference and result without recording the password.
+4. Current hosted Supabase behaviour, verified on 20 July 2026, does not expose a safe Restart project control under General Settings. Supabase documentation also states that managed services are automatically updated after a database password change. Do not use Pause project, restore, a compute change or another disruptive action as a substitute for a missing restart control.
+5. Verify one read through the Session pooler. Verify one direct database connection when the network supports the direct IPv6 endpoint. If the local network cannot resolve the direct host, record that limitation and perform an account authenticated SQL read against the exact named Supabase project as independent confirmation. Do not describe that management connection as a direct network connection.
+6. If authentication failures continue after the old password fails and the current password succeeds, inspect connection logs and external consumers. For any serverless function that connects directly to Postgres, confirm whether the transaction pooler on port 6543 is the appropriate connection path. Do not assume this applies to an application using only the Supabase API client.
+7. If the hosted dashboard or official guidance changes, update this section from current evidence before using a restart procedure.
 
 4. Cron and pipeline inventory
 This table is the liveness audit target. Fill the confirmed columns from vercel.json and provider dashboards, then keep it current.
@@ -54,5 +58,35 @@ Repo: private GitHub is the code backup. Governing spec files live in the repo, 
 
 
 7. Incident log
-One line per incident: date, what broke, user-visible impact, root cause, fix, lesson (and whether the lesson went into tasks/lessons-MERGED.md).
-DateWhatImpactRoot causeFixLesson captured?Jul 2026Database credential exposedNone known[fill in on resolution]Rotation per Section 2pendingJul 2026Supabase pooler auth failuresIntermittent connection errors[fill in]Project restart per Section 3pending
+
+Each incident record must include the date, what happened, user impact, root cause, fix, verification evidence and lesson.
+
+20 July 2026
+
+What happened: A Tideline Postgres database password had previously been exposed in working material.
+
+User impact: None observed.
+
+Root cause: The credential had appeared outside its password manager. The exact original exposure surface was not retained in this session.
+
+Fix: The password was rotated in the Tideline Supabase project. A previous Tideline password was rejected by the Session pooler. The current password successfully returned `select 1`. An account authenticated production SQL read against project `fmrtogpogcpfsdlfzqwd` also returned `1`.
+
+Consumer check: Vercel Production, Pre production and Shared variables contained no database password or Postgres connection string. Local environment files contained no database password variable. No Vercel environment update or redeployment was required.
+
+Repository check: The tracked Supabase temporary files contained project metadata and a passwordless pooler address only. They contained no password, token or key. They were removed from Git tracking and remain ignored as local cache files.
+
+Lesson: Confirm the project reference before rotating or testing. Distinguish the Postgres password from Supabase API keys. Do not force a stale restart instruction when the current hosted platform provides no safe restart control. Never track `supabase/.temp/`.
+
+Status: Resolved and verified.
+
+July 2026
+
+What happened: Intermittent Supabase pooler authentication failures were previously reported.
+
+User impact: Intermittent connection errors.
+
+Root cause: Not yet established.
+
+Current action: Use the evidence based diagnostic sequence in Section 3.
+
+Status: Open.
